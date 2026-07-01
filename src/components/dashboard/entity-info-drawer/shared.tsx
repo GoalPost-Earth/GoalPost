@@ -45,12 +45,32 @@ export const StatCell: FC<{
   </div>
 )
 
-export const BodySkeleton: FC = () => (
+/**
+ * First-open loading state. When the caller already knows the entity's
+ * name (passed through `?entity=` navigations and every canvas drill via
+ * `InfoEntity.label`), paint the title immediately so the *basic* form is
+ * visible instantly instead of a full-page shimmer that blocks on the
+ * heavy detail query. The lower sections still shimmer until data lands.
+ * Falls back to a shimmer bar when no label is known (e.g. a deep-linked
+ * refresh, where the URL carries only `Type:id`). See GOAL-279.
+ *
+ * `titleClassName` lets a body match its own loaded header exactly so the
+ * title doesn't reflow (resize) when data lands — Person/Document render
+ * their title at `text-xl`, the rest at `text-2xl`. Defaults to `text-2xl`.
+ */
+export const BodySkeleton: FC<{ label?: string; titleClassName?: string }> = ({
+  label,
+  titleClassName = 'text-2xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words leading-tight',
+}) => (
   <div className="p-6 space-y-5">
     <div className="flex items-start gap-4">
       <div className="size-14 rounded-2xl bg-black/[0.05] dark:bg-white/5 animate-pulse" />
       <div className="flex-1 space-y-2 pt-1">
-        <div className="h-6 w-3/4 rounded-md bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+        {label ? (
+          <h2 className={titleClassName}>{label}</h2>
+        ) : (
+          <div className="h-6 w-3/4 rounded-md bg-black/[0.05] dark:bg-white/5 animate-pulse" />
+        )}
         <div className="h-3 w-1/3 rounded-md bg-black/[0.05] dark:bg-white/5 animate-pulse" />
       </div>
     </div>

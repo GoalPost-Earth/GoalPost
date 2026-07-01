@@ -50,9 +50,10 @@ function displayName(p?: PersonLite | null): string {
   return p.name?.trim() || composed || 'Unnamed'
 }
 
-export const ConnectionDetailsBody: FC<{ connectionKey: string }> = ({
-  connectionKey,
-}) => {
+export const ConnectionDetailsBody: FC<{
+  connectionKey: string
+  label?: string
+}> = ({ connectionKey, label }) => {
   // Composite key `aId__bId`. Person ids never contain `__` (prefixes use a
   // single underscore; UUIDs use hyphens), so the first `__` is the separator.
   // Split on the first occurrence (not `.split`) so a hypothetical `__`-bearing
@@ -68,7 +69,7 @@ export const ConnectionDetailsBody: FC<{ connectionKey: string }> = ({
     skip: !aId || !bId,
   })
 
-  if (loading && !data) return <BodySkeleton />
+  if (loading && !data) return <BodySkeleton label={label} />
 
   const people = (data?.people ?? []) as PersonConnectionsRecord[]
   const aRecord = people.find((p) => p.id === aId)

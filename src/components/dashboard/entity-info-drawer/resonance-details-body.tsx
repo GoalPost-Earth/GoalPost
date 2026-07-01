@@ -42,9 +42,10 @@ function typenameToNodeType(typename: string): NodeType {
   return map[typename] ?? 'goal'
 }
 
-export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
-  resonanceId,
-}) => {
+export const ResonanceDetailsBody: FC<{
+  resonanceId: string
+  label?: string
+}> = ({ resonanceId, label }) => {
   const [isEditMode, setIsEditMode] = useState(false)
   const [editLabel, setEditLabel] = useState('')
   const [editDescription, setEditDescription] = useState('')
@@ -64,7 +65,7 @@ export const ResonanceDetailsBody: FC<{ resonanceId: string }> = ({
   const [deleteResonance] = useMutation(DELETE_RESONANCE_LINK_MUTATION)
   const [logResonanceActivity] = useMutation(LOG_RESONANCE_ACTIVITY)
 
-  if (loading && !data) return <BodySkeleton />
+  if (loading && !data) return <BodySkeleton label={label} />
 
   const resonance = data?.resonanceLinks?.[0]
   if (!resonance) {

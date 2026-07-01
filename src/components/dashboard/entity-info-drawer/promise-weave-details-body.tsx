@@ -43,9 +43,10 @@ function composePersonName(p: {
  * without edit/delete: the PromiseWeave type carries `@mutation(operations:
  * [])`, so there are no write paths yet (authoring is a later slice).
  */
-export const PromiseWeaveDetailsBody: FC<{ weaveId: string }> = ({
-  weaveId,
-}) => {
+export const PromiseWeaveDetailsBody: FC<{
+  weaveId: string
+  label?: string
+}> = ({ weaveId, label }) => {
   const { data, loading, error, refetch } = useQuery(
     GET_PROMISE_WEAVE_DETAILS,
     {
@@ -54,7 +55,7 @@ export const PromiseWeaveDetailsBody: FC<{ weaveId: string }> = ({
     }
   )
 
-  if (loading && !data) return <BodySkeleton />
+  if (loading && !data) return <BodySkeleton label={label} />
 
   const weave = data?.promiseWeaves?.[0]
   if (!weave) {

@@ -28,7 +28,10 @@ import {
 } from './shared'
 import { dispatchOpenInfoDrawer } from './types'
 
-export const SpaceDetailsBody: FC<{ spaceId: string }> = ({ spaceId }) => {
+export const SpaceDetailsBody: FC<{ spaceId: string; label?: string }> = ({
+  spaceId,
+  label,
+}) => {
   const router = useRouter()
   const { user } = useApp()
   const [isEditMode, setIsEditMode] = useState(false)
@@ -46,7 +49,7 @@ export const SpaceDetailsBody: FC<{ spaceId: string }> = ({ spaceId }) => {
   const [updateWeSpace] = useMutation(UPDATE_WE_SPACE_MUTATION)
   const [logSpaceActivity] = useMutation(LOG_SPACE_ACTIVITY)
 
-  if (loading && !data) return <BodySkeleton />
+  if (loading && !data) return <BodySkeleton label={label} />
 
   type SpaceData = NonNullable<typeof data>['spaces'][number]
   const space = data?.spaces?.[0] as SpaceData | undefined

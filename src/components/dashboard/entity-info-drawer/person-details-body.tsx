@@ -39,7 +39,8 @@ import { dispatchOpenInfoDrawer } from './types'
 export const PersonDetailsBody: FC<{
   personId: string
   onClose: () => void
-}> = ({ personId, onClose }) => {
+  label?: string
+}> = ({ personId, onClose, label }) => {
   const router = useRouter()
   const { setFocalLabel } = useFocalEntity()
 
@@ -84,7 +85,13 @@ export const PersonDetailsBody: FC<{
     setFocalLabel(person.id, person.name, refined)
   }, [person?.id, person?.name, person, setFocalLabel])
 
-  if (loading && !data) return <BodySkeleton />
+  if (loading && !data)
+    return (
+      <BodySkeleton
+        label={label}
+        titleClassName="text-xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words"
+      />
+    )
   if (!person) {
     // Log the underlying GraphQL error so a data-integrity cascade (a
     // NULL on a non-nullable scalar somewhere in the person tree) is

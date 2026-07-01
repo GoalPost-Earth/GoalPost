@@ -126,9 +126,10 @@ function pulseLabel(typename: string | null | undefined): string {
   }
 }
 
-export const DocumentDetailsBody: FC<{ documentId: string }> = ({
-  documentId,
-}) => {
+export const DocumentDetailsBody: FC<{
+  documentId: string
+  label?: string
+}> = ({ documentId, label }) => {
   const { data, loading, error, refetch } = useQuery<{
     documents?: DocumentDetail[]
   }>(GET_DOCUMENT_BY_ID, {
@@ -138,7 +139,13 @@ export const DocumentDetailsBody: FC<{ documentId: string }> = ({
   const [deleteDocument] = useMutation(DELETE_DOCUMENT_MUTATION)
   const [isDeleting, setIsDeleting] = useState(false)
 
-  if (loading && !data) return <BodySkeleton />
+  if (loading && !data)
+    return (
+      <BodySkeleton
+        label={label}
+        titleClassName="text-xl font-black tracking-tight text-gp-ink-strong dark:text-white break-all leading-tight"
+      />
+    )
 
   const document = data?.documents?.[0]
   if (!document) {

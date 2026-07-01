@@ -42,9 +42,10 @@ import { dispatchOpenInfoDrawer } from './types'
  * /protected/dashboard/field-context/[id], which is the entry point for
  * those workflows (alongside the assistant).
  */
-export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
-  contextId,
-}) => {
+export const FieldContextDetailsBody: FC<{
+  contextId: string
+  label?: string
+}> = ({ contextId, label }) => {
   const router = useRouter()
   const [isEditMode, setIsEditMode] = useState(false)
   const [editTitle, setEditTitle] = useState('')
@@ -85,7 +86,7 @@ export const FieldContextDetailsBody: FC<{ contextId: string }> = ({
     fetchPolicy: 'cache-and-network',
   })
 
-  if (loading && !data) return <BodySkeleton />
+  if (loading && !data) return <BodySkeleton label={label} />
 
   const context = data?.fieldContexts?.[0]
   if (!context) {

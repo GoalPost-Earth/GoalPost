@@ -52,7 +52,10 @@ import {
 } from './shared'
 import { dispatchOpenInfoDrawer } from './types'
 
-export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
+export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
+  pulseId,
+  label,
+}) => {
   const [showShareModal, setShowShareModal] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [editTitle, setEditTitle] = useState('')
@@ -80,7 +83,7 @@ export const PulseDetailsBody: FC<{ pulseId: string }> = ({ pulseId }) => {
   const [updateCoreValuePulse] = useMutation(UPDATE_CORE_VALUE_PULSE_MUTATION)
   const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
 
-  if (loading && !data) return <BodySkeleton />
+  if (loading && !data) return <BodySkeleton label={label} />
 
   const pulse =
     data?.goalPulses?.[0] ||

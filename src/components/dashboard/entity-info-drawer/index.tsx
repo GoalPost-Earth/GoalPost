@@ -199,24 +199,34 @@ const DrawerBody: FC<{ entity: InfoEntity; onClose: () => void }> = ({
   entity,
   onClose,
 }) => {
+  // `entity.label` is the name the caller already had in hand (canvas
+  // drills and card clicks pass it). Thread it into each body so the
+  // first-open loading state can show the title immediately rather than
+  // blocking the whole form on the detail query. See GOAL-279.
   switch (entity.type) {
     case 'MeSpace':
     case 'WeSpace':
-      return <SpaceDetailsBody spaceId={entity.id} />
+      return <SpaceDetailsBody spaceId={entity.id} label={entity.label} />
     case 'Pulse':
-      return <PulseDetailsBody pulseId={entity.id} />
+      return <PulseDetailsBody pulseId={entity.id} label={entity.label} />
     case 'FieldContext':
-      return <FieldContextDetailsBody contextId={entity.id} />
+      return <FieldContextDetailsBody contextId={entity.id} label={entity.label} />
     case 'Person':
-      return <PersonDetailsBody personId={entity.id} onClose={onClose} />
+      return (
+        <PersonDetailsBody
+          personId={entity.id}
+          onClose={onClose}
+          label={entity.label}
+        />
+      )
     case 'Document':
-      return <DocumentDetailsBody documentId={entity.id} />
+      return <DocumentDetailsBody documentId={entity.id} label={entity.label} />
     case 'ResonanceLink':
-      return <ResonanceDetailsBody resonanceId={entity.id} />
+      return <ResonanceDetailsBody resonanceId={entity.id} label={entity.label} />
     case 'PromiseWeave':
-      return <PromiseWeaveDetailsBody weaveId={entity.id} />
+      return <PromiseWeaveDetailsBody weaveId={entity.id} label={entity.label} />
     case 'Connection':
-      return <ConnectionDetailsBody connectionKey={entity.id} />
+      return <ConnectionDetailsBody connectionKey={entity.id} label={entity.label} />
   }
 }
 
