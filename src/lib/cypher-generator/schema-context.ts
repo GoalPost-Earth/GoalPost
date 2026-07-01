@@ -52,6 +52,14 @@ export const ALLOWED_RELATIONSHIPS = [
   'IS_MEMBER',
   'HAS_CONTEXT',
   'HAS_PULSE',
+  // A FieldContext surfaces the people in its relational world via HAS_PERSON
+  // → (:Person). The target is USUALLY a non-member (:Person:PersonPulse) but
+  // can be a :Person:User (the uploader self-links their own node on ingest),
+  // so match the base :Person label and filter membership by the :User label.
+  // Without this edge whitelisted the generator cannot reach contacts attached
+  // to a field, so "show the non-members connected to me" came back empty
+  // (GOAL-277).
+  'HAS_PERSON',
   'HAS_RESONANCE',
   // PromiseWeave edges — directly analogous to ResonanceLink's
   // SOURCE/TARGET/HAS_RESONANCE. A weave WEAVES the pulse(s) it connects, is
@@ -107,7 +115,14 @@ GoalPost Neo4j schema (read-only). Use only the labels and relationship types li
 # Labels and key properties
 
 Person { id, firstName, lastName, name, email, pronouns, photo, location, careManual, passions, traits, fieldsOfCare, interests }
-  - Adjacent labels: "User" (registered platform user), "PersonPulse" (non-user person in someone's relational world).
+  - Every human is a :Person. An ADJACENT label distinguishes platform access:
+      :User        → a MEMBER — a registered platform user who can log in, owns a MeSpace, creates pulses. Labels: ["Person","User"].
+      :PersonPulse → a NON-MEMBER — someone in a user's relational world (a contact, family, colleague) with no platform login. Labels: ["Person","PersonPulse"].
+      (neither)    → a bare :Person — a NON-MEMBER contact/imported record not yet classified. Labels: ["Person"].
+  - "member(s)" / "platform user(s)" / "people on GoalPost" ⇒ :Person:User.
+  - "non-member(s)" / "contacts" / "people NOT on the platform" / "my relational world" ⇒ a :Person that is NOT a :User (a bare :Person or a :Person:PersonPulse).
+  - To match ONLY non-members, filter by the ABSENCE of the User label with a WHERE predicate: \`MATCH (x:Person) WHERE NOT x:User\`. Do NOT assume every Person is a :User — most Persons in the graph are non-members.
+  - To match ONLY members, add the label to the pattern: \`MATCH (x:Person:User)\` or \`WHERE x:User\`.
 
 Space { id, name, description, visibility, why, location, createdAt }
   - Always co-labeled as MeSpace or WeSpace.
@@ -148,6 +163,7 @@ FieldResonance { label, description } — semantic theme node.
 (SpaceMembership)-[:IS_MEMBER]->(Person)
 (Space)-[:HAS_CONTEXT]->(FieldContext)
 (FieldContext)-[:HAS_PULSE]->(FieldPulse)
+(FieldContext)-[:HAS_PERSON]->(Person)   // people attached to a field's relational world — usually a non-member (:Person:PersonPulse), but occasionally the :Person:User uploader who self-linked. Match base :Person and filter membership by the :User label.
 (FieldContext)-[:HAS_RESONANCE]->(ResonanceLink)
 (ResonanceLink)-[:SOURCE]->(FieldPulse)
 (ResonanceLink)-[:TARGET]->(FieldPulse)

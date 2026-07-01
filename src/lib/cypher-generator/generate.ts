@@ -107,7 +107,9 @@ The user's natural-language intent rarely names entity types precisely. Read the
 - "promise weave" / "weave" / "X's weaves", or "show the node <title>" where the title is a PromiseWeave's → \`PromiseWeave\` nodes (MATCH the \`:PromiseWeave\` label). Reach them via \`(ctx:FieldContext)-[hw:HAS_WEAVE]->(w:PromiseWeave)\`, and include the weave's own edges (\`(w)-[wv:WEAVES]->(:FieldPulse)\`, \`(w)-[wf:WOVEN_FOR]->(:Person)\`) so the connected pulses/person render too. PromiseWeave nodes are INVISIBLE to any query that omits the \`:PromiseWeave\` label — never substitute a FieldPulse keyword match for them.
 - "X's pulses" / "X's goals/resources/stories/cares/values" → \`FieldPulse\` nodes (filter by subtype label when the user names one).
 - "X's spaces" → \`MeSpace\` / \`WeSpace\` nodes X owns or is a member of.
-- "X's people" / "who does X know" → \`Person\` nodes connected via CONNECTED_TO, or co-members of any shared Space.
+- "X's people" / "who does X know" → \`Person\` nodes connected via CONNECTED_TO, people attached to X's field contexts via \`(:FieldContext)-[:HAS_PERSON]->(:Person)\` (usually non-members, occasionally a self-linked member — match base \`:Person\` and filter by the \`:User\` label), or co-members of any shared Space.
+- "members" / "platform users" / "people on GoalPost" connected to X → \`Person\` nodes that ALSO carry the \`:User\` label. Match \`(m:Person:User)\` or add \`WHERE m:User\`.
+- "non-members" / "contacts" / "people NOT on the platform" / "people (not members)" / "my relational world" connected to X → \`Person\` nodes that do NOT carry the \`:User\` label (a bare \`:Person\` or a \`:Person:PersonPulse\`). Match \`(other:Person) WHERE NOT other:User\`. NEVER assume every Person is a member — most are not. When the user explicitly asks for "only non-members", you MUST exclude \`:User\` nodes with \`WHERE NOT other:User\`. Reach non-members BOTH through CONNECTED_TO and through the field contexts they are attached to via HAS_PERSON.
 - "How is X connected to Y?" / "How is X related to Y?" / "What's the path between X and Y?" / "Show me how X and Y are connected" / "Shortest path from X to Y" → a SHORTEST-PATH query between two named entities. Return the path so the runtime renders both endpoints plus every node and edge along the connecting chain. Use Neo4j's \`shortestPath()\` with a type-restricted variable-length relationship — anonymous \`[*..N]\` is REJECTED by the validator.
 - "Show my connection to X and Y" / "Show how I'm connected to X, Y and Z" / "connections among X, Y and Z" / "show me X, Y and Z together" — TWO OR MORE named or canvas-visible entities, of ANY type (Person, pulse, Space, …) → a MULTI-ENTITY co-visualization. The point of these requests is to SEE the entities on the canvas. Anchor EACH entity by its id (use ids from canvasVisibleEntities or the intent whenever present) in its OWN OPTIONAL MATCH so the node is GUARANTEED to come back, then OPTIONAL MATCH a shortestPath between each pair. A missing connection between the entities must NEVER drop the entities themselves — returning them with no edges ("here they are; they don't appear connected") is the CORRECT, desired result, not a failure. See the multi-entity canonical shape below.
 
@@ -152,12 +154,31 @@ When the focal entity is a pulse and the user asks to expand / explore / see its
   - Bind AND return every relationship variable (per Rule 5) so the edges render. Drop the \`ppl\` / \`com\` branches if the intent is clearly only about pulse-to-pulse links.
   - The runtime auth filter drops any connected pulse/person the user cannot see — do NOT add visibility predicates of your own.
 
+# People-by-membership canonical shape (use this for "show the non-members connected to me", "who are my contacts", "people who aren't on the platform", "my members" / "my platform-user connections")
+
+When the intent is about the PEOPLE connected to the user filtered by membership, reach them BOTH via CONNECTED_TO and via the field contexts they are attached to (HAS_PERSON), then filter on the \`:User\` label. Non-members are a bare \`:Person\` or a \`:Person:PersonPulse\` — the defining test is the ABSENCE of \`:User\`, so use \`WHERE NOT other:User\`.
+
+    MATCH (user:Person {id: $userId})
+    OPTIONAL MATCH (user)-[ct:CONNECTED_TO]-(other:Person)
+    WHERE NOT other:User            // drop this WHERE for "all people"; use \`WHERE other:User\` for "only members"
+    OPTIONAL MATCH (user)-[owns:OWNS]->(sp:Space)-[hc:HAS_CONTEXT]->(ctx:FieldContext)-[hpn:HAS_PERSON]->(attached:Person)
+    WHERE NOT attached:User          // same membership filter applied to field-attached people
+    RETURN user, ct, other, owns, sp, hc, ctx, hpn, attached
+    LIMIT 200
+
+Rules for this shape:
+  - The membership filter is a LABEL predicate on the person variable, NOT a relationship type: \`WHERE NOT other:User\` (non-members) or \`WHERE other:User\` (members). A \`:Person:PersonPulse\` and a bare \`:Person\` are BOTH non-members — do not try to enumerate subtype labels, just test for the absence of \`:User\`.
+  - Bind and RETURN every relationship variable (Rule 5) so the CONNECTED_TO / HAS_PERSON edges render.
+  - For "only members" flip both predicates to \`WHERE other:User\` / \`WHERE attached:User\`. For "all the people connected to me" regardless of membership, drop the WHERE lines entirely.
+  - Use a generous \`LIMIT\` (≥ 200). The two OPTIONAL MATCH branches multiply into a cross-product of rows (connections × attached people), and the RETURN contract forbids aggregation — so a tight row LIMIT can truncate a cross-product and silently drop real people. The executor caps DISTINCT nodes at 60, so a high row LIMIT is bounded there, not by the row count.
+  - This shape reaches people through the user's OWNED spaces and direct CONNECTED_TO edges — a scoping choice for "my relational world," not a security boundary. Authorization is enforced solely by the post-execute filter in execute.ts (which currently treats every Person as visible per kb/02); do NOT rely on the OWNS clause as a privacy gate.
+
 # Shortest-path canonical shape (use this for "How is X connected to Y?" / "path between X and Y" / "how is X related to Y?")
 
     MATCH (user:Person {id: $userId})
     MATCH (a:Person {id: "<X_id>"}), (b:Person {id: "<Y_id>"})
     OPTIONAL MATCH p = shortestPath(
-      (a)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(b)
+      (a)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(b)
     )
     RETURN a, b, p
     LIMIT 1
@@ -208,9 +229,9 @@ When the request names two or more entities — especially ones already in canva
     OPTIONAL MATCH (n0:Person {id: "<id of first entity>"})
     OPTIONAL MATCH (n1:FieldPulse {id: "<id of second entity>"})
     OPTIONAL MATCH (n2:Person {id: "<id of third entity>"})
-    OPTIONAL MATCH p01 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n1))
-    OPTIONAL MATCH p02 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
-    OPTIONAL MATCH p12 = shortestPath((n1)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
+    OPTIONAL MATCH p01 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n1))
+    OPTIONAL MATCH p02 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
+    OPTIONAL MATCH p12 = shortestPath((n1)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
     RETURN n0, n1, n2, p01, p02, p12
     LIMIT 1
 
