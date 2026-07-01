@@ -30,7 +30,9 @@ import { GET_PERSON_PROVENANCE } from '@/app/graphql/queries/PROVENANCE_QUERIES'
 interface PersonSelectOption {
   value: string
   label: string
-  email: string
+  // GOAL-275: directory search is name-only; connection targets are chosen by
+  // name, never email.
+  email?: string
 }
 
 export default function PersonProfilePage() {
@@ -175,7 +177,6 @@ export default function PersonProfilePage() {
     .map((candidate: any) => ({
       value: candidate.id,
       label: candidate.name,
-      email: candidate.email,
     }))
 
   const handleCreateConnection = async () => {
@@ -326,10 +327,34 @@ export default function PersonProfilePage() {
     )
   }
 
-  if (error || !person) {
+  if (error) {
     return (
       <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors flex items-center justify-center">
         <div className="text-red-500">Error loading person profile</div>
+      </div>
+    )
+  }
+
+  // GOAL-275: this page selects Space-scoped PII fields, so an unauthorized
+  // viewer (shares no Space with this person, and isn't them) gets an EMPTY
+  // result rather than a partial one — the whole Person row is filtered out.
+  // Render a neutral "not available" state, not an error: nothing failed, the
+  // profile is simply private to people outside their Spaces.
+  if (!person) {
+    return (
+      <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors flex items-center justify-center px-6">
+        <div className="max-w-sm text-center flex flex-col items-center gap-3">
+          <span className="material-symbols-outlined text-4xl text-gp-ink-soft dark:text-white/40">
+            lock_person
+          </span>
+          <h1 className="text-lg font-semibold text-gp-ink-strong dark:text-white">
+            This profile isn&apos;t available
+          </h1>
+          <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft">
+            You can only view someone&apos;s full profile if you share a Space
+            with them. Ask them to add you to a Space to connect.
+          </p>
+        </div>
       </div>
     )
   }
@@ -363,9 +388,11 @@ export default function PersonProfilePage() {
             <h1 className="text-4xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong mb-2">
               {person.name}
             </h1>
-            <p className="text-gp-ink-muted dark:text-gp-ink-soft text-xs">
-              {person.email}
-            </p>
+            {person.email && (
+              <p className="text-gp-ink-muted dark:text-gp-ink-soft text-xs">
+                {person.email}
+              </p>
+            )}
 
             <button
               onClick={handleOpenPersonNode}
@@ -533,9 +560,6 @@ export default function PersonProfilePage() {
                             <h4 className="text-sm font-bold text-gp-ink-strong dark:text-white truncate">
                               {connection.name}
                             </h4>
-                            <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft truncate">
-                              {connection.email}
-                            </p>
                           </div>
                           <button
                             className="cursor-pointer text-[8px] text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-primary transition-colors"
@@ -817,13 +841,13 @@ export default function PersonProfilePage() {
                 isSearchable
                 isClearable
                 isDisabled={creatingConnection}
-                placeholder="Search by name or email..."
+                placeholder="Search by name..."
                 noOptionsMessage={() =>
                   searchInput.trim().length < 2
                     ? 'Type at least 2 characters'
                     : 'No matching people found'
                 }
-                getOptionLabel={(option) => `${option.label} (${option.email})`}
+                getOptionLabel={(option) => option.label}
                 onInputChange={(value, actionMeta) => {
                   if (actionMeta.action === 'input-change') {
                     handleSearchInput(value)
@@ -877,9 +901,6 @@ export default function PersonProfilePage() {
                 <div>
                   <div className="font-semibold text-gp-ink-strong dark:text-white">
                     {selectedPersonOption.label}
-                  </div>
-                  <div className="text-xs text-gp-ink-muted dark:text-white/60">
-                    {selectedPersonOption.email}
                   </div>
                   <button
                     onClick={() => {

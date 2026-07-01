@@ -63,7 +63,6 @@ export const GET_LOGGED_IN_USER = graphql(`
         firstName
         lastName
         name
-        email
         photo
       }
       connectionEdges {
@@ -75,6 +74,12 @@ export const GET_LOGGED_IN_USER = graphql(`
   }
 `)
 
+// GOAL-275: directory FIND by name only. Searching by email (email_CONTAINS)
+// enabled cross-Space email enumeration; `email` is also now Space-scoped, and
+// selecting a gated field would filter the whole Person out of results for
+// non-co-Space callers (breaking discovery). So this query selects ONLY the
+// open directory fields (id/name/photo) and matches on name — every Person
+// stays findable, and no PII is exposed.
 export const SEARCH_PEOPLE_QUERY = graphql(`
   query SearchPeople($nameContains: String!) {
     people(
@@ -82,13 +87,11 @@ export const SEARCH_PEOPLE_QUERY = graphql(`
         OR: [
           { firstName_CONTAINS: $nameContains }
           { lastName_CONTAINS: $nameContains }
-          { email_CONTAINS: $nameContains }
         ]
       }
     ) {
       id
       name
-      email
       photo
     }
   }

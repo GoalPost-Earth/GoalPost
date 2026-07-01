@@ -16,8 +16,11 @@ import { dispatchOpenInfoDrawer } from './types'
  * key: the two person ids sorted and joined with `__` (built in BloomView's
  * relationship-click handler). We resolve both endpoints' display info from
  * `GET_PERSON_CONNECTIONS`: each person's `connections` list contains the
- * *other* endpoint (with name/photo/email), and `connectionEdges` carries the
- * relationship metadata. Resolving from the query (not the click payload) keeps
+ * *other* endpoint (name/photo — directory fields only, per GOAL-275), and
+ * `connectionEdges` carries the relationship metadata. The whole query is
+ * Space-scoped by the Person field-auth gate, so a caller who shares no Space
+ * with (and isn't connected to) either endpoint resolves nothing → NotFound.
+ * Resolving from the query (not the click payload) keeps
  * the drawer URL-refresh-safe — `?entity=Connection:a__b` reopens correctly.
  *
  * Replaces the legacy `ConnectionPanel` (removed with /protected/spaces/*).
@@ -28,7 +31,6 @@ type PersonLite = {
   firstName?: string | null
   lastName?: string | null
   name?: string | null
-  email?: string | null
   photo?: string | null
 }
 
@@ -182,11 +184,6 @@ const PersonCard: FC<{ person: PersonLite | null; fallbackId?: string }> = ({
           <p className="text-sm font-semibold text-gp-ink-strong dark:text-white truncate">
             {name}
           </p>
-          {person?.email && (
-            <p className="text-[11px] text-gp-ink-muted dark:text-white/45 truncate">
-              {person.email}
-            </p>
-          )}
         </div>
         <ArrowRight className="w-4 h-4 shrink-0 text-gp-ink-soft/50 dark:text-white/30 group-hover:text-gp-ink-muted dark:group-hover:text-white/70 group-hover:translate-x-0.5 transition-all" />
       </div>

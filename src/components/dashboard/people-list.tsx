@@ -106,9 +106,6 @@ export function PeopleList({ showAll = false, onViewAll }: PeopleListProps) {
                     <h4 className="text-base font-bold text-slate-800 group-hover:text-gp-primary transition-colors dark:text-white dark:group-hover:text-gp-primary truncate">
                       {person.name}
                     </h4>
-                    <p className="text-xs text-slate-500 truncate group-hover:text-slate-700 transition-colors dark:text-white/60 dark:group-hover:text-white/80">
-                      {person.email}
-                    </p>
                     {spaceCount > 0 && (
                       <p className="text-xs text-gp-primary font-medium mt-1">
                         Owns {spaceCount}{' '}

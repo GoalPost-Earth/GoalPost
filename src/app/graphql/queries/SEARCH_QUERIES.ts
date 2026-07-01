@@ -15,7 +15,7 @@ export const SEARCH_ALL = gql`
         id
         firstName
         lastName
-        email
+        photo
       }
       contexts {
         __typename

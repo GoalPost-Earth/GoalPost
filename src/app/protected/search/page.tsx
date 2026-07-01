@@ -46,7 +46,7 @@ interface GraphQLSearchResult {
       id: string
       firstName: string
       lastName: string
-      email: string
+      photo?: string | null
     }>
     meSpaces: Array<{
       id: string
@@ -98,7 +98,6 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
       id: person.id,
       type: 'person',
       title: `${person.firstName} ${person.lastName}`,
-      subtitle: person.email,
       description: `A person in the network`,
       href: `/protected/dashboard/persons/${person.id}`,
     })

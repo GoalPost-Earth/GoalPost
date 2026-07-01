@@ -30,8 +30,12 @@ import { cn } from '@/lib/utils'
 
 interface PersonSelectOption {
   value: string
+  // GOAL-275: existing-person options carry no email — the directory search is
+  // name+photo only, so `email` is set solely on a typed "invite" option
+  // (isNew). Server-side inviteToSpaceByEmail resolves a typed email to an
+  // existing Person (no duplicate), so client-side email dedupe isn't needed.
   label: string
-  email: string
+  email?: string
   // True for an email typed in that matches no existing GoalPost person —
   // adding it routes through inviteToSpaceByEmail rather than addSpaceMember.
   isNew?: boolean
@@ -160,7 +164,8 @@ export function SpacePermissionsModal({
         .map((person: any) => ({
           value: person.id,
           label: person.name,
-          email: person.email,
+          // No email on directory results (GOAL-275). Left undefined here; set
+          // only on typed "invite" options via getNewOptionData below.
         })),
     [searchResults, existingMemberIds]
   )
@@ -404,18 +409,13 @@ export function SpacePermissionsModal({
                   isSearchable
                   isDisabled={loading}
                   placeholder="Search by name, or type an email to invite someone new..."
-                  // Only offer "Invite <x>" when the typed value is a valid
-                  // email AND no existing (searchable) person already has it —
-                  // otherwise the admin would be nudged into an email invite
-                  // for someone they could just add directly, and could even
-                  // select both the person and the invite for the same email.
-                  isValidNewOption={(inputValue) => {
-                    if (!isValidEmail(inputValue)) return false
-                    const typed = inputValue.trim().toLowerCase()
-                    return !personOptions.some(
-                      (option) => option.email.toLowerCase() === typed
-                    )
-                  }}
+                  // Offer "Invite <x>" for any valid email. Directory options no
+                  // longer carry email (GOAL-275), so we can't dedupe a typed
+                  // email against them here — and we don't need to: server-side
+                  // inviteToSpaceByEmail resolves the email to an existing Person
+                  // when one exists (adding them, never duplicating), so the
+                  // invite path is always safe.
+                  isValidNewOption={(inputValue) => isValidEmail(inputValue)}
                   formatCreateLabel={(inputValue) =>
                     `Invite ${inputValue.trim()}`
                   }

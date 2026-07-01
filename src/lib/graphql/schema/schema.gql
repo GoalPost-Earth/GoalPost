@@ -147,29 +147,146 @@ type Person implements PersonInterface
   firstName: String!
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
+
+  # ── GOAL-275 sensitive-field READ gate ─────────────────────────────────────
+  # The Person type stays open for directory lookup: id / firstName / lastName /
+  # name / photo are readable by any authenticated user (kb/02-user-roles.md).
+  # The fields below carry PII or relational narrative and MUST NOT leak across
+  # Space boundaries. Each carries an identical field-level `@authorization`
+  # `filter` rule that authorizes the read only when the caller
+  #   • is the person           (id_EQ $jwt.user.id), OR
+  #   • shares a Space with them (co-owner or co-member of any Space they own /
+  #                               belong to).
+  #
+  # MECHANISM (important — @neo4j/graphql v6): a field-level `filter` rule is
+  # ANDed onto the PARENT Person's match *whenever that field appears in the
+  # selection set*. It does NOT null just the one field — an unauthorized caller
+  # who selects any gated field does not receive the Person row at all (it is
+  # filtered out). Consequences, by design:
+  #   • Directory/search queries that select ONLY the open fields
+  #     (id/firstName/lastName/name/photo) never trigger the rule, so every
+  #     Person is still findable by name cross-Space.
+  #   • A query that selects a gated field (the Person / Connection drawers,
+  #     the profile page) returns the Person to authorized callers and an EMPTY
+  #     result to everyone else — so every such surface MUST render a graceful
+  #     not-found. `filter` (not `validate`) is used so this fails closed by
+  #     omission rather than erroring the whole operation.
+  # This is fail-closed and leak-free; it is a deliberately stricter posture
+  # than "show name+photo, hide the sensitive bits" (which the declarative
+  # filter cannot express without a raw projection).
+  #
+  # The predicate reuses the exact owner/member pattern from the WeSpace +
+  # SpaceMembership authorization filters above, over the pre-existing
+  # `ownsSpaces` / `memberOf` relationships — so it adds NO new filter surface.
+  # A legacy CONNECTED_TO edge does NOT unlock these fields: expressing "caller
+  # is connected to this person" declaratively would require a CONNECTED_TO
+  # relationship filter on PersonWhere, which `people(where:)` would then expose
+  # for cross-Space connection-graph enumeration — re-opening the very leak this
+  # ticket closes. CONNECTED_TO is legacy (migrating to ResonanceLinks), so
+  # sharing a Space is the intended path to a person's private profile.
+  # Keep the OR-branches byte-identical on every gated field — a drifted copy
+  # is a leak.
+  # ────────────────────────────────────────────────────────────────────────────
+  # NOTE: `email` stays filterable — `people(where: { email_EQ })` is the
+  # self-bootstrap lookup (GET_LOGGED_IN_USER). Its value is still gated by the
+  # @authorization filter below; only the exact-match filter capability remains.
   email: String
-  
-  # Profile properties (merged from reference)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
+
+  # Profile properties (merged from reference).
+  # photo/avatar/status stay open (directory / presence — non-PII); the PII
+  # scalars — including `gender`, which is collected on the person forms — carry
+  # the GOAL-275 gate below.
   photo: String
   phone: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   pronouns: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   location: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   avatar: String
   status: String
   gender: String
-  
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
+
   # Rich profile content
   # `description` is a short relational note about a PersonPulse — who they are
   # in the user's world. Distinct from the CONNECTED_TO `why` (how the user
   # relates to them). Populated by the assistant at create time and editable via
   # the authorized `updatePersonPulse` mutation (NOT the self-gated updatePeople).
   description: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   careManual: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   favorites: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   passions: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   traits: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   fieldsOfCare: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   interests: String
+    @filterable(byValue: false)
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
 
   # Authentication properties (for users)
   password: String @private
@@ -208,9 +325,14 @@ type Person implements PersonInterface
   # Modern relationships (pulse-first architecture)
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
   memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: IN)
-  
+
   # Legacy relationships (preserved for migration)
-  # NOTE: Person-to-person connections should migrate to ResonanceLinks
+  # NOTE: Person-to-person connections should migrate to ResonanceLinks.
+  # Both fields carry the SAME GOAL-275 gate as the PII scalars: the connection
+  # graph + narrative (`why`/`interests`) are only readable when the caller is
+  # the person or shares a Space with them. Each endpoint in the returned
+  # `connections` list is itself a Person, so its own PII re-enters the
+  # field-auth gate and stays independently scoped.
   connections: [Person!]!
     @cypher(
       statement: """
@@ -219,6 +341,11 @@ type Person implements PersonInterface
       """
       columnName: "other"
     )
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   connectionEdges: [PersonConnectionEdge!]!
     @cypher(
       statement: """
@@ -227,6 +354,11 @@ type Person implements PersonInterface
       """
       columnName: "connectionEdge"
     )
+    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
+      { id_EQ: "$jwt.user.id" }
+      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
+      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+    ] } } }])
   
   # PULSE ACCESS: Pulses are accessed through FieldContexts in owned/member Spaces
   # To get a person's pulses:
@@ -252,10 +384,22 @@ type Person implements PersonInterface
 User authentication and preferences.
 Extends Person with login and feature flags.
 Multi-label: ["Person", "User"]
-Authorization: Any authenticated user can query any User (bypasses Person restrictions for member lookup).
+Authorization: the auto-generated `users` READ query is disabled (GOAL-275).
+Every :User node also carries the :Person label, so it is readable through the
+`people` query — where the Person type's field-level PII gate applies. Exposing
+a second, UNGATED read path here (`users { email … }`) let any authenticated
+caller enumerate every registered account's PII, bypassing that gate. Legitimate
+by-email member lookup goes through the narrow, exact-match `findUserByEmail`
+resolver (user-lookup-resolver.ts), not a broad `users` scan.
 """
 type User implements PersonInterface
   @node(labels: ["Person", "User"])
+  # Disable the auto-generated `users` / `usersConnection` / `usersAggregate`
+  # READ queries. This is the READ half of GOAL-275: without it, the ungated
+  # User type re-opens the cross-Space PII leak that the Person field-auth gate
+  # closes (a :User is the same node as a :Person, just addressed by a second
+  # GraphQL type). :User nodes stay readable — gated — via `people`.
+  @query(read: false, aggregate: false)
   # Drop the auto-generated `createUsers` mutation entirely. A :User carries
   # auth state (password, refreshToken) and is the login identity, so an
   # ungated create let any authenticated token holder mint an arbitrary
@@ -2040,21 +2184,16 @@ type Query {
   # LEGACY SUBSTRING QUERIES (Preserved for backward compatibility)
   # ============================================================================
   
-  """
-  Search for people by substring match on firstName or lastName.
-  LEGACY: Consider using searchAll for unified search experience.
-  """
-  peopleSubstringSearch(key: String!): [Person!]!
-    @cypher(
-      statement: """
-      MATCH (person:Person)
-      WHERE toLower(person.firstName) CONTAINS toLower($key) 
-        OR toLower(person.lastName) CONTAINS toLower($key)
-      RETURN person
-      """
-      columnName: "person"
-    )
-  
+  # GOAL-275: `peopleSubstringSearch` was removed. It was a root @cypher query
+  # returning full :Person nodes (`RETURN person`) with NO @authorization and no
+  # lean projection — i.e. an unauthenticated-by-Space PII surface of the exact
+  # class this ticket closes, and with NO parent-node gate to fall back on. It
+  # had zero consumers (search goes through `searchAll`, which is lean-projected
+  # server-side). Removed outright rather than gated, so its PII safety does not
+  # depend on whether field-level @authorization reaches @cypher-materialized
+  # nodes. If people-substring search is ever reinstated, project only
+  # id/firstName/lastName/photo (see `searchAll` in search-resolver.ts).
+
   """
   Search for goals by substring match on title or content.
   LEGACY: Consider using searchAll for unified search experience.

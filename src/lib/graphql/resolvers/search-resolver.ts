@@ -18,7 +18,8 @@ interface SearchResults {
  * Returns up to 10 results of each entity type.
  *
  * Searches:
- * - People: firstName, lastName, email
+ * - People: firstName, lastName (name only — GOAL-275; never email/PII, and
+ *   the projection returns only directory-safe columns id/firstName/lastName/photo)
  * - Communities: name
  * - MeSpaces: name
  * - WeSpaces: name
@@ -67,16 +68,20 @@ export const searchResolvers = {
         resourcePulsesResult,
         storyPulsesResult,
       ] = await Promise.all([
-        // Search people by firstName, lastName, or email
+        // Search people by name only. GOAL-275: this custom resolver bypasses
+        // the Person type's field-level @authorization, so it MUST NOT search
+        // by (or return) PII. Searching `email CONTAINS` allowed cross-Space
+        // email enumeration; returning the whole node leaked every PII scalar.
+        // We match on name and project ONLY directory-safe fields.
         peopleSession.executeRead((tx) =>
           tx.run(
             `
             MATCH (p:Person)
-            WHERE 
+            WHERE
               toLower(p.firstName) CONTAINS $searchTerm OR
-              toLower(p.lastName) CONTAINS $searchTerm OR
-              toLower(p.email) CONTAINS $searchTerm
-            RETURN p
+              toLower(p.lastName) CONTAINS $searchTerm
+            RETURN p.id AS id, p.firstName AS firstName,
+                   p.lastName AS lastName, p.photo AS photo
             LIMIT 10
             `,
             { searchTerm }
@@ -270,8 +275,18 @@ export const searchResolvers = {
           }
         })
 
+      // People are projected to directory-safe scalar columns (not a node),
+      // so map them explicitly rather than via extractProperties (which reads
+      // `.properties` off a Node). Keeps PII out of the search response.
+      const people: EntityRecord[] = peopleResult.records.map((record) => ({
+        id: record.get('id'),
+        firstName: record.get('firstName'),
+        lastName: record.get('lastName'),
+        photo: record.get('photo'),
+      }))
+
       return {
-        people: extractProperties(peopleResult.records, 'p'),
+        people,
         communities: extractProperties(communitiesResult.records, 'c'),
         meSpaces: extractProperties(meSpacesResult.records, 's'),
         weSpaces: extractProperties(weSpacesResult.records, 's'),

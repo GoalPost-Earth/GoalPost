@@ -207,7 +207,6 @@ export const GET_PERSON_CONNECTIONS = graphql(`
         firstName
         lastName
         name
-        email
         photo
       }
       connectionEdges {

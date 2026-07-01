@@ -42,7 +42,6 @@ export const GET_PERSON_PROFILE = graphql(`
         firstName
         lastName
         name
-        email
         photo
       }
       connectionEdges {
@@ -149,10 +148,7 @@ export const GET_RELATED_PEOPLE = graphql(`
     relatedPeople {
       id
       name
-      email
-      traits
-      passions
-      fieldsOfCare
+      photo
       ownsSpaces {
         id
         name
@@ -209,15 +205,3 @@ export const GET_PEOPLE_AND_THEIR_COREVALUES = graphql(`
   }
 `)
 
-export const GET_USER_BY_ID = graphql(`
-  query getUserById($id: ID!) {
-    people(where: { id_EQ: $id }) {
-      id
-      name
-      email
-      traits
-      passions
-      fieldsOfCare
-    }
-  }
-`)

@@ -273,11 +273,6 @@ export const PersonDetailsBody: FC<{
                         <p className="text-sm font-semibold text-gp-ink-strong dark:text-white/90 truncate">
                           {connection.name}
                         </p>
-                        {connection.email && (
-                          <p className="text-[10px] text-gp-ink-muted dark:text-white/45 truncate">
-                            {connection.email}
-                          </p>
-                        )}
                       </div>
                       <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all" />
                     </div>

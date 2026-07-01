@@ -1,13 +1,16 @@
 import { Context } from '@/config/types'
 
+// GOAL-275: directory-safe shape only. This resolver returns [Person!]! but is
+// a custom resolver, so the Person type's field-level PII @authorization does
+// NOT apply to the objects it emits — it must therefore never carry PII (the
+// related set includes CONNECTED_TO-only contacts the caller shares no Space
+// with). Name + photo + owned spaces are the directory fields; `name` is
+// resolved from firstName/lastName by the Person.name customResolver.
 interface PersonRecord {
   id: string
   firstName: string
   lastName: string
-  email: string
-  traits?: string
-  passions?: string
-  fieldsOfCare?: string
+  photo?: string | null
   [key: string]: unknown
 }
 
@@ -80,23 +83,30 @@ export const relatedPeopleResolvers = {
             END
           }) as ownsSpaces
           
-          RETURN person, ownsSpaces
-          ORDER BY person.firstName, person.lastName
+          // GOAL-275: project only directory-safe columns. Returning the whole
+          // node (person.properties) leaked PII for CONNECTED_TO-only contacts,
+          // since this custom resolver bypasses the Person field-level auth.
+          RETURN person.id AS id,
+                 person.firstName AS firstName,
+                 person.lastName AS lastName,
+                 person.photo AS photo,
+                 ownsSpaces
+          ORDER BY firstName, lastName
           `,
           { userId: currentUserId }
         )
       )
 
-      // Extract properties from Neo4j records and include ownsSpaces
+      // Map the directory-safe columns straight through (no `.properties`, no
+      // PII). `name` is derived by the Person.name customResolver.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return result.records.map((record: any) => {
-        const person = record.get('person').properties as PersonRecord
-        const ownsSpaces = record.get('ownsSpaces') || []
-        return {
-          ...person,
-          ownsSpaces,
-        }
-      })
+      return result.records.map((record: any) => ({
+        id: record.get('id'),
+        firstName: record.get('firstName'),
+        lastName: record.get('lastName'),
+        photo: record.get('photo'),
+        ownsSpaces: record.get('ownsSpaces') || [],
+      }))
     } catch (error) {
       console.error('Error fetching related people:', error)
       throw new Error('Failed to fetch related people')
