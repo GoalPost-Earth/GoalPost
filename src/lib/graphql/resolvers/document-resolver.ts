@@ -11,6 +11,7 @@ import {
 import { createS3BlobStore } from '@/lib/ingest/s3-blob-store'
 import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
 import { handleDeleteDocument } from '@/lib/ingest/handle-delete-document'
+import { buildDocumentDownloadUrl } from '@/lib/ingest/document-download-url'
 
 /**
  * GraphQL surface for the doc-ingestion epic.
@@ -144,6 +145,15 @@ export const documentMutations = {
  * documents/list expected in v1.
  */
 export const documentTypeResolvers = {
+  /**
+   * GOAL-283: the durable, Space-scoped link to open/download the uploaded
+   * file. Computed from the document id — the route re-checks access and mints
+   * a fresh presigned URL on every hit, so we never persist an expiring URL.
+   * Deriving it (rather than storing an absolute URL on the node) also avoids
+   * baking the current deploy domain into the graph.
+   */
+  downloadUrl: (source: { id?: string }): string | null =>
+    source?.id ? buildDocumentDownloadUrl(source.id) : null,
   extractedPeople: async (source: { id?: string }) => {
     if (!source?.id) return []
     const session = driver.session()

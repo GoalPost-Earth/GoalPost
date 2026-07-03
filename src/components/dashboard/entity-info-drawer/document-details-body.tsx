@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 import {
   ArrowRight,
   Calendar,
+  ExternalLink,
   FileText,
   Forward,
   Hash,
@@ -33,6 +34,7 @@ const GET_DOCUMENT_BY_ID = gql`
       mimeType
       sizeBytes
       pageCount
+      downloadUrl
       userHint
       summary
       concepts
@@ -72,6 +74,7 @@ interface DocumentDetail {
   mimeType: string
   sizeBytes: number
   pageCount: number | null
+  downloadUrl: string | null
   userHint: string | null
   summary: string | null
   concepts: string[] | null
@@ -251,7 +254,21 @@ export const DocumentDetailsBody: FC<{
         />
       </section>
 
-      <section className="px-6 pb-3">
+      {document.downloadUrl && (
+        <section className="px-6 pb-1">
+          <a
+            href={document.downloadUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center justify-center gap-2 px-5 h-11 rounded-xl bg-gp-primary hover:bg-gp-primary/90 text-white font-semibold text-sm shadow-lg shadow-gp-primary/20 transition-all cursor-pointer ring-2 ring-transparent focus-visible:ring-white/40"
+          >
+            <ExternalLink className="w-4 h-4 shrink-0" />
+            Open file
+          </a>
+        </section>
+      )}
+
+      <section className="px-6 pt-3 pb-3">
         <p className="text-[11px] text-gp-ink-muted dark:text-white/50">
           Uploaded by {uploaderName}
         </p>

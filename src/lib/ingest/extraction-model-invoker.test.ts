@@ -3,6 +3,7 @@ import {
   type ExtractionModelClient,
   type ExtractionModelInput,
 } from './extraction-model-invoker'
+import { buildDocumentDownloadUrl } from './document-download-url'
 
 const baseInput: ExtractionModelInput = {
   documentText: 'Sarah Chen led the migration. Bob arrived late.',
@@ -387,6 +388,115 @@ describe('ExtractionModelInvoker', () => {
       expect(result.assistantText.toLowerCase()).toMatch(
         /already track|update|match/
       )
+    })
+  })
+
+  // GOAL-283 — a member-uploaded document IS the resource. When the extractor
+  // reads no explicit location for a ResourcePulse, create_pulse.location is
+  // auto-populated with the durable, Space-scoped download URL for the file so
+  // the Resource is always openable/shareable. An extracted location is never
+  // clobbered, and the fallback is ResourcePulse-only.
+  describe('GOAL-283 — ResourcePulse location auto-populate', () => {
+    // Pin the base url so the expected download URL is deterministic and the
+    // suite never depends on the ambient environment.
+    const ORIGINAL_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+    const ORIGINAL_VERCEL_HOST = process.env.VERCEL_PROJECT_PRODUCTION_URL
+
+    beforeEach(() => {
+      process.env.NEXT_PUBLIC_BASE_URL = 'https://app.goalpost.test'
+      delete process.env.VERCEL_PROJECT_PRODUCTION_URL
+    })
+
+    afterEach(() => {
+      if (ORIGINAL_BASE_URL === undefined)
+        delete process.env.NEXT_PUBLIC_BASE_URL
+      else process.env.NEXT_PUBLIC_BASE_URL = ORIGINAL_BASE_URL
+      if (ORIGINAL_VERCEL_HOST === undefined)
+        delete process.env.VERCEL_PROJECT_PRODUCTION_URL
+      else process.env.VERCEL_PROJECT_PRODUCTION_URL = ORIGINAL_VERCEL_HOST
+    })
+
+    it('auto-populates location with the document download URL when the extractor supplies none', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'ResourcePulse',
+            title: 'Community grant guide',
+            content: 'A guide to applying for the neighbourhood grant.',
+            // no location extracted from the text
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('create_pulse')
+      expect(result.toolCalls[0].args.location).toBe(
+        buildDocumentDownloadUrl(baseInput.documentId)
+      )
+      // Anchored on the durable download endpoint keyed to this document.
+      expect(result.toolCalls[0].args.location).toBe(
+        'https://app.goalpost.test/api/ingest/document/doc_1/download'
+      )
+      expect(result.toolCalls[0].args.location as string).toMatch(
+        /\/api\/ingest\/document\/doc_1\/download$/
+      )
+    })
+
+    it('does not clobber an extracted location on a ResourcePulse', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'ResourcePulse',
+            title: 'Tool library',
+            content: 'Borrowable tools for members.',
+            location: 'Community Hall',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].args.location).toBe('Community Hall')
+      expect(result.toolCalls[0].args.location).not.toBe(
+        buildDocumentDownloadUrl(baseInput.documentId)
+      )
+    })
+
+    it('does NOT auto-populate location for a GoalPulse or StoryPulse with no location', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Ship the migration',
+            content: 'Cut over before end of quarter.',
+          },
+          {
+            kind: 'StoryPulse',
+            title: 'Why we started',
+            content: 'The old system paged the team weekly.',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(2)
+      const byType = new Map(
+        result.toolCalls.map((c) => [c.args.pulseType as string, c.args])
+      )
+      expect(byType.get('GoalPulse')).toBeDefined()
+      expect(byType.get('StoryPulse')).toBeDefined()
+      expect(byType.get('GoalPulse')!.location).toBeUndefined()
+      expect(byType.get('StoryPulse')!.location).toBeUndefined()
     })
   })
 })

@@ -4,6 +4,7 @@ import type {
   RosterPulse,
 } from './field-context-roster'
 import type { SynthesizedToolCall } from './synthesized-turn-appender'
+import { buildDocumentDownloadUrl } from './document-download-url'
 
 /**
  * Wraps the extraction LLM call. The actual model invocation is
@@ -200,7 +201,16 @@ function buildCreatePulseArgs(
     args.availability = p.availability
   }
   if (p.why && p.why.trim()) args.why = p.why.trim()
-  if (p.location && p.location.trim()) args.location = p.location.trim()
+  if (p.location && p.location.trim()) {
+    args.location = p.location.trim()
+  } else if (p.kind === 'ResourcePulse' && input.documentId) {
+    // GOAL-283: a member-uploaded document is itself the resource. When the
+    // extractor didn't read an explicit location from the text, fall back to a
+    // durable, Space-scoped link to the uploaded file so the Resource is always
+    // openable/shareable. Never clobber an extracted/manual location above; the
+    // `documentId` guard keeps the fallback from writing a malformed URL.
+    args.location = buildDocumentDownloadUrl(input.documentId)
+  }
   if (p.time && p.time.trim()) args.time = p.time.trim()
   return args
 }

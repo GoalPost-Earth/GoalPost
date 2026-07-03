@@ -876,6 +876,13 @@ type Document
   blobKey: String
   """Provider-issued URL for the blob. May be expiring/private; treat as opaque."""
   blobUrl: String
+  """Durable, Space-scoped in-app link to open/download the uploaded file
+  (GOAL-283). Stable per document — resolves through
+  GET /api/ingest/document/<id>/download, which re-checks Space read access and
+  mints a fresh presigned S3 URL on every hit. This is the permanent handle to
+  the file; unlike blobUrl it never expires and is safe to share within the
+  Space. Computed from the document id (see documentTypeResolvers.downloadUrl)."""
+  downloadUrl: String @customResolver(requires: "id")
   """Optional one-line "What is this?" hint captured at upload. Reused on re-extract (slice 6)."""
   userHint: String
   """AI-generated 1-paragraph synopsis of the document content. Produced at

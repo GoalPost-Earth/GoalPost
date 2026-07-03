@@ -443,7 +443,10 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
           {optional.location && (
             <div className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55">
               <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-              <span className="break-words">{optional.location}</span>
+              <LinkifiedText
+                text={optional.location}
+                className="min-w-0 break-words"
+              />
             </div>
           )}
           {optional.time && (
