@@ -21,11 +21,14 @@ import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
  * node, mints a fresh presigned GET URL, and routes to Gemini (PDF) or
  * OpenAI (text) for entity extraction + summarization.
  *
- * The orchestrator never holds the file bytes. The 60s `maxDuration` ceiling
- * is set by Vercel's hobby plan; raise on prod if Gemini calls trend higher.
+ * The orchestrator never holds the file bytes. `maxDuration` is raised to the
+ * Pro-plan ceiling (300s) as a stopgap for large documents whose Gemini/OpenAI
+ * extraction + summarization was blowing past 60s and returning 504s. The
+ * durable fix is to make ingestion asynchronous (enqueue + background job) so
+ * the request no longer holds the full pipeline — tracked in GOAL-292.
  */
 
-export const maxDuration = 60
+export const maxDuration = 300
 
 function unauthorized(message = 'Authentication required') {
   return Response.json({ error: message }, { status: 401 })
