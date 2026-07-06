@@ -41,7 +41,7 @@
 
 **Submit every defect through the GoalPost bug-report form:**
 
-➡️ **https://airtable.com/apppNaYVL3Q0RT9vG/pag6UYEqtG5GB21CY/form**
+➡️ **https://clientos.thecodefoundry.dev/r/06a9dc4f76fe47a98a3512a037b74e74ead02a72157e478daef75002911f8dba**
 
 Submit a **separate form entry for each issue** (don't batch several bugs into one). Before you open the form, gather the details below so you can fill it in quickly and the team can reproduce without follow-up:
 
@@ -58,7 +58,7 @@ Submit a **separate form entry for each issue** (don't batch several bugs into o
 - Screenshot or screen recording (attach in the form)
 ```
 
-> Keep the local **Defect Log** table in §3 as a running index of what you've filed, so the sign-off summary stays complete even though the canonical record lives in Airtable.
+> Keep the local **Defect Log** table in §3 as a running index of what you've filed, so the sign-off summary stays complete even though the canonical record lives in the bug-report system above.
 
 ### 1.5 Severity guide
 
@@ -346,6 +346,14 @@ The assistant has three **modes**: **Standard** (direct DB answers), **Aiden** (
 
 ☐ Pass ☐ Fail — Notes:
 
+### UAT-F6 — Assistant surfaces non-member people
+**Pre:** A **PersonPulse** (a person record who is not a platform user — see UAT-E5) is attached to one of your FieldContexts, alongside at least one actual member/User contact.
+1. Ask the assistant something like *"Who's connected to me who isn't a member?"* or *"Show the non-members connected to me."*
+
+**Expected:** The assistant returns the non-member PersonPulse contact(s) distinctly from member contacts — not an empty result. No raw IDs in the reply.
+
+☐ Pass ☐ Fail — Notes:
+
 ---
 
 ## G. Canvas Views
@@ -478,6 +486,16 @@ The bottom-center action bar has a **view toggle**: **Dashboard view** (cards), 
 1. Re-extract the document (if offered) and/or delete it.
 
 **Expected:** Re-extract creates a fresh ingest thread and refreshes results. Deleting the document removes the file; **already-extracted entities survive** (only the provenance link drops).
+
+☐ Pass ☐ Fail — Notes:
+
+### UAT-I6 — Durable document link
+**Pre:** A document uploaded in UAT-I1/I2, with at least one extracted Resource pulse that had no location of its own.
+1. Open the document's detail drawer → confirm an **"Open file"** link is present, and click it.
+2. Open the extracted Resource pulse's detail drawer → confirm its **location** field shows the same link (auto-populated only when extraction found no location — it should never overwrite a location the extraction did find).
+3. Copy the link, log out, and paste it into the address bar.
+
+**Expected:** "Open file" opens/downloads the original document (redirects to a fresh, working S3 URL — the link itself doesn't expire even though the underlying signed URL does). Logged-out access redirects to `/auth/login` instead of serving the file or raw JSON. As **User B** (no access to this Space), pasting the same link is denied, not served.
 
 ☐ Pass ☐ Fail — Notes:
 
@@ -615,6 +633,14 @@ These are the most important checks — they protect data sovereignty.
 1. Log out User A; confirm User B's session in the other browser is unaffected and still scoped to User B's data only.
 
 **Expected:** Sessions are independent; no data bleed between accounts.
+
+☐ Pass ☐ Fail — Notes:
+
+### UAT-N5 — Person PII cross-Space isolation
+**Pre:** User A has a Person record (their own profile, or a PersonPulse they added) with PII filled in — email, phone, location, pronouns, description, careManual, favorites, passions, traits, fieldsOfCare, interests, gender. User B shares **no** Space with User A (or with the PersonPulse's owning Space).
+1. As **User B**, try to view that Person's profile/detail drawer directly (e.g. via a known id/URL, search, or a connections listing).
+
+**Expected:** User B sees, at most, the public directory fields (name, photo) — never the PII fields above. The profile should render as a graceful "not found" rather than error, and PII should not leak through search, add-member/discovery pickers, or connection listings either. Any PII visible across a Space boundary is a **Blocker**.
 
 ☐ Pass ☐ Fail — Notes:
 
