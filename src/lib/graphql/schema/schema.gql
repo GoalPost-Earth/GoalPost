@@ -155,6 +155,8 @@ type Person implements PersonInterface
   # Space boundaries. Each carries an identical field-level `@authorization`
   # `filter` rule that authorizes the read only when the caller
   #   • is the person           (id_EQ $jwt.user.id), OR
+  #   • created the person node  (createdBy_SOME id_EQ $jwt.user.id — their own
+  #                               imported / ingested contact), OR
   #   • shares a Space with them (co-owner or co-member of any Space they own /
   #                               belong to).
   #
@@ -177,13 +179,23 @@ type Person implements PersonInterface
   #
   # The predicate reuses the exact owner/member pattern from the WeSpace +
   # SpaceMembership authorization filters above, over the pre-existing
-  # `ownsSpaces` / `memberOf` relationships — so it adds NO new filter surface.
-  # A legacy CONNECTED_TO edge does NOT unlock these fields: expressing "caller
-  # is connected to this person" declaratively would require a CONNECTED_TO
-  # relationship filter on PersonWhere, which `people(where:)` would then expose
-  # for cross-Space connection-graph enumeration — re-opening the very leak this
-  # ticket closes. CONNECTED_TO is legacy (migrating to ResonanceLinks), so
-  # sharing a Space is the intended path to a person's private profile.
+  # `ownsSpaces` / `memberOf` / `createdBy` relationships — so it adds NO new
+  # filter surface (all three are already declared `@relationship` fields on
+  # this type, so their `*_SOME` filters already exist in PersonWhere).
+  # The `createdBy_SOME` branch closes the regression where a user could not
+  # open the profile of a non-member contact they themselves imported/ingested
+  # (e.g. a document-extracted PersonPulse): such a contact owns no Space and is
+  # a member of none, so the owner/member branches miss it, yet it is created
+  # by — and belongs to — the caller. It only ever unlocks persons the caller
+  # created, and CREATED_BY edges are written server-side (never via the
+  # self-gated updatePeople), so it cannot be forged to reach a stranger's PII.
+  # A legacy CONNECTED_TO edge, by contrast, does NOT unlock these fields:
+  # expressing "caller is connected to this person" declaratively would require
+  # adding a CONNECTED_TO relationship filter to PersonWhere, which `people(where:)`
+  # would then expose for cross-Space connection-graph enumeration — re-opening
+  # the very leak this ticket closes. CONNECTED_TO is legacy (migrating to
+  # ResonanceLinks), so createdBy / sharing a Space are the intended paths to a
+  # person's private profile.
   # Keep the OR-branches byte-identical on every gated field — a drifted copy
   # is a leak.
   # ────────────────────────────────────────────────────────────────────────────
@@ -193,6 +205,7 @@ type Person implements PersonInterface
   email: String
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -206,6 +219,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -213,6 +227,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -220,6 +235,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -229,6 +245,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -242,6 +259,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -249,6 +267,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -256,6 +275,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -263,6 +283,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -270,6 +291,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -277,6 +299,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -284,6 +307,7 @@ type Person implements PersonInterface
     @filterable(byValue: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -343,6 +367,7 @@ type Person implements PersonInterface
     )
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])
@@ -356,6 +381,7 @@ type Person implements PersonInterface
     )
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
     ] } } }])

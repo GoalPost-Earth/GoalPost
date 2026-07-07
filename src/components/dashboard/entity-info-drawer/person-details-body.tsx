@@ -8,6 +8,7 @@ import { ArrowRight, Hash, Layers, Sparkles, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useFocalEntity } from '@/contexts'
 import {
+  GET_PERSON_DIRECTORY,
   GET_PERSON_OWNED_PULSES,
   GET_PERSON_PROFILE,
 } from '@/app/graphql/queries/PERSON_QUERIES'
@@ -28,6 +29,7 @@ import {
   SectionHeader,
   StatCell,
 } from './shared'
+import { LimitedPersonBody } from './limited-person-body'
 import { dispatchOpenInfoDrawer } from './types'
 
 /**
@@ -62,6 +64,20 @@ export const PersonDetailsBody: FC<{
     }
   )
   const pulsesFailed = !!pulsesError
+
+  // Directory-only fallback (open fields — never triggers the GOAL-275 PII
+  // gate). Lets us tell "this person exists but their profile is private to
+  // you" apart from "this person is truly gone", so the former renders a
+  // graceful limited card instead of the "no longer available" not-found.
+  const {
+    data: directoryData,
+    loading: directoryLoading,
+    error: directoryError,
+    refetch: refetchDirectory,
+  } = useQuery(GET_PERSON_DIRECTORY, {
+    variables: { personId },
+    fetchPolicy: 'cache-and-network',
+  })
 
   const { data: provenanceData } = useQuery<{
     people?: { id: string; extractedFrom?: ProvenanceDocument[] }[]
@@ -103,6 +119,29 @@ export const PersonDetailsBody: FC<{
       )
       return <ErrorBody detail={error.message} onRetry={() => refetch()} />
     }
+    // No error but no person => the PII gate filtered the node out for this
+    // caller. If the person still resolves via the open directory query, they
+    // exist and are in the caller's network — show a graceful limited card
+    // rather than the misleading "no longer available / you lost access".
+    if (directoryLoading && !directoryData)
+      return (
+        <BodySkeleton
+          label={label}
+          titleClassName="text-xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words"
+        />
+      )
+    const directoryPerson = directoryData?.people?.[0]
+    if (directoryPerson)
+      return <LimitedPersonBody person={directoryPerson} onClose={onClose} />
+    // The directory query itself failing is distinct from "person is gone" —
+    // surface the real error (with retry) rather than a misleading not-found.
+    if (directoryError)
+      return (
+        <ErrorBody
+          detail={directoryError.message}
+          onRetry={() => refetchDirectory()}
+        />
+      )
     return <NotFoundBody />
   }
 
