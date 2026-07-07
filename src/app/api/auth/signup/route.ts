@@ -94,7 +94,17 @@ export async function POST(req: NextRequest) {
                     person.onboardingSkipped = false,
                     person.inviteTokenHash = NULL,
                     person.inviteTokenExpires = NULL
-
+                WITH person
+                // Signing up over a placeholder contact makes this person
+                // self-sovereign. A placeholder carries (person)-[:CREATED_BY]->
+                // (importer); left intact it would keep satisfying the Person
+                // PII createdBy_SOME read gate, letting whoever imported them
+                // read the now-real user's full profile cross-Space without
+                // consent. Shed that ownership edge on adoption. No-op for a
+                // brand-new signup (no CREATED_BY exists).
+                OPTIONAL MATCH (person)-[createdByEdge:CREATED_BY]->(:Person)
+                DELETE createdByEdge
+                WITH DISTINCT person
                 RETURN person.id as personId`,
         {
           email,
