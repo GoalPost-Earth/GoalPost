@@ -64,6 +64,7 @@ Domain knowledge lives in `kb/`. Read the relevant file before working on any fe
 | `kb/06-adr.md`            | Architecture decisions (graph-first, pulse-first, space-based privacy, etc.) |
 | `kb/07-ai-assistant-ux.md` | AI assistant UX conventions — raw-ID prohibition, SESSION CONTEXT shape, tool design, HITL gate, model choice |
 | `kb/08-migration.md`       | Prod-to-dev DB migration — ontology mapping, env setup, gotchas, operational commands |
+| `kb/09-feedback-triage.md` | Prototype feedback → Jira triage — the "Prototype 1.8 Issues" sheet, the mandatory dedup-against-`prototype1-feedback` rule, known batches |
 
 The `kb/` directory is the sole canonical knowledge base. There is no narrative `docs/` tree — that was retired. `docs/` now holds only support artifacts: Cypher seed snippets, the OWL ontology, and a few example TSX files.
 
@@ -101,6 +102,7 @@ Do NOT write code without reading the relevant KB files first. This is non-negot
 | Architecture decisions or trade-offs                    | `kb/06-adr.md`                                         |
 | Assistant prompts, tools, chat routes, or anything the model emits to a user | `kb/07-ai-assistant-ux.md`              |
 | Re-running prod-to-dev DB migration, changing the script, or debugging it    | `kb/08-migration.md`                    |
+| Filing Jira tickets from prototype feedback (spreadsheet, demo notes, etc.)  | `kb/09-feedback-triage.md` — dedup FIRST |
 
 ### Design — You MUST engage the design skill before ANY UI work
 
