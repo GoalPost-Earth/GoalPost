@@ -1,12 +1,13 @@
 export const dynamic = 'force-dynamic'
 
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import { MaintenanceScreen } from '@/components/screens'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import { AppProvider } from '@/contexts'
 import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
+import { resolveAppBaseUrl } from '@/lib/url/app-base-url'
 import './globals.css'
 
 const inter = Inter({
@@ -15,9 +16,55 @@ const inter = Inter({
   variable: '--font-inter',
 })
 
+// Canonical public base URL — resolved from server config only (never request
+// headers), shared with password-reset + durable-download links. Used as the
+// metadataBase so og:image / og:url resolve to absolute URLs.
+const SITE_URL = resolveAppBaseUrl()
+
+const SITE_DESCRIPTION =
+  'A community-first, privacy-respecting platform for mutual aid, collective ' +
+  'sense-making, and relational depth — share goals, resources, and stories, ' +
+  'and discover the resonance between them.'
+
 export const metadata: Metadata = {
-  title: 'Goalpost',
-  description: 'A directive by the Seed COC',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'GoalPost',
+    template: '%s · GoalPost',
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: 'GoalPost',
+  keywords: [
+    'GoalPost',
+    'mutual aid',
+    'community',
+    'collective sense-making',
+    'collaboration',
+    'resonance',
+    'graph',
+  ],
+  // Icon + social images are wired automatically from the file-based
+  // conventions in this directory: icon.tsx, apple-icon.tsx, opengraph-image.tsx.
+  openGraph: {
+    type: 'website',
+    siteName: 'GoalPost',
+    title: 'GoalPost',
+    description: SITE_DESCRIPTION,
+    url: SITE_URL,
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'GoalPost',
+    description: SITE_DESCRIPTION,
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f6f7f8' },
+    { media: '(prefers-color-scheme: dark)', color: '#101c22' },
+  ],
 }
 
 // Content wrapper component to conditionally render maintenance screen
