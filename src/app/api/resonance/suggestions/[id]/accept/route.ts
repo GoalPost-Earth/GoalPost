@@ -22,9 +22,9 @@ export async function POST(
 
     // The accepting user, resolved from the verified accessToken cookie / bearer.
     // Promoting a suggestion to a ResonanceLink is a graph write, so require a
-    // valid authenticated caller (this route previously had no gate at all —
-    // GOAL security review). A finer-grained Space-permission check (can this
-    // user manage the suggestion's FieldContext) is a tracked follow-up.
+    // valid authenticated caller. The finer-grained Space-permission check (can
+    // this user edit the suggestion's Space) is enforced below via
+    // canEditContent once the suggestion's FieldContext is resolved.
     const actorId = resolveAuthenticatedUserId(request)
     if (!actorId) {
       return NextResponse.json(
@@ -44,6 +44,7 @@ export async function POST(
         confidence: number
         evidence: string
       }
+      status: string | null
       contextId: string
       sourcePulseId: string
       targetPulseId: string
@@ -60,6 +61,7 @@ export async function POST(
         confidence: suggestion.confidence,
         evidence: suggestion.evidence
       } as suggestion,
+      suggestion.status as status,
       context.id as contextId,
       source.id as sourcePulseId,
       target.id as targetPulseId
@@ -74,8 +76,32 @@ export async function POST(
       )
     }
 
-    const { suggestion, sourcePulseId, targetPulseId, contextId } =
+    const { suggestion, status, sourcePulseId, targetPulseId, contextId } =
       suggestionResult[0]
+
+    // Idempotency: a suggestion is promoted exactly once. A second accept (double
+    // click, client retry, two admins) must NOT mint a second ResonanceLink —
+    // the promote below is an unconditional CREATE, so without this guard every
+    // re-accept produced a duplicate link + duplicate HAS_RESONANCE edge, now
+    // visible in Bloom. If already accepted, return the link created the first
+    // time. (Sequential guard; the compare-and-set WHERE on the promote closes
+    // the concurrent window.)
+    if (status && status !== 'pending') {
+      const existing = await graph.query<{ linkId: string | null }>(
+        `MATCH (l:ResonanceLink {approvedFromSuggestion: $suggestionId})
+         RETURN l.id AS linkId
+         LIMIT 1`,
+        { suggestionId }
+      )
+      return NextResponse.json({
+        success: true,
+        alreadyAccepted: true,
+        suggestionId,
+        linkId: existing?.[0]?.linkId ?? null,
+        message: 'Suggestion has already been reviewed.',
+        timestamp: new Date().toISOString(),
+      })
+    }
 
     // Promoting a suggestion to a ResonanceLink is a content write within the
     // suggestion's Space — gate it on the caller being able to edit that Space
@@ -115,7 +141,17 @@ export async function POST(
       MATCH (source:FieldPulse {id: $sourcePulseId})
       MATCH (target:FieldPulse {id: $targetPulseId})
       MATCH (suggestion:ResonanceSuggestion {id: $suggestionId})
-      
+      // Compare-and-set: only promote a still-pending suggestion. Under Neo4j's
+      // per-node write lock on the SET below, a racing second accept re-reads
+      // the (now 'accepted') status here and matches nothing — so it creates no
+      // duplicate link. Together with the early-return above this makes accept
+      // idempotent for both sequential and concurrent double-submits.
+      WHERE suggestion.status = 'pending'
+      // The suggestion's context — both pulses are guaranteed to live in it
+      // (enforced at suggestion-create). This is the anchor that makes the
+      // promoted link visible.
+      MATCH (context:FieldContext {id: $contextId})
+
       // Create ResonanceLink with data from suggestion
       CREATE (link:ResonanceLink {
         id: 'rl_' + randomUUID(),
@@ -123,24 +159,35 @@ export async function POST(
         description: $description,
         confidence: $confidence,
         evidence: $evidence,
+        status: 'confirmed',
+        reviewedBy: $actorId,
+        reviewedAt: datetime(),
         createdAt: datetime(),
         approvedFromSuggestion: $suggestionId
       })
-      
-      // Connect to pulses (no context connection - resonances are pulse-level)
+
+      // Connect to pulses
       CREATE (link)-[:SOURCE]->(source)
       CREATE (link)-[:TARGET]->(target)
-      
+      // Anchor to the context via HAS_RESONANCE (GOAL-294). Studio Bloom and the
+      // graph neighborhood auth filter reach ResonanceLinks ONLY through
+      // (FieldContext)-[:HAS_RESONANCE]->(rl); without this edge an accepted
+      // resonance is invisible in every graph surface. Mirrors the assistant
+      // create_resonance path (src/lib/chat/hitl.ts).
+      CREATE (context)-[:HAS_RESONANCE]->(link)
+
       // Update suggestion status
       SET suggestion.status = 'accepted'
       SET suggestion.acceptedAt = datetime()
-      
+
       RETURN link.id as linkId
     `,
       {
         suggestionId,
         sourcePulseId,
         targetPulseId,
+        contextId,
+        actorId,
         label: suggestion.label,
         description: suggestion.description,
         confidence: suggestion.confidence,
@@ -154,7 +201,24 @@ export async function POST(
         : null
 
     if (!linkId) {
-      throw new Error('Failed to create ResonanceLink from suggestion')
+      // The compare-and-set guard matched nothing: a concurrent accept won the
+      // race and already promoted this suggestion. Return that link idempotently
+      // rather than 500ing — the caller's intent (this suggestion is accepted)
+      // is satisfied.
+      const existing = await graph.query<{ linkId: string | null }>(
+        `MATCH (l:ResonanceLink {approvedFromSuggestion: $suggestionId})
+         RETURN l.id AS linkId
+         LIMIT 1`,
+        { suggestionId }
+      )
+      return NextResponse.json({
+        success: true,
+        alreadyAccepted: true,
+        suggestionId,
+        linkId: existing?.[0]?.linkId ?? null,
+        message: 'Suggestion has already been reviewed.',
+        timestamp: new Date().toISOString(),
+      })
     }
 
     console.log(

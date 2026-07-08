@@ -5,6 +5,7 @@
 
 import { getAnalysisProvider } from '@/lib/llm'
 import { initGraph } from '../../../modules/graph'
+import neo4j from 'neo4j-driver'
 import { z } from 'zod'
 import {
   collectPulsePairEvidence,
@@ -90,7 +91,11 @@ async function findSimilarPulsesInContext(
     ORDER BY similarity DESC
     LIMIT $limit
   `,
-    { pulseId, contextId, threshold, limit, embedding }
+    // LIMIT/SKIP reject Neo4j Floats, and the LangChain Neo4jGraph layer encodes
+    // a plain JS number as a Float — so an un-wrapped `limit` throws at runtime
+    // ("'10.0' is not a valid value"). Wrap in neo4j.int() (as execute.ts does).
+    // $limit * 3 (the queryNodes k arg) then stays integer arithmetic too.
+    { pulseId, contextId, threshold, limit: neo4j.int(limit), embedding }
   )
 
   if (!Array.isArray(similarResult) || similarResult.length === 0) {
@@ -193,7 +198,17 @@ async function createResonanceSuggestionsInDatabase(
       )
     }
 
-    // Create ResonanceSuggestion and connect it to the space, context, source, and target
+    // Create ResonanceSuggestion and connect it to the space, context, source, and target.
+    // Deduped symmetrically: if these two pulses are already joined by any
+    // ResonanceSuggestion or ResonanceLink (in either direction), we skip the
+    // CREATE and return no row. This makes repeated SEQUENTIAL discovery runs
+    // safe — on-upload (GOAL-294) and the daily cron both flow through here, and
+    // without the guard every re-run would pile up duplicate suggestions for the
+    // same pair. It is read-then-create within one statement with no uniqueness
+    // constraint on the pair, so two CONCURRENT runs over the same context (e.g.
+    // an on-upload after() racing the cron) could each observe "none" and both
+    // create; that residual duplicate is acceptable here and, unlike the accept
+    // path, stays invisible until a human promotes one of the pair.
     const suggestionResult = await graph.query<{ suggestionId: string }>(
       `
       MATCH (space:Space {id: $spaceId})
@@ -205,6 +220,14 @@ async function createResonanceSuggestionsInDatabase(
       MATCH (context)-[:HAS_PULSE]->(source)
       MATCH (context)-[:HAS_PULSE]->(target)
       MATCH (space)-[:HAS_CONTEXT]->(context)
+
+      // Symmetric duplicate check — a ResonanceSuggestion or ResonanceLink that
+      // already touches BOTH pulses (SOURCE/TARGET either way round) means this
+      // pair is already proposed/confirmed; don't create another.
+      OPTIONAL MATCH (source)<-[:SOURCE|TARGET]-(existing)-[:SOURCE|TARGET]->(target)
+      WHERE existing:ResonanceSuggestion OR existing:ResonanceLink
+      WITH space, context, source, target, existing
+      WHERE existing IS NULL
 
       // Create ResonanceSuggestion
       CREATE (suggestion:ResonanceSuggestion {
@@ -349,6 +372,72 @@ export async function discoverResonancesForPulse(
 }
 
 /**
+ * Discover resonances within a SINGLE FieldContext.
+ *
+ * This is the narrow entry point behind both the space sweep
+ * (`discoverResonancesForSpace`, which loops every context through here) and
+ * the on-upload trigger (GOAL-294), which scopes discovery to just the context
+ * an upload landed in so results surface when the member is looking. Pulses are
+ * expected to already be embedded — callers that create fresh pulses (upload,
+ * import) must embed them first (see `runContextResonanceDiscovery`), otherwise
+ * `findSimilarPulsesInContext` returns nothing and no suggestion is produced.
+ */
+export async function discoverResonancesForContext(
+  spaceId: string,
+  contextId: string,
+  lastRunTimestamp?: string
+): Promise<DiscoveredResonance[]> {
+  const graph = await initGraph()
+
+  // Get pulses in this context (bounded — the vector search + LLM analysis per
+  // pulse is the expensive part; the cap keeps a single run inside the
+  // serverless duration ceiling).
+  const query = lastRunTimestamp
+    ? `MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(p:FieldPulse)
+       WHERE p.modifiedAt > datetime($lastRunTimestamp)
+          OR p.createdAt > datetime($lastRunTimestamp)
+       RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
+       ORDER BY p.createdAt DESC
+       LIMIT 50`
+    : `MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(p:FieldPulse)
+       RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
+       ORDER BY p.createdAt DESC
+       LIMIT 30`
+
+  const pulsesResult = await graph.query<{
+    pulse: { id: string; content: string; createdAt: string }
+  }>(query, lastRunTimestamp ? { contextId, lastRunTimestamp } : { contextId })
+
+  if (!Array.isArray(pulsesResult) || pulsesResult.length < 2) {
+    console.log(
+      `[Context Discovery] Not enough pulses in context ${contextId}, skipping`
+    )
+    return []
+  }
+
+  const pulses = pulsesResult.map((r) => r.pulse)
+
+  console.log(
+    `[Context Discovery] Found ${pulses.length} pulses in context ${contextId}`
+  )
+
+  const discovered: DiscoveredResonance[] = []
+  for (const pulse of pulses) {
+    try {
+      const resonances = await discoverResonancesForPulse(pulse.id, spaceId)
+      discovered.push(...resonances)
+    } catch (error) {
+      console.error(
+        `[Context Discovery] Failed to discover resonances for pulse ${pulse.id}:`,
+        error
+      )
+    }
+  }
+
+  return discovered
+}
+
+/**
  * Discover resonances for a specific space
  * Processes all contexts within the space independently
  */
@@ -394,58 +483,18 @@ export async function discoverResonancesForSpace(
 
   const allDiscoveredResonances: DiscoveredResonance[] = []
 
-  // Process each context independently
+  // Process each context independently through the context-scoped entry point.
   for (const { contextId, contextTitle } of contexts) {
     try {
       console.log(
         `[Space Discovery] Processing context: ${contextTitle} (${contextId})`
       )
-
-      // Get pulses in this context
-      const query = lastRunTimestamp
-        ? `MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(p:FieldPulse)
-           WHERE p.modifiedAt > datetime($lastRunTimestamp) 
-              OR p.createdAt > datetime($lastRunTimestamp)
-           RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
-           ORDER BY p.createdAt DESC
-           LIMIT 50`
-        : `MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(p:FieldPulse)
-           RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
-           ORDER BY p.createdAt DESC
-           LIMIT 30`
-
-      const pulsesResult = await graph.query<{
-        pulse: { id: string; content: string; createdAt: string }
-      }>(
-        query,
-        lastRunTimestamp ? { contextId, lastRunTimestamp } : { contextId }
+      const resonances = await discoverResonancesForContext(
+        spaceId,
+        contextId,
+        lastRunTimestamp
       )
-
-      if (!Array.isArray(pulsesResult) || pulsesResult.length < 2) {
-        console.log(
-          `[Space Discovery] Not enough pulses in context ${contextId}, skipping`
-        )
-        continue
-      }
-
-      const pulses = pulsesResult.map((r) => r.pulse)
-
-      console.log(
-        `[Space Discovery] Found ${pulses.length} pulses in context ${contextId}`
-      )
-
-      // Discover resonances for each pulse in the context
-      for (const pulse of pulses) {
-        try {
-          const resonances = await discoverResonancesForPulse(pulse.id, spaceId)
-          allDiscoveredResonances.push(...resonances)
-        } catch (error) {
-          console.error(
-            `[Space Discovery] Failed to discover resonances for pulse ${pulse.id}:`,
-            error
-          )
-        }
-      }
+      allDiscoveredResonances.push(...resonances)
     } catch (error) {
       console.error(
         `[Space Discovery] Failed to process context ${contextId}:`,
