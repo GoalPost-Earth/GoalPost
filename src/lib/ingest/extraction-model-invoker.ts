@@ -418,8 +418,9 @@ function buildAssistantText(params: {
         `${matchedPulseTitles.length === 1 ? 'a pulse' : 'pulses'} you already track: ${matchedPulseTitles.join(', ')}`
       )
     }
+    const matchedCount = matchedPersonNames.length + matchedPulseTitles.length
     parts.push(
-      ` I matched this against ${matchSegments.join(' and ')} and proposed updates instead of duplicates.`
+      ` I matched this against ${matchSegments.join(' and ')} and updated ${matchedCount === 1 ? 'that existing entry' : 'those existing entries'} instead of creating duplicates.`
     )
   }
 

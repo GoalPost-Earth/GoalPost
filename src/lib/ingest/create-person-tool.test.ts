@@ -210,15 +210,18 @@ describe('executeAuthorizedWriteTool — create_person', () => {
       )
       expect(linked.records).toHaveLength(1)
 
-      // No duplicate Person was created for the uploader's name.
+      // No duplicate Person was created for the uploader's name. Scoped to
+      // this suite's own FieldContext (create_person attaches atomically), so
+      // parallel suites seeding their own 'Test Uploader' fixture in the
+      // shared dev DB can't flake this count.
       const dupes = await session.run(
         `
-        MATCH (p:Person)
+        MATCH (:FieldContext {id: $ctxId})-[:HAS_PERSON]->(p:Person)
         WHERE p.id <> $userId
           AND toLower(trim(coalesce(p.name, ''))) = 'test uploader'
         RETURN count(p) AS c
         `,
-        { userId: ids.user }
+        { userId: ids.user, ctxId: ids.fieldContext }
       )
       expect(Number(dupes.records[0].get('c'))).toBe(0)
 
