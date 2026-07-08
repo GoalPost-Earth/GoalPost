@@ -43,12 +43,24 @@ LIMIT 25
 const PATH_VIA_NONMEMBER = `
 MATCH (user:Person {id: $userId})
 MATCH (a:Person {id: "p1"}), (b:Person {id: "p2"})
-OPTIONAL MATCH p = shortestPath((a)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(b))
+OPTIONAL MATCH p = shortestPath((a)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|INITIATED_BY|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(b))
 RETURN a, b, p
 LIMIT 1
 `
 
-describe('GOAL-277 cypher validator — member/non-member + weave traversal', () => {
+// Pulses authored by a person — must traverse the canonical INITIATED_BY
+// author edge alongside the legacy CREATED_BY alias, or every modern pulse
+// (including doc-ingest attributed ones) is invisible to "pulses by X".
+const PULSES_BY_PERSON = `
+MATCH (user:Person {id: $userId})
+MATCH (author:Person {id: "p1"})
+OPTIONAL MATCH (author)<-[cb:INITIATED_BY|CREATED_BY]-(p:FieldPulse)
+OPTIONAL MATCH (ctx:FieldContext)-[hp:HAS_PULSE]->(p)
+RETURN user, author, cb, p, hp, ctx
+LIMIT 50
+`
+
+describe('GOAL-277 cypher validator — member/non-member + weave + authorship traversal', () => {
   it('accepts a non-member sweep using WHERE NOT x:User + HAS_PERSON', async () => {
     const r = await validateCypher(NON_MEMBERS, mockSession())
     expect(r).toEqual({ ok: true })
@@ -66,6 +78,11 @@ describe('GOAL-277 cypher validator — member/non-member + weave traversal', ()
 
   it('accepts shortest-path with HAS_PERSON in the disjunction', async () => {
     const r = await validateCypher(PATH_VIA_NONMEMBER, mockSession())
+    expect(r).toEqual({ ok: true })
+  })
+
+  it('accepts pulse authorship via INITIATED_BY|CREATED_BY (attribution)', async () => {
+    const r = await validateCypher(PULSES_BY_PERSON, mockSession())
     expect(r).toEqual({ ok: true })
   })
 
