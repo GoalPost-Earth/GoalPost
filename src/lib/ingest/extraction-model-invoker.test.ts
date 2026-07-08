@@ -499,4 +499,132 @@ describe('ExtractionModelInvoker', () => {
       expect(byType.get('StoryPulse')!.location).toBeUndefined()
     })
   })
+
+  // Attribution — a pulse's authorName resolves against the extracted person
+  // candidates and the FieldContext roster (trimmed, case-insensitive full
+  // name). A resolved name rides on create_pulse args as `attributedToName`
+  // in canonical display casing so the orchestrator can map it to the
+  // person's live id after the person calls execute. An unresolved name is
+  // dropped — the hallucination guard means attribution can never invent a
+  // person. update_pulse never carries attribution.
+  describe('attribution — authorName → attributedToName on create_pulse', () => {
+    it('carries attributedToName with canonical casing when authorName matches an extracted person', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Gurindereet', lastName: 'Singh' }],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Launch the seed library',
+            content: 'Open a community seed library by spring.',
+            // Raw model casing/whitespace — resolution is trim + case-insensitive.
+            authorName: '  gurindereet SINGH ',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      const pulseCall = result.toolCalls.find((c) => c.tool === 'create_pulse')
+      expect(pulseCall).toBeDefined()
+      // Canonical display name from the extracted candidate — never the
+      // model's raw casing/whitespace.
+      expect(pulseCall!.args.attributedToName).toBe('Gurindereet Singh')
+    })
+
+    it('carries the roster display name when authorName matches a roster person', async () => {
+      const input: ExtractionModelInput = {
+        ...baseInput,
+        roster: {
+          persons: [{ id: 'person_sarah_existing', name: 'Sarah Chen' }],
+          pulses: [],
+        },
+      }
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'StoryPulse',
+            title: 'How the migration felt',
+            content: 'A first-person account of the cutover weekend.',
+            authorName: 'sarah chen',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(input, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('create_pulse')
+      // Canonical name is the roster's display name.
+      expect(result.toolCalls[0].args.attributedToName).toBe('Sarah Chen')
+      // A roster author may get NO person call this run (the model doesn't
+      // re-emit people it only saw in the hint), so the invoker stamps the
+      // already-live roster id directly — attribution must not depend on the
+      // orchestrator's name→id map learning them.
+      expect(result.toolCalls[0].args.attributedToPersonId).toBe(
+        'person_sarah_existing'
+      )
+    })
+
+    it('drops an authorName matching neither extracted persons nor the roster (hallucination guard)', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Sarah', lastName: 'Chen' }],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Ship migration',
+            content: 'Cut the data migration over before EOQ.',
+            authorName: 'Rumpel Stiltskin',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      const pulseCall = result.toolCalls.find((c) => c.tool === 'create_pulse')
+      expect(pulseCall).toBeDefined()
+      expect(pulseCall!.args).not.toHaveProperty('attributedToName')
+      expect(pulseCall!.args).not.toHaveProperty('attributedToPersonId')
+    })
+
+    it('never carries attribution on update_pulse (roster existingId match), even when authorName resolves', async () => {
+      const input: ExtractionModelInput = {
+        ...baseInput,
+        roster: {
+          persons: [{ id: 'person_sarah_existing', name: 'Sarah Chen' }],
+          pulses: [
+            {
+              id: 'pulse_goal_existing',
+              title: 'Grow event attendance',
+              pulseType: 'GoalPulse',
+            },
+          ],
+        },
+      }
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Increase event attendance',
+            content: 'Boost the next two events.',
+            existingId: 'pulse_goal_existing',
+            // Resolvable name — must still be ignored on the update path.
+            authorName: 'Sarah Chen',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(input, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('update_pulse')
+      expect(result.toolCalls[0].args).not.toHaveProperty('attributedToName')
+      expect(result.toolCalls[0].args).not.toHaveProperty('attributedToPersonId')
+    })
+  })
 })

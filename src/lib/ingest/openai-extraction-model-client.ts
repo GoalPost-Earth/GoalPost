@@ -69,6 +69,7 @@ function buildSystemPrompt(input: ExtractionModelInput): string {
     '- Never emit CarePulse or CoreValuePulse — those are out of scope for v1.',
     '- Each pulse must have BOTH a title and content. Drop anything you can\'t fully form.',
     '- If a pulse mention is semantically equivalent to an existing pulse above, set existingId to that pulse\'s id so we update rather than duplicate. The kind must match the existing pulse\'s kind — otherwise emit as new.',
+    '- When the document makes clear whose voice or authorship a pulse carries (a byline, the user hint, a named speaker), set that pulse\'s authorName to the person\'s full name — exactly as you emitted it in persons, or as listed in EXISTING PEOPLE. Use null when authorship is unclear.',
     '- Never emit the same person or pulse twice. Collapse repeated mentions into a single entry.',
     '- Never expose internal identifiers in assistantText. Use only human-readable names, titles, and the filename.',
     '- Keep assistantText short and natural. One or two sentences.',

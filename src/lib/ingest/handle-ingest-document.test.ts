@@ -68,6 +68,10 @@ afterAll(async () => {
       { ctxId: ids.fieldContext }
     )
     await session.run(
+      `MATCH (c:FieldContext {id: $ctxId})-[:HAS_PULSE]->(p:FieldPulse) DETACH DELETE p`,
+      { ctxId: ids.fieldContext }
+    )
+    await session.run(
       `MATCH (u:Person {id: $userId})-[:HAS_THREAD]->(t:ConversationThread)
        OPTIONAL MATCH (t)-[:HAS_TURN]->(turn)
        DETACH DELETE turn, t`,
@@ -647,6 +651,185 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
           expect(description).not.toContain('ResourcePulse')
           expect(description).not.toContain('StoryPulse')
         }
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
+  itIf(true)(
+    'attribution: pulses with authorName land INITIATED_BY the created person — not the uploader — while the Log stays CREATED_BY the uploader',
+    async () => {
+      if (!neo4jAvailable) return
+      const blobStore = createMemoryBlobStore()
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Gurindereet', lastName: 'Singh' }],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Launch the seed library',
+            content: 'Open a community seed library by spring.',
+            authorName: 'Gurindereet Singh',
+          },
+          {
+            kind: 'StoryPulse',
+            title: 'How the garden began',
+            content: 'It started with three neighbours and a shared plot.',
+            // Case-insensitive resolution against the extracted person.
+            authorName: 'gurindereet singh',
+          },
+        ],
+        assistantText: '',
+      })
+
+      const result = await seedAndIngest(
+        { driver, blobStore, modelClient },
+        {
+          currentUserId: ids.user,
+          fieldContextId: ids.fieldContext,
+          filename: 'garden-notes.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from(
+            'Gurindereet Singh wrote about the seed library and how the garden began.',
+            'utf8'
+          ),
+          hint: null,
+        }
+      )
+
+      expect(result.ok).toBe(true)
+      if (!result.ok) throw new Error('unreachable')
+      expect(result.executedToolCalls).toHaveLength(3)
+
+      const personExec = result.executedToolCalls.find(
+        (c) => c.tool === 'create_person'
+      )
+      expect(personExec).toBeDefined()
+      expect(personExec!.result.success).not.toBe(false)
+      const personId = personExec!.result.personId as string
+      expect(typeof personId).toBe('string')
+      expect(personId).not.toBe(ids.user)
+
+      const pulseExecs = result.executedToolCalls.filter(
+        (c) => c.tool === 'create_pulse'
+      )
+      expect(pulseExecs).toHaveLength(2)
+      for (const exec of pulseExecs) {
+        expect(exec.result.success).not.toBe(false)
+        // The orchestrator resolved the validated author name to the live
+        // person id created moments earlier in the same run.
+        expect(exec.args.attributedToPersonId).toBe(personId)
+        // Execution reports attribution by display name (Rule 1).
+        expect(exec.result.attributedTo).toBe('Gurindereet Singh')
+      }
+
+      const session = driver.session()
+      try {
+        const rows = await session.run(
+          `
+          MATCH (c:FieldContext {id: $ctxId})-[:HAS_PULSE]->(p:FieldPulse)-[:EXTRACTED_FROM]->(d:Document {id: $docId})
+          MATCH (p)-[:INITIATED_BY]->(author)
+          RETURN p.title AS title, author.id AS authorId,
+                 size([(p)-[:INITIATED_BY]->() | 1]) AS initiatedByCount
+          ORDER BY p.title ASC
+          `,
+          { ctxId: ids.fieldContext, docId: result.documentId }
+        )
+        expect(rows.records).toHaveLength(2)
+        for (const r of rows.records) {
+          // The canonical author edge targets the extracted person, NOT the
+          // uploader — this is the captured failure the fix closes.
+          expect(r.get('authorId')).toBe(personId)
+          expect(r.get('authorId')).not.toBe(ids.user)
+          // Exactly one INITIATED_BY per pulse either way.
+          expect(Number(r.get('initiatedByCount'))).toBe(1)
+        }
+
+        // Audit trail unchanged: every pulse Log is CREATED_BY the uploader
+        // and carries the attribution by name only.
+        const logRows = await session.run(
+          `
+          MATCH (log:Log)-[:LOGGED_FOR]->(p:FieldPulse)-[:EXTRACTED_FROM]->(d:Document {id: $docId})
+          MATCH (log)-[:CREATED_BY]->(creator)
+          RETURN creator.id AS creatorId, log.description AS description
+          `,
+          { docId: result.documentId }
+        )
+        expect(logRows.records).toHaveLength(2)
+        for (const r of logRows.records) {
+          expect(r.get('creatorId')).toBe(ids.user)
+          const description = String(r.get('description'))
+          expect(description).toContain('attributed to Gurindereet Singh')
+          // Rule 1 — no raw person id in activity copy.
+          expect(description).not.toContain(personId)
+        }
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
+  itIf(true)(
+    'attribution copy: the synthesized assistant turn reports "attributed to <Name>" with names only — no raw ids',
+    async () => {
+      if (!neo4jAvailable) return
+      const blobStore = createMemoryBlobStore()
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Amara', lastName: 'Okafor' }],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Start a repair cafe',
+            content: 'Host a monthly fix-it evening at the hall.',
+            authorName: 'Amara Okafor',
+          },
+        ],
+        assistantText: '',
+      })
+
+      const result = await seedAndIngest(
+        { driver, blobStore, modelClient },
+        {
+          currentUserId: ids.user,
+          fieldContextId: ids.fieldContext,
+          filename: 'repair-cafe.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from(
+            'Amara Okafor proposed a monthly repair cafe.',
+            'utf8'
+          ),
+          hint: null,
+        }
+      )
+
+      expect(result.ok).toBe(true)
+      if (!result.ok) throw new Error('unreachable')
+
+      const session = driver.session()
+      try {
+        const turnRows = await session.run(
+          `MATCH (t:ConversationThread {id: $threadId})-[:HAS_TURN]->(turn:ConversationTurn {role: 'assistant'})
+           RETURN turn.content AS content`,
+          { threadId: result.threadId }
+        )
+        expect(turnRows.records).toHaveLength(1)
+        const content = String(turnRows.records[0].get('content'))
+        // The attribution sentence is built from EXECUTED create_pulse
+        // results only — title(s) quoted, author by display name.
+        expect(content).toContain(
+          '"Start a repair cafe" is attributed to Amara Okafor'
+        )
+        expect(content).toContain('stay connected to them in the graph')
+        // Rule 1 — names only in chat copy: no uuids, no entity-id prefixes,
+        // no test fixture ids.
+        expect(content).not.toMatch(
+          /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i
+        )
+        expect(content).not.toContain(result.documentId)
+        expect(content).not.toContain(ids.fieldContext)
+        expect(content).not.toContain(ids.user)
+        expect(content).not.toContain('person_')
+        expect(content).not.toContain('pulse_')
       } finally {
         await session.close()
       }

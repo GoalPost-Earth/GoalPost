@@ -147,6 +147,16 @@ async function searchPeopleByVector(
  * (:Person {id: $userId})` clause enforces this server-side, regardless
  * of what the model decides to do in the chat surface.
  *
+ * INVARIANT this gate leans on: doc-ingest attribution can point a pulse's
+ * INITIATED_BY at an extracted person instead of the acting user
+ * (`createPulseAuthorized` in src/lib/chat/hitl.ts), but ingest-created
+ * pulses never carry HAS_CHUNK, so INITIATED_BY still equals "chunk owner"
+ * for every pulse that has chunks. If attribution ever extends to
+ * chat-created pulses (which DO carry chunks), this MATCH must be re-gated
+ * on the acting user (e.g. via the Log CREATED_BY edge) or an attributed
+ * User could search the uploader's private conversation, and the uploader
+ * would lose recall of their own.
+ *
  * Returns the matching chunk plus enough metadata to navigate back to
  * the parent pulse without exposing raw IDs in user-facing output (per
  * kb/07-ai-assistant-ux.md Rule 1 — the model gets the parent pulse's

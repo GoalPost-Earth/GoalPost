@@ -120,17 +120,38 @@ export async function appendSynthesizedIngestTurns(
   // one entity does not abort the rest — partial success is recorded in
   // the assistant turn so the user can see which entities landed and
   // which need manual follow-up.
+  //
+  // Attribution wiring: roster-matched authors already ride in with their
+  // live id stamped by the invoker (they may get no person call this run).
+  // For persons minted or enriched THIS run, the invoker orders person calls
+  // before pulse calls, and the name→id map below closes the loop from their
+  // executed results. A failed person call (with no roster id to fall back
+  // on) simply leaves the pulse attributed to the uploader.
   const executed: ExecutedToolCallRecord[] = []
+  const personIdByName = new Map<string, string>()
   if (toolCalls.length > 0) {
     const graph = await initGraph()
     for (const call of toolCalls) {
+      let args = call.args
+      if (call.tool === 'create_pulse') {
+        const attributedToName =
+          typeof args.attributedToName === 'string'
+            ? args.attributedToName.trim().toLowerCase()
+            : ''
+        const attributedToPersonId = attributedToName
+          ? personIdByName.get(attributedToName)
+          : undefined
+        if (attributedToPersonId) {
+          args = { ...args, attributedToPersonId }
+        }
+      }
       let result: ExecutedToolResult
       try {
         result = (await executeAuthorizedWriteTool(
           graph,
           userId,
           call.tool,
-          call.args
+          args
         )) as ExecutedToolResult
       } catch (err) {
         result = {
@@ -141,7 +162,25 @@ export async function appendSynthesizedIngestTurns(
               : 'Tool execution failed unexpectedly.',
         }
       }
-      executed.push({ tool: call.tool, args: call.args, result })
+      if (
+        (call.tool === 'create_person' || call.tool === 'update_person') &&
+        result.success !== false &&
+        typeof result.personId === 'string' &&
+        result.personId
+      ) {
+        // Key by both the graph's canonical name and the extractor's
+        // firstName+lastName — the two can differ (e.g. enrich returns the
+        // existing node's richer name) and attribution must match either.
+        const keys = [
+          typeof result.name === 'string' ? result.name : '',
+          `${String(args.firstName ?? '')} ${String(args.lastName ?? '')}`,
+        ]
+        for (const key of keys) {
+          const normalized = key.trim().toLowerCase()
+          if (normalized) personIdByName.set(normalized, result.personId)
+        }
+      }
+      executed.push({ tool: call.tool, args, result })
     }
   }
 
@@ -176,7 +215,28 @@ export async function appendSynthesizedIngestTurns(
         : outcome
           ? `${capitalizedOutcome} from this document; ${failed} of ${executed.length} proposed didn't land — see details above.`
           : `None of the ${executed.length} proposed entities landed — see details above.`
-  const assistantText = [summaryLine, extraction.assistantText]
+  // Attribution is reported from EXECUTED results, never from the proposal —
+  // a pulse only counts as attributed when the write actually linked it to
+  // the person (names only in chat copy, per kb/07 Rule 1).
+  const pulsesByAuthor = new Map<string, string[]>()
+  for (const e of executed) {
+    if (e.tool !== 'create_pulse' || e.result.success === false) continue
+    const author =
+      typeof e.result.attributedTo === 'string' ? e.result.attributedTo.trim() : ''
+    const title = typeof e.result.title === 'string' ? e.result.title.trim() : ''
+    if (!author || !title) continue
+    pulsesByAuthor.set(author, [...(pulsesByAuthor.get(author) ?? []), title])
+  }
+  const attributionLine = Array.from(pulsesByAuthor.entries())
+    .map(
+      ([author, titles]) =>
+        `${titles.map((t) => `"${t}"`).join(', ')} ${titles.length === 1 ? 'is' : 'are'} attributed to ${author}, so their contributions stay connected to them in the graph.`
+    )
+    .join(' ')
+  const assistantText = [
+    [summaryLine, attributionLine].filter((s) => s.length > 0).join(' '),
+    extraction.assistantText,
+  ]
     .filter((s) => s.length > 0)
     .join('\n\n')
 

@@ -43,6 +43,12 @@ export interface ExtractedPulseCandidate {
   content: string
   /** Optional id of a roster pulse the model thinks this mention matches. */
   existingId?: string
+  /**
+   * Full name of the person whose voice/authorship this pulse carries (the
+   * document's author or a named speaker). Only honoured when it resolves to
+   * an extracted person candidate or a roster person — see resolveAuthor.
+   */
+  authorName?: string
   status?: string
   intensity?: number
   horizon?: string
@@ -175,6 +181,48 @@ function resolvePulseMatch(
   // that case and treat as a fresh create.
   if (byId.pulseType !== candidate.kind) return null
   return byId
+}
+
+interface ResolvedAuthor {
+  /** Canonical display name (extracted candidate's or the roster's). */
+  name: string
+  /**
+   * Set only on a roster match — the id is already live, so attribution must
+   * not depend on a person call running this run (the model is told not to
+   * re-emit people it only saw in the hint or EXISTING PEOPLE list).
+   */
+  personId?: string
+}
+
+/**
+ * Resolve a pulse's claimed author against the people this extraction run
+ * actually knows: the extracted person candidates and the context roster.
+ * A name that matches neither is dropped (hallucination guard) — attribution
+ * must never invent a person. Extracted candidates win over the roster (their
+ * id doesn't exist yet; the orchestrator closes that loop after the person
+ * call executes — which, for a roster duplicate, returns the same live id).
+ */
+function resolveAuthor(
+  candidate: ExtractedPulseCandidate,
+  persons: ExtractedPersonCandidate[],
+  rosterPersons: RosterPerson[]
+): ResolvedAuthor | null {
+  const raw = candidate.authorName?.trim()
+  if (!raw) return null
+  const key = raw.toLowerCase()
+  const extracted = persons.find(
+    (p) =>
+      `${p.firstName.trim()} ${p.lastName.trim()}`.trim().toLowerCase() === key
+  )
+  if (extracted) {
+    return {
+      name: `${extracted.firstName.trim()} ${extracted.lastName.trim()}`.trim(),
+    }
+  }
+  const roster = rosterPersons.find(
+    (p) => p.name.trim().toLowerCase() === key
+  )
+  return roster ? { name: roster.name.trim(), personId: roster.id } : null
 }
 
 function buildCreatePulseArgs(
@@ -340,7 +388,19 @@ export async function extractEntities(
     if (match) {
       return { tool: 'update_pulse', args: buildUpdatePulseArgs(p, match, input) }
     }
-    return { tool: 'create_pulse', args: buildCreatePulseArgs(p, input) }
+    const args = buildCreatePulseArgs(p, input)
+    // Attribution: always carry the validated author NAME. A roster match
+    // also carries its live id — that person may get no person call this run
+    // (the model doesn't re-emit hint-only mentions), so the orchestrator's
+    // name→id map would never learn them. Extracted candidates carry the name
+    // only; the orchestrator resolves their id after the person calls (which
+    // run first) have executed.
+    const author = resolveAuthor(p, uniquePersons, input.roster.persons)
+    if (author) {
+      args.attributedToName = author.name
+      if (author.personId) args.attributedToPersonId = author.personId
+    }
+    return { tool: 'create_pulse', args }
   })
 
   const toolCalls: SynthesizedToolCall[] = [...personCalls, ...pulseCalls]

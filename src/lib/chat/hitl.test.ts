@@ -161,6 +161,45 @@ describe('hitl — create_pulse approval copy per pulseType (slice 2)', () => {
   })
 })
 
+describe('hitl — create_pulse attribution copy (doc-ingest INITIATED_BY)', () => {
+  // Doc-ingest attribution: when the synthesized create_pulse args carry
+  // attributedToName, the human-readable summary appends the attribution
+  // clause — by NAME only. The companion attributedToPersonId must never
+  // leak into copy (Rule 1).
+  it('appends "— attributed to <name>" when args carry attributedToName; never echoes the person id', () => {
+    const summary = describeWriteAction('create_pulse', {
+      pulseType: 'GoalPulse',
+      title: 'Launch the seed library',
+      contextTitle: 'Care Practices',
+      attributedToName: 'Gurindereet Singh',
+      attributedToPersonId: 'person_a87c5bf1-6ab3-42f6-bb61-14d5e884fda4',
+    })
+    expect(summary).toContain('Launch the seed library')
+    expect(summary).toContain('— attributed to Gurindereet Singh')
+    expect(summary).not.toContain('person_')
+    expect(summary).not.toContain('a87c5bf1')
+  })
+
+  it('omits the attribution clause entirely when attributedToName is absent', () => {
+    const summary = describeWriteAction('create_pulse', {
+      pulseType: 'GoalPulse',
+      title: 'Launch the seed library',
+      contextTitle: 'Care Practices',
+    })
+    expect(summary).not.toContain('attributed to')
+  })
+
+  it('treats a whitespace-only attributedToName as absent', () => {
+    const summary = describeWriteAction('create_pulse', {
+      pulseType: 'StoryPulse',
+      title: 'How the garden began',
+      contextTitle: 'Care Practices',
+      attributedToName: '   ',
+    })
+    expect(summary).not.toContain('attributed to')
+  })
+})
+
 describe('hitl — update_person write tool (slice 4)', () => {
   describe('isWriteToolName', () => {
     it('recognises update_person as a registered write tool', () => {
