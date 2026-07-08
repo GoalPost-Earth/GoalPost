@@ -145,17 +145,37 @@ export async function appendSynthesizedIngestTurns(
     }
   }
 
-  const succeeded = executed.filter((e) => e.result.success !== false).length
-  const failed = executed.length - succeeded
+  const succeededCalls = executed.filter((e) => e.result.success !== false)
+  const failed = executed.length - succeededCalls.length
   // The extractor emits a free-text reply explaining what it proposed.
   // Prepend a one-line execution summary so the thread reads as a record
-  // of what happened, not a record of what was proposed.
+  // of what happened, not a record of what was proposed. Count creates and
+  // updates separately — a roster match that only updated an existing
+  // person must not be announced as "created", or the user goes hunting
+  // the graph for a new node that was never minted.
+  const createdCount = succeededCalls.filter(
+    (e) => !e.tool.startsWith('update_')
+  ).length
+  const updatedCount = succeededCalls.length - createdCount
+  const outcome = [
+    createdCount > 0
+      ? `created ${createdCount} ${createdCount === 1 ? 'entity' : 'entities'}`
+      : '',
+    updatedCount > 0
+      ? `updated ${updatedCount} existing ${updatedCount === 1 ? 'entry' : 'entries'}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' and ')
+  const capitalizedOutcome = outcome.charAt(0).toUpperCase() + outcome.slice(1)
   const summaryLine =
     executed.length === 0
       ? ''
       : failed === 0
-        ? `Created ${succeeded} ${succeeded === 1 ? 'entity' : 'entities'} from this document.`
-        : `Created ${succeeded} of ${executed.length} proposed entities. ${failed} failed — see details above.`
+        ? `${capitalizedOutcome} from this document.`
+        : outcome
+          ? `${capitalizedOutcome} from this document; ${failed} of ${executed.length} proposed didn't land — see details above.`
+          : `None of the ${executed.length} proposed entities landed — see details above.`
   const assistantText = [summaryLine, extraction.assistantText]
     .filter((s) => s.length > 0)
     .join('\n\n')

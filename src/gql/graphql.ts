@@ -31,6 +31,73 @@ export type Scalars = {
   DateTime: { input: any; output: any }
 }
 
+/** Response when attaching a person to a field context via `addPersonToFieldContext`. */
+export type AddPersonToFieldContextResponse = {
+  __typename?: 'AddPersonToFieldContextResponse'
+  message: Scalars['String']['output']
+  person?: Maybe<Person>
+  success: Scalars['Boolean']['output']
+}
+
+export type AddPersonToFieldContextResponseAggregate = {
+  __typename?: 'AddPersonToFieldContextResponseAggregate'
+  count: Count
+  node: AddPersonToFieldContextResponseAggregateNode
+}
+
+export type AddPersonToFieldContextResponseAggregateNode = {
+  __typename?: 'AddPersonToFieldContextResponseAggregateNode'
+  message: StringAggregateSelection
+}
+
+export type AddPersonToFieldContextResponseAggregateSelection = {
+  __typename?: 'AddPersonToFieldContextResponseAggregateSelection'
+  count: Scalars['Int']['output']
+  message: StringAggregateSelection
+}
+
+export type AddPersonToFieldContextResponseCreateInput = {
+  message: Scalars['String']['input']
+  success: Scalars['Boolean']['input']
+}
+
+export type AddPersonToFieldContextResponseEdge = {
+  __typename?: 'AddPersonToFieldContextResponseEdge'
+  cursor: Scalars['String']['output']
+  node: AddPersonToFieldContextResponse
+}
+
+/** Fields to sort AddPersonToFieldContextResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one AddPersonToFieldContextResponseSort object. */
+export type AddPersonToFieldContextResponseSort = {
+  message?: InputMaybe<SortDirection>
+  success?: InputMaybe<SortDirection>
+}
+
+export type AddPersonToFieldContextResponseUpdateInput = {
+  message_SET?: InputMaybe<Scalars['String']['input']>
+  success_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type AddPersonToFieldContextResponseWhere = {
+  AND?: InputMaybe<Array<AddPersonToFieldContextResponseWhere>>
+  NOT?: InputMaybe<AddPersonToFieldContextResponseWhere>
+  OR?: InputMaybe<Array<AddPersonToFieldContextResponseWhere>>
+  message_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  message_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  message_EQ?: InputMaybe<Scalars['String']['input']>
+  message_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  message_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  success_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type AddPersonToFieldContextResponsesConnection = {
+  __typename?: 'AddPersonToFieldContextResponsesConnection'
+  aggregate: AddPersonToFieldContextResponseAggregate
+  edges: Array<AddPersonToFieldContextResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 /** Response when adding a member to a space. */
 export type AddSpaceMemberResponse = {
   __typename?: 'AddSpaceMemberResponse'
@@ -1161,32 +1228,20 @@ export type CarePulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'CarePulsePersonCreatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -1200,32 +1255,20 @@ export type CarePulsePersonInitiatedByNodeAggregateSelection = {
   __typename?: 'CarePulsePersonInitiatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -2491,32 +2534,20 @@ export type CoreValuePulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'CoreValuePulsePersonCreatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -2530,32 +2561,20 @@ export type CoreValuePulsePersonInitiatedByNodeAggregateSelection = {
   __typename?: 'CoreValuePulsePersonInitiatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -2701,6 +2720,12 @@ export type CountConnection = {
   __typename?: 'CountConnection'
   edges: Scalars['Int']['output']
   nodes: Scalars['Int']['output']
+}
+
+export type CreateAddPersonToFieldContextResponsesMutationResponse = {
+  __typename?: 'CreateAddPersonToFieldContextResponsesMutationResponse'
+  addPersonToFieldContextResponses: Array<AddPersonToFieldContextResponse>
+  info: CreateInfo
 }
 
 export type CreateAddSpaceMemberResponsesMutationResponse = {
@@ -4257,32 +4282,20 @@ export type DocumentPersonExtractedPeopleNodeAggregateSelection = {
   __typename?: 'DocumentPersonExtractedPeopleNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -4302,32 +4315,20 @@ export type DocumentPersonUploadedByNodeAggregateSelection = {
   __typename?: 'DocumentPersonUploadedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -5328,7 +5329,6 @@ export type FieldContextConnectInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByConnectFieldInput>>
   documents?: InputMaybe<Array<FieldContextDocumentsConnectFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceConnectFieldInput>>
-  people?: InputMaybe<Array<FieldContextPeopleConnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesConnectFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesConnectFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceConnectFieldInput>>
@@ -5345,7 +5345,6 @@ export type FieldContextCreateInput = {
   documents?: InputMaybe<FieldContextDocumentsFieldInput>
   emergentName?: InputMaybe<Scalars['String']['input']>
   meSpace?: InputMaybe<FieldContextMeSpaceFieldInput>
-  people?: InputMaybe<FieldContextPeopleFieldInput>
   pulses?: InputMaybe<FieldContextPulsesFieldInput>
   resonances?: InputMaybe<FieldContextResonancesFieldInput>
   title: Scalars['String']['input']
@@ -5659,7 +5658,6 @@ export type FieldContextDeleteInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByDeleteFieldInput>>
   documents?: InputMaybe<Array<FieldContextDocumentsDeleteFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceDeleteFieldInput>>
-  people?: InputMaybe<Array<FieldContextPeopleDeleteFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDeleteFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesDeleteFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceDeleteFieldInput>>
@@ -6201,11 +6199,6 @@ export type FieldContextPeopleAggregateInput = {
   node?: InputMaybe<FieldContextPeopleNodeAggregationWhereInput>
 }
 
-export type FieldContextPeopleConnectFieldInput = {
-  connect?: InputMaybe<Array<PersonConnectInput>>
-  where?: InputMaybe<PersonConnectWhere>
-}
-
 export type FieldContextPeopleConnection = {
   __typename?: 'FieldContextPeopleConnection'
   aggregate: FieldContextPersonPeopleAggregateSelection
@@ -6225,23 +6218,9 @@ export type FieldContextPeopleConnectionWhere = {
   node?: InputMaybe<PersonWhere>
 }
 
-export type FieldContextPeopleCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type FieldContextPeopleDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<FieldContextPeopleConnectionWhere>
-}
-
 export type FieldContextPeopleDisconnectFieldInput = {
   disconnect?: InputMaybe<PersonDisconnectInput>
   where?: InputMaybe<FieldContextPeopleConnectionWhere>
-}
-
-export type FieldContextPeopleFieldInput = {
-  connect?: InputMaybe<Array<FieldContextPeopleConnectFieldInput>>
-  create?: InputMaybe<Array<FieldContextPeopleCreateFieldInput>>
 }
 
 export type FieldContextPeopleNodeAggregationWhereInput = {
@@ -6478,17 +6457,8 @@ export type FieldContextPeopleRelationship = {
   node: Person
 }
 
-export type FieldContextPeopleUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<FieldContextPeopleConnectionWhere>
-}
-
 export type FieldContextPeopleUpdateFieldInput = {
-  connect?: InputMaybe<Array<FieldContextPeopleConnectFieldInput>>
-  create?: InputMaybe<Array<FieldContextPeopleCreateFieldInput>>
-  delete?: InputMaybe<Array<FieldContextPeopleDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextPeopleDisconnectFieldInput>>
-  update?: InputMaybe<FieldContextPeopleUpdateConnectionInput>
 }
 
 export type FieldContextPersonCreatedByAggregateSelection = {
@@ -6507,32 +6477,20 @@ export type FieldContextPersonCreatedByNodeAggregateSelection = {
   __typename?: 'FieldContextPersonCreatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -6552,32 +6510,20 @@ export type FieldContextPersonPeopleNodeAggregateSelection = {
   __typename?: 'FieldContextPersonPeopleNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -9836,32 +9782,20 @@ export type GoalPulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'GoalPulsePersonCreatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -9875,32 +9809,20 @@ export type GoalPulsePersonInitiatedByNodeAggregateSelection = {
   __typename?: 'GoalPulsePersonInitiatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -10231,42 +10153,6 @@ export type IntAggregateSelection = {
   max?: Maybe<Scalars['Int']['output']>
   min?: Maybe<Scalars['Int']['output']>
   sum?: Maybe<Scalars['Int']['output']>
-}
-
-/**
- * Anything that can initiate pulses or own spaces.
- * Query-time abstraction.
- *
- * MIGRATION NOTES:
- *
- * 1. Community Transformation:
- *    - Community nodes → WeSpace nodes with merged properties
- *    - BELONGS_TO relationships → SpaceMembership nodes with appropriate roles
- *    - Community owners → Space owners via OWNS relationship
- *
- * 2. Pulse Creation Pattern:
- *    - User pulses: Create FieldContext in auto-created MeSpace ("{User's name} MeSpace")
- *    - Community pulses: Create FieldContext ("{Community name} Field") in WeSpace
- *    - All pulses live ONLY within FieldContexts
- *    - Pulse relationships → ResonanceLinks within the FieldContext
- *
- * 3. Example Migration:
- *    Person "Alice" MOTIVATED_BY Goal "Launch App" →
- *      a. Create MeSpace "Alice MeSpace" (owner: Alice)
- *      b. Create FieldContext "Alice's Goals" in MeSpace
- *      c. Create GoalPulse "Launch App" in FieldContext
- *      d. Alice can access via: ownsSpaces → contexts → pulses
- *
- *    Community "Tech Team" MOTIVATED_BY Goal "Ship v2.0" →
- *      a. Create WeSpace "Tech Team" with community properties
- *      b. Create FieldContext "Tech Team Field" in WeSpace
- *      c. Create GoalPulse "Ship v2.0" in FieldContext
- *      d. Members can access via: memberOf → space → contexts → pulses
- */
-export type LifeSensor = Person
-
-export type LifeSensorWhere = {
-  Person?: InputMaybe<PersonWhere>
 }
 
 /**
@@ -11152,32 +11038,20 @@ export type LogPersonCreatedByNodeAggregateSelection = {
   __typename?: 'LogPersonCreatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -12473,32 +12347,20 @@ export type MeSpacePersonOwnerNodeAggregateSelection = {
   __typename?: 'MeSpacePersonOwnerNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -12667,10 +12529,27 @@ export type MeSpacesConnection = {
 export type Mutation = {
   __typename?: 'Mutation'
   /**
+   * Attach an existing person to a field context (HAS_PERSON). This is the ONLY
+   * write path for HAS_PERSON through GraphQL — the nested CONNECT on
+   * FieldContext.people / Person.contexts is disabled.
+   *
+   * Authorization (enforced server-side in the resolver, not via @authorization):
+   * the caller must be able to edit the context (owner, ADMIN, or MEMBER of its
+   * parent Space — GUESTs are view-only), and a target carrying the `User` label
+   * may only be attached when they are the caller themselves or already own / are
+   * a member of that parent Space. Attaching a person unlocks their gated PII to
+   * the space's members (Person contexts_SOME READ branch), so for registered
+   * accounts, presence in the Space is the consent boundary. Non-user people
+   * (PersonPulse / imported contacts) are space content and attachable by any
+   * editor. Writes an activity Log.
+   */
+  addPersonToFieldContext: AddPersonToFieldContextResponse
+  /**
    * Add a member to a space with a specific role.
    * Only the space owner or members with ADMIN role can add new members.
    */
   addSpaceMember: AddSpaceMemberResponse
+  createAddPersonToFieldContextResponses: CreateAddPersonToFieldContextResponsesMutationResponse
   createAddSpaceMemberResponses: CreateAddSpaceMemberResponsesMutationResponse
   createCarePulses: CreateCarePulsesMutationResponse
   createChatbotResponses: CreateChatbotResponsesMutationResponse
@@ -12705,6 +12584,7 @@ export type Mutation = {
   createUpdateSpaceMemberRoleResponses: CreateUpdateSpaceMemberRoleResponsesMutationResponse
   createUpdateUserAiResponses: CreateUpdateUserAiResponsesMutationResponse
   createWeSpaces: CreateWeSpacesMutationResponse
+  deleteAddPersonToFieldContextResponses: DeleteInfo
   deleteAddSpaceMemberResponses: DeleteInfo
   deleteCarePulses: DeleteInfo
   deleteChatbotResponses: DeleteInfo
@@ -12857,6 +12737,7 @@ export type Mutation = {
    * flow through a separate server-side write path — not this mutation.
    */
   submitAssistantFeedback: SubmitAssistantFeedbackResponse
+  updateAddPersonToFieldContextResponses: UpdateAddPersonToFieldContextResponsesMutationResponse
   updateAddSpaceMemberResponses: UpdateAddSpaceMemberResponsesMutationResponse
   updateCarePulses: UpdateCarePulsesMutationResponse
   updateChatbotResponses: UpdateChatbotResponsesMutationResponse
@@ -12920,10 +12801,19 @@ export type Mutation = {
   updateWeSpaces: UpdateWeSpacesMutationResponse
 }
 
+export type MutationAddPersonToFieldContextArgs = {
+  contextId: Scalars['ID']['input']
+  personId: Scalars['ID']['input']
+}
+
 export type MutationAddSpaceMemberArgs = {
   memberId: Scalars['ID']['input']
   role: SpaceRole
   spaceId: Scalars['ID']['input']
+}
+
+export type MutationCreateAddPersonToFieldContextResponsesArgs = {
+  input: Array<AddPersonToFieldContextResponseCreateInput>
 }
 
 export type MutationCreateAddSpaceMemberResponsesArgs = {
@@ -13047,6 +12937,10 @@ export type MutationCreateUpdateUserAiResponsesArgs = {
 
 export type MutationCreateWeSpacesArgs = {
   input: Array<WeSpaceCreateInput>
+}
+
+export type MutationDeleteAddPersonToFieldContextResponsesArgs = {
+  where?: InputMaybe<AddPersonToFieldContextResponseWhere>
 }
 
 export type MutationDeleteAddSpaceMemberResponsesArgs = {
@@ -13248,6 +13142,11 @@ export type MutationSubmitAssistantFeedbackArgs = {
   rating: AssistantFeedbackRating
   turnId: Scalars['ID']['input']
   userComment?: InputMaybe<Scalars['String']['input']>
+}
+
+export type MutationUpdateAddPersonToFieldContextResponsesArgs = {
+  update?: InputMaybe<AddPersonToFieldContextResponseUpdateInput>
+  where?: InputMaybe<AddPersonToFieldContextResponseWhere>
 }
 
 export type MutationUpdateAddSpaceMemberResponsesArgs = {
@@ -13897,32 +13796,20 @@ export type NotificationPersonActorNodeAggregateSelection = {
   __typename?: 'NotificationPersonActorNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -13942,32 +13829,20 @@ export type NotificationPersonRecipientNodeAggregateSelection = {
   __typename?: 'NotificationPersonRecipientNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -14645,32 +14520,20 @@ export type PersonAggregateNode = {
   __typename?: 'PersonAggregateNode'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -14678,38 +14541,25 @@ export type PersonAggregateSelection = {
   __typename?: 'PersonAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
 export type PersonConnectInput = {
-  contexts?: InputMaybe<Array<PersonContextsConnectFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByConnectFieldInput>>
   extractedFrom?: InputMaybe<Array<PersonExtractedFromConnectFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfConnectFieldInput>>
@@ -14818,11 +14668,6 @@ export type PersonContextsAggregateInput = {
   node?: InputMaybe<PersonContextsNodeAggregationWhereInput>
 }
 
-export type PersonContextsConnectFieldInput = {
-  connect?: InputMaybe<Array<FieldContextConnectInput>>
-  where?: InputMaybe<FieldContextConnectWhere>
-}
-
 export type PersonContextsConnection = {
   __typename?: 'PersonContextsConnection'
   aggregate: PersonFieldContextContextsAggregateSelection
@@ -14842,23 +14687,9 @@ export type PersonContextsConnectionWhere = {
   node?: InputMaybe<FieldContextWhere>
 }
 
-export type PersonContextsCreateFieldInput = {
-  node: FieldContextCreateInput
-}
-
-export type PersonContextsDeleteFieldInput = {
-  delete?: InputMaybe<FieldContextDeleteInput>
-  where?: InputMaybe<PersonContextsConnectionWhere>
-}
-
 export type PersonContextsDisconnectFieldInput = {
   disconnect?: InputMaybe<FieldContextDisconnectInput>
   where?: InputMaybe<PersonContextsConnectionWhere>
-}
-
-export type PersonContextsFieldInput = {
-  connect?: InputMaybe<Array<PersonContextsConnectFieldInput>>
-  create?: InputMaybe<Array<PersonContextsCreateFieldInput>>
 }
 
 export type PersonContextsNodeAggregationWhereInput = {
@@ -14913,24 +14744,14 @@ export type PersonContextsRelationship = {
   node: FieldContext
 }
 
-export type PersonContextsUpdateConnectionInput = {
-  node?: InputMaybe<FieldContextUpdateInput>
-  where?: InputMaybe<PersonContextsConnectionWhere>
-}
-
 export type PersonContextsUpdateFieldInput = {
-  connect?: InputMaybe<Array<PersonContextsConnectFieldInput>>
-  create?: InputMaybe<Array<PersonContextsCreateFieldInput>>
-  delete?: InputMaybe<Array<PersonContextsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonContextsDisconnectFieldInput>>
-  update?: InputMaybe<PersonContextsUpdateConnectionInput>
 }
 
 export type PersonCreateInput = {
   authId?: InputMaybe<Scalars['String']['input']>
   avatar?: InputMaybe<Scalars['String']['input']>
   careManual?: InputMaybe<Scalars['String']['input']>
-  contexts?: InputMaybe<PersonContextsFieldInput>
   createdBy?: InputMaybe<PersonCreatedByFieldInput>
   description?: InputMaybe<Scalars['String']['input']>
   email?: InputMaybe<Scalars['String']['input']>
@@ -15267,7 +15088,6 @@ export type PersonCreatedByUpdateFieldInput = {
 }
 
 export type PersonDeleteInput = {
-  contexts?: InputMaybe<Array<PersonContextsDeleteFieldInput>>
   createdBy?: InputMaybe<Array<PersonCreatedByDeleteFieldInput>>
   extractedFrom?: InputMaybe<Array<PersonExtractedFromDeleteFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfDeleteFieldInput>>
@@ -15568,143 +15388,6 @@ export type PersonInterface = {
   photo?: Maybe<Scalars['String']['output']>
   pronouns?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
-}
-
-export type PersonInterfaceAggregate = {
-  __typename?: 'PersonInterfaceAggregate'
-  count: Count
-  node: PersonInterfaceAggregateNode
-}
-
-export type PersonInterfaceAggregateNode = {
-  __typename?: 'PersonInterfaceAggregateNode'
-  createdAt: DateTimeAggregateSelection
-  email: StringAggregateSelection
-  firstName: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  lastName: StringAggregateSelection
-  location: StringAggregateSelection
-  name: StringAggregateSelection
-  phone: StringAggregateSelection
-  photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
-  updatedAt: DateTimeAggregateSelection
-}
-
-export type PersonInterfaceAggregateSelection = {
-  __typename?: 'PersonInterfaceAggregateSelection'
-  count: Scalars['Int']['output']
-  createdAt: DateTimeAggregateSelection
-  email: StringAggregateSelection
-  firstName: StringAggregateSelection
-  /** @deprecated aggregation of ID fields are deprecated and will be removed */
-  id: IdAggregateSelection
-  lastName: StringAggregateSelection
-  location: StringAggregateSelection
-  name: StringAggregateSelection
-  phone: StringAggregateSelection
-  photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
-  updatedAt: DateTimeAggregateSelection
-}
-
-export type PersonInterfaceEdge = {
-  __typename?: 'PersonInterfaceEdge'
-  cursor: Scalars['String']['output']
-  node: PersonInterface
-}
-
-export enum PersonInterfaceImplementation {
-  Person = 'Person',
-  User = 'User',
-}
-
-/** Fields to sort PersonInterfaces by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonInterfaceSort object. */
-export type PersonInterfaceSort = {
-  createdAt?: InputMaybe<SortDirection>
-  email?: InputMaybe<SortDirection>
-  firstName?: InputMaybe<SortDirection>
-  id?: InputMaybe<SortDirection>
-  lastName?: InputMaybe<SortDirection>
-  location?: InputMaybe<SortDirection>
-  name?: InputMaybe<SortDirection>
-  phone?: InputMaybe<SortDirection>
-  photo?: InputMaybe<SortDirection>
-  pronouns?: InputMaybe<SortDirection>
-  updatedAt?: InputMaybe<SortDirection>
-}
-
-export type PersonInterfaceWhere = {
-  AND?: InputMaybe<Array<PersonInterfaceWhere>>
-  NOT?: InputMaybe<PersonInterfaceWhere>
-  OR?: InputMaybe<Array<PersonInterfaceWhere>>
-  createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
-  createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
-  createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  email_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  email_EQ?: InputMaybe<Scalars['String']['input']>
-  email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  firstName_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  firstName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  firstName_EQ?: InputMaybe<Scalars['String']['input']>
-  firstName_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  firstName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
-  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
-  id_EQ?: InputMaybe<Scalars['ID']['input']>
-  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
-  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
-  lastName_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  lastName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  lastName_EQ?: InputMaybe<Scalars['String']['input']>
-  lastName_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  lastName_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  location_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  location_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  location_EQ?: InputMaybe<Scalars['String']['input']>
-  location_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  location_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  name_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  name_EQ?: InputMaybe<Scalars['String']['input']>
-  name_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  phone_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  phone_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  phone_EQ?: InputMaybe<Scalars['String']['input']>
-  phone_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  phone_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  photo_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  photo_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  photo_EQ?: InputMaybe<Scalars['String']['input']>
-  photo_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  photo_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  pronouns_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  pronouns_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  pronouns_EQ?: InputMaybe<Scalars['String']['input']>
-  pronouns_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  pronouns_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  typename?: InputMaybe<Array<PersonInterfaceImplementation>>
-  updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
-  updatedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
-  updatedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
-}
-
-export type PersonInterfacesConnection = {
-  __typename?: 'PersonInterfacesConnection'
-  aggregate: PersonInterfaceAggregate
-  edges: Array<PersonInterfaceEdge>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
 }
 
 export type PersonMemberOfAggregateInput = {
@@ -16023,32 +15706,20 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
   __typename?: 'PersonPersonCreatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -17272,32 +16943,20 @@ export type PromiseWeavePersonCreatedByNodeAggregateSelection = {
   __typename?: 'PromiseWeavePersonCreatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -17317,32 +16976,20 @@ export type PromiseWeavePersonWovenForNodeAggregateSelection = {
   __typename?: 'PromiseWeavePersonWovenForNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -17911,6 +17558,10 @@ export type PromiseWeavesConnection = {
 
 export type Query = {
   __typename?: 'Query'
+  addPersonToFieldContextResponses: Array<AddPersonToFieldContextResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "addPersonToFieldContextResponsesConnection" instead */
+  addPersonToFieldContextResponsesAggregate: AddPersonToFieldContextResponseAggregateSelection
+  addPersonToFieldContextResponsesConnection: AddPersonToFieldContextResponsesConnection
   addSpaceMemberResponses: Array<AddSpaceMemberResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "addSpaceMemberResponsesConnection" instead */
   addSpaceMemberResponsesAggregate: AddSpaceMemberResponseAggregateSelection
@@ -18030,7 +17681,6 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "ingestDocumentResponsesConnection" instead */
   ingestDocumentResponsesAggregate: IngestDocumentResponseAggregateSelection
   ingestDocumentResponsesConnection: IngestDocumentResponsesConnection
-  lifeSensors: Array<LifeSensor>
   logs: Array<Log>
   /** @deprecated Please use the explicit field "aggregate" inside "logsConnection" instead */
   logsAggregate: LogAggregateSelection
@@ -18064,10 +17714,6 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "personConnectionEdgesConnection" instead */
   personConnectionEdgesAggregate: PersonConnectionEdgeAggregateSelection
   personConnectionEdgesConnection: PersonConnectionEdgesConnection
-  personInterfaces: Array<PersonInterface>
-  /** @deprecated Please use the explicit field "aggregate" inside "personInterfacesConnection" instead */
-  personInterfacesAggregate: PersonInterfaceAggregateSelection
-  personInterfacesConnection: PersonInterfacesConnection
   promiseWeaves: Array<PromiseWeave>
   /** @deprecated Please use the explicit field "aggregate" inside "promiseWeavesConnection" instead */
   promiseWeavesAggregate: PromiseWeaveAggregateSelection
@@ -18170,6 +17816,24 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "weSpacesConnection" instead */
   weSpacesAggregate: WeSpaceAggregateSelection
   weSpacesConnection: WeSpacesConnection
+}
+
+export type QueryAddPersonToFieldContextResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<AddPersonToFieldContextResponseSort>>
+  where?: InputMaybe<AddPersonToFieldContextResponseWhere>
+}
+
+export type QueryAddPersonToFieldContextResponsesAggregateArgs = {
+  where?: InputMaybe<AddPersonToFieldContextResponseWhere>
+}
+
+export type QueryAddPersonToFieldContextResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<AddPersonToFieldContextResponseSort>>
+  where?: InputMaybe<AddPersonToFieldContextResponseWhere>
 }
 
 export type QueryAddSpaceMemberResponsesArgs = {
@@ -18458,12 +18122,6 @@ export type QueryIngestDocumentResponsesConnectionArgs = {
   where?: InputMaybe<IngestDocumentResponseWhere>
 }
 
-export type QueryLifeSensorsArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<LifeSensorWhere>
-}
-
 export type QueryLogsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -18574,24 +18232,6 @@ export type QueryPersonConnectionEdgesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<PersonConnectionEdgeSort>>
   where?: InputMaybe<PersonConnectionEdgeWhere>
-}
-
-export type QueryPersonInterfacesArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<PersonInterfaceSort>>
-  where?: InputMaybe<PersonInterfaceWhere>
-}
-
-export type QueryPersonInterfacesAggregateArgs = {
-  where?: InputMaybe<PersonInterfaceWhere>
-}
-
-export type QueryPersonInterfacesConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<PersonInterfaceSort>>
-  where?: InputMaybe<PersonInterfaceWhere>
 }
 
 export type QueryPromiseWeavesArgs = {
@@ -21009,32 +20649,20 @@ export type ResourcePulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'ResourcePulsePersonCreatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -21048,32 +20676,20 @@ export type ResourcePulsePersonInitiatedByNodeAggregateSelection = {
   __typename?: 'ResourcePulsePersonInitiatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -22114,32 +21730,20 @@ export type SpaceMembershipPersonMemberNodeAggregateSelection = {
   __typename?: 'SpaceMembershipPersonMemberNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -24053,32 +23657,20 @@ export type StoryPulsePersonCreatedByNodeAggregateSelection = {
   __typename?: 'StoryPulsePersonCreatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -24092,32 +23684,20 @@ export type StoryPulsePersonInitiatedByNodeAggregateSelection = {
   __typename?: 'StoryPulsePersonInitiatedByNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -24462,6 +24042,12 @@ export type SubmitAssistantFeedbackResponsesConnection = {
   edges: Array<SubmitAssistantFeedbackResponseEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
+}
+
+export type UpdateAddPersonToFieldContextResponsesMutationResponse = {
+  __typename?: 'UpdateAddPersonToFieldContextResponsesMutationResponse'
+  addPersonToFieldContextResponses: Array<AddPersonToFieldContextResponse>
+  info: UpdateInfo
 }
 
 export type UpdateAddSpaceMemberResponsesMutationResponse = {
@@ -26096,32 +25682,20 @@ export type WeSpacePersonOwnerNodeAggregateSelection = {
   __typename?: 'WeSpacePersonOwnerNodeAggregateSelection'
   authId: StringAggregateSelection
   avatar: StringAggregateSelection
-  careManual: StringAggregateSelection
   createdAt: DateTimeAggregateSelection
-  description: StringAggregateSelection
-  email: StringAggregateSelection
-  favorites: StringAggregateSelection
-  fieldsOfCare: StringAggregateSelection
   firstName: StringAggregateSelection
-  gender: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  interests: StringAggregateSelection
   lastFocalAt: DateTimeAggregateSelection
   lastFocalId: StringAggregateSelection
   lastFocalLabel: StringAggregateSelection
   lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
-  location: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
-  passions: StringAggregateSelection
-  phone: StringAggregateSelection
   photo: StringAggregateSelection
-  pronouns: StringAggregateSelection
   refreshTokenExp: DateTimeAggregateSelection
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
-  traits: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
 }
 
@@ -26512,18 +26086,11 @@ export type AddPersonToFieldContextMutationVariables = Exact<{
 
 export type AddPersonToFieldContextMutation = {
   __typename?: 'Mutation'
-  updateFieldContexts: {
-    __typename?: 'UpdateFieldContextsMutationResponse'
-    fieldContexts: Array<{
-      __typename?: 'FieldContext'
-      id: string
-      people: Array<{
-        __typename?: 'Person'
-        id: string
-        name: string
-        email?: string | null
-      }>
-    }>
+  addPersonToFieldContext: {
+    __typename?: 'AddPersonToFieldContextResponse'
+    success: boolean
+    message: string
+    person?: { __typename?: 'Person'; id: string; name: string } | null
   }
 }
 
@@ -26536,16 +26103,7 @@ export type RemovePersonFromFieldContextMutation = {
   __typename?: 'Mutation'
   updateFieldContexts: {
     __typename?: 'UpdateFieldContextsMutationResponse'
-    fieldContexts: Array<{
-      __typename?: 'FieldContext'
-      id: string
-      people: Array<{
-        __typename?: 'Person'
-        id: string
-        name: string
-        email?: string | null
-      }>
-    }>
+    fieldContexts: Array<{ __typename?: 'FieldContext'; id: string }>
   }
 }
 
@@ -32230,124 +31788,38 @@ export const AddPersonToFieldContextDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'updateFieldContexts' },
+            name: { kind: 'Name', value: 'addPersonToFieldContext' },
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
+                name: { kind: 'Name', value: 'contextId' },
                 value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'id_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'contextId' },
-                      },
-                    },
-                  ],
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'contextId' },
                 },
               },
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'update' },
+                name: { kind: 'Name', value: 'personId' },
                 value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'people' },
-                      value: {
-                        kind: 'ObjectValue',
-                        fields: [
-                          {
-                            kind: 'ObjectField',
-                            name: { kind: 'Name', value: 'connect' },
-                            value: {
-                              kind: 'ListValue',
-                              values: [
-                                {
-                                  kind: 'ObjectValue',
-                                  fields: [
-                                    {
-                                      kind: 'ObjectField',
-                                      name: { kind: 'Name', value: 'where' },
-                                      value: {
-                                        kind: 'ObjectValue',
-                                        fields: [
-                                          {
-                                            kind: 'ObjectField',
-                                            name: {
-                                              kind: 'Name',
-                                              value: 'node',
-                                            },
-                                            value: {
-                                              kind: 'ObjectValue',
-                                              fields: [
-                                                {
-                                                  kind: 'ObjectField',
-                                                  name: {
-                                                    kind: 'Name',
-                                                    value: 'id_EQ',
-                                                  },
-                                                  value: {
-                                                    kind: 'Variable',
-                                                    name: {
-                                                      kind: 'Name',
-                                                      value: 'personId',
-                                                    },
-                                                  },
-                                                },
-                                              ],
-                                            },
-                                          },
-                                        ],
-                                      },
-                                    },
-                                  ],
-                                },
-                              ],
-                            },
-                          },
-                        ],
-                      },
-                    },
-                  ],
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'personId' },
                 },
               },
             ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'fieldContexts' },
+                  name: { kind: 'Name', value: 'person' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'people' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                     ],
                   },
                 },
@@ -32495,27 +31967,6 @@ export const RemovePersonFromFieldContextDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'people' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },

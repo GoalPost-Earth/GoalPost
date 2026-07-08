@@ -975,12 +975,18 @@ export default function FieldContextDetailsPage() {
         throw new Error('Person creation failed')
       }
 
-      await addPersonToFieldContext({
+      // The custom mutation reports authorization failures as
+      // success: false rather than a thrown GraphQL error.
+      const { data: attachResponse } = await addPersonToFieldContext({
         variables: {
           contextId,
           personId,
         },
       })
+      const attachResult = attachResponse?.addPersonToFieldContext
+      if (!attachResult?.success) {
+        throw new Error(attachResult?.message || 'Failed to add person')
+      }
 
       await refetchFieldPeople()
       setIsAddPersonModalOpen(false)
