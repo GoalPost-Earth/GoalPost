@@ -404,6 +404,91 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
   })
 
   itIf(true)(
+    'mixed create/update run: summary line splits created vs updated counts — a roster match is never announced as created (feedback_ada357aa)',
+    async () => {
+      if (!neo4jAvailable) return
+      const blobStore = createMemoryBlobStore()
+      // Seed a roster person so the extractor's full-name match resolves to
+      // update_person instead of create_person.
+      const rosterPersonId = `test_roster_${testRunId}`
+      const seedSession = driver.session()
+      try {
+        await seedSession.run(
+          `MATCH (c:FieldContext {id: $ctxId})
+           CREATE (p:Person:PersonPulse {id: $pid, firstName: 'Priya', lastName: 'Raman', name: 'Priya Raman', createdAt: datetime()})
+           CREATE (c)-[:HAS_PERSON]->(p)`,
+          { ctxId: ids.fieldContext, pid: rosterPersonId }
+        )
+      } finally {
+        await seedSession.close()
+      }
+
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [
+          { firstName: 'Priya', lastName: 'Raman' }, // roster match → update
+          { firstName: 'Noah', lastName: 'Fields' }, // new → create
+        ],
+        assistantText: '',
+      })
+
+      const result = await seedAndIngest(
+        { driver, blobStore, modelClient },
+        {
+          currentUserId: ids.user,
+          fieldContextId: ids.fieldContext,
+          filename: 'follow-up-notes.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from(
+            'Priya Raman synced with Noah Fields about rollout.',
+            'utf8'
+          ),
+          hint: null,
+        }
+      )
+
+      expect(result.ok).toBe(true)
+      if (!result.ok) throw new Error('unreachable')
+      const byTool = result.executedToolCalls.reduce<Record<string, number>>(
+        (acc, c) => {
+          acc[c.tool] = (acc[c.tool] ?? 0) + 1
+          return acc
+        },
+        {}
+      )
+      expect(byTool.update_person).toBe(1)
+      expect(byTool.create_person).toBe(1)
+      for (const exec of result.executedToolCalls) {
+        expect(exec.result.success).not.toBe(false)
+      }
+
+      const session = driver.session()
+      try {
+        const turnRows = await session.run(
+          `MATCH (t:ConversationThread {id: $threadId})-[:HAS_TURN]->(turn:ConversationTurn {role: 'assistant'})
+           RETURN turn.content AS content`,
+          { threadId: result.threadId }
+        )
+        expect(turnRows.records).toHaveLength(1)
+        const content = String(turnRows.records[0].get('content'))
+        // The summary must split creates from updates. Announcing the
+        // roster-matched update as "created" sent users hunting the graph
+        // for a node that was never minted (feedback_ada357aa).
+        expect(content).toContain(
+          'Created 1 entity and updated 1 existing entry from this document.'
+        )
+        expect(content).not.toMatch(/Created 2/)
+        // The match sentence reports the update as done, not "proposed" —
+        // the ingest pipeline auto-executes.
+        expect(content).toContain('you already track: Priya Raman')
+        expect(content).toContain('updated that existing entry')
+        expect(content).not.toContain('proposed')
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
+  itIf(true)(
     'slice 2 batch — 2 persons + 3 pulses (Goal/Resource/Story) approved together land in the graph with EXTRACTED_FROM; CarePulse is dropped server-side',
     async () => {
       if (!neo4jAvailable) return
