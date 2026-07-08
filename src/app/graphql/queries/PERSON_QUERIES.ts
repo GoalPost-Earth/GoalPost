@@ -21,6 +21,29 @@ export const GET_PERSON = graphql(`
   }
 `)
 
+/**
+ * Open directory-only lookup — selects ONLY the fields left ungated by the
+ * GOAL-275 Person PII filter (id / firstName / lastName / name / photo). Because
+ * it never touches a gated field, this query resolves for ANY existing Person
+ * regardless of the caller's relationship to them. The drawer uses it as a
+ * fallback: when GET_PERSON_PROFILE returns empty (the PII gate filtered the
+ * node out for this caller — e.g. a connection the caller neither created nor
+ * shares a Space with), a non-empty result here means "the person exists, you
+ * just can't see their private profile" → render a graceful limited card
+ * instead of the misleading "no longer available / you lost access" not-found.
+ */
+export const GET_PERSON_DIRECTORY = graphql(`
+  query getPersonDirectory($personId: ID!) {
+    people(where: { id_EQ: $personId }) {
+      id
+      firstName
+      lastName
+      name
+      photo
+    }
+  }
+`)
+
 export const GET_PERSON_PROFILE = graphql(`
   query getPersonProfile($personId: ID!) {
     people(where: { id_EQ: $personId }) {

@@ -70,14 +70,19 @@ export async function GET(request: NextRequest) {
 
     const graph = await initGraph()
 
-    // Get suggestions with their pulses and context
-    const suggestionsResult = await graph.query<ResonanceSuggestion>(
+    // Get suggestions with their pulses and context. Pass status='all' to
+    // return every status (used by the review modal so its Accepted/Declined
+    // tabs populate); otherwise filter to the requested status.
+    const suggestionsResult = await graph.query<{
+      suggestion: ResonanceSuggestion
+    }>(
       `
-      MATCH (space:Space {id: $spaceId})-[:HAS_SUGGESTION]->(suggestion:ResonanceSuggestion {status: $status})
+      MATCH (space:Space {id: $spaceId})-[:HAS_SUGGESTION]->(suggestion:ResonanceSuggestion)
+      WHERE $status = 'all' OR suggestion.status = $status
       MATCH (suggestion)-[:SOURCE]->(source:FieldPulse)
       MATCH (suggestion)-[:TARGET]->(target:FieldPulse)
       MATCH (context:FieldContext)-[:HAS_SUGGESTION]->(suggestion)
-      
+
       RETURN {
         id: suggestion.id,
         label: suggestion.label,
@@ -93,15 +98,25 @@ export async function GET(request: NextRequest) {
         contextId: context.id,
         contextTitle: context.title
       } as suggestion
-      
+
       ORDER BY suggestion.createdAt DESC
     `,
       { spaceId, status }
     )
 
-    const suggestions = Array.isArray(suggestionsResult)
+    // The Cypher aliases the projection as `suggestion`, and the LangChain
+    // Neo4jGraph layer returns each row as `{ suggestion: {...} }` (record
+    // key preserved). Unwrap so the API contract stays flat — the modal +
+    // hook read `.status`/`.confidence` directly. (Without this the modal
+    // filters on undefined fields and shows "No pending suggestions".)
+    const suggestions = (Array.isArray(suggestionsResult)
       ? suggestionsResult
       : []
+    ).map((row) =>
+      row && typeof row === 'object' && 'suggestion' in row
+        ? (row as { suggestion: ResonanceSuggestion }).suggestion
+        : (row as unknown as ResonanceSuggestion)
+    )
 
     console.log(
       `[Resonance Suggestions] Found ${suggestions.length} ${status} suggestions in space ${spaceId}`

@@ -41,6 +41,7 @@
     "docs-langchain",
     "chrome-devtools",
     "context7",
-    "atlassian"
+    "atlassian",
+    "neo4j-demo"
   ]
 }

@@ -255,6 +255,7 @@ export default function FieldContextDetailsPage() {
     loading: resonanceSuggestionsLoading,
     refetch: refetchSuggestions,
     acceptSuggestion,
+    acceptAllAboveConfidence,
     declineSuggestion,
   } = useResonanceSuggestions({ spaceId, filter: 'all', enabled: false })
 
@@ -974,12 +975,18 @@ export default function FieldContextDetailsPage() {
         throw new Error('Person creation failed')
       }
 
-      await addPersonToFieldContext({
+      // The custom mutation reports authorization failures as
+      // success: false rather than a thrown GraphQL error.
+      const { data: attachResponse } = await addPersonToFieldContext({
         variables: {
           contextId,
           personId,
         },
       })
+      const attachResult = attachResponse?.addPersonToFieldContext
+      if (!attachResult?.success) {
+        throw new Error(attachResult?.message || 'Failed to add person')
+      }
 
       await refetchFieldPeople()
       setIsAddPersonModalOpen(false)
@@ -1687,6 +1694,12 @@ export default function FieldContextDetailsPage() {
           onAccept={async (id) => {
             await acceptSuggestion(id)
             await refetch()
+          }}
+          onAcceptAll={async (minConfidence) => {
+            const accepted = await acceptAllAboveConfidence(minConfidence)
+            // Newly-created ResonanceLinks surface in the Resonances section.
+            await refetch()
+            return accepted
           }}
           onDecline={declineSuggestion}
           onRefresh={refetchSuggestions}

@@ -155,6 +155,15 @@ export async function POST(req: NextRequest) {
            p.onboardingSkipped = coalesce(p.onboardingSkipped, false),
            p.inviteTokenHash = NULL,
            p.inviteTokenExpires = NULL
+       WITH p
+       // Accepting an invite makes this placeholder self-sovereign. A
+       // placeholder carries (p)-[:CREATED_BY]->(importer); left intact it
+       // would keep satisfying the Person PII createdBy_SOME read gate,
+       // letting whoever imported them read the now-real user's full profile
+       // cross-Space without consent. Shed that ownership edge on adoption.
+       OPTIONAL MATCH (p)-[createdByEdge:CREATED_BY]->(:Person)
+       DELETE createdByEdge
+       WITH DISTINCT p
        RETURN p.id AS id, p.email AS email,
               p.firstName AS firstName, p.lastName AS lastName`,
       {

@@ -42,7 +42,12 @@ export function useResonanceSuggestions(
         spaceId: options.spaceId,
       })
 
-      if (options.filter && options.filter !== 'all') {
+      // 'all' is an explicit sentinel the route understands (returns every
+      // status so the modal's Accepted/Declined tabs populate). A specific
+      // filter passes through; undefined lets the route default to pending.
+      if (options.filter === 'all') {
+        params.append('status', 'all')
+      } else if (options.filter) {
         params.append('status', options.filter)
       }
 
@@ -106,6 +111,49 @@ export function useResonanceSuggestions(
     [fetchSuggestions]
   )
 
+  const acceptAllAboveConfidence = useCallback(
+    async (minConfidence: number): Promise<number> => {
+      try {
+        const response = await fetch(
+          `/api/resonance/suggestions/accept-bulk`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              spaceId: options.spaceId,
+              minConfidence,
+            }),
+          }
+        )
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to accept suggestions')
+        }
+
+        const data = await response.json()
+        const accepted = Number(data.accepted ?? 0)
+        const pct = Math.round(minConfidence * 100)
+        if (accepted > 0) {
+          toast.success(
+            `✨ Accepted ${accepted} resonance${accepted === 1 ? '' : 's'} at ${pct}%+`
+          )
+        } else {
+          toast.info(`No pending resonances at ${pct}%+ to accept.`)
+        }
+
+        await fetchSuggestions()
+        return accepted
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Unknown error occurred'
+        toast.error(`Failed to accept resonances: ${errorMessage}`)
+        throw err
+      }
+    },
+    [fetchSuggestions, options.spaceId]
+  )
+
   const declineSuggestion = useCallback(
     async (id: string) => {
       try {
@@ -144,6 +192,7 @@ export function useResonanceSuggestions(
     error,
     refetch: fetchSuggestions,
     acceptSuggestion,
+    acceptAllAboveConfidence,
     declineSuggestion,
   }
 }

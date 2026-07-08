@@ -94,8 +94,18 @@ type PersonConnectionEdge {
 """
 Base interface for Person entities.
 Defines common properties across Person and User types.
+
+`@query(read: false, aggregate: false)`: the GOAL-275 PII gate lives on the
+concrete `Person` type (field-level `@authorization` READ + `@selectable`
+onAggregate:false). Those do NOT flow to the interface's auto-generated roots
+(`personInterfaces`, `personInterfacesAggregate`, `personInterfacesConnection`),
+which read the same `:Person` nodes with NO authorization — a cross-Space leak
+of email/phone/location/pronouns to any authenticated user. Disabling the
+interface roots closes that parallel path; the app never queries them (all
+Person access goes through `people` / `relatedPeople`). Mirrors the `User`
+type lock. If a new gated field is added to `Person`, this stays sufficient.
 """
-interface PersonInterface {
+interface PersonInterface @query(read: false, aggregate: false) {
   id: ID!
   firstName: String!
   lastName: String!
@@ -155,8 +165,28 @@ type Person implements PersonInterface
   # Space boundaries. Each carries an identical field-level `@authorization`
   # `filter` rule that authorizes the read only when the caller
   #   • is the person           (id_EQ $jwt.user.id), OR
+  #   • created the person node  (createdBy_SOME id_EQ $jwt.user.id — their own
+  #                               imported / ingested contact), OR
   #   • shares a Space with them (co-owner or co-member of any Space they own /
-  #                               belong to).
+  #                               belong to), OR
+  #   • can view a FieldContext that holds them (contexts_SOME — the person is
+  #     attached via HAS_PERSON to a FieldContext whose parent Space the caller
+  #     owns or is a member of). This is the ONLY Space tie a PersonPulse has:
+  #     relational-world people own no Space and hold no SpaceMembership, so
+  #     without this branch every ingest/assistant-created person was filtered
+  #     out of any query selecting a gated field — including for the very user
+  #     who created them in their own MeSpace (the "uploaded a document but the
+  #     people never appeared" failure). The branch mirrors FieldContext's own
+  #     READ filter, so it authorizes exactly the people the caller could
+  #     already reach by opening that context. No cross-Space widening for
+  #     PersonPulses; for `:User` persons, PII reach equals context reach, so
+  #     the HAS_PERSON attach side is gated to match: the generated nested
+  #     CONNECT is disabled (FieldContext.people / Person.contexts carry
+  #     `nestedOperations: [DISCONNECT]`), and the sole attach path — the
+  #     custom `addPersonToFieldContext` mutation — refuses a `:User` target
+  #     unless they are the caller or already own / belong to the context's
+  #     parent Space. The declarative filter here cannot express "NOT :User",
+  #     which is exactly why that guard lives in the resolver, not this rule.
   #
   # MECHANISM (important — @neo4j/graphql v6): a field-level `filter` rule is
   # ANDed onto the PARENT Person's match *whenever that field appears in the
@@ -175,15 +205,34 @@ type Person implements PersonInterface
   # than "show name+photo, hide the sensitive bits" (which the declarative
   # filter cannot express without a raw projection).
   #
+  # AGGREGATION: the filter rules cover READ only, and field-level rules do NOT
+  # gate aggregate selections — `peopleAggregate { email { shortest } }` was
+  # confirmed to return real cross-Space emails. Every gated scalar therefore
+  # also carries `@selectable(onRead: true, onAggregate: false)`, which removes
+  # it from ALL aggregate selection types (top-level and nested) at schema-build
+  # time — fail-closed by construction. `peopleAggregate { count }` (the only
+  # aggregate the app uses, GET_GRAPH_STATS) is unaffected. If you add a new
+  # gated field, add BOTH directives.
+  #
   # The predicate reuses the exact owner/member pattern from the WeSpace +
   # SpaceMembership authorization filters above, over the pre-existing
-  # `ownsSpaces` / `memberOf` relationships — so it adds NO new filter surface.
-  # A legacy CONNECTED_TO edge does NOT unlock these fields: expressing "caller
-  # is connected to this person" declaratively would require a CONNECTED_TO
-  # relationship filter on PersonWhere, which `people(where:)` would then expose
-  # for cross-Space connection-graph enumeration — re-opening the very leak this
-  # ticket closes. CONNECTED_TO is legacy (migrating to ResonanceLinks), so
-  # sharing a Space is the intended path to a person's private profile.
+  # `ownsSpaces` / `memberOf` / `createdBy` relationships — so it adds NO new
+  # filter surface (all three are already declared `@relationship` fields on
+  # this type, so their `*_SOME` filters already exist in PersonWhere).
+  # The `createdBy_SOME` branch closes the regression where a user could not
+  # open the profile of a non-member contact they themselves imported/ingested
+  # (e.g. a document-extracted PersonPulse): such a contact owns no Space and is
+  # a member of none, so the owner/member branches miss it, yet it is created
+  # by — and belongs to — the caller. It only ever unlocks persons the caller
+  # created, and CREATED_BY edges are written server-side (never via the
+  # self-gated updatePeople), so it cannot be forged to reach a stranger's PII.
+  # A legacy CONNECTED_TO edge, by contrast, does NOT unlock these fields:
+  # expressing "caller is connected to this person" declaratively would require
+  # adding a CONNECTED_TO relationship filter to PersonWhere, which `people(where:)`
+  # would then expose for cross-Space connection-graph enumeration — re-opening
+  # the very leak this ticket closes. CONNECTED_TO is legacy (migrating to
+  # ResonanceLinks), so createdBy / sharing a Space are the intended paths to a
+  # person's private profile.
   # Keep the OR-branches byte-identical on every gated field — a drifted copy
   # is a leak.
   # ────────────────────────────────────────────────────────────────────────────
@@ -191,10 +240,13 @@ type Person implements PersonInterface
   # self-bootstrap lookup (GET_LOGGED_IN_USER). Its value is still gated by the
   # @authorization filter below; only the exact-match filter capability remains.
   email: String
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
 
   # Profile properties (merged from reference).
@@ -204,33 +256,45 @@ type Person implements PersonInterface
   photo: String
   phone: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   pronouns: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   location: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   avatar: String
   status: String
   gender: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
 
   # Rich profile content
@@ -240,52 +304,73 @@ type Person implements PersonInterface
   # the authorized `updatePersonPulse` mutation (NOT the self-gated updatePeople).
   description: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   careManual: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   favorites: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   passions: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   traits: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   fieldsOfCare: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   interests: String
     @filterable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
 
   # Authentication properties (for users)
@@ -343,8 +428,10 @@ type Person implements PersonInterface
     )
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   connectionEdges: [PersonConnectionEdge!]!
     @cypher(
@@ -356,8 +443,10 @@ type Person implements PersonInterface
     )
     @authorization(filter: [{ operations: [READ], where: { node: { OR: [
       { id_EQ: "$jwt.user.id" }
+      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
       { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
       { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
+      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
     ] } } }])
   
   # PULSE ACCESS: Pulses are accessed through FieldContexts in owned/member Spaces
@@ -365,7 +454,16 @@ type Person implements PersonInterface
   #   1. Query ownsSpaces → get MeSpaces/WeSpaces
   #   2. Query contexts on those spaces → get FieldContexts
   #   3. Query pulses on those contexts → get GoalPulse/ResourcePulse/StoryPulse
-  contexts: [FieldContext!]! @relationship(type: "HAS_PERSON", direction: IN)
+  # Same HAS_PERSON write-gate as FieldContext.people, from the Person side:
+  # updatePeople's UPDATE validate limits the target to the caller's own node,
+  # but an open nested CONNECT here still let a caller inject THEMSELVES into
+  # any FieldContext by id. Attach flows go through `addPersonToFieldContext`.
+  contexts: [FieldContext!]!
+    @relationship(
+      type: "HAS_PERSON"
+      direction: IN
+      nestedOperations: [DISCONNECT]
+    )
   #
   # MIGRATION: Legacy direct pulse relationships (goals, resources, coreValues, carePoints)
   # are transformed into pulses within FieldContexts in the person's auto-created MeSpace.
@@ -499,7 +597,11 @@ MIGRATION NOTES:
      c. Create GoalPulse "Ship v2.0" in FieldContext
      d. Members can access via: memberOf → space → contexts → pulses
 """
-union LifeSensor = Person
+# @query(read: false): same reason as PersonInterface — this union's
+# auto-generated `lifeSensors` root reads `:Person` nodes without the
+# GOAL-275 field-auth gate, leaking cross-Space PII. Unused by the app
+# (the schema-graph page shows a static "LifeSensors" label, not a query).
+union LifeSensor @query(read: false) = Person
 
 # ============================================================================
 # SPACES (Privacy + Ownership Boundary)
@@ -756,7 +858,19 @@ type FieldContext
   emergentName: String
   createdAt: DateTime!
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
-  people: [Person!]! @relationship(type: "HAS_PERSON", direction: OUT)
+  # HAS_PERSON connects go through the custom `addPersonToFieldContext`
+  # mutation, which gates `:User` targets (attaching a person to a context
+  # unlocks their gated PII to the space via the Person contexts_SOME READ
+  # branch — so a registered User may only be attached when they are the
+  # caller or already own / belong to the context's parent Space). Only
+  # DISCONNECT stays generated (RemovePersonFromFieldContext); an open nested
+  # CONNECT let any context editor attach an arbitrary User by id.
+  people: [Person!]!
+    @relationship(
+      type: "HAS_PERSON"
+      direction: OUT
+      nestedOperations: [DISCONNECT]
+    )
   pulses: [FieldPulse!]! @relationship(type: "HAS_PULSE", direction: OUT)
   documents: [Document!]! @relationship(type: "HAS_DOCUMENT", direction: OUT)
   resonances: [ResonanceLink!]!
@@ -1804,6 +1918,15 @@ type UpdatePersonPulseResponse {
 }
 
 """
+Response when attaching a person to a field context via `addPersonToFieldContext`.
+"""
+type AddPersonToFieldContextResponse {
+  success: Boolean!
+  message: String!
+  person: Person
+}
+
+"""
 Input for logging pulse-related activities.
 """
 input LogPulseInput {
@@ -1925,6 +2048,26 @@ type Mutation {
     description: String
     relationshipWhy: String
   ): UpdatePersonPulseResponse!
+
+  """
+  Attach an existing person to a field context (HAS_PERSON). This is the ONLY
+  write path for HAS_PERSON through GraphQL — the nested CONNECT on
+  FieldContext.people / Person.contexts is disabled.
+
+  Authorization (enforced server-side in the resolver, not via @authorization):
+  the caller must be able to edit the context (owner, ADMIN, or MEMBER of its
+  parent Space — GUESTs are view-only), and a target carrying the `User` label
+  may only be attached when they are the caller themselves or already own / are
+  a member of that parent Space. Attaching a person unlocks their gated PII to
+  the space's members (Person contexts_SOME READ branch), so for registered
+  accounts, presence in the Space is the consent boundary. Non-user people
+  (PersonPulse / imported contacts) are space content and attachable by any
+  editor. Writes an activity Log.
+  """
+  addPersonToFieldContext(
+    contextId: ID!
+    personId: ID!
+  ): AddPersonToFieldContextResponse!
 
   """
   Add a member to a space with a specific role.

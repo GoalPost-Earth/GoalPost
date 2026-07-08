@@ -13,7 +13,7 @@ All entities in GoalPost — their fields, relationships, and storage details. D
 
 ```
 Person ──OWNS──▶ Space (MeSpace / WeSpace)
-Person ──IS_MEMBER──▶ SpaceMembership ◀──HAS_MEMBER── Space
+Space ──HAS_MEMBER──▶ SpaceMembership ──IS_MEMBER──▶ Person
 Space ──HAS_CONTEXT──▶ FieldContext
 FieldContext ──HAS_PULSE──▶ FieldPulse (GoalPulse / ResourcePulse / StoryPulse / CarePulse / CoreValuePulse)
 FieldContext ──HAS_RESONANCE──▶ ResonanceLink
@@ -174,7 +174,11 @@ Same fields as MeSpace.
 
 - `HAS_CONTEXT` ← Space (MeSpace or WeSpace)
 - `HAS_PULSE` → FieldPulse
-- `HAS_PERSON` → Person (`:Person:PersonPulse`) — people attached to this context
+- `HAS_PERSON` → Person — people attached to this context. Usually a
+  `:Person:PersonPulse` (relational-world contact), but may also be a real
+  `:User` (the uploader's self-link, or a consent-gated attach via the
+  `addPersonToFieldContext` mutation — never the generated nested CONNECT,
+  which is disabled)
 - `HAS_RESONANCE` → ResonanceLink
 - `CREATED_BY` → Person
 
