@@ -27,23 +27,21 @@ export default async function initVectorStore(
     indexName: 'personBioVectorIndex',
     textNodeProperty: 'passions',
     embeddingNodeProperty: 'embedding',
+    // GOAL-275: the index spans every Person (including PersonPulses in
+    // other users' private Spaces) and this raw path bypasses field-level
+    // @authorization — project ONLY directory-safe fields, mirroring
+    // searchPeopleByVector in graph-rag.service.ts. No passions / traits /
+    // favorites / fieldsOfCare / interests / connections here.
     retrievalQuery: `
       RETURN
-        node.passions AS text,
+        coalesce(node.name, trim(coalesce(node.firstName, '') + ' ' + coalesce(node.lastName, ''))) AS text,
         score,
         {
           _id: elementid(node),
           firstName: node.firstName,
           lastName: node.lastName,
           avatar: node.avatar,
-          favorites: node.favorites,
-          passions: node.passions,
-          traits: node.traits,
-          fieldsOfCare: node.fieldsOfCare,
-          interests: node.interests,
-          connectedPeople: [(person)-[:CONNECTS_TO]-(node) | [ person.firstName , person.lastName ] ],
-          communities: [ (community)<-[:BELONGS_TO]-(node) | community.name ],
-          coreValues: [ (coreValue)<-[:EMBRACES]-(node) | coreValue.name ]
+          communities: [ (community)<-[:BELONGS_TO]-(node) | community.name ]
         } AS metadata
     `,
   })

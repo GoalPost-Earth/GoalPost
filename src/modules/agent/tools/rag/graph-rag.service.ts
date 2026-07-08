@@ -88,6 +88,15 @@ function mapMatch(row: Record<string, unknown>): GraphRagMatch {
   }
 }
 
+// GOAL-275: this raw-Cypher path bypasses Person's field-level
+// @authorization, and the vector index spans every Person — including
+// PersonPulses that live in other users' private Spaces (the embedding
+// sweep enrolls all of them). Person *discovery* is open by design, so
+// similarity ranking over all people is fine, but the projection must be
+// directory-safe only (id / name / photo / open community names). Never
+// return email, passions, traits, interests, fieldsOfCare, descriptions,
+// or Space names here — that hands gated scalars cross-Space to any
+// authenticated chat user.
 async function searchPeopleByVector(
   graph: Neo4jGraph,
   embedding: number[],
@@ -97,29 +106,22 @@ async function searchPeopleByVector(
     CALL db.index.vector.queryNodes('personBioVectorIndex', $limit, $embedding)
     YIELD node, score
     WHERE node:Person
-    OPTIONAL MATCH (node)-[:OWNS]->(space:Space)
     OPTIONAL MATCH (node)-[:BELONGS_TO]->(community:Community)
     WITH
       node,
       score,
-      [name IN collect(DISTINCT space.name) WHERE name IS NOT NULL][0..3] AS ownedSpaces,
       [name IN collect(DISTINCT community.name) WHERE name IS NOT NULL][0..3] AS communities
     RETURN
       'person' AS entityType,
       node.id AS id,
       coalesce(node.name, trim(coalesce(node.firstName, '') + ' ' + coalesce(node.lastName, ''))) AS title,
-      coalesce(node.passions, node.traits, node.interests, node.fieldsOfCare, '') AS snippet,
+      NULL AS snippet,
       score,
       {
         firstName: node.firstName,
         lastName: node.lastName,
-        email: node.email,
-        passions: node.passions,
-        traits: node.traits,
-        interests: node.interests,
-        fieldsOfCare: node.fieldsOfCare,
-        communities: communities,
-        ownedSpaces: ownedSpaces
+        photo: node.photo,
+        communities: communities
       } AS metadata
     ORDER BY score DESC
     LIMIT $limit
