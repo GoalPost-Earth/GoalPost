@@ -32,7 +32,8 @@
 
 ### 1.3 Important environment notes (read these first)
 
-- **Background jobs are scheduled (cron), not instant.** Embedding generation, person enrichment, and **resonance discovery** run on a schedule. After you create pulses, resonances may **not appear immediately** — they can take minutes to hours, or require a dev/admin to trigger the discovery job manually (`/api/cron/discover-resonances`). If a resonance step shows nothing, mark it **Blocked – pending job**, not Failed, and flag it to the dev team.
+- **Resonance discovery now runs on demand — you don't have to wait for a cron.** Uploading a document into a FieldContext automatically runs resonance discovery for that field, and every field's **Resonances** section has a **Discover** button you can click yourself to run it (see §K). Discovery is AI-backed (embeddings + LLM), so allow a short wait — a few seconds up to ~2 minutes — after an upload or after clicking **Discover**. A daily background job also exists as a backstop. Only if discovery still returns nothing **after clicking Discover and waiting** should you mark it **Blocked** and flag the dev team.
+- **Other background work can lag.** Embedding generation and person enrichment run behind the scenes; some derived data (e.g. search relevance) may take a little time to catch up after you create content.
 - **AI calls cost money and can be slow.** Assistant replies and document extraction call OpenAI/Gemini. Expect a few seconds of latency; a spinner is normal.
 - **No raw IDs should ever be visible.** The AI assistant must never show internal IDs (`me_…`, `ws_…`, `ctx_…`, `pulse_…`, person UUIDs) or internal artifacts (`__typename`, hashes). If you see one in assistant output, that's a defect — log it.
 - **Data sovereignty is the core promise.** Throughout testing, confirm User B **cannot** see User A's private MeSpace content, and vice versa.
@@ -83,7 +84,7 @@ Submit a **separate form entry for each issue** (don't batch several bugs into o
 | H | WeSpace collaboration | Create WeSpace, invite member, roles, shared pulses |
 | I | Document ingestion | Upload `.txt`/`.md`/`.pdf` to a FieldContext, auto-extraction |
 | J | Data import | CSV / XLSX import |
-| K | Resonance review | Confirm/edit/reject AI-found connections |
+| K | Resonance review | Run discovery (on upload / Discover button); accept/decline suggestions, incl. bulk accept-by-confidence |
 | L | Search | Semantic search across pulses, people, resonances |
 | M | Profile & Settings | Edit profile, settings dialog |
 | N | Authorization / privacy | Cross-account isolation |
@@ -458,6 +459,7 @@ The bottom-center action bar has a **view toggle**: **Dashboard view** (cards), 
 - The chat **auto-switches to a new ingest thread** titled `Ingest: <filename>`.
 - The assistant turn shows **what was extracted/created** ("Created N entities") — Persons and/or Pulses — **auto-executed** (no approval click needed for ingestion).
 - Extracted pulses/persons appear in the FieldContext.
+- **In the background, resonance discovery runs for this field** (using the newly extracted pulses). Pending resonance **suggestions** may appear shortly after — you'll review them in **§K** (open the field's Resonances section and click **Discover** to see them).
 
 ☐ Pass ☐ Fail — Notes:
 
@@ -529,36 +531,49 @@ The bottom-center action bar has a **view toggle**: **Dashboard view** (cards), 
 
 ## K. Resonance Review
 
-> Resonances are AI-discovered connections between pulses, created by a **scheduled** job with status `pending`, then confirmed/edited/rejected by humans.
+> Resonances are AI-discovered connections between pulses. Discovery creates **pending suggestions**, which you **Accept** or **Decline**. Accepting a suggestion promotes it to a confirmed **resonance** that shows up in the graph. Discovery runs **automatically when you upload a document** into a field (§I), **on demand** via the **Discover** button below, and via a daily background job.
 
-### UAT-K1 — Resonances appear
-**Pre:** You've created several semantically related pulses (across MeSpace/WeSpace). Allow time for, or have the dev team trigger, the discovery job.
-1. Look for resonance suggestions (e.g. a suggestions modal/panel on a WeSpace FieldContext, resonance badges on pulses, or the review surface).
+### UAT-K1 — Run discovery & see suggestions
+**Pre:** A FieldContext (MeSpace or WeSpace you can edit) with several semantically related pulses — e.g. a field you uploaded a document into (§I), or one with 3+ related pulses you created.
+1. Open the field. In its **Resonances** section, click **Discover**.
+2. Wait for discovery to finish (AI-backed — a few seconds up to ~2 minutes). The **Resonance Suggestions** modal opens.
 
-**Expected:** Pending resonance links are shown, each with: source pulse, target pulse, a label (e.g. MOTIVATED_BY), a confidence score, and evidence text. **No raw IDs.**
+**Expected:**
+- The modal opens on the **Pending** tab, listing suggestions — each with a source pulse, a target pulse, a short label (e.g. "Shared Vision"), a **confidence** score, and **evidence** text. **No raw IDs.**
+- There are **Pending / Accepted / Declined** tabs, each with a count.
+- If you uploaded a document into this field earlier, discovery may already have created suggestions before you clicked Discover; clicking it refreshes the list.
 
-> If nothing appears after a reasonable wait, mark **Blocked – pending job** and notify the dev team (the cron may need a manual run).
+> If nothing appears after clicking **Discover** and waiting, mark **Blocked** and notify the dev team.
 
 ☐ Pass ☐ Fail ☐ Blocked — Notes:
 
-### UAT-K2 — Confirm a resonance
-1. Confirm/accept a pending resonance.
+### UAT-K2 — Accept one suggestion
+1. On a pending suggestion, click **Accept** (or use **Review All Suggestions** to step through them one at a time).
 
-**Expected:** It moves to `confirmed`; the connection now shows as established (e.g. in Graph view / pulse details). Review metadata recorded.
-
-☐ Pass ☐ Fail — Notes:
-
-### UAT-K3 — Edit then confirm
-1. On another suggestion, edit the confidence/evidence, then confirm.
-
-**Expected:** Your edits are saved with the confirmed link.
+**Expected:** A success toast appears; the suggestion moves to the **Accepted** tab; and the connection now shows as an established resonance (e.g. in **Graph** / **Bloom** view or pulse details). Review metadata is recorded.
 
 ☐ Pass ☐ Fail — Notes:
 
-### UAT-K4 — Reject a resonance
-1. Reject/decline a suggestion.
+### UAT-K3 — Bulk accept by confidence
+1. On the **Pending** tab, find the **"Accept all at or above ___ %"** control.
+2. Type a percentage (e.g. **85**). The button should read **"Accept N"**, where N = the number of pending suggestions **at or above** that confidence. Change the value (e.g. 90, 100) and confirm the count updates.
+3. Click **Accept N**.
 
-**Expected:** It moves to `rejected` and no longer appears as an active suggestion or established connection.
+**Expected:** Every pending suggestion at or above the threshold is accepted in one action (toast: e.g. "Accepted N resonances at 85%+") and leaves the Pending tab; suggestions **below** the threshold **stay** Pending. The accepted ones become established resonances (visible in the graph). When no pending suggestion meets the threshold (e.g. 100%), the button is disabled / shows **"Accept 0"**.
+
+☐ Pass ☐ Fail — Notes:
+
+### UAT-K4 — Decline a suggestion
+1. On a remaining pending suggestion, click **Decline**.
+
+**Expected:** It moves to the **Declined** tab and does not appear as an established connection. Discovery should not re-suggest that same pair on a later run.
+
+☐ Pass ☐ Fail — Notes:
+
+### UAT-K5 — Suggestions modal on mobile (390px) + light/dark
+1. Resize to **390 × 844** and open the suggestions modal (via **Discover**). Check the bulk **"Accept all at or above %"** row and the per-suggestion **Accept/Decline** in **light and dark** mode.
+
+**Expected:** No horizontal overflow; the threshold input + "Accept N" button and per-item actions are legible and tappable in both themes; the button stacks full-width on mobile.
 
 ☐ Pass ☐ Fail — Notes:
 
@@ -727,7 +742,7 @@ Run these **on every major screen** you visited above (dashboard, space, field, 
 - **FieldContext** — a thematic container for related pulses, inside a Space.
 - **Space** — privacy boundary. **MeSpace** = personal/private (owner only). **WeSpace** = collaborative (owner + members).
 - **Roles (WeSpace)** — ADMIN (full control), MEMBER (contribute + view), GUEST (view-only); Owner has implicit full control.
-- **Resonance / ResonanceLink** — AI-discovered semantic connection between pulses; pending → confirmed/rejected by humans.
+- **Resonance** — AI-discovered semantic connection between pulses. Discovery creates pending **suggestions**; you **Accept** one (→ a confirmed **ResonanceLink**, shown in the graph) or **Decline** it. Discovery runs on document upload, on demand via **Discover**, and via a daily job.
 - **Assistant modes** — Standard (facts), Aiden (questions the frame), Braider (stays with difficulty).
 - **Views** — Dashboard (cards), Graph (curated focal graph), Bloom (open-ended graph).
 </content>
