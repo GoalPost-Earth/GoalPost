@@ -255,6 +255,7 @@ export default function FieldContextDetailsPage() {
     loading: resonanceSuggestionsLoading,
     refetch: refetchSuggestions,
     acceptSuggestion,
+    acceptAllAboveConfidence,
     declineSuggestion,
   } = useResonanceSuggestions({ spaceId, filter: 'all', enabled: false })
 
@@ -1687,6 +1688,12 @@ export default function FieldContextDetailsPage() {
           onAccept={async (id) => {
             await acceptSuggestion(id)
             await refetch()
+          }}
+          onAcceptAll={async (minConfidence) => {
+            const accepted = await acceptAllAboveConfidence(minConfidence)
+            // Newly-created ResonanceLinks surface in the Resonances section.
+            await refetch()
+            return accepted
           }}
           onDecline={declineSuggestion}
           onRefresh={refetchSuggestions}

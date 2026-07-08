@@ -1,8 +1,15 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { Dialog, DialogContent, DialogPortal } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogPortal,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ResonanceSuggestionItem } from '@/components/ui/resonance-suggestion-item'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
@@ -32,6 +39,11 @@ interface ResonanceSuggestionsModalProps {
   onAccept?: (id: string) => Promise<void>
   onDecline?: (id: string) => Promise<void>
   onRefresh?: () => Promise<void>
+  /**
+   * Bulk-accept every pending suggestion at or above `minConfidence` (0–1).
+   * When provided, the pending tab shows a threshold + "Accept N" control.
+   */
+  onAcceptAll?: (minConfidence: number) => Promise<number | void>
 }
 
 type TabStatus = 'pending' | 'accepted' | 'declined'
@@ -45,11 +57,35 @@ export function ResonanceSuggestionsModal({
   onAccept,
   onDecline,
   onRefresh,
+  onAcceptAll,
 }: ResonanceSuggestionsModalProps) {
   const [activeTab, setActiveTab] = useState<TabStatus>('pending')
   const [reviewMode, setReviewMode] = useState(false)
   const [reviewIndex, setReviewIndex] = useState(0)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [threshold, setThreshold] = useState(85)
+  const [bulkLoading, setBulkLoading] = useState(false)
+
+  // How many pending suggestions clear the current % threshold (confidence is
+  // stored 0–1; the control is expressed as a whole percent).
+  const eligibleCount = useMemo(
+    () =>
+      suggestions.filter(
+        (s) => s.status === 'pending' && s.confidence * 100 >= threshold
+      ).length,
+    [suggestions, threshold]
+  )
+
+  const handleAcceptAll = async () => {
+    if (!onAcceptAll || eligibleCount === 0) return
+    setBulkLoading(true)
+    try {
+      await onAcceptAll(threshold / 100)
+      await onRefresh?.()
+    } finally {
+      setBulkLoading(false)
+    }
+  }
 
   // Filter suggestions by status
   const filteredSuggestions = useMemo(() => {
@@ -128,12 +164,12 @@ export function ResonanceSuggestionsModal({
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="border-b border-slate-200 pb-4 dark:border-slate-700">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <DialogTitle className="text-2xl font-bold text-slate-900 dark:text-slate-100">
               Resonance Suggestions
-            </h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-sm text-slate-600 dark:text-slate-400">
               Review and approve discovered connections between your pulses
-            </p>
+            </DialogDescription>
           </div>
 
           {/* Review Mode */}
@@ -221,6 +257,60 @@ export function ResonanceSuggestionsModal({
                   )
                 )}
               </div>
+
+              {/* Bulk accept-by-confidence control (pending tab only) */}
+              {activeTab === 'pending' &&
+                onAcceptAll &&
+                tabCounts.pending > 0 && (
+                  <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="material-symbols-outlined shrink-0 text-[20px] text-gp-primary">
+                        auto_awesome
+                      </span>
+                      <label
+                        htmlFor="resonance-threshold"
+                        className="text-sm text-foreground"
+                      >
+                        Accept all at or above
+                      </label>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Input
+                          id="resonance-threshold"
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={Number.isFinite(threshold) ? threshold : ''}
+                          onChange={(e) => {
+                            const n = Math.round(Number(e.target.value))
+                            setThreshold(
+                              Number.isFinite(n)
+                                ? Math.max(0, Math.min(100, n))
+                                : 0
+                            )
+                          }}
+                          className="h-9 w-16 text-center"
+                          aria-label="Confidence threshold percentage"
+                        />
+                        <span className="text-sm text-muted-foreground">%</span>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleAcceptAll}
+                      disabled={eligibleCount === 0 || bulkLoading}
+                      className="w-full shrink-0 sm:w-auto"
+                    >
+                      <span
+                        className={cn(
+                          'material-symbols-outlined mr-1 text-[18px]',
+                          bulkLoading && 'animate-spin'
+                        )}
+                      >
+                        {bulkLoading ? 'progress_activity' : 'done_all'}
+                      </span>
+                      {bulkLoading ? 'Accepting…' : `Accept ${eligibleCount}`}
+                    </Button>
+                  </div>
+                )}
 
               {/* Content */}
               {loading ? (
