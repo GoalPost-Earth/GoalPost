@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { discoverGlobalResonances } from '@/lib/resonance/discovery/pattern-detector'
 import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedder'
+import { generatePersonEmbedding } from '@/lib/resonance/embeddings/person-embedder'
 import { initGraph } from '@/modules/graph'
 
 // Vercel cron invocations are always GET. The full sweep (embeddings + LLM
@@ -76,6 +77,58 @@ export async function GET(request: NextRequest) {
     } else {
       console.log(
         '[Resonance Cron] All pulses already have embeddings, skipping generation'
+      )
+    }
+
+    // Step 1b: Generate embeddings for people that don't have them.
+    // Two write paths rely on this sweep: document ingest creates
+    // PersonPulses without an embedding, and update_person nulls the
+    // embedding on semantic edits (person-pulse-resolver.ts). Without it,
+    // those people never enter vector search or resonance discovery.
+    // The trim() filter skips nameless, contentless Person nodes — there is
+    // nothing to embed and they would otherwise error on every nightly run.
+    // Known gap (safe direction): the filter checks name/description only,
+    // while the embedder can also embed passions/fieldsOfCare/traits — a
+    // person whose ONLY content is enriched arrays is never swept. Arrays
+    // can't be string-concatenated here, and such nodes don't occur in
+    // practice (enrichment implies a named person).
+    const peopleWithoutEmbeddings = await graph.query<{ id: string }>(
+      `
+      MATCH (p:Person)
+      WHERE p.embedding IS NULL
+        AND trim(coalesce(p.name, '') + coalesce(p.firstName, '')
+          + coalesce(p.lastName, '') + coalesce(p.description, '')) <> ''
+      RETURN p.id as id
+      LIMIT 100
+    `,
+      {}
+    )
+
+    if (
+      Array.isArray(peopleWithoutEmbeddings) &&
+      peopleWithoutEmbeddings.length > 0
+    ) {
+      const personIds = peopleWithoutEmbeddings.map((r) => r.id)
+      console.log(
+        `[Resonance Cron] Generating embeddings for ${personIds.length} people...`
+      )
+
+      for (const personId of personIds) {
+        try {
+          await generatePersonEmbedding(personId)
+          console.log(
+            `[Resonance Cron] ✓ Generated person embedding for ${personId}`
+          )
+        } catch (error) {
+          console.error(
+            `[Resonance Cron] ✗ Failed to generate person embedding for ${personId}:`,
+            error
+          )
+        }
+      }
+    } else {
+      console.log(
+        '[Resonance Cron] All people already have embeddings, skipping generation'
       )
     }
 
