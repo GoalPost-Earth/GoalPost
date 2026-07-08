@@ -426,11 +426,75 @@ are all declarative constants near the top of the script. Keep new content
 fictional — do not reintroduce real names, orgs, or internal project
 specifics. Add a new entry to `PULSES` or `RESONANCES` and re-run.
 
+## Full DB clone (any direction) — `scripts/clone-neo4j.ts`
+
+`migrate-prod-to-dev.ts` is a **transforming** migration: it maps the legacy
+prod ontology onto the dev ontology and builds MeSpace/WeSpace anchors.
+`clone-neo4j.ts` is different — it is a **raw, faithful 1:1 clone** of one
+Neo4j database onto another, with no ontology mapping. Use it to replace a
+target DB wholesale with the exact contents of a source DB.
+
+```bash
+# Dev → Demo (EC2 box)
+npm run clone:dev-to-demo -- --confirm neo4j://3.213.48.7:7687
+
+# Dev → Prod (when ready — see caveats below)
+npm run clone:dev-to-prod -- --confirm neo4j://54.225.112.191:7687
+
+# Any pair
+npm run clone:neo4j -- <source> <target> --confirm <targetUri>
+```
+
+**Profiles.** `<source>`/`<target>` are profile names resolving to a gitignored
+`.env.<profile>` file that holds `NEO4J_URI` / `NEO4J_USERNAME` /
+`NEO4J_PASSWORD`:
+
+| Profile | Env file | Database |
+|---------|----------|----------|
+| `local` | `.env.local` | Dev Aura (`ee93871d`) |
+| `demo` | `.env.demo` | EC2 demo box (`3.213.48.7`) |
+| `production` | `.env.production` | PROD (`54.225.112.191`) |
+
+`.env.demo` is gitignored (like `.env.local` / `.env.production` / `.mcp.json`);
+its creds mirror the `neo4j-demo` entry in `.mcp.json`.
+
+**What it does.** (1) Backs up the target's current nodes+rels to
+`backups/<target>-<ts>.json` (gitignored — may contain PII). (2) Drops the
+target's constraints + indexes and wipes all its data. (3) Rebuilds the target
+schema to **exactly match the source** — constraints plus range/vector/fulltext
+indexes (the vector indexes matter: without them resonance/embedding search is
+dead). (4) Copies every source node and relationship 1:1 — labels, properties,
+and 1536-dim embeddings preserved verbatim, matched by a temporary
+`:_CloneTmp {_srcEid}` marker that is stripped (and verified stripped) at the
+end. (5) Verifies the result: total **and per-label** node counts, total **and
+per-type** relationship counts, plus an embedding-length spot check
+(`FieldPulse`/`Person`) must all match the source. Requires APOC on both ends
+(`apoc.create.node`, `apoc.periodic.iterate`) — preflighted before any schema is
+dropped, so an APOC-less target fails while still intact. Non-uniqueness
+constraints (NODE KEY aside) are not reproduced and are logged loudly if present.
+
+**Safety guards (all must pass before anything is wiped):**
+
+- Refuses unless `--confirm <uri>` is passed **and exactly equals** the resolved
+  target URI — so the npm alias alone can never wipe a DB; you must paste the
+  target URI. The guard runs before any driver/backup step.
+- Refuses if source URI === target URI (never clone a DB onto itself).
+- Always writes the target backup first. **There is no restore script yet** —
+  the backup JSON is the only rollback.
+
+**Caveats for the `production` direction.** This is a raw clone, so it ships
+*everything* in dev to prod — assistant feedback, conversation history +
+embeddings, the seeded "Maple Street" / "JD Test" spaces, and test fixtures
+(`Movie`, `DriverTest`, `Test`). Curate dev first if prod should only receive
+real content. And it **wipes prod entirely** before copying; with no restore
+path, treat a prod clone as irreversible beyond the backup file.
+
 ## Quick reference: paths
 
 | Path | Purpose |
 |------|---------|
-| `scripts/migrate-prod-to-dev.ts` | Current migration. Run via `npm run migrate:prod-to-dev`. |
+| `scripts/migrate-prod-to-dev.ts` | Current prod→dev **transforming** migration. Run via `npm run migrate:prod-to-dev`. |
+| `scripts/clone-neo4j.ts` | Raw 1:1 **clone** of any Neo4j DB onto another (`clone:dev-to-demo`, `clone:dev-to-prod`, `clone:neo4j`). Schema + data + embeddings; backup + `--confirm` guard. |
 | `scripts/seed-build-space.ts` | Curated fictional WeSpace ("Maple Street Mutual Aid") + sample pulses + resonances, attached to the 4 member accounts. Run via `npm run seed:build-space` after migration. |
 | `scripts/migrate-reference-to-merged.ts` | Previous migration (transformative, doesn't preserve provenance). Kept for reference but not used. |
 | `scripts/init-db.js` | Schema + demo seed for fresh dev DBs. Destructive — do not chain after a migration. |

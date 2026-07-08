@@ -47,7 +47,11 @@ verify-parsing-logic.ts
 .env.local
 .env.development.local
 .env.production
+.env.demo
 .mcp.json
+
+# clone-neo4j.ts target backups (may contain PII)
+/backups/
 
 # MacOS
 .DS_Store
