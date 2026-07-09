@@ -379,9 +379,13 @@ type Person implements PersonInterface
   refreshTokenExp: DateTime
   refreshTokenRevoked: Boolean
   authId: String
-  embedding: [Float!]
+  # @private: the vector is derived from GOAL-275-gated profile content
+  # (description, passions, traits) — an ungated readable copy would undo the
+  # field gates (embedding inversion recovers short texts). No client selects
+  # it; server-side vector search reads it via Cypher, which @private ignores.
+  embedding: [Float!] @private
   signupDate: DateTime
-  
+
   # Onboarding (modern schema)
   onboardingCurrentStepIndex: Int
   onboardingCompletedSteps: [String!]
@@ -547,9 +551,10 @@ type User implements PersonInterface
   refreshTokenExp: DateTime
   refreshTokenRevoked: Boolean
   authId: String
-  embedding: [Float!]
+  # @private: same rationale as Person.embedding — derived from gated content.
+  embedding: [Float!] @private
   signupDate: DateTime
-  
+
   # Onboarding
   onboardingCurrentStepIndex: Int!
   onboardingCompletedSteps: [String!]!
@@ -1811,11 +1816,39 @@ type Notification
 # ============================================================================
 
 """
+Directory-safe projection of a Person for global search results.
+GOAL-275: searchAll's people rows come from a custom resolver returning plain
+objects, so Person's field-level @authorization never runs for them. Typing
+the field as Person let clients *select* PII fields (resolving to null only
+because the resolver happened to omit them). This dedicated type makes the
+restriction structural — only these four fields exist to select.
+"""
+type PersonSearchResult
+  # Never a Neo4j node — only materialized by the searchAll resolver. Disable
+  # every auto-generated root so no phantom :PersonSearchResult query/mutation
+  # surface exists (mirrors the PersonInterface / LifeSensor lockdown).
+  @query(read: false, aggregate: false)
+  @mutation(operations: [])
+  @subscription(events: []) {
+  id: ID!
+  firstName: String!
+  lastName: String!
+  photo: String
+}
+
+"""
 Structured response for categorized search results.
 Returns up to 10 results of each entity type matching the search query.
 """
-type SearchResults {
-  people: [Person!]!
+type SearchResults
+  # Never a Neo4j node — only materialized by the searchAll resolver. Same
+  # lockdown as PersonSearchResult: without it the library generates
+  # searchResults/createSearchResults/... roots that let any caller write
+  # junk :SearchResults nodes.
+  @query(read: false, aggregate: false)
+  @mutation(operations: [])
+  @subscription(events: []) {
+  people: [PersonSearchResult!]!
   meSpaces: [MeSpace!]!
   weSpaces: [WeSpace!]!
   contexts: [FieldContext!]!
@@ -2289,7 +2322,8 @@ type Query {
   Global federated search across all entity types.
   Searches using case-insensitive substring matching on:
     - Pulses: content field
-    - People: firstName, lastName, email
+    - People: full name ("firstName lastName" concatenation) — name only,
+      never email/PII (GOAL-275), and only directory-safe fields are returned
     - Contexts: title field
     - Spaces (MeSpace/WeSpace): name field (filtered by user ownership/membership)
 

@@ -90,6 +90,7 @@ describe('mapExtractionObject (GOAL-282)', () => {
           title: 'Ship v1',
           content: 'Ship the v1 ingest pipeline.',
           existingId: null,
+          authorName: null,
           status: null,
           intensity: null,
           horizon: null,
@@ -105,6 +106,7 @@ describe('mapExtractionObject (GOAL-282)', () => {
 
     expect(out.persons[0].existingId).toBeUndefined()
     expect(out.pulses?.[0].existingId).toBeUndefined()
+    expect(out.pulses?.[0].authorName).toBeUndefined()
     expect(out.pulses?.[0].status).toBeUndefined()
     expect(out.pulses?.[0].intensity).toBeUndefined()
   })
@@ -127,6 +129,7 @@ describe('mapExtractionObject (GOAL-282)', () => {
           title: 'Compute budget',
           content: 'A small compute budget is available.',
           existingId: 'pulse_9',
+          authorName: 'Ada Lovelace',
           status: null,
           intensity: 0,
           horizon: null,
@@ -142,6 +145,7 @@ describe('mapExtractionObject (GOAL-282)', () => {
 
     expect(out.persons[0].existingId).toBe('person_1')
     expect(out.pulses?.[0].existingId).toBe('pulse_9')
+    expect(out.pulses?.[0].authorName).toBe('Ada Lovelace')
     expect(out.pulses?.[0].intensity).toBe(0)
     expect(out.pulses?.[0].availability).toBe(0)
     expect(out.pulses?.[0].resourceType).toBe('budget')

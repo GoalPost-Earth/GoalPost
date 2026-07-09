@@ -2989,12 +2989,6 @@ export type CreateResourcePulsesMutationResponse = {
   resourcePulses: Array<ResourcePulse>
 }
 
-export type CreateSearchResultsMutationResponse = {
-  __typename?: 'CreateSearchResultsMutationResponse'
-  info: CreateInfo
-  searchResults: Array<SearchResults>
-}
-
 export type CreateSpaceMembershipsMutationResponse = {
   __typename?: 'CreateSpaceMembershipsMutationResponse'
   info: CreateInfo
@@ -12575,7 +12569,6 @@ export type Mutation = {
   createRemoveSpaceMemberResponses: CreateRemoveSpaceMemberResponsesMutationResponse
   createResonanceLinks: CreateResonanceLinksMutationResponse
   createResourcePulses: CreateResourcePulsesMutationResponse
-  createSearchResults: CreateSearchResultsMutationResponse
   createSpaceMemberships: CreateSpaceMembershipsMutationResponse
   createStoryPulses: CreateStoryPulsesMutationResponse
   createSubmitAssistantFeedbackResponses: CreateSubmitAssistantFeedbackResponsesMutationResponse
@@ -12621,7 +12614,6 @@ export type Mutation = {
   deleteRemoveSpaceMemberResponses: DeleteInfo
   deleteResonanceLinks: DeleteInfo
   deleteResourcePulses: DeleteInfo
-  deleteSearchResults: DeleteInfo
   deleteSpaceMemberships: DeleteInfo
   deleteStoryPulses: DeleteInfo
   deleteSubmitAssistantFeedbackResponses: DeleteInfo
@@ -12779,7 +12771,6 @@ export type Mutation = {
   updateRemoveSpaceMemberResponses: UpdateRemoveSpaceMemberResponsesMutationResponse
   updateResonanceLinks: UpdateResonanceLinksMutationResponse
   updateResourcePulses: UpdateResourcePulsesMutationResponse
-  updateSearchResults: UpdateSearchResultsMutationResponse
   /**
    * Update a space member's role.
    * Only the space owner or members with ADMIN role can change roles.
@@ -12901,10 +12892,6 @@ export type MutationCreateResonanceLinksArgs = {
 
 export type MutationCreateResourcePulsesArgs = {
   input: Array<ResourcePulseCreateInput>
-}
-
-export type MutationCreateSearchResultsArgs = {
-  input: Array<SearchResultsCreateInput>
 }
 
 export type MutationCreateSpaceMembershipsArgs = {
@@ -13044,10 +13031,6 @@ export type MutationDeleteResonanceLinksArgs = {
 export type MutationDeleteResourcePulsesArgs = {
   delete?: InputMaybe<ResourcePulseDeleteInput>
   where?: InputMaybe<ResourcePulseWhere>
-}
-
-export type MutationDeleteSearchResultsArgs = {
-  where?: InputMaybe<SearchResultsWhere>
 }
 
 export type MutationDeleteSpaceMembershipsArgs = {
@@ -13267,11 +13250,6 @@ export type MutationUpdateResonanceLinksArgs = {
 export type MutationUpdateResourcePulsesArgs = {
   update?: InputMaybe<ResourcePulseUpdateInput>
   where?: InputMaybe<ResourcePulseWhere>
-}
-
-export type MutationUpdateSearchResultsArgs = {
-  update?: InputMaybe<SearchResultsUpdateInput>
-  where?: InputMaybe<SearchResultsWhere>
 }
 
 export type MutationUpdateSpaceMemberRoleArgs = {
@@ -14266,7 +14244,6 @@ export type Person = PersonInterface & {
   createdByConnection: PersonCreatedByConnection
   description?: Maybe<Scalars['String']['output']>
   email?: Maybe<Scalars['String']['output']>
-  embedding?: Maybe<Array<Scalars['Float']['output']>>
   /**
    * Documents this person was extracted from (doc-ingestion provenance — see GOAL-242 + ADR-0002).
    * Empty for manually-created Person nodes. Each Document is auth-filtered via its own
@@ -14755,7 +14732,6 @@ export type PersonCreateInput = {
   createdBy?: InputMaybe<PersonCreatedByFieldInput>
   description?: InputMaybe<Scalars['String']['input']>
   email?: InputMaybe<Scalars['String']['input']>
-  embedding?: InputMaybe<Array<Scalars['Float']['input']>>
   extractedFrom?: InputMaybe<PersonExtractedFromFieldInput>
   favorites?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare?: InputMaybe<Scalars['String']['input']>
@@ -15723,6 +15699,22 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
   updatedAt: DateTimeAggregateSelection
 }
 
+/**
+ * Directory-safe projection of a Person for global search results.
+ * GOAL-275: searchAll's people rows come from a custom resolver returning plain
+ * objects, so Person's field-level @authorization never runs for them. Typing
+ * the field as Person let clients *select* PII fields (resolving to null only
+ * because the resolver happened to omit them). This dedicated type makes the
+ * restriction structural — only these four fields exist to select.
+ */
+export type PersonSearchResult = {
+  __typename?: 'PersonSearchResult'
+  firstName: Scalars['String']['output']
+  id: Scalars['ID']['output']
+  lastName: Scalars['String']['output']
+  photo?: Maybe<Scalars['String']['output']>
+}
+
 /** Fields to sort People by. The order in which sorts are applied is not guaranteed when specifying many fields in one PersonSort object. */
 export type PersonSort = {
   authId?: InputMaybe<SortDirection>
@@ -15813,9 +15805,6 @@ export type PersonUpdateInput = {
   createdBy?: InputMaybe<Array<PersonCreatedByUpdateFieldInput>>
   description_SET?: InputMaybe<Scalars['String']['input']>
   email_SET?: InputMaybe<Scalars['String']['input']>
-  embedding_POP?: InputMaybe<Scalars['Int']['input']>
-  embedding_PUSH?: InputMaybe<Array<Scalars['Float']['input']>>
-  embedding_SET?: InputMaybe<Array<Scalars['Float']['input']>>
   extractedFrom?: InputMaybe<Array<PersonExtractedFromUpdateFieldInput>>
   favorites_SET?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_SET?: InputMaybe<Scalars['String']['input']>
@@ -15918,8 +15907,6 @@ export type PersonWhere = {
   email_EQ?: InputMaybe<Scalars['String']['input']>
   email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  embedding_EQ?: InputMaybe<Array<Scalars['Float']['input']>>
-  embedding_INCLUDES?: InputMaybe<Scalars['Float']['input']>
   extractedFromAggregate?: InputMaybe<PersonExtractedFromAggregateInput>
   /** Return People where all of the related PersonExtractedFromConnections match this filter */
   extractedFromConnection_ALL?: InputMaybe<PersonExtractedFromConnectionWhere>
@@ -17752,7 +17739,8 @@ export type Query = {
    * Global federated search across all entity types.
    * Searches using case-insensitive substring matching on:
    *   - Pulses: content field
-   *   - People: firstName, lastName, email
+   *   - People: full name ("firstName lastName" concatenation) — name only,
+   *     never email/PII (GOAL-275), and only directory-safe fields are returned
    *   - Contexts: title field
    *   - Spaces (MeSpace/WeSpace): name field (filtered by user ownership/membership)
    *
@@ -17766,10 +17754,6 @@ export type Query = {
    * Returns: SearchResults with up to 10 results of each entity type
    */
   searchAll?: Maybe<SearchResults>
-  searchResults: Array<SearchResults>
-  /** @deprecated Please use the explicit field "aggregate" inside "searchResultsConnection" instead */
-  searchResultsAggregate: SearchResultsAggregateSelection
-  searchResultsConnection: SearchResultsConnection
   spaceMemberships: Array<SpaceMembership>
   /** @deprecated Please use the explicit field "aggregate" inside "spaceMembershipsConnection" instead */
   spaceMembershipsAggregate: SpaceMembershipAggregateSelection
@@ -18312,22 +18296,6 @@ export type QueryResourceSubstringSearchArgs = {
 
 export type QuerySearchAllArgs = {
   query: Scalars['String']['input']
-}
-
-export type QuerySearchResultsArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<SearchResultsWhere>
-}
-
-export type QuerySearchResultsAggregateArgs = {
-  where?: InputMaybe<SearchResultsWhere>
-}
-
-export type QuerySearchResultsConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  where?: InputMaybe<SearchResultsWhere>
 }
 
 export type QuerySpaceMembershipsArgs = {
@@ -20884,50 +20852,10 @@ export type SearchResults = {
   coreValuePulses: Array<CoreValuePulse>
   goalPulses: Array<GoalPulse>
   meSpaces: Array<MeSpace>
-  people: Array<Person>
+  people: Array<PersonSearchResult>
   resourcePulses: Array<ResourcePulse>
   storyPulses: Array<StoryPulse>
   weSpaces: Array<WeSpace>
-}
-
-export type SearchResultsAggregate = {
-  __typename?: 'SearchResultsAggregate'
-  count: Count
-}
-
-export type SearchResultsAggregateSelection = {
-  __typename?: 'SearchResultsAggregateSelection'
-  count: Scalars['Int']['output']
-}
-
-export type SearchResultsConnection = {
-  __typename?: 'SearchResultsConnection'
-  aggregate: SearchResultsAggregate
-  edges: Array<SearchResultsEdge>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
-}
-
-export type SearchResultsCreateInput = {
-  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
-  _emptyInput?: InputMaybe<Scalars['Boolean']['input']>
-}
-
-export type SearchResultsEdge = {
-  __typename?: 'SearchResultsEdge'
-  cursor: Scalars['String']['output']
-  node: SearchResults
-}
-
-export type SearchResultsUpdateInput = {
-  /** Appears because this input type would be empty otherwise because this type is composed of just generated and/or relationship properties. See https://neo4j.com/docs/graphql-manual/current/troubleshooting/faqs/ */
-  _emptyInput?: InputMaybe<Scalars['Boolean']['input']>
-}
-
-export type SearchResultsWhere = {
-  AND?: InputMaybe<Array<SearchResultsWhere>>
-  NOT?: InputMaybe<SearchResultsWhere>
-  OR?: InputMaybe<Array<SearchResultsWhere>>
 }
 
 /** An enum for sorting in either ascending or descending order. */
@@ -24319,12 +24247,6 @@ export type UpdateResourcePulsesMutationResponse = {
   resourcePulses: Array<ResourcePulse>
 }
 
-export type UpdateSearchResultsMutationResponse = {
-  __typename?: 'UpdateSearchResultsMutationResponse'
-  info: UpdateInfo
-  searchResults: Array<SearchResults>
-}
-
 /** Response when updating a space member's role. */
 export type UpdateSpaceMemberRoleResponse = {
   __typename?: 'UpdateSpaceMemberRoleResponse'
@@ -24532,7 +24454,6 @@ export type User = PersonInterface & {
   avatar?: Maybe<Scalars['String']['output']>
   createdAt: Scalars['DateTime']['output']
   email?: Maybe<Scalars['String']['output']>
-  embedding?: Maybe<Array<Scalars['Float']['output']>>
   fieldsOfCare?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
   gender?: Maybe<Scalars['String']['output']>
@@ -24856,9 +24777,6 @@ export type UserUpdateInput = {
   authId_SET?: InputMaybe<Scalars['String']['input']>
   avatar_SET?: InputMaybe<Scalars['String']['input']>
   email_SET?: InputMaybe<Scalars['String']['input']>
-  embedding_POP?: InputMaybe<Scalars['Int']['input']>
-  embedding_PUSH?: InputMaybe<Array<Scalars['Float']['input']>>
-  embedding_SET?: InputMaybe<Array<Scalars['Float']['input']>>
   fieldsOfCare_SET?: InputMaybe<Scalars['String']['input']>
   firstName_SET?: InputMaybe<Scalars['String']['input']>
   gender_SET?: InputMaybe<Scalars['String']['input']>
@@ -24911,8 +24829,6 @@ export type UserWhere = {
   email_EQ?: InputMaybe<Scalars['String']['input']>
   email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  embedding_EQ?: InputMaybe<Array<Scalars['Float']['input']>>
-  embedding_INCLUDES?: InputMaybe<Scalars['Float']['input']>
   fieldsOfCare_CONTAINS?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_EQ?: InputMaybe<Scalars['String']['input']>
@@ -30314,7 +30230,7 @@ export type SearchAllQuery = {
   searchAll?: {
     __typename?: 'SearchResults'
     people: Array<{
-      __typename: 'Person'
+      __typename: 'PersonSearchResult'
       id: string
       firstName: string
       lastName: string

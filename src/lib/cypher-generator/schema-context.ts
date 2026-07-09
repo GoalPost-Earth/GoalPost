@@ -68,6 +68,17 @@ export const ALLOWED_RELATIONSHIPS = [
   'WEAVES',
   'WOVEN_FOR',
   'HAS_WEAVE',
+  // Pulse authorship — TWO live edges, written by different surfaces.
+  // INITIATED_BY is the canonical author edge (assistant + doc-ingest paths:
+  // lib/chat/hitl.ts, api/pulse/create-from-conversation); CREATED_BY is
+  // still written by the dashboard create flow and the CSV/document imports
+  // (and also exists, unrelated to pulse authorship, on Log/FieldContext/
+  // PromiseWeave). Authorship queries must match the alternation
+  // [:INITIATED_BY|CREATED_BY] — either edge alone silently drops the other
+  // surface's pulses ("show pulses by X" was a dead end for assistant-created
+  // pulses while only CREATED_BY was whitelisted). Display-side resolution
+  // lives in src/lib/pulse-author.ts.
+  'INITIATED_BY',
   'CREATED_BY',
   'CONNECTED_TO',
   'SOURCE',
@@ -172,7 +183,8 @@ FieldResonance { label, description } — semantic theme node.
 (PromiseWeave)-[:WEAVES]->(FieldPulse)     // the care point(s) it connects (1..n)
 (PromiseWeave)-[:WOVEN_FOR]->(Person)      // the person it concerns
 (PromiseWeave)-[:CREATED_BY]->(Person)     // authorship
-(FieldPulse)-[:CREATED_BY]->(Person)
+(FieldPulse)-[:INITIATED_BY]->(Person)   // canonical author edge — who made / is credited for this pulse. Written by the assistant + doc-ingest paths; doc-ingested pulses point at the extracted author (often a :Person:PersonPulse), not the uploader.
+(FieldPulse)-[:CREATED_BY]->(Person)     // same meaning, written by the dashboard create flow and imports. NEITHER edge alone covers all pulses — ALWAYS match authorship as [:INITIATED_BY|CREATED_BY].
 (Person)-[:CONNECTED_TO]-(Person)  // bidirectional
 (Community)-[:HAS_MEMBER]->(Person)  // direct community membership (no intermediary node)
 (Community)-[:OWNS]->(Space)         // a community can own a WeSpace
@@ -183,9 +195,9 @@ Pulses are NOT connected only through ResonanceLink. Migrated GoalPost
 content carries DIRECT, typed edges between pulses (and between pulses and
 the people/communities they involve). When a user asks to "expand",
 "explore", or see the "surrounding relationships" of a pulse, these are
-usually the edges they mean — alongside the structural HAS_PULSE /
-CREATED_BY edges. A query that omits them will look empty even though the
-pulse is richly connected.
+usually the edges they mean — alongside the structural HAS_PULSE edge and
+the INITIATED_BY|CREATED_BY author edges. A query that omits them will look
+empty even though the pulse is richly connected.
 
 (GoalPulse)-[:DEPENDS_ON]->(ResourcePulse)     // a goal needs a resource ("supporting resources")
 (StoryPulse)-[:DEPENDS_ON]->(ResourcePulse)
@@ -210,6 +222,7 @@ Intent phrasing → edge:
 - "supporting resources" / "resources it depends on" → DEPENDS_ON / APPLIED_TO / APPLIED_IN (a ResourcePulse)
 - "values it aligns to" → ALIGNED_TO (a CoreValuePulse)
 - "who is motivated by / provides this" → MOTIVATED_BY / PROVIDES (a Person)
+- "who created / authored / added this pulse" / "pulses by <person>" / "<person>'s contributions" → (FieldPulse)-[:INITIATED_BY|CREATED_BY]->(Person)
 
 NOTE on HAS_MEMBER: it has two valid domains.
   (Space)-[:HAS_MEMBER]->(SpaceMembership)  // Space membership goes through a SpaceMembership node carrying the role

@@ -105,7 +105,7 @@ The user's natural-language intent rarely names entity types precisely. Read the
 - "X's relationships" / "X's connections" / "what is X connected to" / "dive into X" / "explore X" / "show me around X" / "expand X" / "expand its surrounding relationships" → an EXPANSIVE sweep of every entity reachable from X in 1-2 hops that the runtime auth filter will allow. NOT just \`ResonanceLink\` nodes. For a Person, that means: spaces they own, spaces they are a member of, pulses they created, field contexts those pulses sit inside, other people they are CONNECTED_TO, and any ResonanceLinks involving their pulses. For a FieldContext or Space, that means: every child + sibling + adjacent entity. For a PULSE (a goal/resource/story/care/value — \`FieldPulse\` and its subtypes), that means: the field context it sits in, its creator, any ResonanceLinks involving it, AND — most importantly — its SEMANTIC ONTOLOGY edges to other pulses and people (goals it ENABLES, resources it DEPENDS_ON / APPLIED_TO, values it is ALIGNED_TO, people who PROVIDE / are MOTIVATED_BY it, etc. — see "Semantic pulse relationships" in the schema). For a pulse these semantic edges are usually the entire point of the request; a sweep that returns only the field context + creator and drops the semantic edges is a bug.
 - "X's resonances" / "X's resonance links" → specifically \`ResonanceLink\` nodes incident to X via SOURCE/TARGET (or via HAS_RESONANCE from a FieldContext).
 - "promise weave" / "weave" / "X's weaves", or "show the node <title>" where the title is a PromiseWeave's → \`PromiseWeave\` nodes (MATCH the \`:PromiseWeave\` label). Reach them via \`(ctx:FieldContext)-[hw:HAS_WEAVE]->(w:PromiseWeave)\`, and include the weave's own edges (\`(w)-[wv:WEAVES]->(:FieldPulse)\`, \`(w)-[wf:WOVEN_FOR]->(:Person)\`) so the connected pulses/person render too. PromiseWeave nodes are INVISIBLE to any query that omits the \`:PromiseWeave\` label — never substitute a FieldPulse keyword match for them.
-- "X's pulses" / "X's goals/resources/stories/cares/values" → \`FieldPulse\` nodes (filter by subtype label when the user names one).
+- "X's pulses" / "X's goals/resources/stories/cares/values" / "pulses by X" / "what has X created or contributed" → \`FieldPulse\` nodes reached through the AUTHOR edge: \`(x:Person)<-[:INITIATED_BY|CREATED_BY]-(p:FieldPulse)\`. INITIATED_BY is the canonical author edge, written by the assistant and doc-ingest paths (doc-ingested pulses point at the extracted author, who may be a non-member \`:Person:PersonPulse\`); CREATED_BY carries the same meaning but is written by the dashboard create flow and imports. NEITHER edge alone covers all pulses — always match the alternation, and filter by subtype label when the user names one.
 - "X's spaces" → \`MeSpace\` / \`WeSpace\` nodes X owns or is a member of.
 - "X's people" / "who does X know" → \`Person\` nodes connected via CONNECTED_TO, people attached to X's field contexts via \`(:FieldContext)-[:HAS_PERSON]->(:Person)\` (usually non-members, occasionally a self-linked member — match base \`:Person\` and filter by the \`:User\` label), or co-members of any shared Space.
 - "members" / "platform users" / "people on GoalPost" connected to X → \`Person\` nodes that ALSO carry the \`:User\` label. Match \`(m:Person:User)\` or add \`WHERE m:User\`.
@@ -123,7 +123,7 @@ For an expansive sweep, raise your LIMIT toward 50 (the runtime cap is 60).
     MATCH (focal:Person {id: "<id from canvasVisibleEntities or intent>"})
     OPTIONAL MATCH (focal)-[owns:OWNS]->(sp:Space)
     OPTIONAL MATCH (focal)<-[im:IS_MEMBER]-(sm:SpaceMembership)<-[hm:HAS_MEMBER]-(sp2:Space)
-    OPTIONAL MATCH (focal)<-[cb:CREATED_BY]-(p:FieldPulse)
+    OPTIONAL MATCH (focal)<-[cb:INITIATED_BY|CREATED_BY]-(p:FieldPulse)
     OPTIONAL MATCH (ctx:FieldContext)-[hp:HAS_PULSE]->(p)
     OPTIONAL MATCH (ctx)<-[hc:HAS_CONTEXT]-(sp3:Space)
     OPTIONAL MATCH (focal)-[ct:CONNECTED_TO]-(other:Person)
@@ -131,7 +131,7 @@ For an expansive sweep, raise your LIMIT toward 50 (the runtime cap is 60).
     RETURN focal, owns, sp, im, sm, hm, cb, p, hp, ctx, hc, sp3, ct, other, src, rl, tgt, rp
     LIMIT 50
 
-Adjust the rooted node's label (\`focal:Person\` → \`focal:WeSpace\` / \`focal:FieldContext\`) when the intent is rooted on a different entity type. Drop OPTIONAL MATCH branches that are not relevant to the rooted type (e.g. a Space has no CREATED_BY incoming edges from itself, but it does have HAS_CONTEXT outgoing).
+Adjust the rooted node's label (\`focal:Person\` → \`focal:WeSpace\` / \`focal:FieldContext\`) when the intent is rooted on a different entity type. Drop OPTIONAL MATCH branches that are not relevant to the rooted type (e.g. a Space has no incoming author (INITIATED_BY/CREATED_BY) edges from itself, but it does have HAS_CONTEXT outgoing).
 
 # Expansive-sweep canonical shape rooted on a PULSE (use this when the focal entity is a goal / resource / story / care / value)
 
@@ -140,7 +140,7 @@ When the focal entity is a pulse and the user asks to expand / explore / see its
     MATCH (user:Person {id: $userId})
     MATCH (focal:FieldPulse {id: "<id from canvasVisibleEntities or intent>"})
     OPTIONAL MATCH (focal)<-[hp:HAS_PULSE]-(ctx:FieldContext)
-    OPTIONAL MATCH (focal)-[cb:CREATED_BY]->(creator:Person)
+    OPTIONAL MATCH (focal)-[cb:INITIATED_BY|CREATED_BY]->(creator:Person)
     OPTIONAL MATCH (focal)-[sem:ENABLES|ENABLED_BY|DEPENDS_ON|APPLIED_TO|APPLIED_IN|ALIGNED_TO|CARES_FOR]-(rel:FieldPulse)
     OPTIONAL MATCH (focal)-[ppl:MOTIVATED_BY|PROVIDES|EMBRACES|HAS_ACCESS_TO|GUIDED_BY]-(per:Person)
     OPTIONAL MATCH (focal)-[com:MOTIVATED_BY|PROVIDES|EMBRACES|HAS_ACCESS_TO]-(comm:Community)
@@ -178,7 +178,7 @@ Rules for this shape:
     MATCH (user:Person {id: $userId})
     MATCH (a:Person {id: "<X_id>"}), (b:Person {id: "<Y_id>"})
     OPTIONAL MATCH p = shortestPath(
-      (a)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(b)
+      (a)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|INITIATED_BY|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(b)
     )
     RETURN a, b, p
     LIMIT 1
@@ -215,7 +215,7 @@ Rules for this shape:
 
 Rules for this shape:
   - Both endpoints MUST carry a label and an id constraint (\`(a:Person {id: "…"})\`). Use ids from canvasVisibleEntities or session context when available.
-  - The variable-length relationship MUST be type-restricted using a \`|\`-disjunction of relationship types from the schema. Anonymous \`[*..N]\` is REJECTED. Listing all 11 allowed types is fine — the planner picks; the constraint is about NOT traversing into private internal relationships (HAS_THREAD, HAS_TURN, HAS_CHUNK, etc.).
+  - The variable-length relationship MUST be type-restricted using a \`|\`-disjunction of relationship types from the schema. Anonymous \`[*..N]\` is REJECTED. Listing all the allowed structural types is fine — the planner picks; the constraint is about NOT traversing into private internal relationships (HAS_THREAD, HAS_TURN, HAS_CHUNK, etc.).
   - Cap the hop count at \`*..6\`. Longer paths rarely shed insight and inflate planner cost.
   - \`RETURN p\` returns a Path; the runtime walks every segment and renders endpoints + intermediates + each labelled edge along the chain.
   - The endpoint type does not have to be \`Person\` — it can be any entity (e.g. \`(a:FieldPulse)\` ↔ \`(b:FieldPulse)\` for "how are these two goals connected?"). The query stays the same shape.
@@ -229,9 +229,9 @@ When the request names two or more entities — especially ones already in canva
     OPTIONAL MATCH (n0:Person {id: "<id of first entity>"})
     OPTIONAL MATCH (n1:FieldPulse {id: "<id of second entity>"})
     OPTIONAL MATCH (n2:Person {id: "<id of third entity>"})
-    OPTIONAL MATCH p01 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n1))
-    OPTIONAL MATCH p02 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
-    OPTIONAL MATCH p12 = shortestPath((n1)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
+    OPTIONAL MATCH p01 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|INITIATED_BY|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n1))
+    OPTIONAL MATCH p02 = shortestPath((n0)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|INITIATED_BY|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
+    OPTIONAL MATCH p12 = shortestPath((n1)-[:OWNS|HAS_MEMBER|IS_MEMBER|HAS_CONTEXT|HAS_PULSE|HAS_PERSON|HAS_RESONANCE|INITIATED_BY|CREATED_BY|CONNECTED_TO|SOURCE|TARGET|RESONATES_AS*..6]-(n2))
     RETURN n0, n1, n2, p01, p02, p12
     LIMIT 1
 

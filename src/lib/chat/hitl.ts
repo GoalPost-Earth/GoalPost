@@ -140,7 +140,10 @@ export function describeWriteAction(
       const label = pulseTypeLabel(args.pulseType)
       const titleClause = title ? ` "${title}"` : ''
       const whereClause = where ? ` in ${where}` : ''
-      return `Add ${label}${titleClause}${whereClause}`
+      // Rule 1: attribution by name only, never an id.
+      const by = String(args.attributedToName || '').trim()
+      const byClause = by ? ` — attributed to ${by}` : ''
+      return `Add ${label}${titleClause}${whereClause}${byClause}`
     }
     case 'delete_pulse':
       return `Delete pulse ${String(args.pulseId || args.currentTitle || 'target pulse')}`
@@ -258,6 +261,17 @@ interface CreatePulseInput extends ContextLocatorInput {
   documentId?: string
   /** Optional ingest thread — slice 7: stamps the Log.metadata audit trail. */
   conversationThreadId?: string
+  /**
+   * Doc-ingest attribution: the extracted person whose voice/authorship this
+   * pulse carries. When the id resolves to a person attached (HAS_PERSON) to
+   * the same FieldContext, the canonical INITIATED_BY author edge points at
+   * them instead of the acting user — the pulse is theirs, the upload merely
+   * carried it in. The activity Log stays CREATED_BY the acting user either
+   * way, so the audit trail is unchanged.
+   */
+  attributedToPersonId?: string
+  /** Display name for the attributed person — approval-card copy only (Rule 1). */
+  attributedToName?: string
 }
 
 interface DeletePulseInput {
@@ -1118,15 +1132,48 @@ async function createPulseAuthorized(
   const documentFilename = documentId
     ? await lookupDocumentFilename(graph, documentId)
     : null
+
+  // Attribution guard: only a person already attached (HAS_PERSON) to THIS
+  // context can be credited as the pulse's author — an arbitrary id cannot
+  // pull authorship from outside the Space the canEditContext gate above
+  // authorized. Unresolvable ids fall back silently to the acting user.
+  const attributedToPersonId = input.attributedToPersonId?.trim() || null
+  let attributedAuthor: { id: string; name: string } | null = null
+  if (attributedToPersonId && attributedToPersonId !== currentUserId) {
+    const authorRows = await graph.query<{ id: string; name: string | null }>(
+      `
+      MATCH (:FieldContext {id: $contextId})-[:HAS_PERSON]->(p:Person {id: $attributedToPersonId})
+      RETURN p.id AS id,
+             coalesce(p.name, trim(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, ''))) AS name
+      LIMIT 1
+      `,
+      { contextId: resolvedContext.contextId, attributedToPersonId }
+    )
+    if (authorRows?.[0]) {
+      attributedAuthor = {
+        id: authorRows[0].id,
+        name:
+          authorRows[0].name?.trim() ||
+          input.attributedToName?.trim() ||
+          'person',
+      }
+    }
+  }
+
   const pulseId = `pulse_${randomUUID()}`
   const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
   const where = input.contextTitle?.trim() || ''
   const humanLabel = pulseTypeLabel(pulseType)
   const filenameSuffix = documentFilename ? ` (from ${documentFilename})` : ''
+  const attributionSuffix = attributedAuthor
+    ? ` — attributed to ${attributedAuthor.name}`
+    : ''
   const description =
     (where
       ? `Added ${humanLabel} "${title}" to ${where}`
-      : `Added ${humanLabel} "${title}"`) + filenameSuffix
+      : `Added ${humanLabel} "${title}"`) +
+    filenameSuffix +
+    attributionSuffix
   // Slice 7: server-side audit metadata. Never user-facing; surfaced only via
   // the Log row's metadata field for downstream audits.
   const metadata = buildIngestLogMetadata(documentId, conversationThreadId)
@@ -1134,6 +1181,10 @@ async function createPulseAuthorized(
   const query = `
     MATCH (context:FieldContext {id: $contextId})
     MATCH (person:Person {id: $currentUserId})
+    // Re-verify context attachment atomically with the write ($authorId was
+    // pre-verified above, but the guard ran in a separate transaction).
+    OPTIONAL MATCH (author:Person {id: $authorId})
+      WHERE EXISTS { (context)-[:HAS_PERSON]->(author) }
     OPTIONAL MATCH (doc:Document {id: $documentId})
     CREATE (pulse:FieldPulse${pulseLabel} {
       id: $pulseId,
@@ -1167,7 +1218,12 @@ async function createPulseAuthorized(
       SET pulse.time = $time
     )
     CREATE (context)-[:HAS_PULSE]->(pulse)
-    CREATE (pulse)-[:INITIATED_BY]->(person)
+    // Canonical author edge: the attributed person when one was verified
+    // above, otherwise the acting user. Exactly one INITIATED_BY either way —
+    // resolvePulseAuthor reads initiatedBy[0], so the edge must stay single.
+    FOREACH (a IN CASE WHEN author IS NULL THEN [person] ELSE [author] END |
+      CREATE (pulse)-[:INITIATED_BY]->(a)
+    )
     CREATE (log:Log {
       id: $logId,
       description: $description,
@@ -1188,6 +1244,7 @@ async function createPulseAuthorized(
   const rows = await graph.query<{ id: string; title: string }>(query, {
     contextId: resolvedContext.contextId,
     currentUserId,
+    authorId: attributedAuthor?.id ?? null,
     documentId,
     pulseId,
     logId,
@@ -1225,6 +1282,9 @@ async function createPulseAuthorized(
     }
   }
 
+  const attributionClause = attributedAuthor
+    ? `, attributed to ${attributedAuthor.name}`
+    : ''
   return {
     success: true,
     pulseId: rows[0].id,
@@ -1232,9 +1292,12 @@ async function createPulseAuthorized(
     pulseType,
     contextId: resolvedContext.contextId,
     documentId,
+    // Human label for the credited author (Rule 3) — null when the pulse is
+    // simply the acting user's own.
+    attributedTo: attributedAuthor?.name ?? null,
     message: where
-      ? `Added ${humanLabel} "${rows[0].title}" to ${where}.`
-      : `Added ${humanLabel} "${rows[0].title}".`,
+      ? `Added ${humanLabel} "${rows[0].title}" to ${where}${attributionClause}.`
+      : `Added ${humanLabel} "${rows[0].title}"${attributionClause}.`,
   }
 }
 

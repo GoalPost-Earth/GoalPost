@@ -547,6 +547,21 @@ and ADR-014 / ADR-015 in `kb/06-adr.md`.
 - `EXTRACTED_FROM` ← FieldPulse (extracted goal/resource/story pulses trace back here)
 - `HAS_INGEST_THREAD` → ConversationThread (one per upload + one per re-extract)
 
+**Attribution:** when the extractor identifies whose voice/authorship an
+extracted pulse carries (a byline, the user hint, a named speaker), the
+created pulse's canonical `INITIATED_BY` author edge points at that extracted
+Person — not the uploader — so the person stays related to their
+contributions in the graph. The extractor emits an `authorName` per pulse,
+validated against the extracted persons + context roster
+(`extraction-model-invoker.ts`), resolved to the live person id by the ingest
+orchestrator, and enforced context-scoped (the credited person must be
+`HAS_PERSON`-attached to the same FieldContext) in
+`createPulseAuthorized` (`src/lib/chat/hitl.ts`). The activity `Log` stays
+`CREATED_BY` the uploader either way, and `UPLOADED_BY` still records who
+brought the document in. Any `HAS_PERSON`-attached Person qualifies —
+including a registered `:User` (e.g. a WeSpace co-member): deliberate, since
+the Log keeps the uploader accountable for the write itself.
+
 **Authorization:** inherits read access from the parent Space — the same
 `@authorization` pattern as FieldContext. Writes (`POST /api/ingest/document/{presign,process}`,
 `reExtractDocument`, `deleteDocument`) all gate on `canEditContent` against

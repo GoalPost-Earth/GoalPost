@@ -7,6 +7,7 @@
 import { initGraph } from '../../../modules/graph'
 import { z } from 'zod'
 import { getAnalysisProvider, getEmbeddingsProvider } from '../../llm/factory'
+import { generatePersonEmbedding } from './person-embedder'
 
 const PersonInsightsSchema = z.object({
   themes: z
@@ -100,7 +101,6 @@ export async function enrichPersonFromPulses(
     person: {
       id: string
       name: string
-      email?: string
       passions?: string[]
       fieldsOfCare?: string[]
       traits?: string[]
@@ -121,7 +121,6 @@ export async function enrichPersonFromPulses(
       {
         id: p.id,
         name: p.name,
-        email: p.email,
         passions: p.passions,
         fieldsOfCare: p.fieldsOfCare,
         traits: p.traits
@@ -130,7 +129,8 @@ export async function enrichPersonFromPulses(
         content: pulse.content,
         createdAt: toString(pulse.createdAt),
         labels: labels(pulse)
-      }) as pulses
+      }) as pulses,
+      p.embedding IS NOT NULL as hasEmbedding
   `,
     { personId }
   )
@@ -139,7 +139,9 @@ export async function enrichPersonFromPulses(
     throw new Error(`Person not found: ${personId}`)
   }
 
-  const { person, pulses } = result[0]
+  const { person, pulses, hasEmbedding } = result[0] as (typeof result)[0] & {
+    hasEmbedding: boolean
+  }
 
   // Filter out null pulses from OPTIONAL MATCH
   const validPulses = pulses.filter((p) => p.content)
@@ -148,11 +150,17 @@ export async function enrichPersonFromPulses(
     console.log(
       `No recent pulses found for person ${personId}, skipping enrichment`
     )
-    // Still regenerate embedding from existing bio
-    const bioText = `${person.name}${person.email ? ` (${person.email})` : ''}`
-    const embeddingProvider = getEmbeddingsProvider()
-    const embeddings = await embeddingProvider.embed([bioText])
-    const embedding = embeddings[0]
+    // Repair-only: if the node's embedding is NULL (invalidated by an edit,
+    // or never generated), regenerate AND persist via the canonical profile
+    // embedder — it builds the bio without email (embeddings are durable
+    // derived artifacts and must not encode PII) and throws before the API
+    // call when the person has no content to embed. If a (richer, insight-
+    // bearing) embedding already exists, leave it untouched — bulk enrich
+    // reaches this path for anyone quiet for 30+ days, and overwriting would
+    // downgrade their vector to profile-only.
+    const embedding = hasEmbedding
+      ? []
+      : (await generatePersonEmbedding(personId)).embedding
 
     return {
       personId,
@@ -206,8 +214,11 @@ export async function enrichPersonFromPulses(
     }
   )
 
-  // Generate new embedding combining bio + insights
-  const bioText = `${person.name}${person.email ? ` (${person.email})` : ''}
+  // Generate new embedding combining bio + insights. No email: embeddings
+  // are durable derived artifacts readable outside the PII gates, and email
+  // adds nothing to person-similarity semantics (matches person-embedder's
+  // deliberate exclusion — both writers of Person.embedding must agree).
+  const bioText = `${person.name || ''}
 Passions: ${updatedProperties.passions.join(', ')}
 Fields of Care: ${updatedProperties.fieldsOfCare.join(', ')}
 Traits: ${updatedProperties.traits.join(', ')}

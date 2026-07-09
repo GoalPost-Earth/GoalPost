@@ -16,6 +16,20 @@ interface EnrichRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    // Ops/cron-only endpoint: bulk enrichment overwrites profile fields and
+    // embeddings and burns LLM spend — it must never be anonymously
+    // triggerable. Fail CLOSED when the secret is unconfigured (unlike the
+    // legacy fail-open pattern) because no user-facing surface calls this.
+    const cronSecret = process.env.CRON_SECRET
+    const authHeader = request.headers.get('authorization')
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+      console.warn('[Person Enrichment] Unauthorized enrich request attempted')
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
     const body: EnrichRequest = await request.json()
     const { personIds } = body
 

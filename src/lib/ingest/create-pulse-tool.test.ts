@@ -20,6 +20,11 @@ const ids = {
   meSpace: `test_me_${testRunId}`,
   fieldContext: `test_ctx_${testRunId}`,
   document: `test_${testRunId}_doc`,
+  // Attribution fixtures: one PersonPulse attached to the context via
+  // HAS_PERSON (valid attribution target) and one deliberately unattached
+  // (must fall back to the acting user).
+  attachedPerson: `test_attr_${testRunId}`,
+  unattachedPerson: `test_unatt_${testRunId}`,
 }
 
 beforeAll(async () => {
@@ -41,16 +46,21 @@ beforeAll(async () => {
       CREATE (s:Space:MeSpace {id: $spaceId, name: 'Test MeSpace', visibility: 'PRIVATE', createdAt: datetime()})
       CREATE (c:FieldContext {id: $ctxId, title: 'Care Practices', createdAt: datetime()})
       CREATE (d:Document {id: $docId, filename: 'meeting-notes.txt', mimeType: 'text/plain', sizeBytes: 42, uploadedAt: datetime()})
+      CREATE (ap:Person:PersonPulse {id: $attachedPersonId, firstName: 'Nadia', lastName: 'Woods', name: 'Nadia Woods', createdAt: datetime()})
+      CREATE (up:Person:PersonPulse {id: $unattachedPersonId, firstName: 'Omar', lastName: 'Haddad', name: 'Omar Haddad', createdAt: datetime()})
       CREATE (u)-[:OWNS]->(s)
       CREATE (s)-[:HAS_CONTEXT]->(c)
       CREATE (c)-[:HAS_DOCUMENT]->(d)
       CREATE (d)-[:UPLOADED_BY]->(u)
+      CREATE (c)-[:HAS_PERSON]->(ap)
       `,
       {
         userId: ids.user,
         spaceId: ids.meSpace,
         ctxId: ids.fieldContext,
         docId: ids.document,
+        attachedPersonId: ids.attachedPerson,
+        unattachedPersonId: ids.unattachedPerson,
       }
     )
   } finally {
@@ -73,7 +83,7 @@ afterAll(async () => {
     await session.run(
       `
       MATCH (n)
-      WHERE n.id IN [$userId, $spaceId, $ctxId, $docId]
+      WHERE n.id IN [$userId, $spaceId, $ctxId, $docId, $attachedPersonId, $unattachedPersonId]
       DETACH DELETE n
       `,
       {
@@ -81,6 +91,8 @@ afterAll(async () => {
         spaceId: ids.meSpace,
         ctxId: ids.fieldContext,
         docId: ids.document,
+        attachedPersonId: ids.attachedPerson,
+        unattachedPersonId: ids.unattachedPerson,
       }
     )
   } finally {
@@ -254,6 +266,162 @@ describe('executeAuthorizedWriteTool — create_pulse (slice 2)', () => {
           `MATCH (p:FieldPulse) WHERE p.title = 'Sneaky goal' RETURN p.id AS id`
         )
         expect(rows.records).toHaveLength(0)
+      } finally {
+        await session.close()
+      }
+    }
+  )
+})
+
+// Doc-ingest attribution: when create_pulse carries attributedToPersonId for
+// a person attached (HAS_PERSON) to the SAME FieldContext, the canonical
+// (:FieldPulse)-[:INITIATED_BY]->() author edge points at that person instead
+// of the acting user — exactly one INITIATED_BY edge either way. The activity
+// Log stays CREATED_BY the acting user. An id that is missing, self, or not
+// attached to the context falls back silently to the acting user.
+describe('executeAuthorizedWriteTool — create_pulse attribution (INITIATED_BY)', () => {
+  itIf(true)(
+    'points INITIATED_BY at the attributed person attached to the context; Log stays CREATED_BY the acting user',
+    async () => {
+      if (!neo4jAvailable) return
+      const graph = await initGraph()
+
+      const result = await executeAuthorizedWriteTool(graph, ids.user, 'create_pulse', {
+        pulseType: 'StoryPulse',
+        title: 'Harvest story from the plot',
+        content: 'Nadia told the story of the first shared harvest.',
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+        attributedToPersonId: ids.attachedPerson,
+        attributedToName: 'Nadia Woods',
+      })
+      expect(result.success).toBe(true)
+      const pulseId = (result as { pulseId?: string }).pulseId
+      expect(typeof pulseId).toBe('string')
+      // Execution result reports the credited author by display name.
+      expect((result as { attributedTo?: string | null }).attributedTo).toBe(
+        'Nadia Woods'
+      )
+      expect(String(result.message || '')).toContain('attributed to Nadia Woods')
+
+      const session = driver.session()
+      try {
+        const rows = await session.run(
+          `
+          MATCH (p:FieldPulse {id: $pulseId})-[:INITIATED_BY]->(author)
+          RETURN author.id AS authorId,
+                 size([(p)-[:INITIATED_BY]->() | 1]) AS initiatedByCount
+          `,
+          { pulseId }
+        )
+        expect(rows.records).toHaveLength(1)
+        // The pulse belongs to the attributed person, NOT the acting user.
+        expect(rows.records[0].get('authorId')).toBe(ids.attachedPerson)
+        expect(rows.records[0].get('authorId')).not.toBe(ids.user)
+        // Exactly one canonical author edge.
+        expect(Number(rows.records[0].get('initiatedByCount'))).toBe(1)
+
+        // Audit trail unchanged: the Log is CREATED_BY the acting user and
+        // its description carries the attribution by name only.
+        const logRows = await session.run(
+          `
+          MATCH (log:Log)-[:LOGGED_FOR]->(p:FieldPulse {id: $pulseId})
+          MATCH (log)-[:CREATED_BY]->(creator)
+          RETURN creator.id AS creatorId, log.description AS description
+          `,
+          { pulseId }
+        )
+        expect(logRows.records).toHaveLength(1)
+        expect(logRows.records[0].get('creatorId')).toBe(ids.user)
+        const description = String(logRows.records[0].get('description'))
+        expect(description).toContain('attributed to Nadia Woods')
+        // Rule 1 — no raw person id in activity copy.
+        expect(description).not.toContain(ids.attachedPerson)
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
+  itIf(true)(
+    'falls back to INITIATED_BY the acting user when the attributed person is NOT attached to the context (attributedTo null)',
+    async () => {
+      if (!neo4jAvailable) return
+      const graph = await initGraph()
+
+      const result = await executeAuthorizedWriteTool(graph, ids.user, 'create_pulse', {
+        pulseType: 'GoalPulse',
+        title: 'Unattached attribution attempt',
+        content: 'The claimed author is not part of this field context.',
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+        attributedToPersonId: ids.unattachedPerson,
+        attributedToName: 'Omar Haddad',
+      })
+      // Silent fallback — the write still succeeds, just as the acting user's.
+      expect(result.success).toBe(true)
+      const pulseId = (result as { pulseId?: string }).pulseId
+      expect(typeof pulseId).toBe('string')
+      expect(
+        (result as { attributedTo?: string | null }).attributedTo
+      ).toBeNull()
+      expect(String(result.message || '')).not.toContain('attributed to')
+
+      const session = driver.session()
+      try {
+        const rows = await session.run(
+          `
+          MATCH (p:FieldPulse {id: $pulseId})-[:INITIATED_BY]->(author)
+          RETURN author.id AS authorId,
+                 size([(p)-[:INITIATED_BY]->() | 1]) AS initiatedByCount
+          `,
+          { pulseId }
+        )
+        expect(rows.records).toHaveLength(1)
+        expect(rows.records[0].get('authorId')).toBe(ids.user)
+        expect(Number(rows.records[0].get('initiatedByCount'))).toBe(1)
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
+  itIf(true)(
+    'self-attribution collapses to plain authorship (INITIATED_BY the acting user, attributedTo null)',
+    async () => {
+      if (!neo4jAvailable) return
+      const graph = await initGraph()
+
+      const result = await executeAuthorizedWriteTool(graph, ids.user, 'create_pulse', {
+        pulseType: 'StoryPulse',
+        title: 'Self attribution collapses',
+        content: 'Attributing a pulse to yourself is just authorship.',
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        attributedToPersonId: ids.user,
+        attributedToName: 'Test Uploader',
+      })
+      expect(result.success).toBe(true)
+      const pulseId = (result as { pulseId?: string }).pulseId
+      expect(
+        (result as { attributedTo?: string | null }).attributedTo
+      ).toBeNull()
+
+      const session = driver.session()
+      try {
+        const rows = await session.run(
+          `
+          MATCH (p:FieldPulse {id: $pulseId})-[:INITIATED_BY]->(author)
+          RETURN author.id AS authorId,
+                 size([(p)-[:INITIATED_BY]->() | 1]) AS initiatedByCount
+          `,
+          { pulseId }
+        )
+        expect(rows.records).toHaveLength(1)
+        expect(rows.records[0].get('authorId')).toBe(ids.user)
+        expect(Number(rows.records[0].get('initiatedByCount'))).toBe(1)
       } finally {
         await session.close()
       }

@@ -59,6 +59,12 @@ export const ExtractionSchema = z.object({
           .describe(
             'Set ONLY when this pulse matches an existing pulse from EXISTING PULSES — copy their id verbatim. Use null otherwise. Match strictly: the kind must agree.'
           ),
+        authorName: z
+          .string()
+          .nullable()
+          .describe(
+            'Full name of the person this pulse is attributed to — the document author or named speaker whose voice the pulse carries. Must exactly match a name you emitted in persons, or a name from EXISTING PEOPLE. Use null when authorship is unclear.'
+          ),
         status: z
           .string()
           .nullable()
@@ -119,6 +125,7 @@ export function mapExtractionObject(
       title: p.title ?? '',
       content: p.content ?? '',
       existingId: p.existingId ?? undefined,
+      authorName: p.authorName ?? undefined,
       status: p.status ?? undefined,
       intensity: p.intensity ?? undefined,
       horizon: p.horizon ?? undefined,
