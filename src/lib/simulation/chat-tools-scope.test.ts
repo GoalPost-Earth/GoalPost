@@ -139,6 +139,50 @@ describe('GOAL-300 — search tools do not force the active scope', () => {
 
 /**
  * Regression for the captured AI-quality failure behind
+ * feedback_d02d469f-... : "look for all value-like pulses in my Me Space".
+ * search_pulse required a keyword, so the model could not ENUMERATE by type +
+ * Space and wrongly concluded there were no value pulses. The fix lets it list
+ * pulses with a blank query when a scope (pulseType / space / field) is present,
+ * and adds a Space scope so "in my Me Space" resolves in one call.
+ */
+describe('search_pulse enumerates by scope without a keyword', () => {
+  it('lists by pulseType + spaceName with a blank query and does NOT inject the active field', async () => {
+    const tools = await toolsWithActiveScope()
+    await runTool(tools.search_pulse, {
+      pulseType: 'CoreValuePulse',
+      spaceName: "Robert's Space",
+    })
+
+    expect(searchPulses).toHaveBeenCalledTimes(1)
+    const arg = searchPulses.mock.calls[0][1] as Record<string, unknown>
+    // Enumeration: no keyword required, and the active field is not injected.
+    expect(arg.query).toBeUndefined()
+    expect(arg.contextId).toBeUndefined()
+    // The Space the user named is forwarded so the listing is scoped to it.
+    expect(arg.spaceName).toBe("Robert's Space")
+    expect(arg.pulseType).toBe('CoreValuePulse')
+    expect(arg.userId).toBe(USER_ID)
+  })
+
+  it('forwards an explicit spaceId scope for enumeration', async () => {
+    const tools = await toolsWithActiveScope()
+    await runTool(tools.search_pulse, {
+      pulseType: 'CoreValuePulse',
+      spaceId: 'mespace_robert',
+    })
+
+    // Assert the call happened first — a valid spaceId must not short-circuit
+    // the search. Without this, a regressed assertCanViewSpace gate would throw
+    // a cryptic "cannot read [1] of undefined" instead of a clear failure.
+    expect(searchPulses).toHaveBeenCalledTimes(1)
+    const arg = searchPulses.mock.calls[0][1] as Record<string, unknown>
+    expect(arg.spaceId).toBe('mespace_robert')
+    expect(arg.pulseType).toBe('CoreValuePulse')
+  })
+})
+
+/**
+ * Regression for the captured AI-quality failure behind
  * feedback_32f2ee28-... : a raw Neo4j "LIMIT: Invalid input. '25.0' ..." error
  * reached the model, which paraphrased it into member-facing copy ("a
  * search-tool limit error on this surface") — a technical failure no

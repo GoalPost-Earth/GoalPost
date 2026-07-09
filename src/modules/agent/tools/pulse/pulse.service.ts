@@ -40,7 +40,12 @@ export interface PulseRecord {
 }
 
 export interface PulseSearchInput {
-  query: string
+  /**
+   * Keyword for a title/content search. OPTIONAL: when blank/absent AND a scope
+   * (spaceId/spaceName/contextId/contextTitle/pulseType) is present, the search
+   * ENUMERATES — it lists every pulse in that scope instead of matching text.
+   */
+  query?: string
   /**
    * The authenticated caller's id. REQUIRED — results are restricted to pulses
    * in Spaces this user can view. A missing/empty userId returns nothing
@@ -49,6 +54,10 @@ export interface PulseSearchInput {
   userId?: string | null
   contextId?: string
   contextTitle?: string
+  /** Optional Space id scope — restrict to pulses living in this one Space. */
+  spaceId?: string
+  /** Optional Space name scope (fuzzy contains) — restrict to Spaces whose name matches. */
+  spaceName?: string
   pulseType?: PulseType
   limit?: number
 }
@@ -147,6 +156,12 @@ function mapPulseRecord(raw: Record<string, unknown>): PulseRecord {
 }
 
 function typeFilterCypher(): string {
+  // The CoreValuePulse branch also matches the legacy `:CoreValue` label:
+  // prod→dev migration mapped a prod CoreValue to `FieldPulse:StoryPulse:CoreValue`
+  // ("merged with CoreValue into StoryPulse; prod label kept for traceability",
+  // kb/08). Those migrated values carry NO `:CoreValuePulse` label, so a
+  // `pulseType='CoreValuePulse'` filter (what "value-like pulses" resolves to)
+  // would miss every migrated value without this bridge — the captured failure.
   return `
     (
       $pulseType IS NULL
@@ -155,12 +170,18 @@ function typeFilterCypher(): string {
       OR ($pulseType = 'ResourcePulse' AND pulse:ResourcePulse)
       OR ($pulseType = 'StoryPulse' AND pulse:StoryPulse)
       OR ($pulseType = 'CarePulse' AND pulse:CarePulse)
-      OR ($pulseType = 'CoreValuePulse' AND pulse:CoreValuePulse)
+      OR ($pulseType = 'CoreValuePulse' AND (pulse:CoreValuePulse OR pulse:CoreValue))
       OR ($pulseType = 'FieldPulse' AND pulse:FieldPulse)
     )
   `
 }
 
+// Migrated values are labelled `:StoryPulse:CoreValue` (kb/08), so the type
+// CASE below checks the `:CoreValue` value-marker BEFORE `:StoryPulse` — a value
+// the user asked for is reported as a value, not a story, keeping the projected
+// type consistent with the `:CoreValue` bridge in typeFilterCypher(). Accepted
+// consequence: a `pulseType='StoryPulse'` enumeration reports such a node as
+// 'CoreValuePulse' — a value merged into story is still a value.
 function pulseProjectionCypher(): string {
   return `
     pulse.id AS id,
@@ -169,9 +190,9 @@ function pulseProjectionCypher(): string {
     CASE
       WHEN pulse:GoalPulse THEN 'GoalPulse'
       WHEN pulse:ResourcePulse THEN 'ResourcePulse'
-      WHEN pulse:StoryPulse THEN 'StoryPulse'
       WHEN pulse:CarePulse THEN 'CarePulse'
-      WHEN pulse:CoreValuePulse THEN 'CoreValuePulse'
+      WHEN pulse:CoreValuePulse OR pulse:CoreValue THEN 'CoreValuePulse'
+      WHEN pulse:StoryPulse THEN 'StoryPulse'
       ELSE 'FieldPulse'
     END AS type,
     pulse.status AS status,
@@ -368,20 +389,12 @@ export async function searchPulses(
   graph: Neo4jGraph,
   input: PulseSearchInput
 ): Promise<PulseSearchResult> {
-  const query = input.query?.trim()
-
-  if (!query) {
-    return {
-      found: false,
-      count: 0,
-      pulses: [],
-      needsDisambiguation: false,
-      message: 'Please provide a pulse title or keyword to search for.',
-    }
-  }
+  const query = input.query?.trim() || ''
 
   const contextId = input.contextId?.trim() || null
   const contextTitle = input.contextTitle?.trim() || null
+  const spaceId = input.spaceId?.trim() || null
+  const spaceName = input.spaceName?.trim() || null
   const pulseType = input.pulseType || null
   const limit = normalizeLimit(input.limit)
   const currentUserId = input.userId?.trim() || null
@@ -398,13 +411,57 @@ export async function searchPulses(
     }
   }
 
+  // A scope (a Space, a field, or a pulse type) lets us ENUMERATE — list every
+  // pulse in it — WITHOUT a keyword. This is what "all value pulses in my Me
+  // Space" needs: the member should never have to invent a keyword just to see
+  // what a Space holds (the captured failure behind this change). We only refuse
+  // a TRULY unscoped blank query, which would otherwise dump every pulse the
+  // member can see.
+  const hasScope = Boolean(
+    spaceId || spaceName || contextId || contextTitle || pulseType
+  )
+  if (!query && !hasScope) {
+    return {
+      found: false,
+      count: 0,
+      pulses: [],
+      needsDisambiguation: false,
+      message:
+        'Please give me a keyword, or name a Space, field, or pulse type so I can list the matching pulses.',
+    }
+  }
+
+  // Text match only when a keyword is present; a scoped blank query lists every
+  // pulse in the scope, newest first. Every result is still gated by
+  // viewablePulsePredicate($userId) below, so scoping never widens visibility.
+  const textClause = query
+    ? `(
+        toLower(coalesce(pulse.title, '')) CONTAINS toLower($query)
+        OR toLower(coalesce(pulse.content, '')) CONTAINS toLower($query)
+        OR toLower(coalesce(pulse.title, '')) STARTS WITH toLower($query)
+      )`
+    : 'true'
+
+  const orderClause = query
+    ? `ORDER BY
+        CASE
+          WHEN toLower(trim(coalesce(pulse.title, ''))) = toLower(trim($query)) THEN 0
+          WHEN toLower(coalesce(pulse.title, '')) STARTS WITH toLower($query) THEN 1
+          ELSE 2
+        END,
+        pulse.createdAt DESC`
+    : `ORDER BY pulse.createdAt DESC`
+
+  // The `WITH pulse ... ORDER BY ... LIMIT` sits BEFORE the projection
+  // OPTIONAL MATCHes so those four expansions run for the returned rows only
+  // (O(limit)), not for every pulse in scope — mirroring
+  // searchPulsesByRelatedPerson. The ordering keys (pulse.title/createdAt) are
+  // pulse-only, and the final RETURN re-applies orderClause, so it is
+  // order-preserving. (Kept as a JS comment, not an inline Cypher `//`, so
+  // reformatting the template can never swallow the query.)
   const cypher = `
     MATCH (pulse:FieldPulse)
-    WHERE (
-      toLower(coalesce(pulse.title, '')) CONTAINS toLower($query)
-      OR toLower(coalesce(pulse.content, '')) CONTAINS toLower($query)
-      OR toLower(coalesce(pulse.title, '')) STARTS WITH toLower($query)
-    )
+    WHERE ${textClause}
       AND ${viewablePulsePredicate('pulse', 'currentUserId')}
       AND (
         $contextId IS NULL
@@ -419,7 +476,23 @@ export async function searchPulses(
           WHERE toLower(coalesce(contextFilter.title, '')) CONTAINS toLower($contextTitle)
         }
       )
+      AND (
+        $spaceId IS NULL
+        OR EXISTS {
+          MATCH (spaceFilter:Space {id: $spaceId})-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PULSE]->(pulse)
+        }
+      )
+      AND (
+        $spaceName IS NULL
+        OR EXISTS {
+          MATCH (spaceFilter:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PULSE]->(pulse)
+          WHERE toLower(coalesce(spaceFilter.name, '')) CONTAINS toLower($spaceName)
+        }
+      )
       AND ${typeFilterCypher()}
+    WITH pulse
+    ${orderClause}
+    LIMIT toInteger($limit)
     OPTIONAL MATCH (context:FieldContext)-[:HAS_PULSE]->(pulse)
     OPTIONAL MATCH (space:Space)-[:HAS_CONTEXT]->(context)
     OPTIONAL MATCH (pulse)-[:CREATED_BY]->(creatorA:Person)
@@ -432,20 +505,15 @@ export async function searchPulses(
       head([name IN collect(DISTINCT creatorA.name) WHERE name IS NOT NULL]) AS createdByA,
       head([name IN collect(DISTINCT creatorB.name) WHERE name IS NOT NULL]) AS createdByB
     RETURN ${pulseProjectionCypher()}
-    ORDER BY
-      CASE
-        WHEN toLower(trim(coalesce(pulse.title, ''))) = toLower(trim($query)) THEN 0
-        WHEN toLower(coalesce(pulse.title, '')) STARTS WITH toLower($query) THEN 1
-        ELSE 2
-      END,
-      pulse.createdAt DESC
-    LIMIT toInteger($limit)
+    ${orderClause}
   `
 
   const raw = await graph.query<Record<string, unknown>>(cypher, {
     query,
     contextId,
     contextTitle,
+    spaceId,
+    spaceName,
     pulseType,
     limit,
     currentUserId,
@@ -454,21 +522,34 @@ export async function searchPulses(
   const pulses = (raw || []).map(mapPulseRecord)
 
   if (pulses.length === 0) {
-    // Nothing matched the pulse text directly. Before giving up, bridge from the
-    // query to any PERSON it names: people identified during ingestion are
-    // graph-related to pulses (authored / same document / same field) but never
-    // appear in pulse text, so a "pulses related to <person>" question would
-    // otherwise dead-end. Auth is preserved — the bridge re-gates on $userId.
-    const related = await searchPulsesByRelatedPerson(graph, {
-      query,
-      contextId,
-      contextTitle,
-      pulseType,
-      limit,
-      currentUserId,
-    })
+    // A KEYWORD that matched no pulse text may still name a PERSON: people
+    // identified during ingestion are graph-related to pulses (authored / same
+    // document / same field) but never appear in pulse text, so a "pulses
+    // related to <person>" question would otherwise dead-end. Bridge to them —
+    // keyword mode only, since an enumeration has no name to resolve. Auth is
+    // preserved: the bridge re-gates on $userId.
+    if (query) {
+      const related = await searchPulsesByRelatedPerson(graph, {
+        query,
+        contextId,
+        contextTitle,
+        pulseType,
+        limit,
+        currentUserId,
+      })
 
-    if (related.length === 0) {
+      if (related.length > 0) {
+        return {
+          found: true,
+          count: related.length,
+          pulses: related,
+          // Discovery results, not update candidates — don't prompt for a
+          // pulse ID the way a title-collision disambiguation would.
+          needsDisambiguation: false,
+          message: buildRelatedPulseMessage(query, related),
+        }
+      }
+
       return {
         found: false,
         count: 0,
@@ -479,13 +560,32 @@ export async function searchPulses(
     }
 
     return {
-      found: true,
-      count: related.length,
-      pulses: related,
-      // These are discovery results, not update candidates — don't prompt for a
-      // pulse ID the way a title-collision disambiguation would.
+      found: false,
+      count: 0,
+      pulses: [],
       needsDisambiguation: false,
-      message: buildRelatedPulseMessage(query, related),
+      message: 'I did not find any pulses in that scope.',
+    }
+  }
+
+  // Enumeration (blank query) is a plain listing, not a set of update
+  // candidates — don't prompt for a pulse ID the way a keyword collision would.
+  if (!query) {
+    const noun = pulses.length === 1 ? 'pulse' : 'pulses'
+    // A listing that fills the whole page (=limit) is almost certainly
+    // truncated, so signal that instead of implying the count is the total —
+    // otherwise the model relays "you have 25 values" when there may be more
+    // (kb/07 truthfulness). The keyword path keeps its own messaging below.
+    const message =
+      pulses.length === limit
+        ? `Here are ${pulses.length} ${noun} in that scope — there may be more; ask me to narrow the scope or show additional results.`
+        : `I found ${pulses.length} ${noun} in that scope.`
+    return {
+      found: true,
+      count: pulses.length,
+      pulses,
+      needsDisambiguation: false,
+      message,
     }
   }
 
