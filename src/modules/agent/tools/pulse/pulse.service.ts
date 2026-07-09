@@ -29,6 +29,14 @@ export interface PulseRecord {
   contextTitles?: string[]
   spaceNames?: string[]
   createdByName?: string | null
+  /**
+   * Why this pulse is related to the search term when it was surfaced via the
+   * person bridge (see `searchPulses`). One of `authored` | `sharedDocument` |
+   * `sharedField`; absent for direct title/content text matches.
+   */
+  relatedVia?: 'authored' | 'sharedDocument' | 'sharedField' | null
+  /** The person whose name matched, when surfaced via the person bridge. */
+  relatedPersonName?: string | null
 }
 
 export interface PulseSearchInput {
@@ -132,6 +140,9 @@ function mapPulseRecord(raw: Record<string, unknown>): PulseRecord {
     contextTitles,
     spaceNames,
     createdByName: (raw.createdByName as string | null) || null,
+    relatedVia:
+      (raw.relatedVia as PulseRecord['relatedVia'] | undefined) || null,
+    relatedPersonName: (raw.relatedPersonName as string | null) || null,
   }
 }
 
@@ -179,6 +190,178 @@ function pulseProjectionCypher(): string {
     spaceNames AS spaceNames,
     coalesce(createdByA, createdByB) AS createdByName
   `
+}
+
+/**
+ * Person-bridge fallback for `searchPulses`.
+ *
+ * A plain title/content text search misses the common case behind a real user
+ * complaint: "are there any pulses related to <a person>?" People identified
+ * during document ingestion become `:Person:PersonPulse` nodes attached to a
+ * FieldContext — they are NOT written into any pulse's title/content, so a text
+ * search returns nothing even though the person (and the pulses around them) are
+ * plainly in the graph. This bridge finds pulses connected to a Person whose
+ * name matches the query, ranked by how directly they relate:
+ *   0 `authored`        — the person authored the pulse (INITIATED_BY/CREATED_BY)
+ *   1 `sharedDocument`  — pulse + person were extracted from the same Document
+ *   2 `sharedField`     — the person is attached (HAS_PERSON) to the pulse's field
+ *
+ * Every candidate is re-gated by `viewablePulsePredicate($currentUserId)` — the
+ * bridge never returns a pulse the caller could not already see, so it cannot
+ * leak Spaces or the existence of people in them (fail-closed).
+ */
+async function searchPulsesByRelatedPerson(
+  graph: Neo4jGraph,
+  params: {
+    query: string
+    contextId: string | null
+    contextTitle: string | null
+    pulseType: PulseType | null
+    limit: number
+    currentUserId: string
+  }
+): Promise<PulseRecord[]> {
+  const cypher = `
+    WITH toLower($query) AS qLower
+    MATCH (person:Person)
+    WHERE toLower(coalesce(person.name, trim(coalesce(person.firstName, '') + ' ' + coalesce(person.lastName, '')))) CONTAINS qLower
+       OR toLower(coalesce(person.lastName, '')) CONTAINS qLower
+       OR toLower(coalesce(person.firstName, '')) CONTAINS qLower
+    CALL {
+      WITH person
+      MATCH (pulse:FieldPulse)-[:INITIATED_BY|CREATED_BY]->(person)
+      RETURN pulse AS relPulse, 0 AS relRank
+      UNION
+      WITH person
+      MATCH (pulse:FieldPulse)-[:EXTRACTED_FROM]->(:Document)<-[:EXTRACTED_FROM]-(person)
+      RETURN pulse AS relPulse, 1 AS relRank
+      UNION
+      WITH person
+      MATCH (fc:FieldContext)-[:HAS_PERSON]->(person)
+      MATCH (fc)-[:HAS_PULSE]->(pulse:FieldPulse)
+      RETURN pulse AS relPulse, 2 AS relRank
+    }
+    WITH
+      relPulse AS pulse,
+      relRank,
+      coalesce(person.name, trim(coalesce(person.firstName, '') + ' ' + coalesce(person.lastName, ''))) AS personName
+    WHERE ${viewablePulsePredicate('pulse', 'currentUserId')}
+      AND (
+        $contextId IS NULL
+        OR EXISTS {
+          MATCH (:FieldContext {id: $contextId})-[:HAS_PULSE]->(pulse)
+        }
+      )
+      AND (
+        $contextTitle IS NULL
+        OR EXISTS {
+          MATCH (contextFilter:FieldContext)-[:HAS_PULSE]->(pulse)
+          WHERE toLower(coalesce(contextFilter.title, '')) CONTAINS toLower($contextTitle)
+        }
+      )
+      AND ${typeFilterCypher()}
+    // Collapse to one row per pulse, keeping the STRONGEST relationship (lowest
+    // rank) AND the person who produced it — ordering by relRank before collect
+    // makes head() the min-rank element, so relatedPersonName can never be a
+    // different person than the one relatedVia describes (honest attribution).
+    WITH pulse, relRank, personName
+    ORDER BY relRank ASC
+    WITH pulse, head(collect({ rank: relRank, name: personName })) AS best
+    WITH pulse, best.rank AS bestRank, best.name AS relatedPersonName
+    // Rank the candidates and cut to $limit BEFORE the projection expansions, so
+    // the four OPTIONAL MATCHes below run for the returned rows only (O(limit)),
+    // not for every pulse in a possibly-large field (O(field size)).
+    ORDER BY bestRank, pulse.createdAt DESC
+    LIMIT toInteger($limit)
+    OPTIONAL MATCH (context:FieldContext)-[:HAS_PULSE]->(pulse)
+    OPTIONAL MATCH (space:Space)-[:HAS_CONTEXT]->(context)
+    OPTIONAL MATCH (pulse)-[:CREATED_BY]->(creatorA:Person)
+    OPTIONAL MATCH (pulse)-[:INITIATED_BY]->(creatorB:Person)
+    WITH
+      pulse,
+      bestRank,
+      relatedPersonName,
+      [id IN collect(DISTINCT context.id) WHERE id IS NOT NULL] AS contextIds,
+      [title IN collect(DISTINCT context.title) WHERE title IS NOT NULL] AS contextTitles,
+      [name IN collect(DISTINCT space.name) WHERE name IS NOT NULL] AS spaceNames,
+      head([name IN collect(DISTINCT creatorA.name) WHERE name IS NOT NULL]) AS createdByA,
+      head([name IN collect(DISTINCT creatorB.name) WHERE name IS NOT NULL]) AS createdByB
+    RETURN ${pulseProjectionCypher()},
+      CASE bestRank WHEN 0 THEN 'authored' WHEN 1 THEN 'sharedDocument' ELSE 'sharedField' END AS relatedVia,
+      relatedPersonName AS relatedPersonName
+    ORDER BY bestRank, pulse.createdAt DESC
+  `
+
+  const raw = await graph.query<Record<string, unknown>>(cypher, {
+    query: params.query,
+    contextId: params.contextId,
+    contextTitle: params.contextTitle,
+    pulseType: params.pulseType,
+    limit: params.limit,
+    currentUserId: params.currentUserId,
+  })
+
+  return (raw || []).map(mapPulseRecord)
+}
+
+/**
+ * Human-readable, honest framing for person-bridge results. It never claims the
+ * pulses are "about" the person — it names the actual relationship so the
+ * assistant can relay it truthfully (a `sharedField` pulse is a fieldmate, not
+ * the person's own contribution).
+ */
+function buildRelatedPulseMessage(
+  query: string,
+  pulses: PulseRecord[]
+): string {
+  // Anchor on the person the query actually named. If a name substring matches
+  // more than one person, describe the one with the most related pulses so the
+  // counts below never span two different people (honest attribution).
+  const nameCounts = new Map<string, number>()
+  for (const p of pulses) {
+    if (p.relatedPersonName) {
+      nameCounts.set(
+        p.relatedPersonName,
+        (nameCounts.get(p.relatedPersonName) ?? 0) + 1
+      )
+    }
+  }
+  const who =
+    [...nameCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] || query
+
+  // Count EACH relationship tier separately, for THIS person only. The returned
+  // rows can mix tiers (ORDER BY bestRank), so a single "strongest" label would
+  // misattribute fieldmate pulses as authored/extracted — never do that.
+  const mine = pulses.filter((p) => p.relatedPersonName === who)
+  const authored = mine.filter((p) => p.relatedVia === 'authored').length
+  const sharedDocument = mine.filter(
+    (p) => p.relatedVia === 'sharedDocument'
+  ).length
+  const sharedFieldPulses = mine.filter((p) => p.relatedVia === 'sharedField')
+  const field = sharedFieldPulses[0]?.contextTitle
+  const plural = (n: number) => (n === 1 ? 'pulse' : 'pulses')
+
+  const clauses: string[] = []
+  if (authored > 0) {
+    clauses.push(`is credited on ${authored} ${plural(authored)}`)
+  }
+  if (sharedDocument > 0) {
+    clauses.push(
+      `appears alongside ${sharedDocument} ${plural(sharedDocument)} extracted from the same uploaded document`
+    )
+  }
+  if (sharedFieldPulses.length > 0) {
+    clauses.push(
+      `shares ${field ? `the "${field}" field` : 'a field'} with ${
+        sharedFieldPulses.length
+      } ${plural(sharedFieldPulses.length)} that are present alongside them, not specifically about them`
+    )
+  }
+
+  if (clauses.length === 0) {
+    return `No pulse mentions "${query}" by name, but ${who} is connected to ${mine.length} ${plural(mine.length)}.`
+  }
+  return `No pulse mentions "${query}" by name, but ${who} ${clauses.join('; ')}.`
 }
 
 export async function searchPulses(
@@ -256,7 +439,7 @@ export async function searchPulses(
         ELSE 2
       END,
       pulse.createdAt DESC
-    LIMIT $limit
+    LIMIT toInteger($limit)
   `
 
   const raw = await graph.query<Record<string, unknown>>(cypher, {
@@ -271,12 +454,38 @@ export async function searchPulses(
   const pulses = (raw || []).map(mapPulseRecord)
 
   if (pulses.length === 0) {
+    // Nothing matched the pulse text directly. Before giving up, bridge from the
+    // query to any PERSON it names: people identified during ingestion are
+    // graph-related to pulses (authored / same document / same field) but never
+    // appear in pulse text, so a "pulses related to <person>" question would
+    // otherwise dead-end. Auth is preserved — the bridge re-gates on $userId.
+    const related = await searchPulsesByRelatedPerson(graph, {
+      query,
+      contextId,
+      contextTitle,
+      pulseType,
+      limit,
+      currentUserId,
+    })
+
+    if (related.length === 0) {
+      return {
+        found: false,
+        count: 0,
+        pulses: [],
+        needsDisambiguation: false,
+        message: `I could not find pulses matching "${query}".`,
+      }
+    }
+
     return {
-      found: false,
-      count: 0,
-      pulses: [],
+      found: true,
+      count: related.length,
+      pulses: related,
+      // These are discovery results, not update candidates — don't prompt for a
+      // pulse ID the way a title-collision disambiguation would.
       needsDisambiguation: false,
-      message: `I could not find pulses matching "${query}".`,
+      message: buildRelatedPulseMessage(query, related),
     }
   }
 
