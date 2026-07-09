@@ -582,3 +582,327 @@ export async function discoverGlobalResonances(
 
   return allDiscoveredResonances
 }
+
+// ---------------------------------------------------------------------------
+// Cross-context discovery (GOAL-293)
+//
+// The functions above only ever match a candidate pulse WITHIN the same
+// FieldContext as the source. Robert's goal is for an upload to surface
+// connections across a member's whole world — every FieldContext they can
+// access. The helpers below take a source pulse and vector-match it against
+// pulses in the member's OTHER accessible contexts, then create pending
+// cross-context `ResonanceSuggestion`s anchored to the uploader's Space and
+// context (so they surface in the existing per-Space suggestions listing).
+//
+// Space authorization is enforced by construction: `accessibleContextIds` is
+// the caller's viewable-context set (see getAccessibleFieldContexts), and every
+// query below intersects candidate pulses with that set — a pulse in a Space
+// the member cannot view is never read, and a suggestion is never written into
+// one. See kb/06-adr.md (data sovereignty).
+// ---------------------------------------------------------------------------
+
+/**
+ * Vector-search for pulses similar to `pulseId` that live in one of the
+ * member's OTHER accessible contexts. Restricted to `accessibleContextIds`
+ * (authorization) and excluding `excludeContextId` (the upload's own context —
+ * that pairing is handled by the within-context pass). Only embedded pulses are
+ * reachable via the vector index, so un-embedded candidates are silently — and
+ * correctly — skipped.
+ */
+async function findSimilarPulsesAcrossContexts(
+  pulseId: string,
+  accessibleContextIds: string[],
+  excludeContextId: string,
+  threshold: number = 0.7,
+  limit: number = 10
+): Promise<Array<{ id: string; content: string; similarity: number }>> {
+  if (accessibleContextIds.length === 0) return []
+
+  const graph = await initGraph()
+
+  const pulseResult = await graph.query<{ embedding: number[] }>(
+    `MATCH (p:FieldPulse {id: $pulseId}) RETURN p.embedding as embedding`,
+    { pulseId }
+  )
+  if (
+    !Array.isArray(pulseResult) ||
+    pulseResult.length === 0 ||
+    !pulseResult[0].embedding
+  ) {
+    return []
+  }
+  const embedding = pulseResult[0].embedding
+
+  const similarResult = await graph.query<{
+    pulse: { id: string; content: string }
+    similarity: number
+  }>(
+    `
+    CALL db.index.vector.queryNodes('pulseContentVectorIndex', $limit * 3, $embedding)
+    YIELD node, score
+    WITH node, score
+    WHERE node.id <> $pulseId AND score >= $threshold
+      // Node qualifies iff it is reachable through at least one context the
+      // member can view that is NOT the upload's own context. EXISTS avoids
+      // row-multiplication when a pulse lives in several contexts, and gates
+      // out any pulse in a Space the member cannot access.
+      AND EXISTS {
+        MATCH (ctx:FieldContext)-[:HAS_PULSE]->(node)
+        WHERE ctx.id IN $accessibleContextIds AND ctx.id <> $excludeContextId
+      }
+    RETURN {id: node.id, content: node.content} as pulse, score as similarity
+    ORDER BY similarity DESC
+    LIMIT $limit
+    `,
+    {
+      pulseId,
+      accessibleContextIds,
+      excludeContextId,
+      threshold,
+      limit: neo4j.int(limit),
+      embedding,
+    }
+  )
+
+  if (!Array.isArray(similarResult) || similarResult.length === 0) return []
+
+  return similarResult.map((r) => ({
+    id: r.pulse.id,
+    content: r.pulse.content,
+    similarity: r.similarity,
+  }))
+}
+
+/**
+ * Create ONE cross-context `ResonanceSuggestion` between `sourcePulseId` (which
+ * MUST live in `sourceContextId`) and `targetPulseId` (which lives in a
+ * different, member-accessible context). The suggestion is anchored to the
+ * uploader's Space + context via HAS_SUGGESTION so the existing per-Space
+ * listing (`GET /api/resonance/suggestions?spaceId=…`) surfaces it for review.
+ *
+ * Deduped symmetrically against any existing ResonanceSuggestion/ResonanceLink
+ * that already joins the pair (either direction) — repeated uploads never pile
+ * up duplicates. Returns the new suggestion id, or null when the pair was
+ * already proposed/confirmed (dedup skip) or the anchors could not be matched.
+ */
+async function createCrossContextResonanceSuggestion(params: {
+  sourceSpaceId: string
+  sourceContextId: string
+  sourcePulseId: string
+  targetPulseId: string
+  accessibleContextIds: string[]
+  label: string
+  description: string
+  confidence: number
+  evidence: string
+}): Promise<string | null> {
+  const graph = await initGraph()
+
+  const result = await graph.query<{ suggestionId: string }>(
+    `
+    MATCH (space:Space {id: $sourceSpaceId})
+    MATCH (context:FieldContext {id: $sourceContextId})
+    MATCH (space)-[:HAS_CONTEXT]->(context)
+    MATCH (context)-[:HAS_PULSE]->(source:FieldPulse {id: $sourcePulseId})
+    MATCH (target:FieldPulse {id: $targetPulseId})
+    WHERE source <> target
+      // Structural authorization (defense in depth): the target MUST live in a
+      // context the caller can access. Callers already filter candidates to the
+      // accessible set, but enforcing it in the write means a mis-call can never
+      // link an out-of-scope pulse.
+      AND EXISTS {
+        MATCH (a:FieldContext)-[:HAS_PULSE]->(target)
+        WHERE a.id IN $accessibleContextIds
+      }
+
+    // Symmetric duplicate check across BOTH suggestion and link nodes.
+    OPTIONAL MATCH (source)<-[:SOURCE|TARGET]-(existing)-[:SOURCE|TARGET]->(target)
+    WHERE existing:ResonanceSuggestion OR existing:ResonanceLink
+    WITH space, context, source, target, existing
+    WHERE existing IS NULL
+
+    CREATE (suggestion:ResonanceSuggestion {
+      id: 'rs_' + randomUUID(),
+      label: $label,
+      description: $description,
+      confidence: $confidence,
+      evidence: $evidence,
+      status: 'pending',
+      crossContext: true,
+      createdAt: datetime()
+    })
+    CREATE (space)-[:HAS_SUGGESTION]->(suggestion)
+    CREATE (context)-[:HAS_SUGGESTION]->(suggestion)
+    CREATE (suggestion)-[:SOURCE]->(source)
+    CREATE (suggestion)-[:TARGET]->(target)
+    RETURN suggestion.id as suggestionId
+    `,
+    { ...params }
+  )
+
+  return Array.isArray(result) && result.length > 0
+    ? result[0].suggestionId
+    : null
+}
+
+/**
+ * Discover cross-context resonances for a single source pulse: vector-match it
+ * against the member's other accessible contexts, run the same LLM pattern
+ * analysis used within-context, and write a pending cross-context suggestion
+ * for every returned connection that is incident to the source pulse.
+ *
+ * Only connections that touch `sourcePulseId` are created — target↔target pairs
+ * the LLM may surface between two OTHER contexts are out of scope for THIS
+ * upload and are dropped.
+ */
+export async function discoverCrossContextResonancesForPulse(
+  sourcePulseId: string,
+  sourceSpaceId: string,
+  sourceContextId: string,
+  accessibleContextIds: string[]
+): Promise<DiscoveredResonance[]> {
+  const graph = await initGraph()
+
+  const sourceRows = await graph.query<{
+    pulse: { id: string; content: string; createdAt: string }
+  }>(
+    `MATCH (p:FieldPulse {id: $sourcePulseId})
+     RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse`,
+    { sourcePulseId }
+  )
+  if (!Array.isArray(sourceRows) || sourceRows.length === 0) return []
+  const sourcePulse = sourceRows[0].pulse
+
+  const similar = await findSimilarPulsesAcrossContexts(
+    sourcePulseId,
+    accessibleContextIds,
+    sourceContextId
+  )
+  if (similar.length === 0) return []
+
+  const candidateIds = new Set(similar.map((s) => s.id))
+  const pattern = await analyzeResonancePattern([sourcePulse, ...similar])
+  if (!pattern) return []
+
+  const created: DiscoveredResonance[] = []
+  for (const connection of pattern.pulseConnections) {
+    // Normalize so the created suggestion always has the upload pulse as SOURCE
+    // and a valid cross-context candidate as TARGET. Skip connections that do
+    // not involve the source pulse, or whose other end is not one of the
+    // cross-context candidates (guards against the LLM inventing an id).
+    let targetId: string | null = null
+    if (connection.sourcePulseId === sourcePulseId) {
+      targetId = connection.targetPulseId
+    } else if (connection.targetPulseId === sourcePulseId) {
+      targetId = connection.sourcePulseId
+    }
+    if (!targetId || !candidateIds.has(targetId)) continue
+
+    let enrichedEvidence = connection.evidence
+    try {
+      const graphFacts = await collectPulsePairEvidence(sourcePulseId, targetId)
+      enrichedEvidence = composeEvidenceString(graphFacts, connection.evidence)
+    } catch (evidenceError) {
+      console.warn(
+        '[CrossContextResonance] Evidence enrichment failed; using LLM-only evidence:',
+        evidenceError instanceof Error ? evidenceError.message : evidenceError
+      )
+    }
+
+    const suggestionId = await createCrossContextResonanceSuggestion({
+      sourceSpaceId,
+      sourceContextId,
+      sourcePulseId,
+      targetPulseId: targetId,
+      accessibleContextIds,
+      label: pattern.label,
+      description: pattern.description,
+      confidence: connection.confidence,
+      evidence: enrichedEvidence,
+    })
+
+    if (suggestionId) {
+      created.push({
+        linkId: suggestionId,
+        contextId: sourceContextId,
+        label: pattern.label,
+        description: pattern.description,
+        sourcePulseId,
+        targetPulseId: targetId,
+        confidence: connection.confidence,
+        evidence: enrichedEvidence,
+      })
+    }
+  }
+
+  return created
+}
+
+/**
+ * Cross-context discovery scoped to one upload's context: take the recent
+ * (embedded) pulses in `sourceContextId` and, for each, discover resonances
+ * against the member's OTHER accessible contexts. Bounded to keep a single
+ * on-upload run inside the ingest route's duration ceiling.
+ *
+ * AUTHORIZATION: `accessibleContextIds` MUST already be the uploader's viewable
+ * set (getAccessibleFieldContexts) — this function trusts it and never widens
+ * scope beyond it.
+ */
+export async function discoverCrossContextResonancesForContext(params: {
+  sourceSpaceId: string
+  sourceContextId: string
+  accessibleContextIds: string[]
+  maxSourcePulses?: number
+}): Promise<DiscoveredResonance[]> {
+  const {
+    sourceSpaceId,
+    sourceContextId,
+    accessibleContextIds,
+    // Bounded to keep the on-upload after() run (embeddings + within-context
+    // LLM analysis + this cross-context LLM analysis) inside the ingest route's
+    // maxDuration ceiling. Anything beyond this is picked up on the next upload
+    // or by the daily cron.
+    maxSourcePulses = 15,
+  } = params
+
+  // Nothing to compare against beyond the upload's own context.
+  const otherContexts = accessibleContextIds.filter(
+    (id) => id !== sourceContextId
+  )
+  if (otherContexts.length === 0) return []
+
+  const graph = await initGraph()
+
+  const sourcePulseRows = await graph.query<{ id: string }>(
+    `MATCH (:FieldContext {id: $sourceContextId})-[:HAS_PULSE]->(p:FieldPulse)
+     WHERE p.embedding IS NOT NULL
+     RETURN p.id AS id
+     ORDER BY p.createdAt DESC
+     LIMIT $limit`,
+    { sourceContextId, limit: neo4j.int(maxSourcePulses) }
+  )
+  const sourcePulseIds = Array.isArray(sourcePulseRows)
+    ? sourcePulseRows.map((r) => r.id)
+    : []
+  if (sourcePulseIds.length === 0) return []
+
+  const discovered: DiscoveredResonance[] = []
+  for (const sourcePulseId of sourcePulseIds) {
+    try {
+      const resonances = await discoverCrossContextResonancesForPulse(
+        sourcePulseId,
+        sourceSpaceId,
+        sourceContextId,
+        accessibleContextIds
+      )
+      discovered.push(...resonances)
+    } catch (error) {
+      console.error(
+        `[CrossContextResonance] Failed for pulse ${sourcePulseId}:`,
+        error
+      )
+    }
+  }
+
+  return discovered
+}

@@ -96,6 +96,7 @@ ${SCHEMA_DOC}
    That query renders as four nodes + three labelled edges in Bloom. If you omit \`owns\`, \`hc\`, or \`hp\` from the RETURN, the corresponding edges DISAPPEAR — the user sees disconnected nodes floating in space, which is a UX bug.
 6. Add a LIMIT clause (e.g. \`LIMIT 25\`). The runtime additionally wraps your query in \`CALL { … } RETURN * LIMIT $maxNodes\` for safety.
 7. Prefer matching by id (\`{id: $someId}\`) when an id is provided in the session context. Use CASE-INSENSITIVE substring for name/title fuzzing: \`toLower(ctx.title) CONTAINS toLower("care")\` — inline server-controlled literals (Space name, FieldContext title) safely quoted; do NOT introduce additional $parameters beyond $userId.
+   SCOPE — activeSpaceId / activeFieldContextId are HINTS, not fences. For a general lookup ("what is the Artisans Cooperative?", "find X", "who is Y?") the user wants a match from ANYWHERE they can access — search across ALL their spaces/contexts (anchor only on \`$userId\` and fuzzy-match the name/title), NOT just the active field. Constrain to \`activeFieldContextId\` ONLY when the intent explicitly says "in this field" / "here". The runtime auth filter guarantees results stay limited to what the user may view, so a broad match is safe.
 8. Keep the query short and focused. Aim for ≤ 6 MATCH clauses — but use OPTIONAL MATCH freely when an intent calls for an expansive sweep (see Intent Glossary below).
 
 # Intent Glossary — disambiguate the user's phrasing

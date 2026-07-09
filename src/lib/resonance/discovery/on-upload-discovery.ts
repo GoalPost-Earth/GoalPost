@@ -19,7 +19,11 @@
 import neo4j from 'neo4j-driver'
 import { initGraph } from '@/modules/graph'
 import { generatePulseEmbeddings } from '../embeddings/pulse-embedder'
-import { discoverResonancesForContext } from './pattern-detector'
+import {
+  discoverResonancesForContext,
+  discoverCrossContextResonancesForContext,
+} from './pattern-detector'
+import { getAccessibleFieldContexts } from '@/lib/permissions/accessible-contexts'
 import { createLog } from '@/lib/activity-logs/create-log'
 
 /**
@@ -35,6 +39,13 @@ export interface ContextDiscoveryResult {
   spaceId: string | null
   embeddedCount: number
   suggestionsCreated: number
+  /**
+   * Cross-context suggestions (GOAL-293) — connections between the upload's
+   * pulses and pulses in the member's OTHER accessible contexts. Counted
+   * separately from the within-context `suggestionsCreated` so ops can see how
+   * much value the cross-context expansion adds.
+   */
+  crossContextSuggestionsCreated: number
   error?: string
 }
 
@@ -81,6 +92,7 @@ export async function runContextResonanceDiscovery(params: {
         spaceId: null,
         embeddedCount: 0,
         suggestionsCreated: 0,
+        crossContextSuggestionsCreated: 0,
         error: 'No Space owns this context',
       }
     }
@@ -120,21 +132,94 @@ export async function runContextResonanceDiscovery(params: {
       `[OnUploadDiscovery] Created ${suggestions.length} suggestions in context ${contextId}`
     )
 
-    // Step 3: activity Log for the run — only when it actually produced
+    // Step 3: cross-context discovery (GOAL-293). Compare the upload's pulses
+    // against pulses in the uploader's OTHER accessible FieldContexts and write
+    // pending cross-context suggestions anchored to THIS Space/context.
+    //
+    // DATA-SOVEREIGNTY GATE: a suggestion anchored to Space S surfaces to
+    // EVERYONE who can view S (via GET /api/resonance/suggestions?spaceId=S),
+    // and it embeds the TARGET pulse's content. The uploader can view every
+    // target (accessibleContextIds is their own viewable set), but the OTHER
+    // members of a shared source Space may NOT be able to view a target that
+    // lives in the uploader's private MeSpace or a different WeSpace — that
+    // would leak private content to a co-member with no role on the target's
+    // Space (kb/06-adr.md, kb/02-user-roles.md). We therefore only run
+    // cross-context discovery when the source Space is a MeSpace the uploader
+    // OWNS: its audience is exactly {uploader}, so every target the uploader can
+    // view is, by definition, viewable by the sole person who sees these
+    // suggestions. Cross-context for a shared (WeSpace) upload would require
+    // filtering targets to those whose audience is a superset of the source
+    // Space's — a heavier per-target check left as a follow-up. Within-context
+    // discovery (step 2) still runs for every Space.
+    let crossContext: Awaited<
+      ReturnType<typeof discoverCrossContextResonancesForContext>
+    > = []
+    try {
+      const ownGate = await graph.query<{ ownedMeSpace: number }>(
+        `MATCH (s:Space {id: $spaceId})
+         RETURN CASE
+           WHEN s:MeSpace AND EXISTS { (s)<-[:OWNS]-(:Person {id: $actorUserId}) }
+           THEN 1 ELSE 0 END AS ownedMeSpace`,
+        { spaceId, actorUserId }
+      )
+      const isOwnedMeSpace = Number(ownGate?.[0]?.ownedMeSpace ?? 0) === 1
+
+      if (!isOwnedMeSpace) {
+        console.log(
+          `[OnUploadDiscovery] Source Space ${spaceId} is not the uploader's own MeSpace; skipping cross-context discovery (would risk cross-Space exposure).`
+        )
+      } else {
+        const accessible = await getAccessibleFieldContexts(graph, actorUserId)
+        const accessibleContextIds = accessible.map((a) => a.contextId)
+        crossContext = await discoverCrossContextResonancesForContext({
+          sourceSpaceId: spaceId,
+          sourceContextId: contextId,
+          accessibleContextIds,
+        })
+        console.log(
+          `[OnUploadDiscovery] Created ${crossContext.length} cross-context suggestions from context ${contextId} across ${
+            accessibleContextIds.filter((id) => id !== contextId).length
+          } other accessible contexts`
+        )
+      }
+    } catch (crossErr) {
+      // Cross-context is additive — a failure here must not lose the
+      // within-context suggestions already written above.
+      console.error(
+        '[OnUploadDiscovery] Cross-context discovery failed:',
+        crossErr
+      )
+    }
+
+    // Step 4: activity Log for the run — only when it actually produced
     // suggestions. createLog only edges the Log to its `pulseIds` (LOGGED_FOR);
     // a zero-result run has no pulses to anchor, so its Log would be reachable
     // by neither the context nor the user activity feed — an unreachable node
     // accumulated on every no-op upload. The console line above already records
     // the run for ops; skip the graph Log when there's nothing to surface.
-    const count = suggestions.length
+    const count = suggestions.length + crossContext.length
     if (count > 0) {
       try {
+        // Anchor the Log ONLY to pulses that live in THIS context, so it stays
+        // in the uploader's own activity feed. Within-context suggestions have
+        // both ends here; cross-context suggestions have only their SOURCE here
+        // (the TARGET lives in another context/Space — LOGGED_FOR-ing it would
+        // surface this uploader-attributed Log in that other feed, code-review
+        // finding #2).
         const pulseIds = Array.from(
-          new Set(suggestions.flatMap((s) => [s.sourcePulseId, s.targetPulseId]))
+          new Set([
+            ...suggestions.flatMap((s) => [s.sourcePulseId, s.targetPulseId]),
+            ...crossContext.map((s) => s.sourcePulseId),
+          ])
         )
+        const crossCount = crossContext.length
         await createLog({
           userId: actorUserId,
-          description: `Resonance discovery found ${count} suggestion${count === 1 ? '' : 's'} from a new upload`,
+          description: `Resonance discovery found ${count} suggestion${count === 1 ? '' : 's'} from a new upload${
+            crossCount > 0
+              ? ` (${crossCount} across your other fields)`
+              : ''
+          }`,
           pulseIds,
           contextId,
           metadata: {
@@ -143,7 +228,8 @@ export async function runContextResonanceDiscovery(params: {
             contextId,
             spaceId,
             embeddedCount,
-            suggestionsCreated: count,
+            suggestionsCreated: suggestions.length,
+            crossContextSuggestionsCreated: crossCount,
           },
         })
       } catch (logErr) {
@@ -157,6 +243,7 @@ export async function runContextResonanceDiscovery(params: {
       spaceId,
       embeddedCount,
       suggestionsCreated: suggestions.length,
+      crossContextSuggestionsCreated: crossContext.length,
     }
   } catch (err) {
     // Fire-and-forget contract: never throw. The upload has already succeeded;
@@ -168,6 +255,7 @@ export async function runContextResonanceDiscovery(params: {
       spaceId: null,
       embeddedCount: 0,
       suggestionsCreated: 0,
+      crossContextSuggestionsCreated: 0,
       error: err instanceof Error ? err.message : 'Unknown error',
     }
   }

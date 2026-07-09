@@ -8,6 +8,7 @@ import { initGraph } from '@/modules/graph'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import { getSession, initializeDB } from '@/app/api/auth/neo4j'
 import { canEditContent } from '@/lib/permissions/space-permissions'
+import { canViewPulse } from '@/lib/permissions/pulse-visibility'
 import { createNotification } from '@/lib/notifications/create-notification'
 import { createLog } from '@/lib/activity-logs/create-log'
 
@@ -133,6 +134,22 @@ export async function POST(
       }
     } finally {
       await permSession.close()
+    }
+
+    // Defense in depth for cross-context suggestions (GOAL-293): promoting a
+    // suggestion anchors a ResonanceLink to the source context (HAS_RESONANCE),
+    // which surfaces the TARGET pulse in the source Space's graph. For a normal
+    // within-context suggestion the target lives in this Space, so canEditContent
+    // above already covers it. For a cross-context suggestion the target lives
+    // elsewhere — refuse to promote it into this Space's graph unless the caller
+    // can actually view the target (never mint a cross-Space link to a pulse the
+    // caller cannot see).
+    const targetViewable = await canViewPulse(graph, actorId, targetPulseId)
+    if (!targetViewable) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden' },
+        { status: 403 }
+      )
     }
 
     // Create the ResonanceLink from the suggestion

@@ -8,6 +8,7 @@ import { initGraph } from '@/modules/graph'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import { getSession, initializeDB } from '@/app/api/auth/neo4j'
 import { canViewContent } from '@/lib/permissions/space-permissions'
+import { viewablePulsePredicate } from '@/lib/permissions/pulse-visibility'
 
 interface ResonanceSuggestion {
   id: string
@@ -83,6 +84,14 @@ export async function GET(request: NextRequest) {
       MATCH (suggestion)-[:TARGET]->(target:FieldPulse)
       MATCH (context:FieldContext)-[:HAS_SUGGESTION]->(suggestion)
 
+      // Defense in depth for cross-context suggestions (GOAL-293): canViewContent
+      // above only proves the caller can view the ANCHOR Space. A cross-context
+      // suggestion's TARGET lives in a different Space, so also require the caller
+      // to be able to view BOTH pulses before returning their content — a Space
+      // co-member must never receive a pulse from a Space they have no role on.
+      WHERE ${viewablePulsePredicate('source', 'currentUserId')}
+        AND ${viewablePulsePredicate('target', 'currentUserId')}
+
       RETURN {
         id: suggestion.id,
         label: suggestion.label,
@@ -101,7 +110,7 @@ export async function GET(request: NextRequest) {
 
       ORDER BY suggestion.createdAt DESC
     `,
-      { spaceId, status }
+      { spaceId, status, currentUserId: userId }
     )
 
     // The Cypher aliases the projection as `suggestion`, and the LangChain

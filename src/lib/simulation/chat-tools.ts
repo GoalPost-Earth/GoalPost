@@ -874,7 +874,7 @@ export async function buildSimulationChatTools(
 
     search_field_context: tool({
       description:
-        'Search field contexts by title or emergent name. If activeSpaceId is in session context, scope to that Space; otherwise pass spaceName to filter.',
+        'Search field contexts by title or emergent name across EVERY Space the member can access (owner or member). By DEFAULT — when the user has not named a Space — omit spaceId/spaceName so the search fans out across all their accessible Spaces. Only pass spaceId/spaceName when the user explicitly restricts to one Space (e.g. "in this space"). Do NOT auto-narrow to the active Space for a general lookup.',
       inputSchema: z.object({
         query: z.string().describe('Field context title or keyword.'),
         spaceName: z
@@ -906,7 +906,13 @@ export async function buildSimulationChatTools(
         spaceId?: string
         limit?: number
       }) => {
-        const resolvedSpaceId = spaceId || ctx.spaceId || undefined
+        // GOAL-300: do NOT silently inject the active Space (ctx.spaceId). A
+        // general lookup from inside a Space must still fan out across ALL the
+        // member's accessible Spaces — the member should not have to name the
+        // Space. Scope ONLY when the model explicitly passes spaceId/spaceName
+        // (i.e. the user asked for a specific Space). searchFieldContexts is
+        // $userId-anchored (owner/member), so the broad path stays authorized.
+        const resolvedSpaceId = spaceId?.trim() || undefined
         logToolDispatch('search_field_context', ctx, {
           query,
           spaceName,
@@ -1105,14 +1111,14 @@ export async function buildSimulationChatTools(
 
     search_pulse: tool({
       description:
-        'Search pulses by title/content with optional context and pulse type filters. If activeFieldContextId is in session context, scope to that context.',
+        'Search pulses by title/content across EVERY field the member can access (any Space they own or belong to). By DEFAULT — for a general question like "what is X?" / "find the X pulse" — omit contextId so the search fans out across ALL the member\'s accessible fields; the member should never have to name the field. Pass contextId (or contextTitle) ONLY when the user explicitly restricts to one field (e.g. "search THIS field", "in the Care field"). Do NOT auto-narrow to the active field for a general lookup.',
       inputSchema: z.object({
         query: z.string().describe('Pulse title or content keyword.'),
         contextId: z
           .string()
           .optional()
           .describe(
-            'Optional field context ID filter. Defaults to activeFieldContextId from session context when present.'
+            "Optional field context ID filter. OMIT for a general search (fans out across ALL the member's accessible fields). To restrict to the field the user is currently viewing (\"this field\", \"here\"), pass the activeFieldContextId from SESSION CONTEXT."
           ),
         contextTitle: z
           .string()
@@ -1150,8 +1156,14 @@ export async function buildSimulationChatTools(
           | 'FieldPulse'
         limit?: number
       }) => {
-        const resolvedContextId =
-          input.contextId || ctx.fieldContextId || undefined
+        // GOAL-300: default to an ALL-accessible-fields search. Only scope to a
+        // field the model explicitly named — never silently inject the active
+        // field (ctx.fieldContextId), which confined a dashboard/in-field
+        // general query ("What is the Artisans Cooperative?") to one field and
+        // missed matches living in the member's other accessible fields.
+        // searchPulses gates every result on viewablePulsePredicate($userId),
+        // so the broad path stays Space-authorized.
+        const resolvedContextId = input.contextId?.trim() || undefined
         logToolDispatch('search_pulse', ctx, {
           ...input,
           resolvedContextId,
@@ -2363,7 +2375,7 @@ export async function buildSimulationChatTools(
 
     graph_rag_search: tool({
       description:
-        "Semantic Graph RAG retrieval across people, pulses, and conversation chunks. People and pulses are searched across the whole graph. Conversation chunks (sentence-level segments of the back-and-forth that produced a pulse) are PRIVATE to the user who created the parent pulse — the `chunks` and `all` scopes will only ever return the current user's own chunks. Never offer to search another person's conversation chunks. If activeFieldContextId is in session context, defaults the contextId filter to it.",
+        "Semantic Graph RAG retrieval across people, pulses, and conversation chunks. People and pulses are searched across every field the member can access. Conversation chunks (sentence-level segments of the back-and-forth that produced a pulse) are PRIVATE to the user who created the parent pulse — the `chunks` and `all` scopes will only ever return the current user's own chunks. Never offer to search another person's conversation chunks. By DEFAULT omit contextId so retrieval fans out across ALL the member's accessible fields; pass contextId ONLY when the user explicitly restricts to one field.",
       inputSchema: z.object({
         query: z.string().describe('Natural language search query.'),
         scope: z
@@ -2376,7 +2388,7 @@ export async function buildSimulationChatTools(
           .string()
           .optional()
           .describe(
-            'Optional field context ID for pulse-scoped retrieval. Defaults to activeFieldContextId from session context when present.'
+            "Optional field context ID for pulse-scoped retrieval. OMIT for a general search (fans out across ALL the member's accessible fields). To restrict to the field the user is currently viewing (\"this field\", \"here\"), pass the activeFieldContextId from SESSION CONTEXT."
           ),
         limit: z
           .number()
@@ -2397,7 +2409,11 @@ export async function buildSimulationChatTools(
         contextId?: string
         limit?: number
       }) => {
-        const resolvedContextId = contextId || ctx.fieldContextId || undefined
+        // GOAL-300: default to an all-accessible-fields search; only scope when
+        // the model explicitly passes contextId (user named a field). The
+        // active field is no longer silently injected. graphRagSearch is
+        // $userId-gated, so the broad path stays Space-authorized.
+        const resolvedContextId = contextId?.trim() || undefined
         logToolDispatch('graph_rag_search', ctx, {
           query,
           scope,
