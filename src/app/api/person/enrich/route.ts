@@ -41,10 +41,13 @@ export async function POST(request: NextRequest) {
     if (personIds && personIds.length > 0) {
       peopleToEnrich = personIds
     } else {
-      // Get all people who have pulses
+      // Get all people who have pulses — via EITHER live author edge
+      // (INITIATED_BY: assistant + doc-ingest; CREATED_BY: dashboard flow,
+      // imports), or people whose pulses only carry the legacy edge are
+      // never selected and the enricher's own alternation is unreachable.
       const result = await graph.query<{ id: string }>(
         `
-        MATCH (p:Person)<-[:INITIATED_BY]-(pulse:FieldPulse)
+        MATCH (p:Person)<-[:INITIATED_BY|CREATED_BY]-(pulse:FieldPulse)
         RETURN DISTINCT p.id as id
       `,
         {}

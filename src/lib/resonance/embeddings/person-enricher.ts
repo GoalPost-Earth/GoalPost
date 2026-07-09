@@ -113,9 +113,13 @@ export async function enrichPersonFromPulses(
   }>(
     `
     MATCH (p:Person {id: $personId})
-    OPTIONAL MATCH (pulse:FieldPulse)-[:INITIATED_BY]->(p)
+    // Authorship lives on TWO live edges — INITIATED_BY (assistant +
+    // doc-ingest) and CREATED_BY (dashboard flow, imports). Sweep both or
+    // dashboard/import-created pulses never feed enrichment. DISTINCT guards
+    // against double-counting any legacy pulse still carrying both edges.
+    OPTIONAL MATCH (pulse:FieldPulse)-[:INITIATED_BY|CREATED_BY]->(p)
     WHERE pulse.createdAt > datetime() - duration('P30D')
-    WITH p, pulse
+    WITH DISTINCT p, pulse
     ORDER BY pulse.createdAt DESC
     RETURN 
       {
