@@ -7451,12 +7451,15 @@ export type FieldPulse = {
   extractedFromConnection: FieldPulseExtractedFromConnection
   id: Scalars['ID']['output']
   /**
-   * Actual write-time creator edge. Persisted by every pulse-creation
-   * path (`lib/chat/hitl.ts`, `api/pulse/create-from-conversation`, ...)
-   * as `(:FieldPulse)-[:INITIATED_BY]->(:Person)`. `createdBy` is the
-   * legacy alias still documented in kb/05-data-entities.md but never
-   * written; consumers that need the real creator (Graph view edges,
-   * RAG, person enrichment) read `initiatedBy`.
+   * Canonical author edge, `(:FieldPulse)-[:INITIATED_BY]->(:Person)`,
+   * written by the assistant + doc-ingest paths (`lib/chat/hitl.ts`,
+   * `api/pulse/create-from-conversation`) — doc-ingested pulses point at
+   * the extracted author. `createdBy` carries the same meaning but is
+   * written by the dashboard create flow and the CSV/document imports, so
+   * NEITHER field alone covers all pulses: consumers must read both,
+   * preferring `initiatedBy` (see `resolvePulseAuthor` in
+   * `src/lib/pulse-author.ts`) or matching the Cypher alternation
+   * `[:INITIATED_BY|CREATED_BY]`.
    */
   initiatedBy: Array<Person>
   initiatedByConnection: FieldPulseInitiatedByConnection
@@ -44930,24 +44933,76 @@ export const GetPersonOwnedPulsesDocument = {
                                               kind: 'ObjectField',
                                               name: {
                                                 kind: 'Name',
-                                                value: 'createdBy_SOME',
+                                                value: 'OR',
                                               },
                                               value: {
-                                                kind: 'ObjectValue',
-                                                fields: [
+                                                kind: 'ListValue',
+                                                values: [
                                                   {
-                                                    kind: 'ObjectField',
-                                                    name: {
-                                                      kind: 'Name',
-                                                      value: 'id_EQ',
-                                                    },
-                                                    value: {
-                                                      kind: 'Variable',
-                                                      name: {
-                                                        kind: 'Name',
-                                                        value: 'personId',
+                                                    kind: 'ObjectValue',
+                                                    fields: [
+                                                      {
+                                                        kind: 'ObjectField',
+                                                        name: {
+                                                          kind: 'Name',
+                                                          value:
+                                                            'initiatedBy_SOME',
+                                                        },
+                                                        value: {
+                                                          kind: 'ObjectValue',
+                                                          fields: [
+                                                            {
+                                                              kind: 'ObjectField',
+                                                              name: {
+                                                                kind: 'Name',
+                                                                value: 'id_EQ',
+                                                              },
+                                                              value: {
+                                                                kind: 'Variable',
+                                                                name: {
+                                                                  kind: 'Name',
+                                                                  value:
+                                                                    'personId',
+                                                                },
+                                                              },
+                                                            },
+                                                          ],
+                                                        },
                                                       },
-                                                    },
+                                                    ],
+                                                  },
+                                                  {
+                                                    kind: 'ObjectValue',
+                                                    fields: [
+                                                      {
+                                                        kind: 'ObjectField',
+                                                        name: {
+                                                          kind: 'Name',
+                                                          value:
+                                                            'createdBy_SOME',
+                                                        },
+                                                        value: {
+                                                          kind: 'ObjectValue',
+                                                          fields: [
+                                                            {
+                                                              kind: 'ObjectField',
+                                                              name: {
+                                                                kind: 'Name',
+                                                                value: 'id_EQ',
+                                                              },
+                                                              value: {
+                                                                kind: 'Variable',
+                                                                name: {
+                                                                  kind: 'Name',
+                                                                  value:
+                                                                    'personId',
+                                                                },
+                                                              },
+                                                            },
+                                                          ],
+                                                        },
+                                                      },
+                                                    ],
                                                   },
                                                 ],
                                               },

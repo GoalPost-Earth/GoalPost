@@ -98,7 +98,7 @@ const SINGLE_CLICK_DELAY = 250
 
 /**
  * Map a Neo4j label (as carried on `NVLNode.labels` from the cypher
- * generator / neighborhood route) to the drawer's `InfoEntityType`.
+ * generator) to the drawer's `InfoEntityType`.
  *
  * Every pulse subtype collapses to 'Pulse' — `PulseDetailsBody` resolves
  * the concrete __typename itself. Person/User/PersonPulse collapse to
@@ -172,11 +172,12 @@ function idPrefixToInfoEntityType(id: string): InfoEntityType | null {
 
 /**
  * Final fallback: derive the entity type from the NVL node's color. The
- * cypher generator's `styleFor` (lib/cypher-generator/execute.ts:81) and
- * the neighborhood route's `NODE_STYLE` (api/graph/neighborhood/route.ts:49)
- * both encode the entity type via a stable color palette — so even when
- * `labels` is missing AND the id is a bare UUID (legacy Users, all
- * WeSpaces), the color hint is still present on the overlay node.
+ * cypher generator's `styleFor` (lib/cypher-generator/execute.ts) encodes
+ * the entity type via a stable color palette — so even when `labels` is
+ * missing AND the id is a bare UUID (legacy Users, all WeSpaces), the
+ * color hint is still present on the overlay node. (The removed Graph
+ * View's neighborhood route used the same palette; execute.ts is the sole
+ * source of truth now.)
  *
  * MeSpace vs WeSpace cannot be distinguished by color alone (both
  * '#86efac'); we resolve that ambiguity by treating bare-UUID green
@@ -857,36 +858,31 @@ export const BloomView: FC = () => {
         } as Relationship)
       }
 
-      // INITIATED_BY — pulse → the person who created it. This is the edge
-      // every pulse-creation path actually writes (lib/chat/hitl.ts, the
-      // create-from-conversation route, etc.), so it's the one that gives
-      // Bloom visible structure. The generated GraphQL types don't surface
-      // `initiatedBy`, so we read it through a narrow cast.
+      // Author edge — pulse → the person credited for it. Authorship lives
+      // on TWO live edges (INITIATED_BY: assistant/doc-ingest paths;
+      // CREATED_BY: dashboard flow, imports), so mirror resolvePulseAuthor
+      // (src/lib/pulse-author.ts): prefer initiatedBy, fall back to
+      // createdBy — else dashboard-created pulses render authorless. The
+      // generated GraphQL types don't surface these fields, so we read them
+      // through a narrow cast.
+      type PulseWithAuthorIds = {
+        id: string
+        initiatedBy?: Array<{ id: string }> | null
+        createdBy?: Array<{ id: string }> | null
+      }
       const allPulses = [
-        ...((fieldDetailsData?.goalPulses ?? []) as Array<{
-          id: string
-          initiatedBy?: Array<{ id: string }> | null
-        }>),
-        ...((fieldDetailsData?.resourcePulses ?? []) as Array<{
-          id: string
-          initiatedBy?: Array<{ id: string }> | null
-        }>),
-        ...((fieldDetailsData?.storyPulses ?? []) as Array<{
-          id: string
-          initiatedBy?: Array<{ id: string }> | null
-        }>),
-        ...((fieldDetailsData?.carePulses ?? []) as Array<{
-          id: string
-          initiatedBy?: Array<{ id: string }> | null
-        }>),
-        ...((fieldDetailsData?.coreValuePulses ?? []) as Array<{
-          id: string
-          initiatedBy?: Array<{ id: string }> | null
-        }>),
+        ...((fieldDetailsData?.goalPulses ?? []) as Array<PulseWithAuthorIds>),
+        ...((fieldDetailsData?.resourcePulses ??
+          []) as Array<PulseWithAuthorIds>),
+        ...((fieldDetailsData?.storyPulses ?? []) as Array<PulseWithAuthorIds>),
+        ...((fieldDetailsData?.carePulses ?? []) as Array<PulseWithAuthorIds>),
+        ...((fieldDetailsData?.coreValuePulses ??
+          []) as Array<PulseWithAuthorIds>),
       ]
       for (const pulse of allPulses) {
         if (!visibleIds.has(pulse.id)) continue
-        const initiatorId = pulse.initiatedBy?.[0]?.id
+        const initiatorId =
+          pulse.initiatedBy?.[0]?.id ?? pulse.createdBy?.[0]?.id
         if (!initiatorId || !visibleIds.has(initiatorId)) continue
         edges.push({
           id: `initiated-by-${pulse.id}-${initiatorId}`,

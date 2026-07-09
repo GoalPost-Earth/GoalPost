@@ -2,9 +2,11 @@
  * Pulse authorship helpers.
  *
  * The canonical "who made this pulse" edge in the graph is `INITIATED_BY`
- * (exposed in GraphQL as `initiatedBy`). `createdBy` is a legacy alias that is
- * still queried as a fallback for any nodes that only carry the older edge —
- * see the FieldPulse interface in `schema.gql` and ADR notes in kb/05.
+ * (exposed in GraphQL as `initiatedBy`), written by the assistant and
+ * doc-ingest paths. `createdBy` carries the same meaning but is written by
+ * the dashboard create flow and the CSV/document imports, so it is a live
+ * fallback, not just a legacy remnant — see the FieldPulse interface in
+ * `schema.gql` and kb/05.
  *
  * Every surface that shows a pulse's author should resolve it through these
  * helpers so attribution is consistent (and gracefully labels unattributed

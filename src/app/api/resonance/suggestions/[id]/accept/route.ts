@@ -186,8 +186,9 @@ export async function POST(
       // Connect to pulses
       CREATE (link)-[:SOURCE]->(source)
       CREATE (link)-[:TARGET]->(target)
-      // Anchor to the context via HAS_RESONANCE (GOAL-294). Studio Bloom and the
-      // graph neighborhood auth filter reach ResonanceLinks ONLY through
+      // Anchor to the context via HAS_RESONANCE (GOAL-294). Studio Bloom and
+      // the cypher generator's Space auth filter (lib/cypher-generator/
+      // execute.ts) reach ResonanceLinks ONLY through
       // (FieldContext)-[:HAS_RESONANCE]->(rl); without this edge an accepted
       // resonance is invisible in every graph surface. Mirrors the assistant
       // create_resonance path (src/lib/chat/hitl.ts).

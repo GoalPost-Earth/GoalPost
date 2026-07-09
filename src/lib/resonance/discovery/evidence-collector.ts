@@ -61,10 +61,19 @@ export async function collectPulsePairEvidence(
     OPTIONAL MATCH (ctx:FieldContext)-[:HAS_PULSE]->(p1)
       WHERE (ctx)-[:HAS_PULSE]->(p2)
     WITH p1, p2, collect(DISTINCT ctx.title) AS sharedContexts
-    OPTIONAL MATCH (p1)-[:CREATED_BY]->(person:Person)<-[:CREATED_BY]-(p2)
+    // Authorship lives on TWO live edges: INITIATED_BY (assistant/doc-ingest
+    // paths, incl. attribution to extracted persons) and CREATED_BY (dashboard
+    // flow, imports). Either alone misses the other surface's pulses, so
+    // shared-author evidence must match the alternation on both legs.
+    OPTIONAL MATCH (p1)-[:INITIATED_BY|CREATED_BY]->(person:Person)<-[:INITIATED_BY|CREATED_BY]-(p2)
     WITH p1, p2, sharedContexts,
       collect(DISTINCT
         CASE
+          // No shared author at all (OPTIONAL MATCH miss) must yield null —
+          // aggregates skip nulls — or every vector-only pair gets a false
+          // "Shared author: someone." and the no-shared-edges fallback in
+          // composeEvidenceString never fires.
+          WHEN person IS NULL THEN null
           WHEN person.name IS NOT NULL AND person.name <> '' THEN person.name
           WHEN coalesce(person.firstName, '') <> '' OR coalesce(person.lastName, '') <> ''
             THEN trim(coalesce(person.firstName, '') + ' ' + coalesce(person.lastName, ''))
