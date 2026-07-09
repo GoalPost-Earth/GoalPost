@@ -65,18 +65,36 @@ describe('ExtractionModelInvoker', () => {
     expect(result.assistantText.toLowerCase()).toContain("didn't find")
   })
 
-  it('returns the failure path (not a thrown error) when the model client throws', async () => {
+  it('returns the failure path (not a thrown error) when the model client throws, without leaking the raw error to the member (kb/07 Rule 1)', async () => {
     // Acceptance criterion: "nothing in graph, nothing in UI" must never be possible.
     // On model error the route still synthesizes an assistant turn — failure
     // is surfaced as text, not propagated as an exception.
+    //
+    // But the member-facing text must NOT carry the raw provider error: a
+    // structured-output schema error, a rate-limit/timeout stack fragment, or a
+    // model id is an internal artifact banned from chat (kb/07 Rule 1). The
+    // captured negative-rated turn leaked exactly that. The raw error stays in
+    // `reason` (server-side outcome/telemetry) and the server log only.
+    const rawError =
+      "Invalid schema for response_format 'response': Missing 'existingId'."
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
     const modelClient: ExtractionModelClient = async () => {
-      throw new Error('upstream timeout')
+      throw new Error(rawError)
     }
     const result = await extractEntities(baseInput, modelClient)
     expect(result.kind).toBe('failure')
     if (result.kind !== 'failure') throw new Error('unreachable')
-    expect(result.assistantText.toLowerCase()).toContain('extraction failed')
-    expect(result.assistantText).toContain('upstream timeout')
+    // Raw provider internals must never reach the member.
+    expect(result.assistantText).not.toContain('response_format')
+    expect(result.assistantText).not.toContain('existingId')
+    expect(result.assistantText).not.toContain(rawError)
+    // The member sees a clean message that names the human-readable file.
+    expect(result.assistantText).toContain(baseInput.filename)
+    expect(result.assistantText.toLowerCase()).toMatch(/couldn't read|try/)
+    // The raw error is preserved server-side for debugging/telemetry.
+    expect(result.reason).toBe(rawError)
+    expect(errorSpy).toHaveBeenCalled()
+    errorSpy.mockRestore()
   })
 
   it('uses the human-readable filename (never raw documentId) in the assistant text', async () => {

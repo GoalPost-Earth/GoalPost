@@ -468,10 +468,24 @@ export async function extractEntities(
     raw = await modelClient(input)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'unknown error'
+    // The raw provider error routinely carries internals a member can't act on
+    // and must never see — OpenAI/Gemini structured-output schema errors
+    // ("Invalid schema for response_format 'response': ... Missing 'existingId'"),
+    // rate-limit/timeout stack fragments, model ids. Interpolating `message`
+    // into member-facing `assistantText` (which the ingest orchestrator persists
+    // verbatim into the assistant turn) leaks exactly that — the kb/07 Rule 1
+    // violation behind this turn's negative rating. So keep the real error in
+    // `reason` (server-side outcome/telemetry only) plus the server log, and
+    // hand the member a clean message naming just the human-readable filename.
+    console.error('[Ingest Extraction Error]', {
+      filename: input.filename,
+      documentId: input.documentId,
+      error: message,
+    })
     return {
       kind: 'failure',
       reason: message,
-      assistantText: `Extraction failed while reading ${input.filename}: ${message}.`,
+      assistantText: `I couldn't read ${input.filename} just now — something went wrong on our end while processing it. Please try again in a moment.`,
     }
   }
 
