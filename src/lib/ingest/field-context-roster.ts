@@ -19,9 +19,16 @@ export interface RosterPulse {
   pulseType: 'GoalPulse' | 'ResourcePulse' | 'StoryPulse'
 }
 
+/** GOAL-298: organizations attached to the context via HAS_ORGANIZATION. */
+export interface RosterOrganization {
+  id: string
+  name: string
+}
+
 export interface FieldContextRoster {
   persons: RosterPerson[]
   pulses: RosterPulse[]
+  organizations: RosterOrganization[]
 }
 
 export interface LoadFieldContextRosterInput {
@@ -68,14 +75,22 @@ export async function loadFieldContextRoster(
             pulseType: pulseType
           })[..$limit] AS pulses
         }
-        RETURN persons, pulses
+        CALL {
+          WITH c
+          MATCH (c)-[:HAS_ORGANIZATION]->(org:Organization)
+          RETURN collect({
+            id: org.id,
+            name: coalesce(org.name, '')
+          })[..$limit] AS organizations
+        }
+        RETURN persons, pulses, organizations
         `,
         { fieldContextId: input.fieldContextId, limit }
       )
     )
 
     const record = result.records[0]
-    if (!record) return { persons: [], pulses: [] }
+    if (!record) return { persons: [], pulses: [], organizations: [] }
 
     const rawPersons =
       (record.get('persons') as Array<{ id: string; name: string }>) ?? []
@@ -109,7 +124,14 @@ export async function loadFieldContextRoster(
       }))
       .filter((p) => p.title.length > 0)
 
-    return { persons, pulses }
+    const rawOrganizations =
+      (record.get('organizations') as Array<{ id: string; name: string }>) ?? []
+    const organizations: RosterOrganization[] = rawOrganizations
+      .filter((o) => o && typeof o.id === 'string' && o.id.length > 0)
+      .map((o) => ({ id: o.id, name: (o.name || '').trim() }))
+      .filter((o) => o.name.length > 0)
+
+    return { persons, pulses, organizations }
   } finally {
     await session.close()
   }

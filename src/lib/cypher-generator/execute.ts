@@ -35,6 +35,7 @@ const NODE_STYLE: Record<string, { color: string; size: number }> = {
   WeSpace: { color: '#86efac', size: 42 },
   Space: { color: '#86efac', size: 42 },
   Community: { color: '#fdba74', size: 38 }, // orange-300 — public collective
+  Organization: { color: '#5eead4', size: 30 }, // teal-300 — named org/cooperative (GOAL-298)
   FieldContext: { color: '#fde68a', size: 34 },
   GoalPulse: { color: '#93c5fd', size: 26 },
   ResourcePulse: { color: '#a7f3d0', size: 26 },
@@ -250,6 +251,34 @@ async function mapNodesToEnclosingSpaces(
       // anchors via HAS_RESONANCE.
       const r = await runRead(
         `MATCH (:PromiseWeave {id: $id})<-[:HAS_WEAVE]-(:FieldContext)<-[:HAS_CONTEXT]-(s:Space) RETURN collect(DISTINCT s.id) AS sids`,
+        { id }
+      )
+      const sids = (r.records[0]?.get('sids') as string[] | null) ?? []
+      for (const sid of sids) anchors.add(sid)
+      result.set(id, anchors)
+      continue
+    }
+
+    if (labels.includes('Organization')) {
+      // GOAL-298: an Organization is anchored to its FieldContext's Space via
+      // the HAS_ORGANIZATION context edge — analogous to PromiseWeave/HAS_WEAVE.
+      // Deliberately NOT public (unlike Person/Community): an org extracted into
+      // a private MeSpace stays space-scoped, matching its GraphQL type-level
+      // auth filter (contexts_SOME). The MENTIONED_IN (s2) branch is one hop
+      // wider than that GraphQL filter, but it is safe TODAY because links are
+      // co-location-gated (linkEntityToPulseAuthorized requires the org and the
+      // pulse to share a context, so s2's space == s1's space) and each candidate
+      // space is still independently gated by canViewContent below. If a future
+      // write path ever creates a non-co-located MENTIONED_IN, drop the s2 branch
+      // to keep this anchor in lockstep with the contexts_SOME GraphQL filter.
+      const r = await runRead(
+        `
+        MATCH (o:Organization {id: $id})
+        OPTIONAL MATCH (o)<-[:HAS_ORGANIZATION]-(:FieldContext)<-[:HAS_CONTEXT]-(s1:Space)
+        OPTIONAL MATCH (o)-[:MENTIONED_IN]->(:FieldPulse)<-[:HAS_PULSE]-(:FieldContext)<-[:HAS_CONTEXT]-(s2:Space)
+        WITH collect(DISTINCT s1.id) + collect(DISTINCT s2.id) AS sids
+        RETURN [sid IN sids WHERE sid IS NOT NULL] AS sids
+        `,
         { id }
       )
       const sids = (r.records[0]?.get('sids') as string[] | null) ?? []

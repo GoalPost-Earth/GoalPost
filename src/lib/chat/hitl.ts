@@ -25,6 +25,8 @@ export type WriteToolName =
   | 'delete_my_profile'
   | 'create_person'
   | 'update_person'
+  | 'create_organization'
+  | 'link_entity_to_pulse'
   | 'create_connection'
   | 'create_resonance'
   | 'create_resonant_pulse'
@@ -53,6 +55,8 @@ const WRITE_TOOL_NAMES = new Set<WriteToolName>([
   'delete_my_profile',
   'create_person',
   'update_person',
+  'create_organization',
+  'link_entity_to_pulse',
   'create_connection',
   'create_resonance',
   'create_resonant_pulse',
@@ -164,6 +168,21 @@ export function describeWriteAction(
       const why = String(args.relationshipWhy || '').trim()
       const whyClause = why ? ` — connected to you as "${why}"` : ''
       return `Add ${full} to ${where}${whyClause}`
+    }
+    case 'create_organization': {
+      // Rule 1: name only, never an id.
+      const name = String(args.name || '').trim() || 'organization'
+      const where =
+        String(args.contextTitle || args.contextName || '').trim() ||
+        'this field context'
+      return `Add organization ${name} to ${where}`
+    }
+    case 'link_entity_to_pulse': {
+      // Rule 1: names/titles only, never ids.
+      const who = String(args.entityName || '').trim() || 'someone'
+      const what = String(args.pulseTitle || '').trim()
+      const whatClause = what ? ` "${what}"` : ' a pulse'
+      return `Connect ${who} to${whatClause}`
     }
     case 'create_connection': {
       // Names only (Rule 1). The model passes person NAMES; never echo an id.
@@ -1935,6 +1954,322 @@ interface CreateConnectionAuthorizedInput {
   interests?: string
 }
 
+interface CreateOrganizationAuthorizedInput {
+  name?: string
+  description?: string
+  contextId?: string
+  contextTitle?: string
+  documentId?: string
+  conversationThreadId?: string
+}
+
+/**
+ * GOAL-298 — create a first-class :Organization:LifeSensor:RelationalEntity
+ * (an org/group/company/cooperative named in an uploaded document) and attach
+ * it to the FieldContext via HAS_ORGANIZATION, so members can discover and
+ * connect with it. Mirrors createPersonAuthorized: `canEditContext` gate,
+ * name-in-context idempotency (enrich, don't duplicate), one :Log per write,
+ * and EXTRACTED_FROM provenance to the source Document.
+ */
+async function createOrganizationAuthorized(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  args: Record<string, unknown>
+): Promise<ToolExecutionResult> {
+  const input = args as CreateOrganizationAuthorizedInput
+  const name = input.name?.trim() || ''
+  const contextId = input.contextId?.trim() || ''
+  const contextTitle = input.contextTitle?.trim() || ''
+  const documentId = input.documentId?.trim() || null
+  const conversationThreadId = input.conversationThreadId?.trim() || null
+  const orgDescription = input.description?.trim() || null
+
+  if (!name) {
+    return { success: false, message: 'create_organization requires a name.' }
+  }
+  if (!contextId) {
+    return { success: false, message: 'create_organization requires a contextId.' }
+  }
+
+  const allowed = await canEditContext(graph, currentUserId, contextId)
+  if (!allowed) {
+    return {
+      success: false,
+      message:
+        'You can only add organizations to field contexts in spaces you belong to.',
+    }
+  }
+
+  const where = contextTitle || 'this field context'
+
+  // Idempotency (enrich, don't duplicate): a same-named org already attached to
+  // this context is enriched (fill-gaps-only description) rather than duplicated.
+  const existingRows = await graph.query<{
+    id: string
+    name: string | null
+    hasDescription: boolean
+  }>(
+    `
+    MATCH (c:FieldContext {id: $contextId})-[:HAS_ORGANIZATION]->(o:Organization)
+    WHERE toLower(trim(coalesce(o.name, ''))) = toLower(trim($name))
+    RETURN o.id AS id, o.name AS name,
+           (o.description IS NOT NULL AND trim(o.description) <> '') AS hasDescription
+    LIMIT 1
+    `,
+    { contextId, name }
+  )
+  const existing = existingRows?.[0] ?? null
+
+  if (existing) {
+    const setDescription = Boolean(orgDescription) && !existing.hasDescription
+    const enrichLogId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+    const enrichDescription = `Updated organization ${existing.name ?? name} in ${where}`
+    const enrichMetadata = buildIngestLogMetadata(documentId, conversationThreadId)
+    await graph.query(
+      `
+      MATCH (o:Organization {id: $existingId})
+      MATCH (u:Person {id: $currentUserId})
+      OPTIONAL MATCH (d:Document {id: $documentId})
+      FOREACH (_ IN CASE WHEN $setDescription THEN [1] ELSE [] END |
+        SET o.description = $orgDescription
+      )
+      SET o.updatedAt = datetime()
+      FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
+        MERGE (o)-[:EXTRACTED_FROM]->(d)
+      )
+      CREATE (log:Log {
+        id: $enrichLogId,
+        description: $enrichDescription,
+        createdAt: datetime()
+      })
+      FOREACH (_ IN CASE WHEN $enrichMetadata IS NULL THEN [] ELSE [1] END |
+        SET log.metadata = $enrichMetadata
+      )
+      CREATE (log)-[:CREATED_BY]->(u)
+      `,
+      {
+        existingId: existing.id,
+        currentUserId,
+        documentId,
+        setDescription,
+        orgDescription,
+        enrichLogId,
+        enrichDescription,
+        enrichMetadata,
+      }
+    )
+    return {
+      success: true,
+      organizationId: existing.id,
+      name: existing.name ?? name,
+      contextId,
+      documentId,
+      alreadyExisted: true,
+      message: `${existing.name ?? name} is already in ${where} — I kept its existing details rather than adding a duplicate.`,
+    }
+  }
+
+  const organizationId = `organization_${randomUUID()}`
+  const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+  const documentFilename = documentId
+    ? await lookupDocumentFilename(graph, documentId)
+    : null
+  const filenameSuffix = documentFilename ? ` (from ${documentFilename})` : ''
+  const description = `Added organization ${name} to ${where}${filenameSuffix}`
+  const metadata = buildIngestLogMetadata(documentId, conversationThreadId)
+
+  const rows = await graph.query<{ id: string; name: string }>(
+    `
+    MATCH (c:FieldContext {id: $contextId})
+    MATCH (u:Person {id: $currentUserId})
+    OPTIONAL MATCH (d:Document {id: $documentId})
+    CREATE (o:Organization:LifeSensor:RelationalEntity {
+      id: $organizationId,
+      name: $name,
+      createdAt: datetime()
+    })
+    FOREACH (_ IN CASE WHEN $orgDescription IS NULL THEN [] ELSE [1] END |
+      SET o.description = $orgDescription
+    )
+    CREATE (c)-[:HAS_ORGANIZATION]->(o)
+    CREATE (log:Log {
+      id: $logId,
+      description: $description,
+      createdAt: datetime()
+    })
+    FOREACH (_ IN CASE WHEN $metadata IS NULL THEN [] ELSE [1] END |
+      SET log.metadata = $metadata
+    )
+    CREATE (log)-[:CREATED_BY]->(u)
+    FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
+      CREATE (o)-[:EXTRACTED_FROM]->(d)
+    )
+    RETURN o.id AS id, o.name AS name
+    LIMIT 1
+    `,
+    {
+      contextId,
+      currentUserId,
+      documentId,
+      organizationId,
+      name,
+      orgDescription,
+      logId,
+      description,
+      metadata,
+    }
+  )
+
+  if (!rows || rows.length === 0) {
+    return { success: false, message: 'Failed to create the organization.' }
+  }
+
+  return {
+    success: true,
+    organizationId: rows[0].id,
+    name: rows[0].name,
+    contextId,
+    documentId,
+    message: `Added ${rows[0].name} to ${where}.`,
+  }
+}
+
+interface LinkEntityToPulseAuthorizedInput {
+  entityType?: 'person' | 'organization'
+  personId?: string
+  organizationId?: string
+  pulseId?: string
+  entityName?: string
+  pulseTitle?: string
+  pulseType?: string
+  contextId?: string
+  contextTitle?: string
+  documentId?: string
+  conversationThreadId?: string
+}
+
+/**
+ * GOAL-298 — link a Person or Organization to a FieldPulse via MENTIONED_IN
+ * (the person/org was named in / related to the pulse, but is NOT its author;
+ * authorship stays on INITIATED_BY). The ingest orchestrator resolves the live
+ * `personId`/`organizationId` + `pulseId` from the earlier create_* results
+ * before calling this — the executor runs on exact ids (deterministic HITL).
+ *
+ * Authorization: the caller must be able to edit the pulse's Space
+ * (`canEditPulse`), AND the entity must already be attached
+ * (HAS_PERSON / HAS_ORGANIZATION) to a FieldContext that holds the pulse — so a
+ * link can never reach across Space boundaries or fabricate a cross-context
+ * relationship. Writes one :Log attributed to the acting user.
+ */
+async function linkEntityToPulseAuthorized(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  args: Record<string, unknown>
+): Promise<ToolExecutionResult> {
+  const input = args as LinkEntityToPulseAuthorizedInput
+  const entityType = input.entityType === 'organization' ? 'organization' : 'person'
+  const entityId =
+    (entityType === 'organization'
+      ? input.organizationId?.trim()
+      : input.personId?.trim()) || ''
+  const pulseId = input.pulseId?.trim() || ''
+  const entityName = input.entityName?.trim() || (entityType === 'organization' ? 'organization' : 'person')
+  const documentId = input.documentId?.trim() || null
+  const conversationThreadId = input.conversationThreadId?.trim() || null
+
+  if (!entityId || !pulseId) {
+    return {
+      success: false,
+      message:
+        'link_entity_to_pulse requires a resolved entity id and pulse id.',
+    }
+  }
+
+  const allowed = await canEditPulse(graph, currentUserId, pulseId)
+  if (!allowed) {
+    return {
+      success: false,
+      message: 'You can only connect entities to pulses in spaces you belong to.',
+    }
+  }
+
+  const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+  const metadata = buildIngestLogMetadata(documentId, conversationThreadId)
+
+  // The MENTIONED_IN edge is only written when the entity is already attached to
+  // a context that holds the pulse (co-location guard). MERGE keeps it
+  // idempotent across re-extracts.
+  //
+  // The entity node is matched UNTYPED (`(entity {id: $entityId})`) on purpose:
+  // it may be a :Person or an :Organization, and the `HAS_PERSON|HAS_ORGANIZATION`
+  // relationship it's reached through already bounds it to exactly those two
+  // labels attached to this context — so the untyped match is safe, not a global
+  // scan. Do NOT "fix" this by pinning a single label; that would drop org
+  // support. (`entityType` is advisory — used only for the return shape/copy;
+  // the co-location MATCH is the authority on what may be linked.) This
+  // polymorphic-match + same-statement CREATE is the source of an Eager operator
+  // in the plan; it's accepted because the materialised set is just this
+  // context's roster (bounded), and this is a per-ingest write, not a hot read.
+  const rows = await graph.query<{
+    entityId: string
+    name: string | null
+    pulseTitle: string | null
+  }>(
+    `
+    MATCH (pulse:FieldPulse {id: $pulseId})
+    MATCH (ctx:FieldContext)-[:HAS_PULSE]->(pulse)
+    MATCH (ctx)-[:HAS_PERSON|HAS_ORGANIZATION]->(entity {id: $entityId})
+    MATCH (u:Person {id: $currentUserId})
+    MERGE (entity)-[:MENTIONED_IN]->(pulse)
+    CREATE (log:Log {
+      id: $logId,
+      description: $description,
+      createdAt: datetime()
+    })
+    FOREACH (_ IN CASE WHEN $metadata IS NULL THEN [] ELSE [1] END |
+      SET log.metadata = $metadata
+    )
+    CREATE (log)-[:CREATED_BY]->(u)
+    CREATE (log)-[:LOGGED_FOR]->(pulse)
+    RETURN entity.id AS entityId,
+           coalesce(entity.name, trim(coalesce(entity.firstName, '') + ' ' + coalesce(entity.lastName, ''))) AS name,
+           pulse.title AS pulseTitle
+    LIMIT 1
+    `,
+    {
+      pulseId,
+      entityId,
+      currentUserId,
+      logId,
+      // The Log description uses the extractor-supplied name/title (Rule-1 safe:
+      // names only, never ids). It is intentionally NOT the graph-canonical
+      // name resolved in the RETURN below — the LOGGED_FOR edge points at the
+      // real pulse, so audit linkage is exact regardless of the display string.
+      description: `Connected ${entityName} to "${input.pulseTitle?.trim() || 'a pulse'}"`,
+      metadata,
+    }
+  )
+
+  if (!rows || rows.length === 0) {
+    return {
+      success: false,
+      message: `Could not connect ${entityName} to the pulse — they must share a field context you can edit.`,
+    }
+  }
+
+  const linkedName = rows[0].name?.trim() || entityName
+  const linkedTitle = rows[0].pulseTitle?.trim() || input.pulseTitle?.trim() || 'the pulse'
+  return {
+    success: true,
+    entityType,
+    entityId: rows[0].entityId,
+    pulseId,
+    name: linkedName,
+    title: linkedTitle,
+    message: `Connected ${linkedName} to "${linkedTitle}".`,
+  }
+}
+
 /**
  * Create (or refresh) a CONNECTED_TO edge between two people the current user
  * is allowed to connect. `from` defaults to the current user — the common case
@@ -2536,6 +2871,14 @@ export async function executeAuthorizedWriteTool(
 
   if (toolName === 'update_person') {
     return await updatePersonAuthorized(graph, currentUserId, rawArgs)
+  }
+
+  if (toolName === 'create_organization') {
+    return await createOrganizationAuthorized(graph, currentUserId, rawArgs)
+  }
+
+  if (toolName === 'link_entity_to_pulse') {
+    return await linkEntityToPulseAuthorized(graph, currentUserId, rawArgs)
   }
 
   if (toolName === 'create_connection') {

@@ -129,6 +129,38 @@ export async function appendSynthesizedIngestTurns(
   // on) simply leaves the pulse attributed to the uploader.
   const executed: ExecutedToolCallRecord[] = []
   const personIdByName = new Map<string, string>()
+  // GOAL-298: name→id for extracted organizations, and (pulseType|title)→id for
+  // created/updated pulses. Both are populated as create_*/update_* results
+  // land, so the trailing link_entity_to_pulse calls (emitted last by the
+  // invoker) can resolve their MENTIONED_IN endpoints by name/title.
+  const orgIdByName = new Map<string, string>()
+  const pulseIdByKey = new Map<string, string>()
+  const registerPulseId = (
+    args: Record<string, unknown>,
+    result: ExecutedToolResult
+  ): void => {
+    const pulseId =
+      typeof result.pulseId === 'string' && result.pulseId
+        ? result.pulseId
+        : typeof (result.pulse as { id?: string } | undefined)?.id === 'string'
+          ? (result.pulse as { id?: string }).id!
+          : ''
+    if (!pulseId) return
+    const pulseType = String(args.pulseType ?? result.pulseType ?? '')
+    const titles = [
+      typeof result.title === 'string' ? result.title : '',
+      String(args.title ?? ''),
+      String(args.newTitle ?? ''),
+      String(args.currentTitle ?? ''),
+    ]
+    for (const t of titles) {
+      const title = t.trim().toLowerCase()
+      if (!title) continue
+      pulseIdByKey.set(`${pulseType}|${title}`, pulseId)
+      // Keyless fallback so a link whose pulseType drifted still resolves.
+      if (!pulseIdByKey.has(title)) pulseIdByKey.set(title, pulseId)
+    }
+  }
   if (toolCalls.length > 0) {
     const graph = await initGraph()
     for (const call of toolCalls) {
@@ -144,6 +176,36 @@ export async function appendSynthesizedIngestTurns(
         if (attributedToPersonId) {
           args = { ...args, attributedToPersonId }
         }
+      } else if (call.tool === 'link_entity_to_pulse') {
+        // Resolve the MENTIONED_IN endpoints by name/title from entities that
+        // executed earlier this run. Any id the invoker already knew (a roster
+        // match) is preserved.
+        const next = { ...args }
+        const entityKey =
+          typeof next.entityName === 'string'
+            ? next.entityName.trim().toLowerCase()
+            : ''
+        if (next.entityType === 'organization') {
+          if (!next.organizationId && entityKey) {
+            const id = orgIdByName.get(entityKey)
+            if (id) next.organizationId = id
+          }
+        } else if (!next.personId && entityKey) {
+          const id = personIdByName.get(entityKey)
+          if (id) next.personId = id
+        }
+        if (!next.pulseId) {
+          const pulseType = String(next.pulseType ?? '')
+          const title =
+            typeof next.pulseTitle === 'string'
+              ? next.pulseTitle.trim().toLowerCase()
+              : ''
+          const id =
+            pulseIdByKey.get(`${pulseType}|${title}`) ??
+            (title ? pulseIdByKey.get(title) : undefined)
+          if (id) next.pulseId = id
+        }
+        args = next
       }
       let result: ExecutedToolResult
       try {
@@ -180,6 +242,27 @@ export async function appendSynthesizedIngestTurns(
           if (normalized) personIdByName.set(normalized, result.personId)
         }
       }
+      if (
+        call.tool === 'create_organization' &&
+        result.success !== false &&
+        typeof result.organizationId === 'string' &&
+        result.organizationId
+      ) {
+        const keys = [
+          typeof result.name === 'string' ? result.name : '',
+          String(args.name ?? ''),
+        ]
+        for (const key of keys) {
+          const normalized = key.trim().toLowerCase()
+          if (normalized) orgIdByName.set(normalized, result.organizationId)
+        }
+      }
+      if (
+        (call.tool === 'create_pulse' || call.tool === 'update_pulse') &&
+        result.success !== false
+      ) {
+        registerPulseId(args, result)
+      }
       executed.push({ tool: call.tool, args, result })
     }
   }
@@ -192,16 +275,31 @@ export async function appendSynthesizedIngestTurns(
   // updates separately — a roster match that only updated an existing
   // person must not be announced as "created", or the user goes hunting
   // the graph for a new node that was never minted.
-  const createdCount = succeededCalls.filter(
-    (e) => !e.tool.startsWith('update_')
+  // A MENTIONED_IN link is a connection, not a created/updated entity — count
+  // it on its own axis so the summary never claims a link is a new node.
+  const linkedCount = succeededCalls.filter(
+    (e) => e.tool === 'link_entity_to_pulse'
   ).length
-  const updatedCount = succeededCalls.length - createdCount
+  const entityCalls = succeededCalls.filter(
+    (e) => e.tool !== 'link_entity_to_pulse'
+  )
+  // A `create_*` tool that hit its idempotency path (enrich-don't-duplicate)
+  // returns `alreadyExisted: true` — that's an update, not a mint. Counting it
+  // as "created" sends the user hunting the graph for a node that was never
+  // added (the same invariant the person path preserves via update_person).
+  const createdCount = entityCalls.filter(
+    (e) => e.tool.startsWith('create_') && e.result.alreadyExisted !== true
+  ).length
+  const updatedCount = entityCalls.length - createdCount
   const outcome = [
     createdCount > 0
       ? `created ${createdCount} ${createdCount === 1 ? 'entity' : 'entities'}`
       : '',
     updatedCount > 0
       ? `updated ${updatedCount} existing ${updatedCount === 1 ? 'entry' : 'entries'}`
+      : '',
+    linkedCount > 0
+      ? `made ${linkedCount} ${linkedCount === 1 ? 'connection' : 'connections'}`
       : '',
   ]
     .filter(Boolean)

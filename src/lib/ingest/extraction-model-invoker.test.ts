@@ -9,7 +9,7 @@ const baseInput: ExtractionModelInput = {
   documentText: 'Sarah Chen led the migration. Bob arrived late.',
   filename: 'meeting-notes.txt',
   hint: null,
-  roster: { persons: [], pulses: [] },
+  roster: { persons: [], pulses: [], organizations: [] },
   fieldContextId: 'ctx_1',
   fieldContextTitle: 'Care Practices',
   documentId: 'doc_1',
@@ -223,6 +223,7 @@ describe('ExtractionModelInvoker', () => {
             pulseType: 'GoalPulse',
           },
         ],
+        organizations: [],
       },
     }
 
@@ -538,6 +539,7 @@ describe('ExtractionModelInvoker', () => {
         roster: {
           persons: [{ id: 'person_sarah_existing', name: 'Sarah Chen' }],
           pulses: [],
+          organizations: [],
         },
       }
       const modelClient: ExtractionModelClient = async () => ({
@@ -602,6 +604,7 @@ describe('ExtractionModelInvoker', () => {
               pulseType: 'GoalPulse',
             },
           ],
+          organizations: [],
         },
       }
       const modelClient: ExtractionModelClient = async () => ({
@@ -625,6 +628,210 @@ describe('ExtractionModelInvoker', () => {
       expect(result.toolCalls[0].tool).toBe('update_pulse')
       expect(result.toolCalls[0].args).not.toHaveProperty('attributedToName')
       expect(result.toolCalls[0].args).not.toHaveProperty('attributedToPersonId')
+    })
+  })
+
+  // GOAL-298 — organizations become first-class :Organization nodes via
+  // create_organization, and people/orgs the document names as related to a
+  // pulse (but not its author) are wired to the pulse with link_entity_to_pulse
+  // (MENTIONED_IN). Tool-call order is always
+  // [persons, organizations, pulses, links] so both link endpoints exist
+  // before the link runs.
+  describe('GOAL-298 — organizations + related-entity links', () => {
+    it('emits a create_organization call for an org candidate, ordered after person calls and before pulse calls', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Sarah', lastName: 'Chen' }],
+        organizations: [
+          { name: 'Artisan Cooperative', description: 'A maker co-op.' },
+        ],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Grow the co-op',
+            content: 'Double the cooperative membership this year.',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+
+      const tools = result.toolCalls.map((c) => c.tool)
+      const personIdx = tools.indexOf('create_person')
+      const orgIdx = tools.indexOf('create_organization')
+      const pulseIdx = tools.indexOf('create_pulse')
+      expect(personIdx).toBeGreaterThanOrEqual(0)
+      expect(orgIdx).toBeGreaterThanOrEqual(0)
+      expect(pulseIdx).toBeGreaterThanOrEqual(0)
+      // Ordering contract: persons → organizations → pulses.
+      expect(orgIdx).toBeGreaterThan(personIdx)
+      expect(orgIdx).toBeLessThan(pulseIdx)
+
+      const orgCall = result.toolCalls[orgIdx]
+      expect(orgCall.args).toMatchObject({
+        name: 'Artisan Cooperative',
+        description: 'A maker co-op.',
+        contextId: 'ctx_1',
+        contextTitle: 'Care Practices',
+        documentId: 'doc_1',
+      })
+      // create_organization has no update_* twin — the write path is
+      // idempotent, so exactly one org tool call per distinct name.
+      expect(
+        result.toolCalls.filter((c) => c.tool === 'create_organization')
+      ).toHaveLength(1)
+    })
+
+    it('emits a link_entity_to_pulse (person) call — ordered LAST — for a resolvable relatedPersonName, and drops a name that resolves to no extracted/roster person', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [
+          { firstName: 'Sarah', lastName: 'Chen' },
+          { firstName: 'Bob', lastName: 'Jones' },
+        ],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Ship the migration',
+            content: 'Cut over before EOQ.',
+            // Sarah resolves to an extracted person; the ghost name resolves to
+            // nobody and must be dropped (never mint a link to an invented one).
+            relatedPersonNames: ['Sarah Chen', 'Ghost Person'],
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+
+      const linkCalls = result.toolCalls.filter(
+        (c) => c.tool === 'link_entity_to_pulse'
+      )
+      // Only Sarah resolves — the ghost name is dropped.
+      expect(linkCalls).toHaveLength(1)
+      expect(linkCalls[0].args).toMatchObject({
+        entityType: 'person',
+        entityName: 'Sarah Chen',
+        pulseTitle: 'Ship the migration',
+        pulseType: 'GoalPulse',
+        contextId: 'ctx_1',
+        documentId: 'doc_1',
+      })
+      // Extracted (not roster) person → no live id yet; the orchestrator
+      // resolves it by name after the create_person calls run.
+      expect(linkCalls[0].args).not.toHaveProperty('personId')
+
+      // Links are the last tool calls in the batch.
+      const lastTool = result.toolCalls[result.toolCalls.length - 1].tool
+      expect(lastTool).toBe('link_entity_to_pulse')
+    })
+
+    it('does NOT emit a link_entity_to_pulse for the pulse author — the author gets INITIATED_BY only', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Sarah', lastName: 'Chen' }],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Ship the migration',
+            content: 'Cut over before EOQ.',
+            authorName: 'Sarah Chen',
+            // The author is also (redundantly) named as related — she must be
+            // deduped out of the links: INITIATED_BY, never MENTIONED_IN.
+            relatedPersonNames: ['Sarah Chen'],
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+
+      const linkCalls = result.toolCalls.filter(
+        (c) => c.tool === 'link_entity_to_pulse'
+      )
+      expect(linkCalls).toHaveLength(0)
+
+      // Attribution still flows to the create_pulse call.
+      const pulseCall = result.toolCalls.find((c) => c.tool === 'create_pulse')
+      expect(pulseCall).toBeDefined()
+      expect(pulseCall!.args.attributedToName).toBe('Sarah Chen')
+    })
+
+    it('links a relatedOrganizationName that matches an extracted org and drops one that matches nothing', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        organizations: [{ name: 'Artisan Cooperative' }],
+        pulses: [
+          {
+            kind: 'ResourcePulse',
+            title: 'Shared kiln',
+            content: 'A community kiln available to members.',
+            relatedOrganizationNames: [
+              'Artisan Cooperative',
+              'Nonexistent Guild',
+            ],
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+
+      const linkCalls = result.toolCalls.filter(
+        (c) => c.tool === 'link_entity_to_pulse'
+      )
+      // Only the extracted org resolves; the unknown guild is dropped.
+      expect(linkCalls).toHaveLength(1)
+      expect(linkCalls[0].args).toMatchObject({
+        entityType: 'organization',
+        entityName: 'Artisan Cooperative',
+        pulseTitle: 'Shared kiln',
+        pulseType: 'ResourcePulse',
+        contextId: 'ctx_1',
+        documentId: 'doc_1',
+      })
+      // Extracted (not roster) org → no live id on the link yet.
+      expect(linkCalls[0].args).not.toHaveProperty('organizationId')
+    })
+
+    it('carries the live roster id on a link when the related person is a roster match', async () => {
+      const input: ExtractionModelInput = {
+        ...baseInput,
+        roster: {
+          persons: [{ id: 'person_sarah_existing', name: 'Sarah Chen' }],
+          pulses: [],
+          organizations: [],
+        },
+      }
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'StoryPulse',
+            title: 'How the garden began',
+            content: 'A first-person account of the first planting.',
+            // Resolves to the roster person (no person call this run) — the
+            // link must carry her already-live id directly.
+            relatedPersonNames: ['Sarah Chen'],
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(input, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+
+      const linkCalls = result.toolCalls.filter(
+        (c) => c.tool === 'link_entity_to_pulse'
+      )
+      expect(linkCalls).toHaveLength(1)
+      expect(linkCalls[0].args).toMatchObject({
+        entityType: 'person',
+        entityName: 'Sarah Chen',
+        personId: 'person_sarah_existing',
+      })
     })
   })
 })

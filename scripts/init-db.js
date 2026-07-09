@@ -120,6 +120,13 @@ async function initializeDatabase() {
       // exactly one recipient and carries its own server-side read flag.
       `CREATE CONSTRAINT notification_id IF NOT EXISTS
        FOR (n:Notification) REQUIRE n.id IS UNIQUE`,
+      // First-class organizations named in uploaded documents (GOAL-298).
+      // The backing RANGE index also turns the assistant's Bloom node-anchor
+      // lookup (MATCH (o:Organization {id}) in cypher-generator/execute.ts)
+      // from a label scan into an index seek. Nodes also carry :LifeSensor
+      // :RelationalEntity; the constraint targets the load-bearing :Organization.
+      `CREATE CONSTRAINT organization_id IF NOT EXISTS
+       FOR (n:Organization) REQUIRE n.id IS UNIQUE`,
     ]
 
     // Drop deprecated standalone indexes that now conflict with a constraint.

@@ -243,3 +243,20 @@
 - `Document` has an `@authorization` directive that inherits from the parent Space — same pattern as `FieldContext`.
 - `EXTRACTED_FROM` is load-bearing: removing or renaming it is a graph migration.
 - Documents are **never auto-deleted**, even on full-rejection of extracted entities. Cleanup is user-driven via `deleteDocument`; the Document node and its blob drop together, but previously approved Persons and FieldPulses survive (their `EXTRACTED_FROM` edges drop with the Document).
+
+## ADR-016: Extracted Organizations Are First-Class; Related People/Orgs Link via MENTIONED_IN (GOAL-298)
+
+**Decision:** Document ingestion now captures **organizations** (groups, companies, cooperatives, institutions named in the document) as a first-class `Organization` node — labels `["Organization", "LifeSensor", "RelationalEntity"]`, attached to the FieldContext via `HAS_ORGANIZATION`. Separately, people and organizations the extractor identifies as *related to* a pulse (but not its author) are linked to that pulse via a new `MENTIONED_IN` edge. Authorship stays on `INITIATED_BY`.
+
+**Why:**
+
+- **Attribution + discovery.** Members need to find and connect with the people and organizations behind an article's resources and stories. Previously only the single pulse *author* (`INITIATED_BY`) was linked to a pulse; everyone else named was created as a context contact but left unconnected to the pulse they belonged to (the reported gap). Organizations weren't modelled at all — the extraction schema only knew persons and pulses, so orgs were silently dropped.
+- **`MENTIONED_IN` ≠ authorship.** `INITIATED_BY` is single-valued (one credited author, read as `initiatedBy[0]`). "Related to / named in" is many-valued — one resource can name three people and a cooperative. Overloading `INITIATED_BY` couldn't express that; a distinct edge can.
+- **First-class org, not Person-adjacent.** An organization is not a person. Modelling it as its own type (mirroring the migration's `Community:LifeSensor:RelationalEntity` shape) keeps queries and UI honest and leaves room for the Living-System / LifeSensor sub-class work.
+
+**Consequences:**
+
+- New GraphQL `Organization` type with a type-level context-reach READ gate (`contexts_SOME`, mirroring the PersonPulse branch) and `@mutation(operations: [])` — orgs are created server-side only, via the audited `create_organization` ingest tool. Not public (unlike Person/Community): an org in a private MeSpace stays space-scoped.
+- New write tools `create_organization` + `link_entity_to_pulse` in `lib/chat/hitl.ts`; the ingest orchestrator resolves each link's endpoints by name/title from entities created earlier in the same run.
+- The assistant's cypher-generator vocab (`schema-context.ts`) and the Bloom anchor/style map (`execute.ts`) learned `Organization` / `HAS_ORGANIZATION` / `MENTIONED_IN` — a new label/edge is invisible to the assistant until whitelisted (kb/07 Rule 9).
+- **Deferred:** organizations carry no embedding / vector index yet (resonance is pulse↔pulse today), so semantic org discovery is a follow-up. Person embeddings for extracted non-author people are covered by the existing `discover-resonances` backfill.

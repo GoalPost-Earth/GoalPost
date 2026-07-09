@@ -174,10 +174,11 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    `UPLOADED_BY`, and stamps the S3 `blobKey`.
 3. A dedicated extraction model (independent of the chat assistant; may
    be reasoning — `kb/07-ai-assistant-ux.md` Rule 6) reads the document
-   alongside the FieldContext roster and proposes Persons + FieldPulses.
-   PDFs route through Gemini multimodal via a freshly minted presigned
-   GET URL (`file_data.fileUri`); `.txt`/`.md` route through OpenAI
-   against the decoded body.
+   alongside the FieldContext roster (persons + pulses + **organizations**)
+   and proposes Persons, Organizations, and FieldPulses — plus, per pulse,
+   the people/orgs *related to* it (GOAL-298). PDFs route through Gemini
+   multimodal via a freshly minted presigned GET URL (`file_data.fileUri`);
+   `.txt`/`.md` route through OpenAI against the decoded body.
 4. A fresh ConversationThread titled `Ingest: <filename>` is created
    (`kind = 'ingest'`, `mode = 'default'`). The thread is linked back to
    the source Document via `HAS_INGEST_THREAD`.
@@ -191,9 +192,16 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    itself already gates on `canEditContent` and the "upload + nothing
    happens until you click Approve" experience was the most common
    confusion point. Each created entity gets:
-   - an `EXTRACTED_FROM` edge from the Person/FieldPulse to the Document,
+   - an `EXTRACTED_FROM` edge from the Person/Organization/FieldPulse to
+     the Document,
    - one `:Log` row attributed to the uploader via `CREATED_BY`,
      stamping `metadata.documentId` + `metadata.conversationThreadId`.
+
+   Tool calls run in the order persons → organizations → pulses →
+   `link_entity_to_pulse` (MENTIONED_IN). The single pulse author is linked
+   via `INITIATED_BY`; every other person/org the extractor named as related
+   to a pulse is linked to it via `MENTIONED_IN`, with endpoints resolved by
+   name/title from the entities created earlier in the same run.
 7. A synthesized assistant turn carries the **execution result** of each
    tool call (not a pending-approval payload). The chat panel auto-
    switches to the new ingest thread so the user sees a record of what
@@ -212,8 +220,9 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
 
 - **Accepted formats.** `text/plain`, `text/markdown`, `application/pdf` only. Hard size cap ~20 pages / ~50K characters of extracted text. `.docx`, `.xlsx`, image OCR, and audio transcription are v2 candidates.
 - **Pulse types extracted.** `GoalPulse`, `ResourcePulse`, `StoryPulse` only. `CarePulse` and `CoreValuePulse` remain manual-only (StoryPulse absorbs the legacy Care + CoreValue concepts).
-- **Deduplication is in-extractor.** The process endpoint pre-loads the FieldContext roster (persons + pulses, projected to id + name + minimal context) and inlines it in the model prompt; the model emits `update_person` / `update_pulse` for roster matches rather than creating duplicates.
-- **Partial persons are skipped.** `create_person` / `update_person` is emitted only when both `firstName` AND `lastName` can be confidently filled. First-name-only / initial-only / role-only mentions are listed in the assistant's free-text reply for manual follow-up.
+- **Organizations are captured (GOAL-298).** Named organizations / groups / cooperatives are extracted as first-class `:Organization` nodes (`create_organization`), attached to the FieldContext via `HAS_ORGANIZATION`, and idempotent by name-within-context. Full first-class org modelling beyond upload-time capture (Living-System / LifeSensor sub-classes) is a follow-up.
+- **Deduplication is in-extractor.** The process endpoint pre-loads the FieldContext roster (persons + pulses + organizations, projected to id + name + minimal context) and inlines it in the model prompt; the model emits `update_person` / `update_pulse` for roster matches rather than creating duplicates (orgs dedup at write time by name-in-context).
+- **Partial persons are skipped.** `create_person` / `update_person` is emitted only when both `firstName` AND `lastName` can be confidently filled. First-name-only / initial-only / role-only mentions are listed in the assistant's free-text reply for manual follow-up — but a single-name mention that is actually an organization is routed to `organizations`, not dropped.
 - **No auto-`CONNECTED_TO`.** Extraction does not create `CONNECTED_TO` edges between the uploader and extracted Persons. `EXTRACTED_FROM` records "this person came from a doc the user has"; `CONNECTED_TO` remains a deliberate user gesture.
 - **Failure path.** On extraction failure (model error, malformed output, empty result), the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message. The Document persists; re-extract is the uniform retry path.
 - **Re-upload semantics.** Uploading the same file again creates a new `Document` node with its own ingest thread — no file versioning in v1.

@@ -2,6 +2,7 @@ import type {
   FieldContextRoster,
   RosterPerson,
   RosterPulse,
+  RosterOrganization,
 } from './field-context-roster'
 import type { SynthesizedToolCall } from './synthesized-turn-appender'
 import { buildDocumentDownloadUrl } from './document-download-url'
@@ -32,6 +33,18 @@ export interface ExtractedPersonCandidate {
 }
 
 /**
+ * GOAL-298: an organization / group / company / cooperative named in the
+ * document. Captured as a first-class :Organization so members can discover
+ * and connect with it, and linked to the pulses it relates to via MENTIONED_IN.
+ */
+export interface ExtractedOrganizationCandidate {
+  name: string
+  description?: string
+  /** Optional id of a roster organization the model thinks this matches. */
+  existingId?: string
+}
+
+/**
  * v1 (slice 2) extracted pulse kinds. CarePulse / CoreValuePulse are not
  * extracted in v1 and are filtered out server-side if the model emits them.
  */
@@ -49,6 +62,19 @@ export interface ExtractedPulseCandidate {
    * an extracted person candidate or a roster person — see resolveAuthor.
    */
   authorName?: string
+  /**
+   * GOAL-298: full names of people RELATED TO / NAMED IN this pulse but not its
+   * author (subjects, contributors, beneficiaries). Each is linked to the pulse
+   * via MENTIONED_IN. Only honoured when the name resolves to an extracted
+   * person candidate or a roster person.
+   */
+  relatedPersonNames?: string[]
+  /**
+   * GOAL-298: names of organizations related to this pulse. Each is linked via
+   * MENTIONED_IN. Only honoured when the name resolves to an extracted
+   * organization candidate or a roster organization.
+   */
+  relatedOrganizationNames?: string[]
   status?: string
   intensity?: number
   horizon?: string
@@ -61,6 +87,7 @@ export interface ExtractedPulseCandidate {
 
 export interface ExtractionModelOutput {
   persons: ExtractedPersonCandidate[]
+  organizations?: ExtractedOrganizationCandidate[]
   pulses?: ExtractedPulseCandidate[]
   /** Free-text prose the model wrote alongside the structured output. */
   assistantText: string
@@ -138,6 +165,14 @@ function normalizePersonKey(first: string, last: string): string {
 
 function normalizePulseKey(kind: ExtractedPulseKind, title: string): string {
   return `${kind}|${title.trim().toLowerCase()}`
+}
+
+function normalizeOrgKey(name: string): string {
+  return name.trim().toLowerCase()
+}
+
+function isValidOrg(o: ExtractedOrganizationCandidate): boolean {
+  return o.name.trim().length > 0
 }
 
 /**
@@ -223,6 +258,104 @@ function resolveAuthor(
     (p) => p.name.trim().toLowerCase() === key
   )
   return roster ? { name: roster.name.trim(), personId: roster.id } : null
+}
+
+/**
+ * GOAL-298: resolve a related-person name against the people this run knows —
+ * extracted candidates first (their canonical full name), then the roster
+ * (whose id is already live). Returns null for a name that matches neither, so
+ * a MENTIONED_IN link is never minted to an invented person.
+ */
+function resolveRelatedPerson(
+  rawName: string,
+  persons: ExtractedPersonCandidate[],
+  rosterPersons: RosterPerson[]
+): ResolvedAuthor | null {
+  const key = rawName.trim().toLowerCase()
+  if (!key) return null
+  const extracted = persons.find(
+    (p) =>
+      `${p.firstName.trim()} ${p.lastName.trim()}`.trim().toLowerCase() === key
+  )
+  if (extracted) {
+    return {
+      name: `${extracted.firstName.trim()} ${extracted.lastName.trim()}`.trim(),
+    }
+  }
+  const roster = rosterPersons.find((p) => p.name.trim().toLowerCase() === key)
+  return roster ? { name: roster.name.trim(), personId: roster.id } : null
+}
+
+interface ResolvedOrg {
+  name: string
+  /** Set only on a roster match — the id is already live. */
+  organizationId?: string
+}
+
+/**
+ * GOAL-298: resolve an organization name against the extracted org candidates
+ * and the context roster. Returns null when it matches neither.
+ */
+function resolveRelatedOrg(
+  rawName: string,
+  orgs: ExtractedOrganizationCandidate[],
+  rosterOrgs: RosterOrganization[]
+): ResolvedOrg | null {
+  const key = rawName.trim().toLowerCase()
+  if (!key) return null
+  const extracted = orgs.find((o) => o.name.trim().toLowerCase() === key)
+  if (extracted) return { name: extracted.name.trim() }
+  const roster = rosterOrgs.find((o) => o.name.trim().toLowerCase() === key)
+  return roster ? { name: roster.name.trim(), organizationId: roster.id } : null
+}
+
+function buildCreateOrganizationArgs(
+  o: ExtractedOrganizationCandidate,
+  input: ExtractionModelInput
+): Record<string, unknown> {
+  const args: Record<string, unknown> = {
+    name: o.name.trim(),
+    contextId: input.fieldContextId,
+    contextTitle: input.fieldContextTitle,
+    documentId: input.documentId,
+  }
+  if (o.description && o.description.trim()) {
+    args.description = o.description.trim()
+  }
+  return args
+}
+
+/**
+ * GOAL-298: a MENTIONED_IN link from a person or organization to a pulse. The
+ * invoker carries the resolved NAMES (and, for roster matches, the live id);
+ * the ingest orchestrator fills any id it can only learn after the create_*
+ * calls execute, keyed by name (person/org) and by (pulseType|title) for the
+ * pulse. Kept name-based so a link never depends on ids that don't exist yet.
+ */
+function buildLinkArgs(params: {
+  entityType: 'person' | 'organization'
+  entityName: string
+  entityId?: string
+  pulse: ExtractedPulseCandidate
+  pulseId?: string
+  input: ExtractionModelInput
+}): Record<string, unknown> {
+  const { entityType, entityName, entityId, pulse, pulseId, input } = params
+  const args: Record<string, unknown> = {
+    entityType,
+    entityName,
+    pulseTitle: pulse.title.trim(),
+    pulseType: pulse.kind,
+    contextId: input.fieldContextId,
+    contextTitle: input.fieldContextTitle,
+    documentId: input.documentId,
+  }
+  if (entityId) {
+    if (entityType === 'person') args.personId = entityId
+    else args.organizationId = entityId
+  }
+  if (pulseId) args.pulseId = pulseId
+  return args
 }
 
 function buildCreatePulseArgs(
@@ -365,7 +498,24 @@ export async function extractEntities(
   }
   const uniquePulses = Array.from(pulseByKey.values())
 
-  if (uniquePersons.length === 0 && uniquePulses.length === 0) {
+  // GOAL-298: dedup organizations by lowercased name. Roster de-dup and
+  // idempotency are enforced at write time (create_organization enriches an
+  // existing same-named org in the context rather than duplicating), so a
+  // single tool per distinct name is emitted here.
+  const rawOrgs = raw.organizations ?? []
+  const validOrgs = rawOrgs.filter(isValidOrg)
+  const orgByKey = new Map<string, ExtractedOrganizationCandidate>()
+  for (const o of validOrgs) {
+    const key = normalizeOrgKey(o.name)
+    if (!orgByKey.has(key)) orgByKey.set(key, o)
+  }
+  const uniqueOrgs = Array.from(orgByKey.values())
+
+  if (
+    uniquePersons.length === 0 &&
+    uniquePulses.length === 0 &&
+    uniqueOrgs.length === 0
+  ) {
     return {
       kind: 'ok',
       toolCalls: [],
@@ -383,8 +533,83 @@ export async function extractEntities(
     return { tool: 'create_person', args: buildCreatePersonArgs(person, input) }
   })
 
+  // Organizations are always created (idempotent at write time). No update_*
+  // twin — the write path enriches an existing same-named org in place.
+  //
+  // Unlike persons/pulses, the org candidate's `existingId` is deliberately NOT
+  // branched on here. Org dedup is name-in-context at write time
+  // (createOrganizationAuthorized), and — unlike a person/pulse, which owns a
+  // stable roster id used as the create→attribution join key — an org has no
+  // pre-resolved id in the create path. The name is the sole join key between
+  // create_organization and the MENTIONED_IN links below, so introducing a
+  // second (canonical) name from a roster match would break link resolution
+  // (a related name uses the extractor's surface form). `existingId` stays an
+  // advisory hint to the model (it steers the model off near-duplicate names);
+  // roster de-dup is enforced by the write, not this branch.
+  const orgCalls: SynthesizedToolCall[] = uniqueOrgs.map((org) => ({
+    tool: 'create_organization',
+    args: buildCreateOrganizationArgs(org, input),
+  }))
+
+  // MENTIONED_IN links accumulate here — emitted AFTER all create_*/update_*
+  // calls so the orchestrator has learned every entity/pulse id by name/title
+  // when it executes them. Deduped on (entityType|name|pulseKey).
+  const linkCalls: SynthesizedToolCall[] = []
+  const seenLinks = new Set<string>()
+
   const pulseCalls: SynthesizedToolCall[] = uniquePulses.map((p) => {
     const match = resolvePulseMatch(p, input.roster.pulses)
+    const pulseId = match?.id
+    // Attribution: the single author gets INITIATED_BY (below). Everyone else
+    // the document names as related to this pulse gets a MENTIONED_IN link.
+    const author = resolveAuthor(p, uniquePersons, input.roster.persons)
+    const authorKey = author?.name.trim().toLowerCase() ?? ''
+
+    for (const rawName of p.relatedPersonNames ?? []) {
+      const resolved = resolveRelatedPerson(
+        rawName,
+        uniquePersons,
+        input.roster.persons
+      )
+      if (!resolved) continue
+      // The author is already tied to the pulse via INITIATED_BY — don't
+      // double-link them as merely mentioned.
+      if (resolved.name.trim().toLowerCase() === authorKey) continue
+      const key = `person|${resolved.name.trim().toLowerCase()}|${normalizePulseKey(p.kind, p.title)}`
+      if (seenLinks.has(key)) continue
+      seenLinks.add(key)
+      linkCalls.push({
+        tool: 'link_entity_to_pulse',
+        args: buildLinkArgs({
+          entityType: 'person',
+          entityName: resolved.name,
+          entityId: resolved.personId,
+          pulse: p,
+          pulseId,
+          input,
+        }),
+      })
+    }
+
+    for (const rawName of p.relatedOrganizationNames ?? []) {
+      const resolved = resolveRelatedOrg(rawName, uniqueOrgs, input.roster.organizations)
+      if (!resolved) continue
+      const key = `organization|${resolved.name.trim().toLowerCase()}|${normalizePulseKey(p.kind, p.title)}`
+      if (seenLinks.has(key)) continue
+      seenLinks.add(key)
+      linkCalls.push({
+        tool: 'link_entity_to_pulse',
+        args: buildLinkArgs({
+          entityType: 'organization',
+          entityName: resolved.name,
+          entityId: resolved.organizationId,
+          pulse: p,
+          pulseId,
+          input,
+        }),
+      })
+    }
+
     if (match) {
       return { tool: 'update_pulse', args: buildUpdatePulseArgs(p, match, input) }
     }
@@ -395,7 +620,6 @@ export async function extractEntities(
     // name→id map would never learn them. Extracted candidates carry the name
     // only; the orchestrator resolves their id after the person calls (which
     // run first) have executed.
-    const author = resolveAuthor(p, uniquePersons, input.roster.persons)
     if (author) {
       args.attributedToName = author.name
       if (author.personId) args.attributedToPersonId = author.personId
@@ -403,7 +627,15 @@ export async function extractEntities(
     return { tool: 'create_pulse', args }
   })
 
-  const toolCalls: SynthesizedToolCall[] = [...personCalls, ...pulseCalls]
+  // Order matters: persons + orgs create the nodes, pulses create the pulses,
+  // links wire MENTIONED_IN once both endpoints exist. The orchestrator
+  // executes in this order and resolves link ids from the earlier results.
+  const toolCalls: SynthesizedToolCall[] = [
+    ...personCalls,
+    ...orgCalls,
+    ...pulseCalls,
+    ...linkCalls,
+  ]
 
   const assistantText = buildAssistantText({
     input,
@@ -413,6 +645,7 @@ export async function extractEntities(
     uniquePulses,
     rosterPulses: input.roster.pulses,
     droppedPulses: rawPulses.filter((p) => !isValidPulse(p)),
+    uniqueOrgs,
   })
 
   return { kind: 'ok', toolCalls, assistantText }
@@ -426,6 +659,7 @@ function buildAssistantText(params: {
   uniquePulses: ExtractedPulseCandidate[]
   rosterPulses: RosterPulse[]
   droppedPulses: ExtractedPulseCandidate[]
+  uniqueOrgs: ExtractedOrganizationCandidate[]
 }): string {
   const {
     input,
@@ -435,10 +669,15 @@ function buildAssistantText(params: {
     uniquePulses,
     rosterPulses,
     droppedPulses,
+    uniqueOrgs,
   } = params
   const parts: string[] = []
 
-  if (uniquePersons.length > 0 || uniquePulses.length > 0) {
+  if (
+    uniquePersons.length > 0 ||
+    uniquePulses.length > 0 ||
+    uniqueOrgs.length > 0
+  ) {
     const segments: string[] = []
     if (uniquePersons.length > 0) {
       const namesList = uniquePersons
@@ -446,6 +685,12 @@ function buildAssistantText(params: {
         .join(', ')
       segments.push(
         `${uniquePersons.length === 1 ? 'one person' : `${uniquePersons.length} people`}: ${namesList}`
+      )
+    }
+    if (uniqueOrgs.length > 0) {
+      const orgList = uniqueOrgs.map((o) => `"${o.name.trim()}"`).join(', ')
+      segments.push(
+        `${uniqueOrgs.length === 1 ? 'one organization' : `${uniqueOrgs.length} organizations`}: ${orgList}`
       )
     }
     if (uniquePulses.length > 0) {

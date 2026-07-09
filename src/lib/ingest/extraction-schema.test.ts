@@ -84,6 +84,7 @@ describe('mapExtractionObject (GOAL-282)', () => {
   it('normalises null optional fields back to undefined', () => {
     const out = mapExtractionObject({
       persons: [{ firstName: 'Sarah', lastName: 'Chen', existingId: null }],
+      organizations: null,
       pulses: [
         {
           kind: 'GoalPulse',
@@ -91,6 +92,8 @@ describe('mapExtractionObject (GOAL-282)', () => {
           content: 'Ship the v1 ingest pipeline.',
           existingId: null,
           authorName: null,
+          relatedPersonNames: null,
+          relatedOrganizationNames: null,
           status: null,
           intensity: null,
           horizon: null,
@@ -107,6 +110,8 @@ describe('mapExtractionObject (GOAL-282)', () => {
     expect(out.persons[0].existingId).toBeUndefined()
     expect(out.pulses?.[0].existingId).toBeUndefined()
     expect(out.pulses?.[0].authorName).toBeUndefined()
+    expect(out.pulses?.[0].relatedPersonNames).toBeUndefined()
+    expect(out.pulses?.[0].relatedOrganizationNames).toBeUndefined()
     expect(out.pulses?.[0].status).toBeUndefined()
     expect(out.pulses?.[0].intensity).toBeUndefined()
   })
@@ -114,15 +119,33 @@ describe('mapExtractionObject (GOAL-282)', () => {
   it('treats a null pulses array as no pulses', () => {
     const out = mapExtractionObject({
       persons: [],
+      organizations: null,
       pulses: null,
       assistantText: 'Nothing structured here.',
     })
     expect(out.pulses).toEqual([])
   })
 
+  it('treats a null organizations array as no organizations', () => {
+    const out = mapExtractionObject({
+      persons: [],
+      organizations: null,
+      pulses: null,
+      assistantText: 'Nothing structured here.',
+    })
+    expect(out.organizations).toEqual([])
+  })
+
   it('preserves real values (including 0) and existing ids', () => {
     const out = mapExtractionObject({
       persons: [{ firstName: 'Ada', lastName: 'Lovelace', existingId: 'person_1' }],
+      organizations: [
+        {
+          name: 'Analytical Engine Co',
+          description: 'Builds mechanical computers.',
+          existingId: 'org_1',
+        },
+      ],
       pulses: [
         {
           kind: 'ResourcePulse',
@@ -130,6 +153,8 @@ describe('mapExtractionObject (GOAL-282)', () => {
           content: 'A small compute budget is available.',
           existingId: 'pulse_9',
           authorName: 'Ada Lovelace',
+          relatedPersonNames: ['Charles Babbage'],
+          relatedOrganizationNames: ['Analytical Engine Co'],
           status: null,
           intensity: 0,
           horizon: null,
@@ -144,8 +169,15 @@ describe('mapExtractionObject (GOAL-282)', () => {
     })
 
     expect(out.persons[0].existingId).toBe('person_1')
+    expect(out.organizations?.[0].name).toBe('Analytical Engine Co')
+    expect(out.organizations?.[0].description).toBe('Builds mechanical computers.')
+    expect(out.organizations?.[0].existingId).toBe('org_1')
     expect(out.pulses?.[0].existingId).toBe('pulse_9')
     expect(out.pulses?.[0].authorName).toBe('Ada Lovelace')
+    expect(out.pulses?.[0].relatedPersonNames).toEqual(['Charles Babbage'])
+    expect(out.pulses?.[0].relatedOrganizationNames).toEqual([
+      'Analytical Engine Co',
+    ])
     expect(out.pulses?.[0].intensity).toBe(0)
     expect(out.pulses?.[0].availability).toBe(0)
     expect(out.pulses?.[0].resourceType).toBe('budget')

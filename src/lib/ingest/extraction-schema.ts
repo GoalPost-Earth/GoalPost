@@ -37,7 +37,33 @@ export const ExtractionSchema = z.object({
       })
     )
     .describe(
-      'Distinct human beings explicitly named in the document. Skip partial mentions where you cannot give both first AND last name confidently. Never repeat the same person twice — if they appear several times, emit a single entry.'
+      'Distinct human beings explicitly named in the document. Skip partial mentions where you cannot give both first AND last name confidently — a single-name mention that is actually an organization/group belongs in `organizations`, not here. Never repeat the same person twice — if they appear several times, emit a single entry.'
+    ),
+  organizations: z
+    .array(
+      z.object({
+        name: z
+          .string()
+          .describe(
+            'The organization / group / company / cooperative / institution name, exactly as written. Required — leave empty to drop.'
+          ),
+        description: z
+          .string()
+          .nullable()
+          .describe(
+            'One short phrase on what this organization is or does, if the document says. Use null when unclear.'
+          ),
+        existingId: z
+          .string()
+          .nullable()
+          .describe(
+            'Set ONLY when this mention matches an existing organization from EXISTING ORGANIZATIONS — copy their id verbatim. Use null otherwise.'
+          ),
+      })
+    )
+    .nullable()
+    .describe(
+      'Distinct organizations, groups, companies, cooperatives or institutions explicitly named in the document (e.g. "Artisan Cooperative"). These are captured so members can discover and connect with them. Never repeat the same organization twice. Use null if there are none.'
     ),
   pulses: z
     .array(
@@ -64,6 +90,18 @@ export const ExtractionSchema = z.object({
           .nullable()
           .describe(
             'Full name of the person this pulse is attributed to — the document author or named speaker whose voice the pulse carries. Must exactly match a name you emitted in persons, or a name from EXISTING PEOPLE. Use null when authorship is unclear.'
+          ),
+        relatedPersonNames: z
+          .array(z.string())
+          .nullable()
+          .describe(
+            'Full names of people the document identifies as RELATED TO or NAMED IN this pulse but who are NOT its author — subjects, contributors, beneficiaries, referenced people. Each must exactly match a name you emitted in persons, or a name from EXISTING PEOPLE. Do NOT repeat the authorName here. Use null when none apply.'
+          ),
+        relatedOrganizationNames: z
+          .array(z.string())
+          .nullable()
+          .describe(
+            'Names of organizations the document identifies as related to this pulse (e.g. the cooperative that offers a resource). Each must exactly match a name you emitted in organizations. Use null when none apply.'
           ),
         status: z
           .string()
@@ -120,12 +158,19 @@ export function mapExtractionObject(
       lastName: p.lastName ?? '',
       existingId: p.existingId ?? undefined,
     })),
+    organizations: (object.organizations ?? []).map((o) => ({
+      name: o.name ?? '',
+      description: o.description ?? undefined,
+      existingId: o.existingId ?? undefined,
+    })),
     pulses: (object.pulses ?? []).map((p) => ({
       kind: p.kind,
       title: p.title ?? '',
       content: p.content ?? '',
       existingId: p.existingId ?? undefined,
       authorName: p.authorName ?? undefined,
+      relatedPersonNames: p.relatedPersonNames ?? undefined,
+      relatedOrganizationNames: p.relatedOrganizationNames ?? undefined,
       status: p.status ?? undefined,
       intensity: p.intensity ?? undefined,
       horizon: p.horizon ?? undefined,

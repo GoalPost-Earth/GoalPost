@@ -480,6 +480,19 @@ type Person implements PersonInterface
   the underlying EXTRACTED_FROM edge exists.
   """
   extractedFrom: [Document!]! @relationship(type: "EXTRACTED_FROM", direction: OUT)
+  """
+  Pulses (goal/resource/story) this person was identified as related to / named
+  in but is not the author of (GOAL-298, MENTIONED_IN). Each FieldPulse is
+  auth-filtered by its own directive, so a non-member of the parent Space sees an
+  empty list. Written server-side by the doc-ingestion link path; open nested
+  CONNECT is disabled.
+  """
+  mentionedIn: [FieldPulse!]!
+    @relationship(
+      type: "MENTIONED_IN"
+      direction: OUT
+      nestedOperations: [DISCONNECT]
+    )
 }
 
 """
@@ -873,6 +886,15 @@ type FieldContext
   people: [Person!]!
     @relationship(
       type: "HAS_PERSON"
+      direction: OUT
+      nestedOperations: [DISCONNECT]
+    )
+  # Organizations attached to this context (GOAL-298). HAS_ORGANIZATION connects
+  # go through the server-side ingest write only; open nested CONNECT is disabled
+  # (parity with `people`) so a context editor can't rehome an arbitrary org by id.
+  organizations: [Organization!]!
+    @relationship(
+      type: "HAS_ORGANIZATION"
       direction: OUT
       nestedOperations: [DISCONNECT]
     )
@@ -1728,6 +1750,107 @@ type PromiseWeave
   wovenFor: [Person!]! @relationship(type: "WOVEN_FOR", direction: OUT)
   createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
   context: [FieldContext!]! @relationship(type: "HAS_WEAVE", direction: IN)
+}
+
+"""
+An organization, group, company, cooperative or institution named in an
+uploaded document (GOAL-298). Captured as a first-class relational entity so
+members can discover it and connect to the resources/stories it belongs to.
+Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+— the GraphQL type maps the load-bearing "Organization" label; the ontology
+labels ride alongside (parity with migrated Persons).
+
+Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+`lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+can only be minted / attached through the audited ingest path that already
+gates on `canEditContent`.
+"""
+type Organization
+  @node(labels: ["Organization"])
+  @mutation(operations: [])
+  @authorization(
+    # READ — anyone who can see a FieldContext the organization is attached to
+    # (owner or any member of that context's owning Me/We space) can see it.
+    # This is the ONLY Space tie an Organization has — like a :PersonPulse it
+    # owns no Space and holds no membership — so `contexts_SOME` is load-bearing
+    # and fail-closed: an org not reachable through any visible context is
+    # filtered out entirely. Mirrors the PersonPulse context-reach branch.
+    filter: [
+      {
+        where: {
+          node: {
+            contexts_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  meSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+    # WRITE — CREATE/UPDATE/DELETE require OWNER, ADMIN, or MEMBER on the owning
+    # Me/We space (GUESTs excluded, kb/02). Redundant while `@mutation` disables
+    # generated writes, but kept so any future authoring path fails closed.
+    validate: [
+      {
+        operations: [CREATE, UPDATE, DELETE]
+        where: {
+          node: {
+            contexts_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: {
+                      AND: [
+                        { member_SOME: { id_EQ: "$jwt.user.id" } }
+                        { role_IN: [ADMIN, MEMBER] }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  ) {
+  id: ID! @id
+  name: String!
+  description: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  # Contexts this org is attached to (HAS_ORGANIZATION). Open nested CONNECT is
+  # disabled — the attach path is the server-side ingest write only; leaving it
+  # would let any context editor rehome an org by id.
+  contexts: [FieldContext!]!
+    @relationship(
+      type: "HAS_ORGANIZATION"
+      direction: IN
+      nestedOperations: [DISCONNECT]
+    )
+  # Pulses this org was identified as related to / named in (MENTIONED_IN).
+  mentionedIn: [FieldPulse!]!
+    @relationship(
+      type: "MENTIONED_IN"
+      direction: OUT
+      nestedOperations: [DISCONNECT]
+    )
+  extractedFrom: [Document!]!
+    @relationship(type: "EXTRACTED_FROM", direction: OUT)
 }
 
 # ============================================================================

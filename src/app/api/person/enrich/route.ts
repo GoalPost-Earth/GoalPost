@@ -41,10 +41,19 @@ export async function POST(request: NextRequest) {
     if (personIds && personIds.length > 0) {
       peopleToEnrich = personIds
     } else {
-      // Get all people who have pulses
+      // People to enrich: pulse authors PLUS the non-author contacts that
+      // doc-ingestion attaches to a field (HAS_PERSON) or links to a pulse
+      // (MENTIONED_IN, GOAL-298). Author-only selection silently skipped every
+      // extracted :Person:PersonPulse, so their embeddings only ever landed via
+      // the discover-resonances backfill. For a no-pulse contact,
+      // enrichPersonFromPulses skips the LLM insight pass and just (re)generates
+      // the name/description embedding — cheap and correct.
       const result = await graph.query<{ id: string }>(
         `
-        MATCH (p:Person)<-[:INITIATED_BY]-(pulse:FieldPulse)
+        MATCH (p:Person)
+        WHERE EXISTS { (p)<-[:INITIATED_BY]-(:FieldPulse) }
+           OR EXISTS { (:FieldContext)-[:HAS_PERSON]->(p) }
+           OR EXISTS { (p)-[:MENTIONED_IN]->(:FieldPulse) }
         RETURN DISTINCT p.id as id
       `,
         {}
@@ -53,7 +62,7 @@ export async function POST(request: NextRequest) {
       if (!Array.isArray(result) || result.length === 0) {
         return NextResponse.json({
           success: true,
-          message: 'No people with pulses found',
+          message: 'No people to enrich found',
           enrichedCount: 0,
         })
       }

@@ -25,6 +25,9 @@ PromiseWeave ──WEAVES──▶ FieldPulse
 PromiseWeave ──WOVEN_FOR──▶ Person
 PromiseWeave ──CREATED_BY──▶ Person
 FieldPulse ──INITIATED_BY──▶ Person   (canonical author edge; CREATED_BY is a legacy alias — see src/lib/pulse-author.ts)
+FieldContext ──HAS_ORGANIZATION──▶ Organization   (GOAL-298; parallels HAS_PERSON)
+Person/Organization ──MENTIONED_IN──▶ FieldPulse   (GOAL-298; named-in / related-to, NOT authorship)
+Organization ──EXTRACTED_FROM──▶ Document
 FieldPulse ──HAS_CHUNK──▶ ConversationChunk
 Person ──CONNECTED_TO── Person (bidirectional)
 Log ──CREATED_BY──▶ Person
@@ -357,6 +360,48 @@ edge — ResonanceLink likewise uses only `HAS_RESONANCE`).
 
 ---
 
+### Organization
+
+**Neo4j Labels:** `["Organization", "LifeSensor", "RelationalEntity"]`
+
+A first-class organization, group, company, cooperative or institution named in
+an uploaded document (GOAL-298) — e.g. "Artisan Cooperative". Its own entity, not
+a `Person` and not a pulse. Captured at upload time so members can discover it
+and connect to the resources/stories it belongs to. The GraphQL `Organization`
+type maps the load-bearing `Organization` label; the `LifeSensor` /
+`RelationalEntity` ontology labels ride alongside (parity with migrated Persons).
+
+| Field       | Type     | Notes                                     |
+| ----------- | -------- | ----------------------------------------- |
+| id          | string   | Unique — `organization_<uuid>`            |
+| name        | string   | Required                                  |
+| description | string   | Optional — what the org is / does         |
+| createdAt   | datetime |                                           |
+| updatedAt   | datetime | Set on enrich                             |
+
+**Relationships:**
+
+- `HAS_ORGANIZATION` ← FieldContext — the context(s) the org is attached to. The
+  only Space tie an Organization has (it owns no Space, holds no membership), so
+  it is the load-bearing branch of the read gate.
+- `MENTIONED_IN` → FieldPulse — the pulse(s) the org was identified as related to.
+- `EXTRACTED_FROM` → Document — doc-ingestion provenance.
+
+**Authorization:** type-level `@authorization` READ filter over `contexts_SOME`
+(owner or member of a context's parent Space) — an org unreachable through any
+visible context is filtered out entirely, mirroring the PersonPulse context-reach
+gate. All generated mutations are disabled (`@mutation(operations: [])`); orgs are
+created server-side only, via the audited doc-ingestion write in
+`src/lib/chat/hitl.ts` (`createOrganizationAuthorized`), which gates on
+`canEditContent`.
+
+**Writes:** created / enriched **only** by the doc-ingestion path
+(`create_organization` tool). Idempotent by name-within-context (a same-named org
+in the context is enriched, never duplicated). No embedding / vector index yet —
+semantic org discovery is a follow-up (resonance is pulse↔pulse today).
+
+---
+
 ### FieldResonance
 
 **Neo4j Labels:** `["FieldResonance"]`
@@ -545,6 +590,7 @@ and ADR-014 / ADR-015 in `kb/06-adr.md`.
 - `UPLOADED_BY` → Person:User (the uploader)
 - `EXTRACTED_FROM` ← Person (extracted persons trace back here)
 - `EXTRACTED_FROM` ← FieldPulse (extracted goal/resource/story pulses trace back here)
+- `EXTRACTED_FROM` ← Organization (extracted orgs trace back here — GOAL-298)
 - `HAS_INGEST_THREAD` → ConversationThread (one per upload + one per re-extract)
 
 **Attribution:** when the extractor identifies whose voice/authorship an
@@ -561,6 +607,20 @@ orchestrator, and enforced context-scoped (the credited person must be
 brought the document in. Any `HAS_PERSON`-attached Person qualifies —
 including a registered `:User` (e.g. a WeSpace co-member): deliberate, since
 the Log keeps the uploader accountable for the write itself.
+
+**Related people & organizations (GOAL-298):** beyond the single author,
+the extractor also emits, per pulse, the people and organizations the document
+names as *related to* it (subjects, contributors, the cooperative offering a
+resource). Each extracted person becomes a `:Person:PersonPulse`
+(`create_person`), each org an `:Organization` (`create_organization`), both
+attached to the FieldContext (`HAS_PERSON` / `HAS_ORGANIZATION`); then a
+`MENTIONED_IN` edge links each to the pulse it belongs to. Authorship stays on
+`INITIATED_BY`; `MENTIONED_IN` is the distinct "named in / related to" edge, so
+one pulse can carry one author and many mentioned entities. The link write
+(`linkEntityToPulseAuthorized`) is co-location-gated — the entity must already be
+attached to a context that holds the pulse — and writes one `Log`. The ingest
+orchestrator resolves each link's endpoints by name/title from the entities
+created earlier in the same run (`handle-ingest-document.ts`).
 
 **Authorization:** inherits read access from the parent Space — the same
 `@authorization` pattern as FieldContext. Writes (`POST /api/ingest/document/{presign,process}`,
@@ -643,6 +703,7 @@ into the `Log` stream — the same exemption as `ConversationTurn` and
 | `conversation_thread_id`       | ConversationThread.id UNIQUE       |
 | `conversation_turn_id`         | ConversationTurn.id UNIQUE         |
 | `assistant_feedback_id`        | AssistantFeedback.id UNIQUE        |
+| `organization_id`              | Organization.id UNIQUE             |
 
 ## Vector Indexes (1536 dimensions, cosine similarity)
 
