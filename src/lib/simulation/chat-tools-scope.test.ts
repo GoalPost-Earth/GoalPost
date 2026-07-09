@@ -136,3 +136,39 @@ describe('GOAL-300 — search tools do not force the active scope', () => {
     expect(arg.userId).toBe(USER_ID)
   })
 })
+
+/**
+ * Regression for the captured AI-quality failure behind
+ * feedback_32f2ee28-... : a raw Neo4j "LIMIT: Invalid input. '25.0' ..." error
+ * reached the model, which paraphrased it into member-facing copy ("a
+ * search-tool limit error on this surface") — a technical failure no
+ * participant could make sense of. kb/07 Rule 1: internal artifacts (Cypher /
+ * Neo4j error text) must NEVER appear in chat. The tool's catch path must hand
+ * the model a clean, member-safe message, keeping the technical detail in the
+ * server log only.
+ */
+describe('tool errors are sanitized before reaching the model (kb/07 Rule 1)', () => {
+  it('search_pulse maps a raw Neo4j LIMIT crash to member-safe copy', async () => {
+    // Reproduce the exact exception from the captured transcript.
+    searchPulses.mockImplementationOnce(() =>
+      Promise.reject(
+        new Error(
+          "LIMIT: Invalid input. '25.0' is not a valid value. Must be a non-negative integer."
+        )
+      )
+    )
+    const tools = await toolsWithActiveScope()
+    const result = (await runTool(tools.search_pulse, {
+      query: 'value',
+      pulseType: 'CoreValuePulse',
+    })) as { status: string; message: string }
+
+    expect(result.status).toBe('error')
+    // The raw technical internals must NOT reach the model.
+    expect(result.message).not.toMatch(/LIMIT/i)
+    expect(result.message).not.toContain('25.0')
+    expect(result.message).not.toMatch(/valid value/i)
+    // What the model DOES get is clean, non-technical, retry-friendly copy.
+    expect(result.message).toMatch(/try again/i)
+  })
+})

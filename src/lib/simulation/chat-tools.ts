@@ -34,9 +34,22 @@ type ToolError = {
 }
 
 function toErrorResult(prefix: string, error: unknown): ToolError {
+  // The raw exception message routinely carries technical internals — Neo4j /
+  // Cypher errors like "LIMIT: Invalid input. '25.0' is not a valid value",
+  // stack fragments, GraphQL field names. Feeding that string back to the model
+  // means it paraphrases it into member-facing copy ("a search-tool limit error
+  // on this surface"), surfacing a technical failure a participant can't make
+  // sense of — the exact complaint behind kb/07 Rule 1. So we keep the real
+  // error in the server log (for debugging) and hand the model a clean,
+  // member-safe message it can relay without leaking internals.
+  console.error('[Assistant Tool Error]', {
+    prefix,
+    error: error instanceof Error ? error.message : String(error),
+  })
   return {
     status: 'error',
-    message: `${prefix}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    message:
+      'I couldn’t complete that just now because of a temporary problem on our end. Please try again in a moment.',
   }
 }
 

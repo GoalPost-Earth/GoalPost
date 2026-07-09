@@ -342,9 +342,12 @@ export async function graphRagSearch(
     try {
       peopleMatches = await searchPeopleByVector(graph, embedding, limit)
     } catch (error) {
-      warnings.push(
-        `People vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-      )
+      // Keep the raw error (Neo4j/Cypher internals like "LIMIT: Invalid input.
+      // '25.0' ...") in the server log ONLY. This warning is folded into the
+      // human-facing `message`, so it must stay member-safe — the model must
+      // never receive raw technical error text to paraphrase (kb/07 Rule 1).
+      console.error('[graph_rag_search] people vector search failed', error)
+      warnings.push('Some people matches were unavailable for this search.')
     }
   }
 
@@ -365,9 +368,10 @@ export async function graphRagSearch(
           input.contextId
         )
       } catch (error) {
-        warnings.push(
-          `Pulse vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`
-        )
+        // Raw error stays server-side only (see note above) — this is the exact
+        // path that can throw the "LIMIT: Invalid input. '25.0' ..." string.
+        console.error('[graph_rag_search] pulse vector search failed', error)
+        warnings.push('Some pulse matches were unavailable for this search.')
       }
     }
   }
@@ -392,8 +396,10 @@ export async function graphRagSearch(
           input.contextId
         )
       } catch (error) {
+        // Raw error stays server-side only (see note above).
+        console.error('[graph_rag_search] chunk vector search failed', error)
         warnings.push(
-          `Chunk vector search failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+          'Some conversation matches were unavailable for this search.'
         )
       }
     }

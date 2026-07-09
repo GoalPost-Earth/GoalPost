@@ -158,11 +158,15 @@ ${spacesList}
 Could you please clarify which space you're referring to by its number or provide a more specific name?`
         return JSON.stringify(result)
       } catch (error) {
+        // Raw error is logged server-side only; the returned message is folded
+        // into the model's context, so it must stay member-safe and never carry
+        // technical internals (kb/07 Rule 1).
         console.error('[search_space_by_name] error:', error)
         return JSON.stringify({
           found: false,
           count: 0,
-          message: `An error occurred while searching for spaces: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,
+          message:
+            'I ran into a problem searching for spaces just now. Please try again in a moment.',
           needsDisambiguation: false,
         })
       }
