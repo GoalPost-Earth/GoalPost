@@ -79,3 +79,6 @@ Thumbs.db
 .e2e-shots/
 .e2e-screens/
 .e2e-tmp/
+
+# GOAL-299 one-off backfill (contains inline DB creds — never commit)
+scripts/backfill-artisans-organization.mjs

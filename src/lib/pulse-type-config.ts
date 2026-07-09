@@ -62,6 +62,21 @@ export const PULSE_TYPE_CONFIG: Record<NodeType, TypeConfig> = {
   },
 }
 
+/**
+ * Organization (GOAL-298 / GOAL-299) is a first-class relational entity, NOT a
+ * pulse — so it lives outside `NodeType`/`PULSE_TYPE_CONFIG`. Kept here so the
+ * one file that owns entity icon+color mappings stays the single source of
+ * truth (drawer, graph legend, and bloom all read from it). Teal, matching the
+ * cypher-generator graph color (`--gp-org` / `#5eead4`). Icon: `apartment`.
+ */
+export const ORGANIZATION_CONFIG = {
+  icon: 'apartment',
+  label: 'Organization',
+  color: 'text-gp-org',
+  cssVar: '--gp-org',
+  shadowColor: 'color-mix(in srgb, var(--gp-org, var(--gp-story)) 55%, transparent)',
+} as const
+
 /** Display order for the pulse type selector. */
 export const PULSE_TYPE_ORDER: NodeType[] = [
   'goal',

@@ -221,6 +221,32 @@ const JD_TEST_SPACE = {
   membershipId: 'membership_jd_test',
 }
 
+// Phase 5c2 (GOAL-299): mastress's migrated "The Artisans Cooperative" resource
+// is ALSO a first-class :Organization (GOAL-298 — the glossary's canonical
+// Organization example). Because a straight migration leaves it a private
+// ResourcePulse in mastress's MeSpace, Space-authorization hides it from other
+// members (Robert reported "This entity is no longer available"). This constant
+// drives Phase 5c2, which reproduces the dual-type overlay + a shared WeSpace
+// (owner + member) on every run, so a dev refresh never silently reverts the
+// fix. The owner/member emails are real personal addresses, so — following the
+// Phase 5b convention (kb/08-migration.md) — they are read from the gitignored
+// `.env.local` (ARTISANS_OWNER_EMAIL / ARTISANS_MEMBER_EMAIL) rather than
+// committed here. If either is unset (or the resource isn't in the dataset) the
+// phase warns and skips (non-fatal), exactly like Phase 5b/5c.
+const ARTISANS_ORG = {
+  resourceId: '1b07343c-1071-41a2-9df1-9f83708452f6',
+  ownerEmail: devEnv.ARTISANS_OWNER_EMAIL || '', // cooperative creator → owner/ADMIN
+  memberEmail: devEnv.ARTISANS_MEMBER_EMAIL || '', // tester → MEMBER
+  spaceId: 'wespace_artisans_shared',
+  spaceName: 'Artisans Cooperative Circle',
+  spaceDescription:
+    'Shared space for the Artisans Cooperative — the cooperative creator and a member.',
+  contextId: 'context_artisans_shared_field',
+  contextTitle: 'Artisans Cooperative',
+  ownerMembershipId: 'sm_artisans_mastress',
+  memberMembershipId: 'sm_artisans_robert',
+}
+
 // For Phase 4: when reading a prod edge whose endpoints have labels like
 // [Person, Member, User] or [CoreValue], we need to know what labels those
 // endpoints have in dev so we can disambiguate id collisions (e.g., prod
@@ -765,7 +791,7 @@ async function phase5_buildDevStructure(): Promise<{
        )
        RETURN count(ws) AS c`
     )
-    let weSpaces = toInt(ws.records[0].get('c'))
+    const weSpaces = toInt(ws.records[0].get('c'))
     console.log(`   ✓ WeSpaces created (one per community): ${weSpaces}`)
 
     // 5d. Community WeSpace memberships. The owner (the single creator chosen
@@ -1360,6 +1386,130 @@ async function phase5d_buildPromiseWeaves(): Promise<{
 }
 
 /**
+ * Phase 5c2: Artisans Cooperative Organization overlay + shared space (GOAL-299).
+ *
+ * mastress's migrated "The Artisans Cooperative" resource is also a first-class
+ * :Organization (GOAL-298). A plain migration leaves it a private ResourcePulse
+ * in mastress's MeSpace, so Space-authorization hides it from other members
+ * (Robert hit "This entity is no longer available"). This phase reproduces the
+ * one-off backfill on every run: it (1) builds a SHARED WeSpace owned by
+ * mastress (ADMIN) with Robert as MEMBER + a FieldContext, and (2) overlays
+ * :Organization:LifeSensor:RelationalEntity on the resource (keeping its
+ * ResourcePulse labels — a dual-type node) and attaches it to that context via
+ * HAS_ORGANIZATION, the only Space tie the Organization read gate keys on. The
+ * resource stays anchored in mastress's MeSpace (HAS_PULSE), so the private
+ * ResourcePulse view never leaks to Robert — he sees only the Organization.
+ *
+ * DEV-only (uses devDriver behind the same URI guard), idempotent (MERGE on
+ * stable ids), and parity-safe: it only SETs dev-only labels and MERGEs
+ * dev-only structural edges — the node keeps its ResourcePulse label, so Phase
+ * 6's ResourcePulse exact-equality is unaffected. If the resource or either
+ * :Person:User isn't in the dataset, it warns and skips (non-fatal), like 5c.
+ */
+async function phase5c2_buildArtisansCooperativeOrg() {
+  console.log(
+    '━━━ Phase 5c2: Artisans Cooperative Organization + shared space ━━━'
+  )
+  const {
+    resourceId,
+    ownerEmail,
+    memberEmail,
+    spaceId,
+    spaceName,
+    spaceDescription,
+    contextId,
+    contextTitle,
+    ownerMembershipId,
+    memberMembershipId,
+  } = ARTISANS_ORG
+  if (!ownerEmail || !memberEmail) {
+    console.log(
+      '   ⏭️  ARTISANS_OWNER_EMAIL / ARTISANS_MEMBER_EMAIL not set in .env.local — skipping.'
+    )
+    console.log('✅ Artisans Cooperative org step skipped\n')
+    return
+  }
+  const session = devDriver.session()
+  try {
+    const exists = await session.run(
+      `RETURN EXISTS { MATCH (:ResourcePulse {id: $resourceId}) } AS e`,
+      { resourceId }
+    )
+    if (!exists.records[0]?.get('e')) {
+      console.log(
+        `   ⚠️  No :ResourcePulse ${resourceId} in dataset — Artisans org step skipped`
+      )
+      console.log('✅ Artisans Cooperative org step skipped\n')
+      return
+    }
+
+    // 1. Shared WeSpace (mastress owner/ADMIN, Robert MEMBER) + FieldContext.
+    const space = await session.run(
+      `MATCH (owner:Person:User {email: $ownerEmail})
+       MATCH (member:Person:User {email: $memberEmail})
+       MERGE (ws:Space:WeSpace {id: $spaceId})
+         ON CREATE SET ws.name = $spaceName,
+                       ws.description = $spaceDescription,
+                       ws.visibility = 'SHARED',
+                       ws.createdAt = datetime()
+       MERGE (owner)-[:OWNS]->(ws)
+       MERGE (ctx:FieldContext {id: $contextId})
+         ON CREATE SET ctx.title = $contextTitle, ctx.createdAt = datetime()
+       MERGE (ws)-[:HAS_CONTEXT]->(ctx)
+       MERGE (ownerSm:SpaceMembership {id: $ownerMembershipId})
+         ON CREATE SET ownerSm.role = 'ADMIN', ownerSm.addedAt = datetime()
+       MERGE (ws)-[:HAS_MEMBER]->(ownerSm)
+       MERGE (ownerSm)-[:IS_MEMBER]->(owner)
+       MERGE (memberSm:SpaceMembership {id: $memberMembershipId})
+         ON CREATE SET memberSm.role = 'MEMBER', memberSm.addedAt = datetime()
+       MERGE (ws)-[:HAS_MEMBER]->(memberSm)
+       MERGE (memberSm)-[:IS_MEMBER]->(member)
+       RETURN count(ws) AS c`,
+      {
+        ownerEmail,
+        memberEmail,
+        spaceId,
+        spaceName,
+        spaceDescription,
+        contextId,
+        contextTitle,
+        ownerMembershipId,
+        memberMembershipId,
+      }
+    )
+    if (toInt(space.records[0]?.get('c') ?? 0) === 0) {
+      console.log(
+        `   ⚠️  ${ownerEmail} / ${memberEmail} not both :Person:User — Artisans shared space not built`
+      )
+      console.log('✅ Artisans Cooperative org step skipped\n')
+      return
+    }
+    console.log(
+      `   ✓ Shared WeSpace ${spaceId} (owner ${ownerEmail} ADMIN, ${memberEmail} MEMBER)`
+    )
+
+    // 2. Overlay the Organization type + attach to the shared context. Backfills
+    //    Organization.name (non-null) from title if the node lacks a name.
+    await session.run(
+      `MATCH (o:ResourcePulse {id: $resourceId})
+       SET o:Organization:LifeSensor:RelationalEntity
+       SET o.name = coalesce(o.name, o.title)
+       SET o.updatedAt = datetime()
+       WITH o
+       MATCH (ctx:FieldContext {id: $contextId})
+       MERGE (ctx)-[:HAS_ORGANIZATION]->(o)`,
+      { resourceId, contextId }
+    )
+    console.log(
+      `   ✓ "${contextTitle}" overlaid as :Organization + attached to the shared context`
+    )
+  } finally {
+    await session.close()
+  }
+  console.log('✅ Artisans Cooperative Organization built\n')
+}
+
+/**
  * Phase 6: Validate parity. Compares prod and dev node/relationship counts
  * label-by-label, type-by-type.
  */
@@ -1541,6 +1691,7 @@ async function main() {
       await phase5_buildDevStructure()
     await phase5b_setDevLoginPassword()
     await phase5c_buildJdTestSpace()
+    await phase5c2_buildArtisansCooperativeOrg()
     const weave = await phase5d_buildPromiseWeaves()
     // Fold the care-point-weave drops into the same maps Phase 6 subtracts, so
     // parity accounts for both the pulse drop (5h) and the weave drop (5d).

@@ -16,6 +16,9 @@ export type InfoEntityType =
   | 'Document'
   | 'ResonanceLink'
   | 'PromiseWeave'
+  // A first-class Organization (cooperative / company / group named in a
+  // Space) — GOAL-298 / GOAL-299. Not a pulse; see OrganizationDetailsBody.
+  | 'Organization'
   // An interpersonal CONNECTED_TO relationship. Its `id` is a composite
   // `personAId__personBId` (sorted) — see ConnectionDetailsBody.
   | 'Connection'
@@ -41,6 +44,7 @@ const INFO_ENTITY_TYPES: ReadonlySet<InfoEntityType> = new Set([
   'Document',
   'ResonanceLink',
   'PromiseWeave',
+  'Organization',
   'Connection',
 ])
 

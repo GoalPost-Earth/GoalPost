@@ -4836,6 +4836,10 @@ export type FieldContext = {
   /** @deprecated Please use field "aggregate" inside "meSpaceConnection" instead */
   meSpaceAggregate?: Maybe<FieldContextMeSpaceMeSpaceAggregationSelection>
   meSpaceConnection: FieldContextMeSpaceConnection
+  organizations: Array<Organization>
+  /** @deprecated Please use field "aggregate" inside "organizationsConnection" instead */
+  organizationsAggregate?: Maybe<FieldContextOrganizationOrganizationsAggregationSelection>
+  organizationsConnection: FieldContextOrganizationsConnection
   owner: Array<Person>
   people: Array<Person>
   /** @deprecated Please use field "aggregate" inside "peopleConnection" instead */
@@ -5022,6 +5026,60 @@ export type FieldContextMeSpaceConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldContextMeSpaceConnectionSort>>
   where?: InputMaybe<FieldContextMeSpaceConnectionWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextOrganizationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<OrganizationSort>>
+  where?: InputMaybe<OrganizationWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextOrganizationsAggregateArgs = {
+  where?: InputMaybe<OrganizationWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextOrganizationsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextOrganizationsConnectionSort>>
+  where?: InputMaybe<FieldContextOrganizationsConnectionWhere>
 }
 
 /**
@@ -5662,6 +5720,9 @@ export type FieldContextDisconnectInput = {
   createdBy?: InputMaybe<Array<FieldContextCreatedByDisconnectFieldInput>>
   documents?: InputMaybe<Array<FieldContextDocumentsDisconnectFieldInput>>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceDisconnectFieldInput>>
+  organizations?: InputMaybe<
+    Array<FieldContextOrganizationsDisconnectFieldInput>
+  >
   people?: InputMaybe<Array<FieldContextPeopleDisconnectFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesDisconnectFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesDisconnectFieldInput>>
@@ -6179,6 +6240,130 @@ export type FieldContextMeSpaceUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextMeSpaceDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextMeSpaceDisconnectFieldInput>>
   update?: InputMaybe<FieldContextMeSpaceUpdateConnectionInput>
+}
+
+export type FieldContextOrganizationOrganizationsAggregateSelection = {
+  __typename?: 'FieldContextOrganizationOrganizationsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldContextOrganizationOrganizationsNodeAggregateSelection>
+}
+
+export type FieldContextOrganizationOrganizationsAggregationSelection = {
+  __typename?: 'FieldContextOrganizationOrganizationsAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldContextOrganizationOrganizationsNodeAggregateSelection>
+}
+
+export type FieldContextOrganizationOrganizationsNodeAggregateSelection = {
+  __typename?: 'FieldContextOrganizationOrganizationsNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  name: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+export type FieldContextOrganizationsAggregateInput = {
+  AND?: InputMaybe<Array<FieldContextOrganizationsAggregateInput>>
+  NOT?: InputMaybe<FieldContextOrganizationsAggregateInput>
+  OR?: InputMaybe<Array<FieldContextOrganizationsAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldContextOrganizationsNodeAggregationWhereInput>
+}
+
+export type FieldContextOrganizationsConnection = {
+  __typename?: 'FieldContextOrganizationsConnection'
+  aggregate: FieldContextOrganizationOrganizationsAggregateSelection
+  edges: Array<FieldContextOrganizationsRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldContextOrganizationsConnectionSort = {
+  node?: InputMaybe<OrganizationSort>
+}
+
+export type FieldContextOrganizationsConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextOrganizationsConnectionWhere>>
+  NOT?: InputMaybe<FieldContextOrganizationsConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextOrganizationsConnectionWhere>>
+  node?: InputMaybe<OrganizationWhere>
+}
+
+export type FieldContextOrganizationsDisconnectFieldInput = {
+  disconnect?: InputMaybe<OrganizationDisconnectInput>
+  where?: InputMaybe<FieldContextOrganizationsConnectionWhere>
+}
+
+export type FieldContextOrganizationsNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldContextOrganizationsNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldContextOrganizationsNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldContextOrganizationsNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type FieldContextOrganizationsRelationship = {
+  __typename?: 'FieldContextOrganizationsRelationship'
+  cursor: Scalars['String']['output']
+  node: Organization
+}
+
+export type FieldContextOrganizationsUpdateFieldInput = {
+  disconnect?: InputMaybe<Array<FieldContextOrganizationsDisconnectFieldInput>>
 }
 
 export type FieldContextPeopleAggregateInput = {
@@ -6890,6 +7075,7 @@ export type FieldContextUpdateInput = {
   documents?: InputMaybe<Array<FieldContextDocumentsUpdateFieldInput>>
   emergentName_SET?: InputMaybe<Scalars['String']['input']>
   meSpace?: InputMaybe<Array<FieldContextMeSpaceUpdateFieldInput>>
+  organizations?: InputMaybe<Array<FieldContextOrganizationsUpdateFieldInput>>
   people?: InputMaybe<Array<FieldContextPeopleUpdateFieldInput>>
   pulses?: InputMaybe<Array<FieldContextPulsesUpdateFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesUpdateFieldInput>>
@@ -7326,6 +7512,23 @@ export type FieldContextWhere = {
   meSpace_SINGLE?: InputMaybe<MeSpaceWhere>
   /** Return FieldContexts where some of the related MeSpaces match this filter */
   meSpace_SOME?: InputMaybe<MeSpaceWhere>
+  organizationsAggregate?: InputMaybe<FieldContextOrganizationsAggregateInput>
+  /** Return FieldContexts where all of the related FieldContextOrganizationsConnections match this filter */
+  organizationsConnection_ALL?: InputMaybe<FieldContextOrganizationsConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextOrganizationsConnections match this filter */
+  organizationsConnection_NONE?: InputMaybe<FieldContextOrganizationsConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextOrganizationsConnections match this filter */
+  organizationsConnection_SINGLE?: InputMaybe<FieldContextOrganizationsConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextOrganizationsConnections match this filter */
+  organizationsConnection_SOME?: InputMaybe<FieldContextOrganizationsConnectionWhere>
+  /** Return FieldContexts where all of the related Organizations match this filter */
+  organizations_ALL?: InputMaybe<OrganizationWhere>
+  /** Return FieldContexts where none of the related Organizations match this filter */
+  organizations_NONE?: InputMaybe<OrganizationWhere>
+  /** Return FieldContexts where one of the related Organizations match this filter */
+  organizations_SINGLE?: InputMaybe<OrganizationWhere>
+  /** Return FieldContexts where some of the related Organizations match this filter */
+  organizations_SOME?: InputMaybe<OrganizationWhere>
   owner?: InputMaybe<PersonWhere>
   owner_ALL?: InputMaybe<PersonWhere>
   owner_NONE?: InputMaybe<PersonWhere>
@@ -14205,6 +14408,807 @@ export type NotificationsConnection = {
   totalCount: Scalars['Int']['output']
 }
 
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type Organization = {
+  __typename?: 'Organization'
+  contexts: Array<FieldContext>
+  /** @deprecated Please use field "aggregate" inside "contextsConnection" instead */
+  contextsAggregate?: Maybe<OrganizationFieldContextContextsAggregationSelection>
+  contextsConnection: OrganizationContextsConnection
+  createdAt?: Maybe<Scalars['DateTime']['output']>
+  description?: Maybe<Scalars['String']['output']>
+  extractedFrom: Array<Document>
+  /** @deprecated Please use field "aggregate" inside "extractedFromConnection" instead */
+  extractedFromAggregate?: Maybe<OrganizationDocumentExtractedFromAggregationSelection>
+  extractedFromConnection: OrganizationExtractedFromConnection
+  id: Scalars['ID']['output']
+  mentionedIn: Array<FieldPulse>
+  /** @deprecated Please use field "aggregate" inside "mentionedInConnection" instead */
+  mentionedInAggregate?: Maybe<OrganizationFieldPulseMentionedInAggregationSelection>
+  mentionedInConnection: OrganizationMentionedInConnection
+  name: Scalars['String']['output']
+  updatedAt?: Maybe<Scalars['DateTime']['output']>
+}
+
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type OrganizationContextsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type OrganizationContextsAggregateArgs = {
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type OrganizationContextsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<OrganizationContextsConnectionSort>>
+  where?: InputMaybe<OrganizationContextsConnectionWhere>
+}
+
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type OrganizationExtractedFromArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DocumentSort>>
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type OrganizationExtractedFromAggregateArgs = {
+  where?: InputMaybe<DocumentWhere>
+}
+
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type OrganizationExtractedFromConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<OrganizationExtractedFromConnectionSort>>
+  where?: InputMaybe<OrganizationExtractedFromConnectionWhere>
+}
+
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type OrganizationMentionedInArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseSort>>
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type OrganizationMentionedInAggregateArgs = {
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * An organization, group, company, cooperative or institution named in an
+ * uploaded document (GOAL-298). Captured as a first-class relational entity so
+ * members can discover it and connect to the resources/stories it belongs to.
+ * Multi-label at the node level: ["Organization", "LifeSensor", "RelationalEntity"]
+ * — the GraphQL type maps the load-bearing "Organization" label; the ontology
+ * labels ride alongside (parity with migrated Persons).
+ *
+ * Writes are server-side ONLY (doc-ingestion via `executeAuthorizedWriteTool` in
+ * `lib/chat/hitl.ts`) — every generated mutation is disabled, so an Organization
+ * can only be minted / attached through the audited ingest path that already
+ * gates on `canEditContent`.
+ */
+export type OrganizationMentionedInConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<OrganizationMentionedInConnectionSort>>
+  where?: InputMaybe<OrganizationMentionedInConnectionWhere>
+}
+
+export type OrganizationAggregate = {
+  __typename?: 'OrganizationAggregate'
+  count: Count
+  node: OrganizationAggregateNode
+}
+
+export type OrganizationAggregateNode = {
+  __typename?: 'OrganizationAggregateNode'
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  name: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+export type OrganizationAggregateSelection = {
+  __typename?: 'OrganizationAggregateSelection'
+  count: Scalars['Int']['output']
+  createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  name: StringAggregateSelection
+  updatedAt: DateTimeAggregateSelection
+}
+
+export type OrganizationContextsAggregateInput = {
+  AND?: InputMaybe<Array<OrganizationContextsAggregateInput>>
+  NOT?: InputMaybe<OrganizationContextsAggregateInput>
+  OR?: InputMaybe<Array<OrganizationContextsAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<OrganizationContextsNodeAggregationWhereInput>
+}
+
+export type OrganizationContextsConnection = {
+  __typename?: 'OrganizationContextsConnection'
+  aggregate: OrganizationFieldContextContextsAggregateSelection
+  edges: Array<OrganizationContextsRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type OrganizationContextsConnectionSort = {
+  node?: InputMaybe<FieldContextSort>
+}
+
+export type OrganizationContextsConnectionWhere = {
+  AND?: InputMaybe<Array<OrganizationContextsConnectionWhere>>
+  NOT?: InputMaybe<OrganizationContextsConnectionWhere>
+  OR?: InputMaybe<Array<OrganizationContextsConnectionWhere>>
+  node?: InputMaybe<FieldContextWhere>
+}
+
+export type OrganizationContextsDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldContextDisconnectInput>
+  where?: InputMaybe<OrganizationContextsConnectionWhere>
+}
+
+export type OrganizationContextsNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<OrganizationContextsNodeAggregationWhereInput>>
+  NOT?: InputMaybe<OrganizationContextsNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<OrganizationContextsNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type OrganizationContextsRelationship = {
+  __typename?: 'OrganizationContextsRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldContext
+}
+
+export type OrganizationDisconnectInput = {
+  contexts?: InputMaybe<Array<OrganizationContextsDisconnectFieldInput>>
+  extractedFrom?: InputMaybe<
+    Array<OrganizationExtractedFromDisconnectFieldInput>
+  >
+  mentionedIn?: InputMaybe<Array<OrganizationMentionedInDisconnectFieldInput>>
+}
+
+export type OrganizationDocumentExtractedFromAggregateSelection = {
+  __typename?: 'OrganizationDocumentExtractedFromAggregateSelection'
+  count: CountConnection
+  node?: Maybe<OrganizationDocumentExtractedFromNodeAggregateSelection>
+}
+
+export type OrganizationDocumentExtractedFromAggregationSelection = {
+  __typename?: 'OrganizationDocumentExtractedFromAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<OrganizationDocumentExtractedFromNodeAggregateSelection>
+}
+
+export type OrganizationDocumentExtractedFromNodeAggregateSelection = {
+  __typename?: 'OrganizationDocumentExtractedFromNodeAggregateSelection'
+  blobKey: StringAggregateSelection
+  blobUrl: StringAggregateSelection
+  filename: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  mimeType: StringAggregateSelection
+  pageCount: IntAggregateSelection
+  sizeBytes: IntAggregateSelection
+  summary: StringAggregateSelection
+  uploadedAt: DateTimeAggregateSelection
+  userHint: StringAggregateSelection
+}
+
+export type OrganizationEdge = {
+  __typename?: 'OrganizationEdge'
+  cursor: Scalars['String']['output']
+  node: Organization
+}
+
+export type OrganizationExtractedFromAggregateInput = {
+  AND?: InputMaybe<Array<OrganizationExtractedFromAggregateInput>>
+  NOT?: InputMaybe<OrganizationExtractedFromAggregateInput>
+  OR?: InputMaybe<Array<OrganizationExtractedFromAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<OrganizationExtractedFromNodeAggregationWhereInput>
+}
+
+export type OrganizationExtractedFromConnection = {
+  __typename?: 'OrganizationExtractedFromConnection'
+  aggregate: OrganizationDocumentExtractedFromAggregateSelection
+  edges: Array<OrganizationExtractedFromRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type OrganizationExtractedFromConnectionSort = {
+  node?: InputMaybe<DocumentSort>
+}
+
+export type OrganizationExtractedFromConnectionWhere = {
+  AND?: InputMaybe<Array<OrganizationExtractedFromConnectionWhere>>
+  NOT?: InputMaybe<OrganizationExtractedFromConnectionWhere>
+  OR?: InputMaybe<Array<OrganizationExtractedFromConnectionWhere>>
+  node?: InputMaybe<DocumentWhere>
+}
+
+export type OrganizationExtractedFromDisconnectFieldInput = {
+  disconnect?: InputMaybe<DocumentDisconnectInput>
+  where?: InputMaybe<OrganizationExtractedFromConnectionWhere>
+}
+
+export type OrganizationExtractedFromNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<OrganizationExtractedFromNodeAggregationWhereInput>>
+  NOT?: InputMaybe<OrganizationExtractedFromNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<OrganizationExtractedFromNodeAggregationWhereInput>>
+  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  filename_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  filename_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  mimeType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  mimeType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  mimeType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  pageCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  pageCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  pageCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  sizeBytes_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  summary_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  summary_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  summary_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  uploadedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  uploadedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  userHint_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  userHint_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  userHint_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  userHint_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type OrganizationExtractedFromRelationship = {
+  __typename?: 'OrganizationExtractedFromRelationship'
+  cursor: Scalars['String']['output']
+  node: Document
+}
+
+export type OrganizationFieldContextContextsAggregateSelection = {
+  __typename?: 'OrganizationFieldContextContextsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<OrganizationFieldContextContextsNodeAggregateSelection>
+}
+
+export type OrganizationFieldContextContextsAggregationSelection = {
+  __typename?: 'OrganizationFieldContextContextsAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<OrganizationFieldContextContextsNodeAggregateSelection>
+}
+
+export type OrganizationFieldContextContextsNodeAggregateSelection = {
+  __typename?: 'OrganizationFieldContextContextsNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  emergentName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type OrganizationFieldPulseMentionedInAggregateSelection = {
+  __typename?: 'OrganizationFieldPulseMentionedInAggregateSelection'
+  count: CountConnection
+  node?: Maybe<OrganizationFieldPulseMentionedInNodeAggregateSelection>
+}
+
+export type OrganizationFieldPulseMentionedInAggregationSelection = {
+  __typename?: 'OrganizationFieldPulseMentionedInAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<OrganizationFieldPulseMentionedInNodeAggregateSelection>
+}
+
+export type OrganizationFieldPulseMentionedInNodeAggregateSelection = {
+  __typename?: 'OrganizationFieldPulseMentionedInNodeAggregateSelection'
+  content: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type OrganizationMentionedInAggregateInput = {
+  AND?: InputMaybe<Array<OrganizationMentionedInAggregateInput>>
+  NOT?: InputMaybe<OrganizationMentionedInAggregateInput>
+  OR?: InputMaybe<Array<OrganizationMentionedInAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<OrganizationMentionedInNodeAggregationWhereInput>
+}
+
+export type OrganizationMentionedInConnection = {
+  __typename?: 'OrganizationMentionedInConnection'
+  aggregate: OrganizationFieldPulseMentionedInAggregateSelection
+  edges: Array<OrganizationMentionedInRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type OrganizationMentionedInConnectionSort = {
+  node?: InputMaybe<FieldPulseSort>
+}
+
+export type OrganizationMentionedInConnectionWhere = {
+  AND?: InputMaybe<Array<OrganizationMentionedInConnectionWhere>>
+  NOT?: InputMaybe<OrganizationMentionedInConnectionWhere>
+  OR?: InputMaybe<Array<OrganizationMentionedInConnectionWhere>>
+  node?: InputMaybe<FieldPulseWhere>
+}
+
+export type OrganizationMentionedInDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
+  where?: InputMaybe<OrganizationMentionedInConnectionWhere>
+}
+
+export type OrganizationMentionedInNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<OrganizationMentionedInNodeAggregationWhereInput>>
+  NOT?: InputMaybe<OrganizationMentionedInNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<OrganizationMentionedInNodeAggregationWhereInput>>
+  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type OrganizationMentionedInRelationship = {
+  __typename?: 'OrganizationMentionedInRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldPulse
+}
+
+/** Fields to sort Organizations by. The order in which sorts are applied is not guaranteed when specifying many fields in one OrganizationSort object. */
+export type OrganizationSort = {
+  createdAt?: InputMaybe<SortDirection>
+  description?: InputMaybe<SortDirection>
+  id?: InputMaybe<SortDirection>
+  name?: InputMaybe<SortDirection>
+  updatedAt?: InputMaybe<SortDirection>
+}
+
+export type OrganizationWhere = {
+  AND?: InputMaybe<Array<OrganizationWhere>>
+  NOT?: InputMaybe<OrganizationWhere>
+  OR?: InputMaybe<Array<OrganizationWhere>>
+  contextsAggregate?: InputMaybe<OrganizationContextsAggregateInput>
+  /** Return Organizations where all of the related OrganizationContextsConnections match this filter */
+  contextsConnection_ALL?: InputMaybe<OrganizationContextsConnectionWhere>
+  /** Return Organizations where none of the related OrganizationContextsConnections match this filter */
+  contextsConnection_NONE?: InputMaybe<OrganizationContextsConnectionWhere>
+  /** Return Organizations where one of the related OrganizationContextsConnections match this filter */
+  contextsConnection_SINGLE?: InputMaybe<OrganizationContextsConnectionWhere>
+  /** Return Organizations where some of the related OrganizationContextsConnections match this filter */
+  contextsConnection_SOME?: InputMaybe<OrganizationContextsConnectionWhere>
+  /** Return Organizations where all of the related FieldContexts match this filter */
+  contexts_ALL?: InputMaybe<FieldContextWhere>
+  /** Return Organizations where none of the related FieldContexts match this filter */
+  contexts_NONE?: InputMaybe<FieldContextWhere>
+  /** Return Organizations where one of the related FieldContexts match this filter */
+  contexts_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return Organizations where some of the related FieldContexts match this filter */
+  contexts_SOME?: InputMaybe<FieldContextWhere>
+  createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
+  createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  description_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  description_EQ?: InputMaybe<Scalars['String']['input']>
+  description_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  description_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  extractedFromAggregate?: InputMaybe<OrganizationExtractedFromAggregateInput>
+  /** Return Organizations where all of the related OrganizationExtractedFromConnections match this filter */
+  extractedFromConnection_ALL?: InputMaybe<OrganizationExtractedFromConnectionWhere>
+  /** Return Organizations where none of the related OrganizationExtractedFromConnections match this filter */
+  extractedFromConnection_NONE?: InputMaybe<OrganizationExtractedFromConnectionWhere>
+  /** Return Organizations where one of the related OrganizationExtractedFromConnections match this filter */
+  extractedFromConnection_SINGLE?: InputMaybe<OrganizationExtractedFromConnectionWhere>
+  /** Return Organizations where some of the related OrganizationExtractedFromConnections match this filter */
+  extractedFromConnection_SOME?: InputMaybe<OrganizationExtractedFromConnectionWhere>
+  /** Return Organizations where all of the related Documents match this filter */
+  extractedFrom_ALL?: InputMaybe<DocumentWhere>
+  /** Return Organizations where none of the related Documents match this filter */
+  extractedFrom_NONE?: InputMaybe<DocumentWhere>
+  /** Return Organizations where one of the related Documents match this filter */
+  extractedFrom_SINGLE?: InputMaybe<DocumentWhere>
+  /** Return Organizations where some of the related Documents match this filter */
+  extractedFrom_SOME?: InputMaybe<DocumentWhere>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  mentionedInAggregate?: InputMaybe<OrganizationMentionedInAggregateInput>
+  /** Return Organizations where all of the related OrganizationMentionedInConnections match this filter */
+  mentionedInConnection_ALL?: InputMaybe<OrganizationMentionedInConnectionWhere>
+  /** Return Organizations where none of the related OrganizationMentionedInConnections match this filter */
+  mentionedInConnection_NONE?: InputMaybe<OrganizationMentionedInConnectionWhere>
+  /** Return Organizations where one of the related OrganizationMentionedInConnections match this filter */
+  mentionedInConnection_SINGLE?: InputMaybe<OrganizationMentionedInConnectionWhere>
+  /** Return Organizations where some of the related OrganizationMentionedInConnections match this filter */
+  mentionedInConnection_SOME?: InputMaybe<OrganizationMentionedInConnectionWhere>
+  /** Return Organizations where all of the related FieldPulses match this filter */
+  mentionedIn_ALL?: InputMaybe<FieldPulseWhere>
+  /** Return Organizations where none of the related FieldPulses match this filter */
+  mentionedIn_NONE?: InputMaybe<FieldPulseWhere>
+  /** Return Organizations where one of the related FieldPulses match this filter */
+  mentionedIn_SINGLE?: InputMaybe<FieldPulseWhere>
+  /** Return Organizations where some of the related FieldPulses match this filter */
+  mentionedIn_SOME?: InputMaybe<FieldPulseWhere>
+  name_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  name_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  name_EQ?: InputMaybe<Scalars['String']['input']>
+  name_IN?: InputMaybe<Array<Scalars['String']['input']>>
+  name_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  updatedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
+  updatedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type OrganizationsConnection = {
+  __typename?: 'OrganizationsConnection'
+  aggregate: OrganizationAggregate
+  edges: Array<OrganizationEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
 /** Pagination information (Relay) */
 export type PageInfo = {
   __typename?: 'PageInfo'
@@ -14274,6 +15278,17 @@ export type Person = PersonInterface & {
   /** @deprecated Please use field "aggregate" inside "memberOfConnection" instead */
   memberOfAggregate?: Maybe<PersonSpaceMembershipMemberOfAggregationSelection>
   memberOfConnection: PersonMemberOfConnection
+  /**
+   * Pulses (goal/resource/story) this person was identified as related to / named
+   * in but is not the author of (GOAL-298, MENTIONED_IN). Each FieldPulse is
+   * auth-filtered by its own directive, so a non-member of the parent Space sees an
+   * empty list. Written server-side by the doc-ingestion link path; open nested
+   * CONNECT is disabled.
+   */
+  mentionedIn: Array<FieldPulse>
+  /** @deprecated Please use field "aggregate" inside "mentionedInConnection" instead */
+  mentionedInAggregate?: Maybe<PersonFieldPulseMentionedInAggregationSelection>
+  mentionedInConnection: PersonMentionedInConnection
   name: Scalars['String']['output']
   onboardingCompletedSteps?: Maybe<Array<Scalars['String']['output']>>
   onboardingCurrentStepIndex?: Maybe<Scalars['Int']['output']>
@@ -14449,6 +15464,45 @@ export type PersonMemberOfConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<PersonMemberOfConnectionSort>>
   where?: InputMaybe<PersonMemberOfConnectionWhere>
+}
+
+/**
+ * A human user of the system.
+ * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
+ * Merged properties from reference schema for backward compatibility.
+ */
+export type PersonMentionedInArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldPulseSort>>
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A human user of the system.
+ * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
+ * Merged properties from reference schema for backward compatibility.
+ */
+export type PersonMentionedInAggregateArgs = {
+  where?: InputMaybe<FieldPulseWhere>
+}
+
+/**
+ * A human user of the system.
+ * Multi-label: ["Person", "User"]
+ * Authorization: Any authenticated user can view any Person (allows profile viewing after search).
+ * Dashboard filtering is handled in queries, not authorization.
+ * Merged properties from reference schema for backward compatibility.
+ */
+export type PersonMentionedInConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<PersonMentionedInConnectionSort>>
+  where?: InputMaybe<PersonMentionedInConnectionWhere>
 }
 
 /**
@@ -15078,6 +16132,7 @@ export type PersonDisconnectInput = {
   createdBy?: InputMaybe<Array<PersonCreatedByDisconnectFieldInput>>
   extractedFrom?: InputMaybe<Array<PersonExtractedFromDisconnectFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfDisconnectFieldInput>>
+  mentionedIn?: InputMaybe<Array<PersonMentionedInDisconnectFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesDisconnectFieldInput>>
 }
 
@@ -15355,6 +16410,28 @@ export type PersonFieldContextContextsNodeAggregateSelection = {
   title: StringAggregateSelection
 }
 
+export type PersonFieldPulseMentionedInAggregateSelection = {
+  __typename?: 'PersonFieldPulseMentionedInAggregateSelection'
+  count: CountConnection
+  node?: Maybe<PersonFieldPulseMentionedInNodeAggregateSelection>
+}
+
+export type PersonFieldPulseMentionedInAggregationSelection = {
+  __typename?: 'PersonFieldPulseMentionedInAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<PersonFieldPulseMentionedInNodeAggregateSelection>
+}
+
+export type PersonFieldPulseMentionedInNodeAggregateSelection = {
+  __typename?: 'PersonFieldPulseMentionedInNodeAggregateSelection'
+  content: StringAggregateSelection
+  createdAt: DateTimeAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  intensity: FloatAggregateSelection
+  title: StringAggregateSelection
+}
+
 export type PersonInterface = {
   createdAt: Scalars['DateTime']['output']
   email?: Maybe<Scalars['String']['output']>
@@ -15457,6 +16534,118 @@ export type PersonMemberOfUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonMemberOfDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonMemberOfDisconnectFieldInput>>
   update?: InputMaybe<PersonMemberOfUpdateConnectionInput>
+}
+
+export type PersonMentionedInAggregateInput = {
+  AND?: InputMaybe<Array<PersonMentionedInAggregateInput>>
+  NOT?: InputMaybe<PersonMentionedInAggregateInput>
+  OR?: InputMaybe<Array<PersonMentionedInAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<PersonMentionedInNodeAggregationWhereInput>
+}
+
+export type PersonMentionedInConnection = {
+  __typename?: 'PersonMentionedInConnection'
+  aggregate: PersonFieldPulseMentionedInAggregateSelection
+  edges: Array<PersonMentionedInRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type PersonMentionedInConnectionSort = {
+  node?: InputMaybe<FieldPulseSort>
+}
+
+export type PersonMentionedInConnectionWhere = {
+  AND?: InputMaybe<Array<PersonMentionedInConnectionWhere>>
+  NOT?: InputMaybe<PersonMentionedInConnectionWhere>
+  OR?: InputMaybe<Array<PersonMentionedInConnectionWhere>>
+  node?: InputMaybe<FieldPulseWhere>
+}
+
+export type PersonMentionedInDisconnectFieldInput = {
+  disconnect?: InputMaybe<FieldPulseDisconnectInput>
+  where?: InputMaybe<PersonMentionedInConnectionWhere>
+}
+
+export type PersonMentionedInNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<PersonMentionedInNodeAggregationWhereInput>>
+  NOT?: InputMaybe<PersonMentionedInNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<PersonMentionedInNodeAggregationWhereInput>>
+  content_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  content_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  content_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  content_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MAX_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_MIN_LTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_GTE?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LT?: InputMaybe<Scalars['Float']['input']>
+  intensity_SUM_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type PersonMentionedInRelationship = {
+  __typename?: 'PersonMentionedInRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldPulse
+}
+
+export type PersonMentionedInUpdateFieldInput = {
+  disconnect?: InputMaybe<Array<PersonMentionedInDisconnectFieldInput>>
 }
 
 export type PersonOwnsSpacesAggregateInput = {
@@ -15821,6 +17010,7 @@ export type PersonUpdateInput = {
   lastName_SET?: InputMaybe<Scalars['String']['input']>
   location_SET?: InputMaybe<Scalars['String']['input']>
   memberOf?: InputMaybe<Array<PersonMemberOfUpdateFieldInput>>
+  mentionedIn?: InputMaybe<Array<PersonMentionedInUpdateFieldInput>>
   onboardingCompletedSteps_POP?: InputMaybe<Scalars['Int']['input']>
   onboardingCompletedSteps_PUSH?: InputMaybe<Array<Scalars['String']['input']>>
   onboardingCompletedSteps_SET?: InputMaybe<Array<Scalars['String']['input']>>
@@ -15981,6 +17171,23 @@ export type PersonWhere = {
   memberOf_SINGLE?: InputMaybe<SpaceMembershipWhere>
   /** Return People where some of the related SpaceMemberships match this filter */
   memberOf_SOME?: InputMaybe<SpaceMembershipWhere>
+  mentionedInAggregate?: InputMaybe<PersonMentionedInAggregateInput>
+  /** Return People where all of the related PersonMentionedInConnections match this filter */
+  mentionedInConnection_ALL?: InputMaybe<PersonMentionedInConnectionWhere>
+  /** Return People where none of the related PersonMentionedInConnections match this filter */
+  mentionedInConnection_NONE?: InputMaybe<PersonMentionedInConnectionWhere>
+  /** Return People where one of the related PersonMentionedInConnections match this filter */
+  mentionedInConnection_SINGLE?: InputMaybe<PersonMentionedInConnectionWhere>
+  /** Return People where some of the related PersonMentionedInConnections match this filter */
+  mentionedInConnection_SOME?: InputMaybe<PersonMentionedInConnectionWhere>
+  /** Return People where all of the related FieldPulses match this filter */
+  mentionedIn_ALL?: InputMaybe<FieldPulseWhere>
+  /** Return People where none of the related FieldPulses match this filter */
+  mentionedIn_NONE?: InputMaybe<FieldPulseWhere>
+  /** Return People where one of the related FieldPulses match this filter */
+  mentionedIn_SINGLE?: InputMaybe<FieldPulseWhere>
+  /** Return People where some of the related FieldPulses match this filter */
+  mentionedIn_SOME?: InputMaybe<FieldPulseWhere>
   onboardingCompletedSteps_EQ?: InputMaybe<Array<Scalars['String']['input']>>
   onboardingCompletedSteps_INCLUDES?: InputMaybe<Scalars['String']['input']>
   onboardingCurrentStepIndex_EQ?: InputMaybe<Scalars['Int']['input']>
@@ -17696,6 +18903,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "notificationsConnection" instead */
   notificationsAggregate: NotificationAggregateSelection
   notificationsConnection: NotificationsConnection
+  organizations: Array<Organization>
+  /** @deprecated Please use the explicit field "aggregate" inside "organizationsConnection" instead */
+  organizationsAggregate: OrganizationAggregateSelection
+  organizationsConnection: OrganizationsConnection
   people: Array<Person>
   /** @deprecated Please use the explicit field "aggregate" inside "peopleConnection" instead */
   peopleAggregate: PersonAggregateSelection
@@ -18183,6 +19394,24 @@ export type QueryNotificationsConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<NotificationSort>>
   where?: InputMaybe<NotificationWhere>
+}
+
+export type QueryOrganizationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<OrganizationSort>>
+  where?: InputMaybe<OrganizationWhere>
+}
+
+export type QueryOrganizationsAggregateArgs = {
+  where?: InputMaybe<OrganizationWhere>
+}
+
+export type QueryOrganizationsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<OrganizationSort>>
+  where?: InputMaybe<OrganizationWhere>
 }
 
 export type QueryPeopleArgs = {
@@ -28244,6 +29473,40 @@ export type UnreadNotificationCountQueryVariables = Exact<{
 export type UnreadNotificationCountQuery = {
   __typename?: 'Query'
   unreadNotificationCount: number
+}
+
+export type GetOrganizationDetailsQueryVariables = Exact<{
+  organizationId: Scalars['ID']['input']
+}>
+
+export type GetOrganizationDetailsQuery = {
+  __typename?: 'Query'
+  organizations: Array<{
+    __typename?: 'Organization'
+    id: string
+    name: string
+    description?: string | null
+    createdAt?: any | null
+    updatedAt?: any | null
+    mentionedIn: Array<
+      | { __typename: 'CarePulse'; id: string; title: string; content: string }
+      | {
+          __typename: 'CoreValuePulse'
+          id: string
+          title: string
+          content: string
+        }
+      | { __typename: 'GoalPulse'; id: string; title: string; content: string }
+      | {
+          __typename: 'ResourcePulse'
+          id: string
+          title: string
+          content: string
+        }
+      | { __typename: 'StoryPulse'; id: string; title: string; content: string }
+    >
+    contexts: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+  }>
 }
 
 export type GetPersonQueryVariables = Exact<{
@@ -40636,6 +41899,100 @@ export const UnreadNotificationCountDocument = {
 } as unknown as DocumentNode<
   UnreadNotificationCountQuery,
   UnreadNotificationCountQueryVariables
+>
+export const GetOrganizationDetailsDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'GetOrganizationDetails' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'organizationId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'organizations' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'organizationId' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'mentionedIn' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'contexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  GetOrganizationDetailsQuery,
+  GetOrganizationDetailsQueryVariables
 >
 export const GetPersonDocument = {
   kind: 'Document',

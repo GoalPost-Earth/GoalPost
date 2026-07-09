@@ -125,6 +125,7 @@ const LABEL_TO_INFO_TYPE: Record<string, InfoEntityType> = {
   Document: 'Document',
   ResonanceLink: 'ResonanceLink',
   PromiseWeave: 'PromiseWeave',
+  Organization: 'Organization',
 }
 
 function labelsToInfoEntityType(
@@ -167,6 +168,7 @@ function idPrefixToInfoEntityType(id: string): InfoEntityType | null {
   if (id.startsWith('rl_')) return 'ResonanceLink'
   if (id.startsWith('doc_')) return 'Document'
   if (id.startsWith('person_')) return 'Person'
+  if (id.startsWith('organization_')) return 'Organization'
   return null
 }
 
@@ -211,6 +213,9 @@ function colorToInfoEntityType(
       return 'ResonanceLink'
     case '#2dd4bf':
       return 'PromiseWeave'
+    case '#5eead4':
+      // Organization — the cypher generator's styleFor color (GOAL-298).
+      return 'Organization'
     default:
       return null
   }

@@ -95,6 +95,7 @@ type Documents = {
   '\n  query GetAllWeSpaces {\n    weSpaces {\n      id\n      name\n      visibility\n      createdAt\n      owner {\n        id\n        firstName\n        lastName\n        name\n        email\n      }\n      members {\n        id\n        role\n        addedAt\n        member {\n          id\n          firstName\n          lastName\n          email\n        }\n      }\n      contexts {\n        id\n        title\n        createdAt\n      }\n    }\n  }\n': typeof types.GetAllWeSpacesDocument
   '\n  query MyNotifications($limit: Int = 20) {\n    myNotifications(limit: $limit) {\n      id\n      type\n      title\n      message\n      link\n      read\n      readAt\n      createdAt\n      actor {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n    }\n  }\n': typeof types.MyNotificationsDocument
   '\n  query UnreadNotificationCount {\n    unreadNotificationCount\n  }\n': typeof types.UnreadNotificationCountDocument
+  '\n  query GetOrganizationDetails($organizationId: ID!) {\n    organizations(where: { id_EQ: $organizationId }) {\n      id\n      name\n      description\n      createdAt\n      updatedAt\n      mentionedIn {\n        id\n        __typename\n        title\n        content\n      }\n      contexts {\n        id\n        title\n      }\n    }\n  }\n': typeof types.GetOrganizationDetailsDocument
   '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n        createdAt\n      }\n    }\n  }\n': typeof types.GetPersonDocument
   '\n  query getPersonDirectory($personId: ID!) {\n    people(where: { id_EQ: $personId }) {\n      id\n      firstName\n      lastName\n      name\n      photo\n    }\n  }\n': typeof types.GetPersonDirectoryDocument
   '\n  query getPersonProfile($personId: ID!) {\n    people(where: { id_EQ: $personId }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      photo\n      description\n      traits\n      passions\n      fieldsOfCare\n      interests\n      careManual\n      favorites\n      connections {\n        id\n        firstName\n        lastName\n        name\n        photo\n      }\n      connectionEdges {\n        connectedPersonId\n        why\n        interests\n      }\n      ownsSpaces {\n        ... on MeSpace {\n          id\n          name\n          visibility\n          createdAt\n          contexts {\n            id\n            title\n          }\n        }\n        ... on WeSpace {\n          id\n          name\n          visibility\n          createdAt\n          contexts {\n            id\n            title\n          }\n        }\n      }\n      memberOf {\n        id\n        role\n        space {\n          ... on MeSpace {\n            id\n            name\n            visibility\n            createdAt\n          }\n          ... on WeSpace {\n            id\n            name\n            visibility\n            createdAt\n          }\n        }\n      }\n    }\n  }\n': typeof types.GetPersonProfileDocument
@@ -286,6 +287,8 @@ const documents: Documents = {
     types.MyNotificationsDocument,
   '\n  query UnreadNotificationCount {\n    unreadNotificationCount\n  }\n':
     types.UnreadNotificationCountDocument,
+  '\n  query GetOrganizationDetails($organizationId: ID!) {\n    organizations(where: { id_EQ: $organizationId }) {\n      id\n      name\n      description\n      createdAt\n      updatedAt\n      mentionedIn {\n        id\n        __typename\n        title\n        content\n      }\n      contexts {\n        id\n        title\n      }\n    }\n  }\n':
+    types.GetOrganizationDetailsDocument,
   '\n  query getPerson($id: ID!) {\n    people(where: { id_EQ: $id }) {\n      id\n      firstName\n      lastName\n      name\n      email\n      traits\n      passions\n      fieldsOfCare\n      ownsSpaces {\n        id\n        name\n        visibility\n        createdAt\n      }\n    }\n  }\n':
     types.GetPersonDocument,
   '\n  query getPersonDirectory($personId: ID!) {\n    people(where: { id_EQ: $personId }) {\n      id\n      firstName\n      lastName\n      name\n      photo\n    }\n  }\n':
@@ -842,6 +845,12 @@ export function graphql(
 export function graphql(
   source: '\n  query UnreadNotificationCount {\n    unreadNotificationCount\n  }\n'
 ): (typeof documents)['\n  query UnreadNotificationCount {\n    unreadNotificationCount\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  query GetOrganizationDetails($organizationId: ID!) {\n    organizations(where: { id_EQ: $organizationId }) {\n      id\n      name\n      description\n      createdAt\n      updatedAt\n      mentionedIn {\n        id\n        __typename\n        title\n        content\n      }\n      contexts {\n        id\n        title\n      }\n    }\n  }\n'
+): (typeof documents)['\n  query GetOrganizationDetails($organizationId: ID!) {\n    organizations(where: { id_EQ: $organizationId }) {\n      id\n      name\n      description\n      createdAt\n      updatedAt\n      mentionedIn {\n        id\n        __typename\n        title\n        content\n      }\n      contexts {\n        id\n        title\n      }\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

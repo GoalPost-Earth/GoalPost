@@ -55,6 +55,7 @@ const OVERLAY_SPACE = '#86efac'
 const OVERLAY_FIELD = '#fde68a'
 const OVERLAY_PULSE = ['#93c5fd', '#a7f3d0', '#c4b5fd', '#fca5a5', '#fcd34d']
 const OVERLAY_RESONANCE = ['#d8b4fe', '#e9d5ff']
+const OVERLAY_ORGANIZATION = '#5eead4'
 
 // Node rows. Native scopes (root / space / field) carry fine-grained subtype
 // colors imported from bloom-view; the generic `Pulse` and `Resonance` rows
@@ -80,6 +81,11 @@ const LEGEND_NODES: LegendItem[] = [
   { label: 'Pulse', swatch: OVERLAY_PULSE[0], colors: OVERLAY_PULSE },
   { label: 'Resonance', swatch: OVERLAY_RESONANCE[0], colors: OVERLAY_RESONANCE },
   { label: 'Promise weave', swatch: WEAVE_NODE_COLOR, colors: [WEAVE_NODE_COLOR] },
+  {
+    label: 'Organization',
+    swatch: OVERLAY_ORGANIZATION,
+    colors: [OVERLAY_ORGANIZATION],
+  },
   { label: 'Person', swatch: PERSON_COLOR, colors: [PERSON_COLOR] },
 ]
 
