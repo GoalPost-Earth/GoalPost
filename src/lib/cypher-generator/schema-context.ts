@@ -47,6 +47,12 @@ export const ALLOWED_LABELS = [
   // subtype). Wraps a migrated care point so "show surrounding relationships"
   // has a starting point. Surfaced inside a FieldContext via HAS_WEAVE.
   'PromiseWeave',
+  // Uploaded source document attached to a FieldContext. The resource/goal/
+  // story pulses (and persons) extracted from it trace back via EXTRACTED_FROM.
+  // Without this label whitelisted, "what documents led to these resources?"
+  // was a silent dead end — the generator could neither name :Document nor
+  // traverse to it. Its human label is `filename`.
+  'Document',
 ] as const
 
 export type AllowedLabel = (typeof ALLOWED_LABELS)[number]
@@ -81,6 +87,15 @@ export const ALLOWED_RELATIONSHIPS = [
   'WEAVES',
   'WOVEN_FOR',
   'HAS_WEAVE',
+  // Document provenance edges. A FieldContext HAS_DOCUMENT each uploaded source
+  // doc; a pulse (or person) points at the doc it was EXTRACTED_FROM; the doc
+  // was UPLOADED_BY a member. These let the assistant answer "what documents
+  // are associated with these resources?" — a ResourcePulse reaches its source
+  // via (resource)-[:EXTRACTED_FROM]->(:Document). Node visibility stays gated
+  // by the post-execute Space filter (Document anchors through HAS_DOCUMENT).
+  'HAS_DOCUMENT',
+  'EXTRACTED_FROM',
+  'UPLOADED_BY',
   // Pulse authorship — TWO live edges, written by different surfaces.
   // INITIATED_BY is the canonical author edge (assistant + doc-ingest paths:
   // lib/chat/hitl.ts, api/pulse/create-from-conversation); CREATED_BY is
@@ -183,6 +198,18 @@ PromiseWeave { id, title, status, createdAt }
 
 FieldResonance { label, description } — semantic theme node.
 
+Document { id, filename, mimeType, summary, concepts, uploadedAt }
+  - An uploaded SOURCE FILE (an article, PDF, note) attached to a FieldContext.
+    Its human label is "filename" — caption Documents by filename, never by id,
+    blobKey, or blobUrl (those are internal). When a member uploads articles
+    into a field, each article becomes a Document, and the ResourcePulses /
+    GoalPulses / StoryPulses (and Persons) the extractor pulled out of it point
+    back at the Document via EXTRACTED_FROM. This is how "the documents that led
+    to these resources" are reached. When the user asks about "documents",
+    "source documents", "uploaded files/articles", or "where a resource came
+    from", MATCH the \`:Document\` label — these nodes are invisible to any query
+    that omits it.
+
 # Relationships (directed)
 
 (Person)-[:OWNS]->(Space)
@@ -202,6 +229,10 @@ FieldResonance { label, description } — semantic theme node.
 (PromiseWeave)-[:WEAVES]->(FieldPulse)     // the care point(s) it connects (1..n)
 (PromiseWeave)-[:WOVEN_FOR]->(Person)      // the person it concerns
 (PromiseWeave)-[:CREATED_BY]->(Person)     // authorship
+(FieldContext)-[:HAS_DOCUMENT]->(Document) // an uploaded source file attached to the field
+(FieldPulse)-[:EXTRACTED_FROM]->(Document) // the resource/goal/story pulse was extracted from this document — the "source document" for that pulse
+(Person)-[:EXTRACTED_FROM]->(Document)     // a person the extractor surfaced from this document
+(Document)-[:UPLOADED_BY]->(Person)        // the member who uploaded it (a :Person:User)
 (FieldPulse)-[:INITIATED_BY]->(Person)   // canonical author edge — who made / is credited for this pulse. Written by the assistant + doc-ingest paths; doc-ingested pulses point at the extracted author (often a :Person:PersonPulse), not the uploader.
 (FieldPulse)-[:CREATED_BY]->(Person)     // same meaning, written by the dashboard create flow and imports. NEITHER edge alone covers all pulses — ALWAYS match authorship as [:INITIATED_BY|CREATED_BY].
 (Person)-[:CONNECTED_TO]-(Person)  // bidirectional
@@ -242,6 +273,7 @@ Intent phrasing → edge:
 - "values it aligns to" → ALIGNED_TO (a CoreValuePulse)
 - "who is motivated by / provides this" → MOTIVATED_BY / PROVIDES (a Person)
 - "who created / authored / added this pulse" / "pulses by <person>" / "<person>'s contributions" → (FieldPulse)-[:INITIATED_BY|CREATED_BY]->(Person)
+- "documents" / "source documents" / "uploaded files/articles" / "what documents led to these resources" / "where did this resource come from" → (:Document), reached via (:FieldContext)-[:HAS_DOCUMENT]->(:Document) for a field's docs, and via (:FieldPulse)-[:EXTRACTED_FROM]->(:Document) for the source doc(s) behind specific pulses
 
 NOTE on HAS_MEMBER: it has two valid domains.
   (Space)-[:HAS_MEMBER]->(SpaceMembership)  // Space membership goes through a SpaceMembership node carrying the role

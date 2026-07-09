@@ -52,6 +52,9 @@ const NODE_STYLE: Record<string, { color: string; size: number }> = {
   // reified connector nodes) but with a distinct fuchsia hue so the two are
   // tellable apart on the canvas.
   PromiseWeave: { color: '#f0abfc', size: 22 },
+  // Uploaded source document — slate/steel hue, distinct from the pulses it
+  // was extracted into. Captioned by filename (see captionFor).
+  Document: { color: '#94a3b8', size: 24 },
   SpaceMembership: { color: '#cbd5e1', size: 18 },
 }
 
@@ -99,6 +102,9 @@ function captionFor(node: Node): string {
     typeof p.firstName === 'string' && typeof p.lastName === 'string'
       ? `${p.firstName} ${p.lastName}`.trim()
       : null,
+    // Document's human label is its filename (only Document carries this
+    // prop). Without it a Document would caption as the bare label "Document".
+    p.filename,
     p.label,
   ]
   for (const c of candidates) {
@@ -279,6 +285,23 @@ async function mapNodesToEnclosingSpaces(
         WITH collect(DISTINCT s1.id) + collect(DISTINCT s2.id) AS sids
         RETURN [sid IN sids WHERE sid IS NOT NULL] AS sids
         `,
+        { id }
+      )
+      const sids = (r.records[0]?.get('sids') as string[] | null) ?? []
+      for (const sid of sids) anchors.add(sid)
+      result.set(id, anchors)
+      continue
+    }
+
+    if (labels.includes('Document')) {
+      // A Document is anchored ONLY to its owning FieldContext's Space via the
+      // HAS_DOCUMENT context edge (KB: "inherits read access from the parent
+      // Space"). Do NOT let it fall through to the generic *1..3 fallback: that
+      // undirected sweep could anchor the doc through its uploader's unrelated
+      // spaces (e.g. (doc)-[:UPLOADED_BY]->(:User)<-[:IS_MEMBER]-(:SpaceMembership)
+      // <-[:HAS_MEMBER]-(:Space)) and over-expose it. Fail closed to the field.
+      const r = await runRead(
+        `MATCH (:Document {id: $id})<-[:HAS_DOCUMENT]-(:FieldContext)<-[:HAS_CONTEXT]-(s:Space) RETURN collect(DISTINCT s.id) AS sids`,
         { id }
       )
       const sids = (r.records[0]?.get('sids') as string[] | null) ?? []
