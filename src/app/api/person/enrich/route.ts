@@ -41,7 +41,10 @@ export async function POST(request: NextRequest) {
     if (personIds && personIds.length > 0) {
       peopleToEnrich = personIds
     } else {
-      // People to enrich: pulse authors PLUS the non-author contacts that
+      // People to enrich: pulse authors via EITHER live author edge
+      // (INITIATED_BY: assistant + doc-ingest; CREATED_BY: dashboard flow,
+      // imports — selecting only one leaves the enricher's own alternation
+      // unreachable for the other's pulses) PLUS the non-author contacts that
       // doc-ingestion attaches to a field (HAS_PERSON) or links to a pulse
       // (MENTIONED_IN, GOAL-298). Author-only selection silently skipped every
       // extracted :Person:PersonPulse, so their embeddings only ever landed via
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
       const result = await graph.query<{ id: string }>(
         `
         MATCH (p:Person)
-        WHERE EXISTS { (p)<-[:INITIATED_BY]-(:FieldPulse) }
+        WHERE EXISTS { (p)<-[:INITIATED_BY|CREATED_BY]-(:FieldPulse) }
            OR EXISTS { (:FieldContext)-[:HAS_PERSON]->(p) }
            OR EXISTS { (p)-[:MENTIONED_IN]->(:FieldPulse) }
         RETURN DISTINCT p.id as id

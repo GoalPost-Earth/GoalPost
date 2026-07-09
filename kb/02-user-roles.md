@@ -100,7 +100,7 @@ Authorization cascades Space → FieldContext → FieldPulse. The `@authorizatio
 | MeSpace        | Owner only                         | Owner only                          | Owner only                              |
 | WeSpace        | Owner or any member                | Owner, ADMIN, or MEMBER             | Owner only                              |
 | FieldContext   | Inherits from parent Space         | Owner, ADMIN, or MEMBER             | Owner or ADMIN                          |
-| FieldPulse     | Inherits from parent FieldContext  | Owner, ADMIN, or MEMBER             | Creator (`createdBy`), ADMIN, or owner  |
+| FieldPulse     | Inherits from parent FieldContext  | Owner, ADMIN, or MEMBER             | Creator (either author edge — `createdBy` or `initiatedBy`), ADMIN, or owner |
 
 ### MeSpace → WeSpace auto-conversion
 

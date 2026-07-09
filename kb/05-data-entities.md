@@ -24,7 +24,7 @@ FieldContext ──HAS_WEAVE──▶ PromiseWeave
 PromiseWeave ──WEAVES──▶ FieldPulse
 PromiseWeave ──WOVEN_FOR──▶ Person
 PromiseWeave ──CREATED_BY──▶ Person
-FieldPulse ──INITIATED_BY──▶ Person   (canonical author edge; CREATED_BY is a legacy alias — see src/lib/pulse-author.ts)
+FieldPulse ──INITIATED_BY──▶ Person   (canonical author edge — assistant + doc-ingest paths; CREATED_BY carries the same meaning but is written by the dashboard flow and imports. Read both, preferring INITIATED_BY — see src/lib/pulse-author.ts)
 FieldContext ──HAS_ORGANIZATION──▶ Organization   (GOAL-298; parallels HAS_PERSON)
 Person/Organization ──MENTIONED_IN──▶ FieldPulse   (GOAL-298; named-in / related-to, NOT authorship)
 Organization ──EXTRACTED_FROM──▶ Document

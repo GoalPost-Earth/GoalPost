@@ -124,7 +124,7 @@ async function searchPeopleByVector(
         communities: communities
       } AS metadata
     ORDER BY score DESC
-    LIMIT $limit
+    LIMIT toInteger($limit)
   `
 
   const rows = await graph.query<Record<string, unknown>>(cypher, {
@@ -199,7 +199,7 @@ async function searchChunksByVector(
         order: node.order
       } AS metadata
     ORDER BY score DESC
-    LIMIT $limit
+    LIMIT toInteger($limit)
   `
 
   const rows = await graph.query<Record<string, unknown>>(cypher, {
@@ -274,7 +274,7 @@ async function searchPulsesByVector(
         createdBy: coalesce(createdByA, createdByB)
       } AS metadata
     ORDER BY score DESC
-    LIMIT $limit
+    LIMIT toInteger($limit)
   `
 
   const rows = await graph.query<Record<string, unknown>>(cypher, {

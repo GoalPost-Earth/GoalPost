@@ -210,9 +210,10 @@ type Person implements PersonInterface
   # confirmed to return real cross-Space emails. Every gated scalar therefore
   # also carries `@selectable(onRead: true, onAggregate: false)`, which removes
   # it from ALL aggregate selection types (top-level and nested) at schema-build
-  # time — fail-closed by construction. `peopleAggregate { count }` (the only
-  # aggregate the app uses, GET_GRAPH_STATS) is unaffected. If you add a new
-  # gated field, add BOTH directives.
+  # time — fail-closed by construction. Plain `count` aggregates are
+  # unaffected (the app currently issues no aggregate selections at all —
+  # the last one, GET_GRAPH_STATS, was removed with the dead Graph View
+  # queries). If you add a new gated field, add BOTH directives.
   #
   # The predicate reuses the exact owner/member pattern from the WeSpace +
   # SpaceMembership authorization filters above, over the pre-existing
@@ -1114,12 +1115,15 @@ interface FieldPulse {
   intensity: Float
   createdBy: [Person!]! @declareRelationship
   """
-  Actual write-time creator edge. Persisted by every pulse-creation
-  path (`lib/chat/hitl.ts`, `api/pulse/create-from-conversation`, ...)
-  as `(:FieldPulse)-[:INITIATED_BY]->(:Person)`. `createdBy` is the
-  legacy alias still documented in kb/05-data-entities.md but never
-  written; consumers that need the real creator (Graph view edges,
-  RAG, person enrichment) read `initiatedBy`.
+  Canonical author edge, `(:FieldPulse)-[:INITIATED_BY]->(:Person)`,
+  written by the assistant + doc-ingest paths (`lib/chat/hitl.ts`,
+  `api/pulse/create-from-conversation`) — doc-ingested pulses point at
+  the extracted author. `createdBy` carries the same meaning but is
+  written by the dashboard create flow and the CSV/document imports, so
+  NEITHER field alone covers all pulses: consumers must read both,
+  preferring `initiatedBy` (see `resolvePulseAuthor` in
+  `src/lib/pulse-author.ts`) or matching the Cypher alternation
+  `[:INITIATED_BY|CREATED_BY]`.
   """
   initiatedBy: [Person!]! @declareRelationship
   context: [FieldContext!]! @declareRelationship
@@ -1195,7 +1199,12 @@ type GoalPulse implements FieldPulse
         where: {
           node: {
             OR: [
+              # Creator self-delete (kb/02 matrix) must accept BOTH live
+              # author edges: createdBy (dashboard flow, imports) and
+              # initiatedBy (assistant + doc-ingest paths) — either alone
+              # strands the other surface's creators.
               { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
+              { initiatedBy_SOME: { id_EQ: "$jwt.user.id" } }
               {
                 context_SOME: {
                   OR: [
@@ -1308,7 +1317,12 @@ type ResourcePulse implements FieldPulse
         where: {
           node: {
             OR: [
+              # Creator self-delete (kb/02 matrix) must accept BOTH live
+              # author edges: createdBy (dashboard flow, imports) and
+              # initiatedBy (assistant + doc-ingest paths) — either alone
+              # strands the other surface's creators.
               { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
+              { initiatedBy_SOME: { id_EQ: "$jwt.user.id" } }
               {
                 context_SOME: {
                   OR: [
@@ -1419,7 +1433,12 @@ type StoryPulse implements FieldPulse
         where: {
           node: {
             OR: [
+              # Creator self-delete (kb/02 matrix) must accept BOTH live
+              # author edges: createdBy (dashboard flow, imports) and
+              # initiatedBy (assistant + doc-ingest paths) — either alone
+              # strands the other surface's creators.
               { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
+              { initiatedBy_SOME: { id_EQ: "$jwt.user.id" } }
               {
                 context_SOME: {
                   OR: [
@@ -1512,6 +1531,67 @@ type CarePulse implements FieldPulse
         }
       }
     ]
+    # WRITE — split per kb/02-user-roles.md operation matrix:
+    #   CREATE/UPDATE → owner, ADMIN, or MEMBER on the owning space
+    #   DELETE        → creator, owner, or ADMIN
+    validate: [
+      {
+        operations: [CREATE, UPDATE]
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: {
+                      AND: [
+                        { member_SOME: { id_EQ: "$jwt.user.id" } }
+                        { role_IN: [ADMIN, MEMBER] }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      {
+        operations: [DELETE]
+        where: {
+          node: {
+            OR: [
+              # Creator self-delete (kb/02 matrix) must accept BOTH live
+              # author edges: createdBy (dashboard flow, imports) and
+              # initiatedBy (assistant + doc-ingest paths) — either alone
+              # strands the other surface's creators.
+              { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
+              { initiatedBy_SOME: { id_EQ: "$jwt.user.id" } }
+              {
+                context_SOME: {
+                  OR: [
+                    { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    {
+                      weSpace_SOME: {
+                        members_SOME: {
+                          AND: [
+                            { member_SOME: { id_EQ: "$jwt.user.id" } }
+                            { role_EQ: ADMIN }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
   ) {
   id: ID! @id
   title: String!
@@ -1552,6 +1632,67 @@ type CoreValuePulse implements FieldPulse
                 }
               ]
             }
+          }
+        }
+      }
+    ]
+    # WRITE — split per kb/02-user-roles.md operation matrix:
+    #   CREATE/UPDATE → owner, ADMIN, or MEMBER on the owning space
+    #   DELETE        → creator, owner, or ADMIN
+    validate: [
+      {
+        operations: [CREATE, UPDATE]
+        where: {
+          node: {
+            context_SOME: {
+              OR: [
+                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                {
+                  weSpace_SOME: {
+                    members_SOME: {
+                      AND: [
+                        { member_SOME: { id_EQ: "$jwt.user.id" } }
+                        { role_IN: [ADMIN, MEMBER] }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+      {
+        operations: [DELETE]
+        where: {
+          node: {
+            OR: [
+              # Creator self-delete (kb/02 matrix) must accept BOTH live
+              # author edges: createdBy (dashboard flow, imports) and
+              # initiatedBy (assistant + doc-ingest paths) — either alone
+              # strands the other surface's creators.
+              { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
+              { initiatedBy_SOME: { id_EQ: "$jwt.user.id" } }
+              {
+                context_SOME: {
+                  OR: [
+                    { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    {
+                      weSpace_SOME: {
+                        members_SOME: {
+                          AND: [
+                            { member_SOME: { id_EQ: "$jwt.user.id" } }
+                            { role_EQ: ADMIN }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       }

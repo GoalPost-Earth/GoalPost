@@ -136,7 +136,14 @@ export const GET_PERSON_OWNED_PULSES = graphql(`
           contexts {
             id
             title
-            pulses(where: { createdBy_SOME: { id_EQ: $personId } }) {
+            pulses(
+              where: {
+                OR: [
+                  { initiatedBy_SOME: { id_EQ: $personId } }
+                  { createdBy_SOME: { id_EQ: $personId } }
+                ]
+              }
+            ) {
               id
               title
               intensity
