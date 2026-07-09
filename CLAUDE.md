@@ -80,7 +80,7 @@ Project-level commands and agents in `.claude/`:
 | `/commit`           | Command | Commit using Conventional Commits: `type(scope): description`                     |
 | `security-reviewer`   | Agent   | Audit auth, JWT, space permissions, input validation (uses neo4j MCP)             |
 | `code-reviewer`       | Agent   | Review conventions, domain correctness, permissions (uses neo4j, shadcn, context7 MCPs) |
-| `e2e-tester`          | Agent   | Browser E2E testing (uses chrome-devtools, neo4j MCPs for data verification)      |
+| `e2e-tester`          | Agent   | Browser E2E testing (uses claude-in-chrome, neo4j MCPs for data verification)      |
 | `test-writer`         | Agent   | Write & run tests for Next.js + Neo4j + GraphQL (uses neo4j, context7 MCPs)      |
 | `cypher-reviewer`     | Agent   | Audit raw Cypher and `@cypher` SDL blocks for safety, perf, Space-scope, activity logs |
 | `jira-story-writer`   | Agent   | Draft and create well-structured Jira stories for project `GOAL` via the Jira MCP |
