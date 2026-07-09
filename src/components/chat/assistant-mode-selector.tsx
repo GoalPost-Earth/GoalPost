@@ -126,10 +126,10 @@ export function AssistantModeIndicator({
   const metadata = MODE_METADATA[mode]
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gp-primary/10 dark:bg-gp-primary/20 border border-gp-glass-border backdrop-blur-sm">
-      <span className="text-sm">{metadata?.icon}</span>
+    <div className="flex min-w-0 items-center gap-2 overflow-hidden rounded-full bg-gp-primary/10 dark:bg-gp-primary/20 border border-gp-glass-border px-3 py-1.5 backdrop-blur-sm">
+      <span className="shrink-0 text-sm">{metadata?.icon}</span>
       {showLabel && (
-        <span className="text-xs font-medium text-slate-900 dark:text-white">
+        <span className="min-w-0 truncate text-xs font-medium text-slate-900 dark:text-white">
           {metadata?.label}
         </span>
       )}
