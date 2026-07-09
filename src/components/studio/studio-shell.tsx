@@ -350,8 +350,14 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     )
   })()
 
+  // `h-dvh` (dynamic viewport height), not `h-screen`/`100vh`: on mobile
+  // browsers `100vh` is measured *including* the area behind the bottom browser
+  // toolbar, so on load (toolbar at full height) the bottom strip of the studio
+  // — the last content row and the floating action bar — is hidden behind the
+  // chrome until it collapses on scroll (GOAL-303). `dvh` tracks the *visible*
+  // viewport, so the app always fits. On desktop dvh === vh, so no change there.
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gp-surface dark:bg-gp-surface-dark">
+    <div className="flex flex-col h-dvh overflow-hidden bg-gp-surface dark:bg-gp-surface-dark">
       <CanvasGraphSync />
       <StudioChrome />
 

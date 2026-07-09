@@ -359,11 +359,11 @@ export function FieldContextSections({
                     }
                   >
                     <div className="flex justify-between items-start gap-4 mb-1">
-                      <div className="flex-1 space-y-1">
+                      <div className="flex-1 min-w-0 space-y-1">
                         <span className="text-[9px] uppercase font-semibold text-gp-primary block">
                           {formatResonanceLabel(resonance.label)}
                         </span>
-                        <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white leading-relaxed">
+                        <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white leading-relaxed break-words">
                           {getResonanceEndpointLabel(source)}
                           <span className="text-gp-ink-muted dark:text-gp-ink-soft font-normal">
                             {' '}

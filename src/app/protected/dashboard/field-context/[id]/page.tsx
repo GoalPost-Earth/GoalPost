@@ -1314,7 +1314,7 @@ export default function FieldContextDetailsPage() {
       {/* Scrollable content — pb-40 leaves a clear lane for the
           floating StudioCanvasActionBar at the bottom of the canvas so
           page content never sits directly under it at scroll end. */}
-      <main className="flex-1 relative z-10 overflow-y-auto scroller p-4 sm:p-8 pb-40">
+      <main className="flex-1 min-w-0 relative z-10 overflow-y-auto overflow-x-hidden scroller p-4 sm:p-8 pb-40">
         <div className="max-w-5xl mx-auto space-y-5 sm:space-y-6 animate-fade-in">
           {/* Top bar — back to the owning Space on the left; page-local
               actions on the right as pill buttons. On md+ the pills
@@ -1388,7 +1388,7 @@ export default function FieldContextDetailsPage() {
                 {spaceLabel}
                 {space?.name ? ` · ${space.name}` : ''}
               </span>
-              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gp-ink-strong leading-tight">
+              <h1 className="text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gp-ink-strong leading-tight break-words">
                 {context.title || 'Untitled field'}
               </h1>
               {context.emergentName && (
@@ -1799,7 +1799,7 @@ const FieldContextSkeleton: FC = () => (
         }}
       />
     </div>
-    <main className="flex-1 relative z-10 overflow-y-auto scroller p-4 sm:p-8 pb-40">
+    <main className="flex-1 min-w-0 relative z-10 overflow-y-auto overflow-x-hidden scroller p-4 sm:p-8 pb-40">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div className="h-4 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />
