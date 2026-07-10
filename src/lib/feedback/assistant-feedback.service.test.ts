@@ -1,4 +1,7 @@
-import { listUnclassifiedFeedback } from './assistant-feedback.service'
+import {
+  listAssistantFeedback,
+  listUnclassifiedFeedback,
+} from './assistant-feedback.service'
 
 /**
  * Regression test for the failure-triage false-positive fix.
@@ -72,5 +75,34 @@ describe('listUnclassifiedFeedback', () => {
     const rows = await listUnclassifiedFeedback()
     expect(Array.isArray(rows)).toBe(true)
     expect(rows).toHaveLength(0)
+  })
+})
+
+/**
+ * The /dev/ai-quality failure-triage board resolves its rating filter via
+ * resolveTriageRating (default 'negative', explicit '?rating=positive'
+ * override) and passes it straight into listAssistantFeedback. These pin the
+ * downstream half of that chain: listAssistantFeedback must thread whichever
+ * rating it is given into the read query, so the dashboard's negative default
+ * genuinely excludes positive (success) rows and the positive override genuinely
+ * shows them.
+ */
+describe('listAssistantFeedback rating scoping (dashboard failure-scope depends on this)', () => {
+  it("threads a negative filter into the read query (the dashboard's default)", async () => {
+    await listAssistantFeedback({ rating: 'negative' })
+
+    expect(runCalls).toHaveLength(1)
+    const [{ cypher, params }] = runCalls
+    expect(params.rating).toBe('negative')
+    // The WHERE clause is what turns the param into an actual exclusion of
+    // positives — assert it is present so the param isn't silently ignored.
+    expect(cypher).toContain('f.rating = $rating')
+  })
+
+  it("threads a positive filter into the read query (explicit ?rating=positive override)", async () => {
+    await listAssistantFeedback({ rating: 'positive' })
+
+    expect(runCalls).toHaveLength(1)
+    expect(runCalls[0]!.params.rating).toBe('positive')
   })
 })

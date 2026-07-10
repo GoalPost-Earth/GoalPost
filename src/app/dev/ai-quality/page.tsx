@@ -9,6 +9,7 @@ import {
 import { buildFixPrompt } from '@/lib/feedback/build-fix-prompt'
 import { FixPromptCopy } from '@/components/feedback/fix-prompt-copy'
 import { FeedbackStatusPicker } from '@/components/feedback/feedback-status-picker'
+import { resolveTriageRating } from './resolve-rating'
 
 interface PageProps {
   searchParams: Promise<{
@@ -66,10 +67,6 @@ function isSource(value: unknown): value is AssistantFeedbackSource {
   )
 }
 
-function isRating(value: unknown): value is AssistantFeedbackRating {
-  return value === 'positive' || value === 'negative'
-}
-
 export default async function AiQualityDashboard({ searchParams }: PageProps) {
   // Belt-and-braces with the layout: defense in depth. A direct route
   // hit must not bypass the env check if a future layout refactor drops
@@ -104,7 +101,10 @@ export default async function AiQualityDashboard({ searchParams }: PageProps) {
       typeof params.classification === 'string' && params.classification.length
         ? params.classification
         : undefined,
-    rating: isRating(params.rating) ? params.rating : undefined,
+    // Failure-triage board: default to negative only. Positive feedback
+    // (thumbs-up + suggestion-card ACCEPTs) is a success, not a bug — see
+    // resolveTriageRating. `?rating=positive` still opts into successes.
+    rating: resolveTriageRating(params.rating),
     goldenSet:
       params.goldenSet === 'true'
         ? true
