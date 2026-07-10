@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import type { ManagedTransaction } from 'neo4j-driver'
 import { driver } from '@/lib/neo4j/driver'
-import { computeCostUsd } from '@/lib/llm/pricing'
+import { computeCostUsd, KNOWN_MODELS } from '@/lib/llm/pricing'
 
 /**
  * Per-user, per-model LLM usage & cost metering (GOAL-297, Phase 1).
@@ -393,15 +393,45 @@ export async function getLlmUsageReport(
       costUsd: num(t?.get('costUsd')),
     }
 
-    const byModel: UsageByModelRow[] = byModelRes.records.map((r) => ({
-      model: (r.get('model') as string) ?? 'unknown',
-      provider: (r.get('provider') as string) ?? 'openai',
-      calls: num(r.get('calls')),
-      promptTokens: num(r.get('promptTokens')),
-      completionTokens: num(r.get('completionTokens')),
-      totalTokens: num(r.get('totalTokens')),
-      costUsd: num(r.get('costUsd')),
-    }))
+    // Seed a zero row for every model GoalPost is wired to call, then overlay
+    // the recorded aggregates. This makes the "Spend by model" table a
+    // catalog, not just a log: a configured-but-unused model (e.g. the Gemini
+    // multimodal extractor before any document is ingested, or any model with
+    // no spend in the selected window) shows with $0 rather than vanishing.
+    // Recorded models that aren't in the catalog (e.g. an env-overridden
+    // extraction model id) are still included from their usage rows.
+    const modelMap = new Map<string, UsageByModelRow>()
+    for (const km of KNOWN_MODELS) {
+      modelMap.set(km.model, {
+        model: km.model,
+        provider: km.provider,
+        calls: 0,
+        promptTokens: 0,
+        completionTokens: 0,
+        totalTokens: 0,
+        costUsd: 0,
+      })
+    }
+    for (const r of byModelRes.records) {
+      const model = (r.get('model') as string) ?? 'unknown'
+      modelMap.set(model, {
+        model,
+        provider: (r.get('provider') as string) ?? 'openai',
+        calls: num(r.get('calls')),
+        promptTokens: num(r.get('promptTokens')),
+        completionTokens: num(r.get('completionTokens')),
+        totalTokens: num(r.get('totalTokens')),
+        costUsd: num(r.get('costUsd')),
+      })
+    }
+    // Highest spend first; unused models fall to the bottom, ordered by id so
+    // the list is stable across windows.
+    const byModel: UsageByModelRow[] = Array.from(modelMap.values()).sort(
+      (a, b) =>
+        b.costUsd - a.costUsd ||
+        b.totalTokens - a.totalTokens ||
+        a.model.localeCompare(b.model)
+    )
 
     const byActor: UsageByActorRow[] = byActorRes.records.map((r) => ({
       actorId: (r.get('actorId') as string) ?? 'unattributed',

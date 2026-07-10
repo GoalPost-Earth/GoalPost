@@ -106,27 +106,30 @@ export default async function LlmUsageDashboard({ searchParams }: PageProps) {
       </Section>
 
       <Section title="Spend by model">
-        {byModel.length === 0 ? (
-          <Empty>No usage recorded yet in this window.</Empty>
-        ) : (
-          <ScrollTable>
-            <thead>
-              <Tr head>
-                <Th>Model</Th>
-                <Th>Provider</Th>
-                <Th right>Calls</Th>
-                <Th right>Prompt</Th>
-                <Th right>Completion</Th>
-                <Th right>Cost</Th>
-              </Tr>
-            </thead>
-            <tbody>
-              {byModel.map((row) => (
-                <ModelRow key={`${row.provider}:${row.model}`} row={row} />
-              ))}
-            </tbody>
-          </ScrollTable>
+        {/* Catalog-seeded: every wired model always renders (with $0 when it
+            has no spend in this window), so this table is never empty. */}
+        {totals.calls === 0 && (
+          <p className="text-xs text-gp-ink-muted dark:text-white/60">
+            No spend in this window — showing every configured model at $0.
+          </p>
         )}
+        <ScrollTable>
+          <thead>
+            <Tr head>
+              <Th>Model</Th>
+              <Th>Provider</Th>
+              <Th right>Calls</Th>
+              <Th right>Prompt</Th>
+              <Th right>Completion</Th>
+              <Th right>Cost</Th>
+            </Tr>
+          </thead>
+          <tbody>
+            {byModel.map((row) => (
+              <ModelRow key={`${row.provider}:${row.model}`} row={row} />
+            ))}
+          </tbody>
+        </ScrollTable>
       </Section>
 
       <Section title="Recent calls">
