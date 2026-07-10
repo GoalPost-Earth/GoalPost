@@ -775,10 +775,44 @@ Title:`,
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error'
 
+    // GOAL-296: an OpenAI 429 (rate / token-quota) previously fell through to
+    // the generic 500 below with `details: errorMessage`, leaking the raw
+    // provider error to the client — an abrupt stop with an internal string,
+    // exactly the kb/07 Rule 1 failure this ticket is about. Detect it and
+    // surface a plain, retryable message instead. The AI SDK / OpenAI SDK
+    // attaches `statusCode`/`status` 429 on rate-limit errors.
+    const statusCode = (
+      error as { statusCode?: number; status?: number } | null
+    )?.statusCode
+    const status = (error as { status?: number } | null)?.status
+    // Primary signal is the numeric status; the message regex is a best-effort
+    // fallback kept tight so unrelated errors that merely mention "quota" or a
+    // "429" count aren't misclassified as retryable.
+    const isRateLimited =
+      statusCode === 429 ||
+      status === 429 ||
+      /rate.?limit|too many requests|insufficient_quota/i.test(errorMessage)
+
+    if (isRateLimited) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "I'm getting a lot of requests right now and need a moment. Please try again in a few seconds.",
+          retryable: true,
+        }),
+        {
+          status: 429,
+          headers: { 'Content-Type': 'application/json', 'Retry-After': '10' },
+        }
+      )
+    }
+
+    // kb/07 Rule 1: do NOT echo the raw error string to the client. Keep it in
+    // the server log (above); hand back a plain, member-safe message.
     return new Response(
       JSON.stringify({
-        error: 'Failed to process simulation chat request',
-        details: errorMessage,
+        error:
+          "Something went wrong on our end while answering. Please try again in a moment.",
       }),
       {
         status: 500,

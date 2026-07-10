@@ -53,6 +53,91 @@ export function extractAssistantText(parts: unknown): string {
 }
 
 /**
+ * Machine-readable markers the assistant embeds in its text for the UI to turn
+ * into side effects (a PersonCard, a Bloom overlay). The frontend STRIPS these
+ * marker + JSON blocks before rendering — the raw payloads never reach the
+ * person's eyes (see components/assistant-ui/marker-strip.ts). The JSON
+ * intentionally carries raw ids / graph labels the UI needs.
+ *
+ * Order + incomplete-handling MUST mirror the frontend so the detector scans
+ * exactly what the reader saw (enhanced-message-text.tsx strips BLOOM first
+ * with hideIncomplete=true, then PERSON with hideIncomplete=false):
+ *   - BLOOM_GRAPH_OVERLAY: an unclosed/malformed block is dropped from the
+ *     marker onward — it never renders, so the detector must not see it.
+ *   - PERSON_PROFILE_FOUND: an unclosed/malformed block is LEFT IN PLACE —
+ *     the frontend renders the partial as raw text (a genuine Rule-1 leak the
+ *     reader saw), so the detector MUST still scan it and flag it. Dropping it
+ *     here would hide a real leak.
+ */
+const UI_MARKERS = [
+  { token: 'BLOOM_GRAPH_OVERLAY:', dropIncomplete: true },
+  { token: 'PERSON_PROFILE_FOUND:', dropIncomplete: false },
+] as const
+
+/**
+ * Remove every well-formed `<MARKER>: { …balanced JSON… }` block from `text`,
+ * mirroring what the frontend strips before display. Without this, the Rule-1
+ * detector scans the un-stripped marker payloads and flags their intentional
+ * ids / graph labels as leaks — a false positive that floods the triage
+ * dashboard with phantom `auto_rule_violation` rows (GOAL-296). We scan the
+ * SAME text a reader would, minus the machine-only payloads.
+ */
+export function stripUiMarkers(text: string): string {
+  let cleaned = text
+  for (const { token, dropIncomplete } of UI_MARKERS) {
+    let cursor = cleaned.indexOf(token)
+    while (cursor !== -1) {
+      const braceStart = cleaned.indexOf('{', cursor + token.length)
+      const end =
+        braceStart === -1 ? -1 : matchBalancedJsonEnd(cleaned, braceStart)
+      if (end === -1) {
+        // Incomplete / malformed (no `{`, or never closed). Mirror the
+        // frontend: BLOOM drops from the marker onward; PERSON is left in
+        // place (the reader saw the partial, so keep it for the detector).
+        if (dropIncomplete) cleaned = cleaned.substring(0, cursor)
+        break
+      }
+      cleaned = cleaned.substring(0, cursor) + cleaned.substring(end)
+      cursor = cleaned.indexOf(token)
+    }
+  }
+  return cleaned
+}
+
+/**
+ * Return the index just PAST the balanced `}` that closes the object starting
+ * at `braceStart`, or -1 if unbalanced. String-aware so a `}` inside a JSON
+ * string value doesn't close the object early.
+ */
+function matchBalancedJsonEnd(text: string, braceStart: number): number {
+  let depth = 0
+  let inString = false
+  let escapeNext = false
+  for (let i = braceStart; i < text.length; i++) {
+    const ch = text[i]
+    if (escapeNext) {
+      escapeNext = false
+      continue
+    }
+    if (ch === '\\') {
+      escapeNext = true
+      continue
+    }
+    if (ch === '"') {
+      inString = !inString
+      continue
+    }
+    if (inString) continue
+    if (ch === '{') depth++
+    else if (ch === '}') {
+      depth--
+      if (depth === 0) return i + 1
+    }
+  }
+  return -1
+}
+
+/**
  * Empty-text detector: no text part produced. Captures the "blank
  * assistant bubble" failure mode that Rule 7 in kb/07-ai-assistant-ux.md
  * exists to prevent — when it leaks through (e.g. a reasoning model
@@ -191,10 +276,14 @@ export function detectRuleViolations(text: string): AutoSignal[] {
  * signals. The chat route writes one feedback row per returned signal.
  */
 export function detectAutoSignals(parts: unknown): AutoSignal[] {
-  const text = extractAssistantText(parts)
+  // Rule-1 detection must run on what the PERSON saw, so strip the machine-only
+  // UI marker payloads first (GOAL-296) — otherwise their intentional ids /
+  // graph labels register as phantom leaks. Empty-text / tool-error detection
+  // work off the raw parts and are unaffected.
+  const visibleText = stripUiMarkers(extractAssistantText(parts))
   return [
     ...detectEmptyText(parts),
     ...detectToolErrors(parts),
-    ...detectRuleViolations(text),
+    ...detectRuleViolations(visibleText),
   ]
 }

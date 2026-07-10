@@ -103,14 +103,18 @@ The model will call any tool whose description matches its current intent. If a 
 
 ---
 
-## Rule 6 — Choose a non-reasoning model for the chat assistant.
+## Rule 6 — Keep the chat model's reasoning low, and never let its deliberation reach chat.
 
-**The bug this prevents:** reasoning models (e.g. `gpt-5.1`) "think internally" and can return empty text after a tool error, producing a silent assistant bubble. They also reject `temperature`.
+**The bug this prevents:** reasoning models "think internally" and can (a) return empty text after a tool error, producing a silent assistant bubble, and (b) reject `temperature`. They can also narrate their own retry deliberation into visible text ("let me retry without the cap…"), leaking internal mechanics to the user (GOAL-296).
 
-For chat + tool-calling + HITL flows the default is **`gpt-5.4`** (agent-tuned, non-reasoning) — see `DEFAULT_ASSISTANT_MODEL` in `src/lib/llm/factory.ts`. If you have reason to bump to a reasoning model, do so deliberately and:
+The current default is **`gpt-5.4`** — a reasoning model in the gpt-5 family, run at **`reasoningEffort: 'low'`** (`DEFAULT_ASSISTANT_MODEL` + `DEFAULT_ASSISTANT_REASONING_EFFORT` in `src/lib/llm/factory.ts`), routed through OpenAI's Responses API. Because it IS a reasoning model:
 
-1. Remove `temperature` from the `streamText`/`generateText` call for reasoning paths.
-2. Add a system-prompt requirement that the model emit at least one text part even when tool errors occur, so the UI bubble is never blank.
+1. Do NOT pass `temperature` on the `streamText`/`generateText` call — tune via `providerOptions.openai.reasoningEffort` instead (the route already does this).
+2. Keep the assistant-ui config from rendering `reasoning` parts in the bubble (they render invisibly by default — do not add a reasoning renderer without re-checking Rule 1).
+3. Make tool failures return a clean, member-safe message (never a raw error the model can paraphrase into "limit/cap" copy) — see `toErrorResult` in `chat-tools.ts` and the `query_for_bloom` orchestrator in `cypher-generator/index.ts`. A model given raw internals WILL surface them.
+4. System prompts must require at least one text part even when tool errors occur, so the UI bubble is never blank.
+
+> Historical note: earlier revisions of this rule called gpt-5.4 "non-reasoning." That was inaccurate — it is a low-effort reasoning model. The invariant that matters is #1–#4 above, not the model's family.
 
 ---
 
@@ -196,7 +200,7 @@ Before merging:
 - [ ] Every tool's result includes a human-readable name for any entity referenced (Rule 3)
 - [ ] Conditional tools are only registered when their required session state is present (Rule 4)
 - [ ] All write tools route through `runWriteTool` (Rule 5)
-- [ ] Model is non-reasoning unless you've handled the reasoning caveats (Rule 6)
+- [ ] Reasoning caveats #1–#4 handled — no `temperature`, reasoning parts stay unrendered, tool errors return member-safe copy, at least one text part on error (Rule 6)
 - [ ] `streamText` / `generateText` calls set `stopWhen: stepCountIs(N)` with N high enough to cover tool-call → tool-result → text (Rule 7)
 - [ ] System prompts still include the "NEVER expose raw IDs" rule (Rule 1)
 - [ ] Manually test the path "what {entity} is this" — assistant must respond with a name, not an id

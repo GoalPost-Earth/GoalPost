@@ -122,11 +122,17 @@ export async function generateAndRunForBloom(
     }
   }
 
+  // kb/07 Rule 1: NEVER surface `lastReason` to the person — it carries
+  // validator/executor internals (Neo4j "LIMIT: Invalid input …", label
+  // names, Cypher fragments) that the model would paraphrase into
+  // member-facing chat as a bogus "limit/cap" error (GOAL-296). Keep the
+  // real reason in the server log only; hand back a plain, member-safe line.
+  if (lastReason) {
+    console.warn('[cypher-generator] Gave up after retries:', lastReason)
+  }
   return {
     found: false,
-    summary: lastReason
-      ? `I was not able to build a safe graph query for that request (${lastReason}).`
-      : 'I was not able to build a safe graph query for that request.',
+    summary: "I couldn't pull that into the graph view just now. Try naming the specific thing you'd like to see, or I can search for it in text instead.",
     nodes: [],
     relationships: [],
   }

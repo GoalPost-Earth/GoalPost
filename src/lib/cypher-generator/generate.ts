@@ -29,7 +29,9 @@ const generatedSchema = z.object({
     ),
   rationale: z
     .string()
-    .describe('One sentence explaining what the query retrieves.'),
+    .describe(
+      'A short, friendly one-line description of what is being shown, written FOR THE PERSON (kb/07 Rule 1). This string is rendered verbatim as a UI label, so it MUST be plain English with NO technical/database wording (no "query", "MATCH", "returns", "nodes", "Cypher", label names) and NO raw ids. Good: "Care Practices and the goals inside it". Bad: "This query anchors on the user id and returns HAS_PULSE edges".'
+    ),
 })
 
 export interface GeneratorInput {
@@ -105,6 +107,7 @@ ${SCHEMA_DOC}
 7. Prefer matching by id (\`{id: $someId}\`) when an id is provided in the session context. Use CASE-INSENSITIVE substring for name/title fuzzing: \`toLower(ctx.title) CONTAINS toLower("care")\` — inline server-controlled literals (Space name, FieldContext title) safely quoted; do NOT introduce additional $parameters beyond $userId.
    SCOPE — activeSpaceId / activeFieldContextId are HINTS, not fences. For a general lookup ("what is the Artisans Cooperative?", "find X", "who is Y?") the user wants a match from ANYWHERE they can access — search across ALL their spaces/contexts (anchor only on \`$userId\` and fuzzy-match the name/title), NOT just the active field. Constrain to \`activeFieldContextId\` ONLY when the intent explicitly says "in this field" / "here". The runtime auth filter guarantees results stay limited to what the user may view, so a broad match is safe.
 8. Keep the query short and focused. Aim for ≤ 6 MATCH clauses — but use OPTIONAL MATCH freely when an intent calls for an expansive sweep (see Intent Glossary below).
+9. The \`rationale\` you emit is shown DIRECTLY to the person as a UI label (kb/07 Rule 1). Write it as a short, friendly, plain-English phrase describing what they'll see — e.g. "Care Practices and the goals inside it" or "How you and Marisa are connected". NEVER describe the query mechanics: no "query", "MATCH", "returns", "nodes/edges", "anchors on", label names (FieldContext, ResonanceLink, …), or raw ids. The \`cypher\` is internal; the \`rationale\` is human copy.
 
 # Intent Glossary — disambiguate the user's phrasing
 
