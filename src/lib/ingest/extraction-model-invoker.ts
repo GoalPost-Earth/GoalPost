@@ -119,6 +119,11 @@ export interface ExtractionModelInput {
   fieldContextId: string
   fieldContextTitle: string
   documentId: string
+  /**
+   * Uploader this extraction runs on behalf of. Used only for usage
+   * metering (GOAL-297), never for authorization. Null when unknown.
+   */
+  userId?: string | null
 }
 
 export type ExtractionResult =

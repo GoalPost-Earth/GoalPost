@@ -62,6 +62,7 @@ import {
 import { randomUUID } from 'node:crypto'
 import { detectAutoSignals } from '@/lib/feedback/auto-detect'
 import { createAssistantFeedback } from '@/lib/feedback/assistant-feedback.service'
+import { recordAiSdkUsage } from '@/lib/llm/usage/record-ai-sdk-usage'
 
 // Allow streaming responses up to 60 seconds (different modes may be verbose)
 export const maxDuration = 60
@@ -611,6 +612,18 @@ export async function POST(req: Request) {
           firstChunkLogged = true
           console.log('[Chat API] Time-to-first-token (ms):', sinceStart())
         },
+        // GOAL-297: meter this chat turn's token spend against the
+        // authenticated user. `totalUsage` aggregates every step of the
+        // multi-step loop (tool-call → tool-result → text). Fire-and-forget.
+        onFinish: ({ totalUsage }) => {
+          void recordAiSdkUsage(totalUsage, {
+            source: 'chat',
+            model: modelName,
+            principal: 'user',
+            userId: currentUserId,
+            threadId,
+          })
+        },
       })
 
       // AI SDK v5 + assistant-ui: Use toUIMessageStreamResponse for proper streaming
@@ -693,7 +706,15 @@ Title:`,
                 },
               ],
             })
-              .then(({ text }) => {
+              .then(({ text, totalUsage }) => {
+                // GOAL-297: meter the title-gen call (gpt-4o-mini).
+                void recordAiSdkUsage(totalUsage, {
+                  source: 'title-gen',
+                  model: 'gpt-4o-mini',
+                  principal: 'user',
+                  userId: currentUserId,
+                  threadId,
+                })
                 const title = text
                   .trim()
                   .replace(/^["'`]|["'`]$/g, '')
@@ -726,6 +747,15 @@ Title:`,
       tools: turnTools,
       stopWhen: turnStopWhen,
       providerOptions: assistantProviderOptions,
+    })
+
+    // GOAL-297: meter the non-streaming chat turn.
+    void recordAiSdkUsage(result.totalUsage, {
+      source: 'chat',
+      model: modelName,
+      principal: 'user',
+      userId: currentUserId,
+      threadId,
     })
 
     return new Response(

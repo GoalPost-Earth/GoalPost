@@ -689,6 +689,57 @@ into the `Log` stream — the same exemption as `ConversationTurn` and
 
 ---
 
+### LlmUsage
+
+Per-call token & cost metering (GOAL-297, Phase 1 — measurement). One node is
+written per LLM/embedding call at every instrumented site (chat, title-gen,
+cypher-gen, doc extract/summary, embeddings, person enrichment, resonance
+analysis, feedback classification). Cost is derived from a configurable
+per-model price table (`src/lib/llm/pricing.ts`, overridable via
+`LLM_PRICING_JSON`). This is an internal metering node — it is deliberately
+NOT part of the assistant's cypher-generator vocabulary (kb/07 Rule 9).
+
+**Properties:**
+
+| Field              | Notes                                                             |
+| ------------------ | ----------------------------------------------------------------- |
+| `id`               | `usage_<uuid>`                                                   |
+| `model`            | Exact model id (e.g. `gpt-5.4`, `gpt-4o-mini`, `text-embedding-3-small`, `gemini-2.5-pro`). |
+| `provider`         | `'openai' \| 'gemini'`                                            |
+| `source`           | Call site: `'chat' \| 'title-gen' \| 'cypher-gen' \| 'doc-extract' \| 'doc-summary' \| 'embeddings' \| 'enrichment' \| 'resonance-analysis' \| 'feedback-classify'` |
+| `promptTokens`     | Input tokens. Embeddings: counted locally via tiktoken (LangChain returns no usage). |
+| `completionTokens` | Output tokens (0 for embeddings).                                |
+| `totalTokens`      | Sum, or the model-reported total.                                |
+| `costUsd`          | Derived at write time from the price table.                      |
+| `priced`           | `false` when the model had no explicit rate (fallback used) — surfaced as "est." in the report. |
+| `tokensEstimated`  | Reserved; `false` today (embeddings use an exact tiktoken count). |
+| `principal`        | `'user'` (interactive) \| `'system'` (background/cron).          |
+| `userId`           | The acting user's id when `principal='user'` (also carried on the edge). |
+| `createdAt`        | datetime.                                                        |
+
+**Relationships:**
+
+- `(LlmUsage)-[:INCURRED_BY]->(:Person)` — the acting user (interactive spend).
+- `(LlmUsage)-[:INCURRED_BY]->(:SystemPrincipal {id:'system'})` — the singleton
+  principal for background/cron spend with no logged-in caller. MERGE'd on
+  first write.
+- `(LlmUsage)-[:IN_CONTEXT_OF]->(:ConversationThread)` — optional, for chat
+  spend. The usage node is always created even when the Person / thread
+  doesn't exist (edges are conditional; nothing is dropped).
+
+**Privacy / activity log:** LlmUsage writes are NOT mirrored into the `Log`
+stream — the same exemption as `ConversationTurn`, `ConversationChunk`, and
+`AssistantFeedback`. The nodes themselves are the audit trail. (Phase-2
+spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
+
+**Where it's consumed:**
+
+- `src/lib/llm/usage/llm-usage.service.ts` — write (`recordLlmUsage`) + report reads (`getLlmUsageReport`).
+- `src/lib/llm/pricing.ts` — per-model price table.
+- `src/app/dev/llm-usage/page.tsx` — dev-gated spend report (by user / by model / system).
+
+---
+
 ## Neo4j Constraints
 
 | Constraint                | Target                        |
@@ -704,6 +755,8 @@ into the `Log` stream — the same exemption as `ConversationTurn` and
 | `conversation_turn_id`         | ConversationTurn.id UNIQUE         |
 | `assistant_feedback_id`        | AssistantFeedback.id UNIQUE        |
 | `organization_id`              | Organization.id UNIQUE             |
+| `llm_usage_id`                 | LlmUsage.id UNIQUE                 |
+| `system_principal_id`          | SystemPrincipal.id UNIQUE         |
 
 ## Vector Indexes (1536 dimensions, cosine similarity)
 
@@ -727,6 +780,7 @@ into the `Log` stream — the same exemption as `ConversationTurn` and
 | `assistant_feedback_status`        | AssistantFeedback.status        |
 | `person_invite_token_hash`         | Person.inviteTokenHash          |
 | `person_reset_token_hash`          | Person.resetTokenHash           |
+| `llm_usage_createdAt`              | LlmUsage.createdAt              |
 
 ## ID Strategy
 

@@ -6,6 +6,7 @@ import type {
   ExtractionModelOutput,
 } from './extraction-model-invoker'
 import { ExtractionSchema, mapExtractionObject } from './extraction-schema'
+import { recordAiSdkUsage } from '@/lib/llm/usage/record-ai-sdk-usage'
 
 /**
  * Gemini multimodal extraction client. Sends the PDF (or any supported file
@@ -113,6 +114,14 @@ export function createGeminiExtractionModelClient(): ExtractionModelClient {
           ],
         },
       ],
+    })
+    // GOAL-297: meter Gemini doc-extraction spend against the uploader.
+    void recordAiSdkUsage(result.usage, {
+      source: 'doc-extract',
+      model: modelId,
+      provider: 'gemini',
+      principal: 'user',
+      userId: input.userId ?? null,
     })
     return mapExtractionObject(result.object)
   }

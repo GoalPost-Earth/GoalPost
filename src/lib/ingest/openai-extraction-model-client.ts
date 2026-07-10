@@ -6,6 +6,7 @@ import type {
   ExtractionModelOutput,
 } from './extraction-model-invoker'
 import { ExtractionSchema, mapExtractionObject } from './extraction-schema'
+import { recordAiSdkUsage } from '@/lib/llm/usage/record-ai-sdk-usage'
 
 /**
  * Production extraction-model client. Wraps `generateObject` against the
@@ -97,6 +98,14 @@ export function createOpenAIExtractionModelClient(): ExtractionModelClient {
       schema: ExtractionSchema,
       system: buildSystemPrompt(input),
       prompt: input.documentText,
+    })
+    // GOAL-297: meter doc-extraction spend against the uploader.
+    void recordAiSdkUsage(result.usage, {
+      source: 'doc-extract',
+      model: modelId,
+      provider: 'openai',
+      principal: 'user',
+      userId: input.userId ?? null,
     })
     return mapExtractionObject(result.object)
   }

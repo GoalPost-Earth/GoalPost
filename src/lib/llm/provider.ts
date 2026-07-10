@@ -10,6 +10,10 @@
  */
 
 import { z } from 'zod'
+import type {
+  LlmUsageSource,
+  LlmUsagePrincipal,
+} from './usage/llm-usage.service'
 
 /**
  * Core message interface for chat interactions
@@ -21,6 +25,21 @@ export interface Message {
 }
 
 /**
+ * Usage-metering opt-in (GOAL-297). When present on a provider call, the
+ * provider records a `(:LlmUsage)` node for that call attributed to the
+ * given principal. Absent → no metering (back-compat default). The
+ * provider is the natural home for this: `embed` / `structuredOutput`
+ * otherwise discard the usage the underlying SDK returns.
+ */
+export interface UsageMeter {
+  source: LlmUsageSource
+  principal: LlmUsagePrincipal
+  /** Required when principal = 'user'; ignored for 'system'. */
+  userId?: string | null
+  threadId?: string | null
+}
+
+/**
  * Options for chat completion
  */
 export interface ChatOptions {
@@ -29,6 +48,13 @@ export interface ChatOptions {
   topP?: number
   stop?: string[]
   stream?: boolean
+  /** Opt into per-call usage metering. See {@link UsageMeter}. */
+  meter?: UsageMeter
+}
+
+/** Options for the embed call (currently just metering opt-in). */
+export interface EmbedOptions {
+  meter?: UsageMeter
 }
 
 /**
@@ -76,9 +102,10 @@ export interface LLMProvider {
   /**
    * Generate embeddings for text inputs
    * @param texts - Array of text strings to embed
+   * @param options - Optional metering opt-in
    * @returns 2D array of embeddings (one per text)
    */
-  embed(texts: string[]): Promise<number[][]>
+  embed(texts: string[], options?: EmbedOptions): Promise<number[][]>
 
   /**
    * Generate structured output conforming to a Zod schema

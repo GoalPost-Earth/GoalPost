@@ -127,6 +127,20 @@ async function initializeDatabase() {
       // :RelationalEntity; the constraint targets the load-bearing :Organization.
       `CREATE CONSTRAINT organization_id IF NOT EXISTS
        FOR (n:Organization) REQUIRE n.id IS UNIQUE`,
+      // Per-user, per-model LLM usage & cost metering (GOAL-297). One
+      // LlmUsage node is written per LLM/embedding call; the /dev/llm-usage
+      // report aggregates by user/model. The id is generated client-side
+      // (`usage_<uuid>`), so a UNIQUE constraint guards against any double
+      // write and backs the id lookup — matches every other event-style node.
+      `CREATE CONSTRAINT llm_usage_id IF NOT EXISTS
+       FOR (n:LlmUsage) REQUIRE n.id IS UNIQUE`,
+      // Singleton principal that background/cron LLM spend is attributed to
+      // (GOAL-297). recordLlmUsage MERGEs (:SystemPrincipal {id:'system'});
+      // without this constraint two concurrent background jobs could MERGE
+      // duplicate nodes on a cold DB and split the "System (background)"
+      // row in the /dev/llm-usage report.
+      `CREATE CONSTRAINT system_principal_id IF NOT EXISTS
+       FOR (n:SystemPrincipal) REQUIRE n.id IS UNIQUE`,
     ]
 
     // Drop deprecated standalone indexes that now conflict with a constraint.
@@ -246,6 +260,14 @@ async function initializeDatabase() {
       // planner falls back to a full label scan as the feedback table grows.
       `CREATE INDEX assistant_feedback_createdAt IF NOT EXISTS
        FOR (f:AssistantFeedback) ON (f.createdAt)`,
+      // LlmUsage is the fastest-growing node in the system (one per LLM /
+      // embedding call, never pruned). The /dev/llm-usage report filters
+      // `WHERE u.createdAt >= datetime($since)` for its time windows and
+      // orders recent calls by createdAt DESC. Without this range index the
+      // windowed reads degrade to a full label scan of every usage row ever.
+      // (GOAL-297)
+      `CREATE INDEX llm_usage_createdAt IF NOT EXISTS
+       FOR (u:LlmUsage) ON (u.createdAt)`,
       // Classification cron filters `WHERE classification IS NULL`; an index
       // on the property lets that filter resolve via index seek rather than
       // a per-row property check.

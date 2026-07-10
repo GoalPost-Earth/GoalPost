@@ -9,6 +9,7 @@ import {
   LLMProvider,
   Message,
   ChatResponse,
+  EmbedOptions,
   StructuredOutputOptions,
   LLMCapability,
 } from '../provider'
@@ -63,7 +64,8 @@ export class MockLLMProvider implements LLMProvider {
     }
   }
 
-  async embed(texts: string[]): Promise<number[][]> {
+  async embed(texts: string[], _options?: EmbedOptions): Promise<number[][]> {
+    void _options
     this.calls.embed.push(texts)
 
     if (this.mockResponses.embeddings) {
@@ -93,7 +95,9 @@ export class MockLLMProvider implements LLMProvider {
     return {} as T
   }
 
-  estimateCost(): number {
+  estimateCost(_operation?: 'chat' | 'embed', _tokens?: number): number {
+    void _operation
+    void _tokens
     return 0 // Mock provider is free!
   }
 

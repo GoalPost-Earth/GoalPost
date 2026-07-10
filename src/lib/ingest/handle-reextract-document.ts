@@ -236,6 +236,7 @@ export async function handleReExtractDocument(
         fieldContextId: record.fieldContextId,
         fieldContextTitle,
         documentId: record.id,
+        userId: input.currentUserId,
       },
       modelClient
     ),
@@ -244,6 +245,7 @@ export async function handleReExtractDocument(
       filename: record.filename,
       hint: record.userHint,
       fieldContextTitle,
+      userId: input.currentUserId,
     }),
   ])
 

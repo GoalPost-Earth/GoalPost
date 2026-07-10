@@ -97,7 +97,12 @@ export async function generatePersonEmbedding(
   }
 
   const provider = getEmbeddingsProvider()
-  const embeddings = await provider.embed([bioText])
+  // GOAL-297: background person-embedding — system-attributed usage metering.
+  // Callers are the discover-resonances cron and the enricher repair path,
+  // both server-run with no interactive user.
+  const embeddings = await provider.embed([bioText], {
+    meter: { source: 'enrichment', principal: 'system' },
+  })
   const embedding = embeddings[0]
 
   await graph.query(

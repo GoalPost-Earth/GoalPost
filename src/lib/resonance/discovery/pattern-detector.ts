@@ -151,7 +151,12 @@ Be specific and evidence-based. Only create connections where the resonance is c
         },
         { role: 'user', content: prompt },
       ],
-      { schema: ResonancePatternSchema, temperature: 0.2 }
+      {
+        schema: ResonancePatternSchema,
+        temperature: 0.2,
+        // GOAL-297: background resonance analysis — system-attributed metering.
+        meter: { source: 'resonance-analysis', principal: 'system' },
+      }
     )
 
     return pattern as z.infer<typeof ResonancePatternSchema>

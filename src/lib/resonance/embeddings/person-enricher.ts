@@ -78,7 +78,12 @@ Be specific and evidence-based. Use the actual pulse content to support your ins
       },
       { role: 'user', content: prompt },
     ],
-    { schema: PersonInsightsSchema, temperature: 0.3 }
+    {
+      schema: PersonInsightsSchema,
+      temperature: 0.3,
+      // GOAL-297: background enrichment — system-attributed metering.
+      meter: { source: 'enrichment', principal: 'system' },
+    }
   )
 
   return insights
@@ -229,7 +234,9 @@ Traits: ${updatedProperties.traits.join(', ')}
 Summary: ${insights.summary}`
 
   const embeddingProvider = getEmbeddingsProvider()
-  const embeddings = await embeddingProvider.embed([bioText])
+  const embeddings = await embeddingProvider.embed([bioText], {
+    meter: { source: 'enrichment', principal: 'system' },
+  })
   const embedding = embeddings[0]
 
   // Store updated embedding

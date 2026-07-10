@@ -17,6 +17,7 @@ import { openai } from '@ai-sdk/openai'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 import { getAssistantModelId } from '@/lib/llm/factory'
+import { recordAiSdkUsage } from '@/lib/llm/usage/record-ai-sdk-usage'
 import { SCHEMA_DOC } from './schema-context'
 
 const generatedSchema = z.object({
@@ -51,6 +52,12 @@ export interface GeneratorInput {
   }>
   /** Optional correction hint from a prior validation failure. */
   correction?: string | null
+  /**
+   * Authenticated user this generation runs on behalf of. Used only for
+   * usage metering (GOAL-297) — never for query authorization (that stays
+   * in `execute.ts`). Null when unknown.
+   */
+  userId?: string | null
 }
 
 export interface GeneratedCypher {
@@ -312,12 +319,20 @@ ${sessionBlock}${canvasBlock}${correction}`
 export async function generateCypher(
   args: GeneratorInput
 ): Promise<GeneratedCypher> {
-  const model = openai(getAssistantModelId())
-  const { object } = await generateObject({
+  const modelId = getAssistantModelId()
+  const model = openai(modelId)
+  const { object, usage } = await generateObject({
     model,
     schema: generatedSchema,
     system: buildSystemPrompt(),
     prompt: buildUserPrompt(args),
+  })
+  // GOAL-297: meter the cypher-generation call against the requesting user.
+  void recordAiSdkUsage(usage, {
+    source: 'cypher-gen',
+    model: modelId,
+    principal: 'user',
+    userId: args.userId ?? null,
   })
   return { cypher: object.cypher, rationale: object.rationale }
 }

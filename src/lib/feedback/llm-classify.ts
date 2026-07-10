@@ -124,9 +124,13 @@ async function processRow(
         {
           schema: ClassificationSchema,
           systemPrompt: SYSTEM_PROMPT,
+          // GOAL-297: daily classify cron — system-attributed metering.
+          meter: { source: 'feedback-classify', principal: 'system' },
         }
       ),
-      embeddings.embed([questionText]),
+      embeddings.embed([questionText], {
+        meter: { source: 'feedback-classify', principal: 'system' },
+      }),
     ])
 
     const vec = embedding[0]

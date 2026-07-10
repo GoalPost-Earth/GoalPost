@@ -61,6 +61,7 @@ export async function generateAndRunForBloom(
       focalEntity: args.focalEntity,
       canvasVisibleEntities: args.canvasVisibleEntities ?? [],
       correction,
+      userId: args.userId,
     }
 
     let generated

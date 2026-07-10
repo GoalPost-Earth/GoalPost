@@ -13,12 +13,20 @@ import {
   Message,
   ChatOptions,
   ChatResponse,
+  EmbedOptions,
   StructuredOutputOptions,
+  UsageMeter,
   ProviderConfig,
   LLMProviderError,
   LLMCapability,
 } from '../provider'
 import { getAssistantModelId } from '../factory'
+import { computeCostUsd } from '../pricing'
+import { recordLlmUsage } from '../usage/llm-usage.service'
+import { countTokensBatch } from '../usage/count-tokens'
+
+/** The embedding model id is fixed for this provider (see constructor). */
+const EMBEDDING_MODEL_ID = 'text-embedding-3-small'
 
 /**
  * OpenAI Provider Implementation
@@ -41,14 +49,6 @@ export class OpenAIProvider implements LLMProvider {
   private embeddingsModel: OpenAIEmbeddings
   private apiKey: string
   private modelName: string
-
-  // Pricing (per 1K tokens) - approximate rates
-  private readonly pricing = {
-    'gpt-5.1': { prompt: 0.01, completion: 0.03 },
-    'gpt-4-turbo': { prompt: 0.01, completion: 0.03 },
-    'gpt-4': { prompt: 0.03, completion: 0.06 },
-    'text-embedding-3-small': 0.0001,
-  }
 
   constructor(private config: ProviderConfig = {}) {
     const apiKey = config.apiKey || process.env.OPENAI_API_KEY
@@ -77,6 +77,28 @@ export class OpenAIProvider implements LLMProvider {
       openAIApiKey: apiKey,
       modelName: 'text-embedding-3-small',
       ...(config.baseURL && { configuration: { baseURL: config.baseURL } }),
+    })
+  }
+
+  /**
+   * Record a `(:LlmUsage)` node for a metered call. Fire-and-forget — the
+   * provider must never let a metering write affect the caller. GOAL-297.
+   */
+  private meterUsage(
+    meter: UsageMeter,
+    modelId: string,
+    usage: { promptTokens: number; completionTokens: number; totalTokens?: number }
+  ): void {
+    void recordLlmUsage({
+      model: modelId,
+      provider: 'openai',
+      source: meter.source,
+      promptTokens: usage.promptTokens,
+      completionTokens: usage.completionTokens,
+      totalTokens: usage.totalTokens,
+      principal: meter.principal,
+      userId: meter.userId ?? null,
+      threadId: meter.threadId ?? null,
     })
   }
 
@@ -110,26 +132,27 @@ export class OpenAIProvider implements LLMProvider {
 
       const response = await llm.invoke(langchainMessages)
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tokenUsage = response.response_metadata?.tokenUsage as any
+      const usage = tokenUsage
+        ? {
+            promptTokens: tokenUsage.promptTokens || 0,
+            completionTokens: tokenUsage.completionTokens || 0,
+            totalTokens: tokenUsage.totalTokens || 0,
+          }
+        : undefined
+
+      // GOAL-297: record usage when the caller opted in.
+      if (options?.meter && usage) {
+        this.meterUsage(options.meter, this.modelName, usage)
+      }
+
       return {
         content:
           typeof response.content === 'string'
             ? response.content
             : JSON.stringify(response.content),
-        usage: response.response_metadata?.tokenUsage
-          ? {
-              promptTokens:
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (response.response_metadata.tokenUsage as any).promptTokens ||
-                0,
-              completionTokens:
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (response.response_metadata.tokenUsage as any)
-                  .completionTokens || 0,
-              totalTokens:
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (response.response_metadata.tokenUsage as any).totalTokens || 0,
-            }
-          : undefined,
+        usage,
         finishReason: response.response_metadata?.finish_reason as
           | string
           | undefined,
@@ -143,9 +166,20 @@ export class OpenAIProvider implements LLMProvider {
     }
   }
 
-  async embed(texts: string[]): Promise<number[][]> {
+  async embed(texts: string[], options?: EmbedOptions): Promise<number[][]> {
     try {
       const embeddings = await this.embeddingsModel.embedDocuments(texts)
+      // GOAL-297: LangChain's OpenAIEmbeddings returns no usage object, so
+      // count input tokens locally (embeddings are input-only). Metering is
+      // opt-in and fire-and-forget.
+      if (options?.meter) {
+        const promptTokens = countTokensBatch(EMBEDDING_MODEL_ID, texts)
+        this.meterUsage(options.meter, EMBEDDING_MODEL_ID, {
+          promptTokens,
+          completionTokens: 0,
+          totalTokens: promptTokens,
+        })
+      }
       return embeddings
     } catch (error) {
       throw new LLMProviderError(
@@ -161,9 +195,6 @@ export class OpenAIProvider implements LLMProvider {
     options: StructuredOutputOptions<T>
   ): Promise<T> {
     try {
-      // Use LangChain's withStructuredOutput for OpenAI
-      const structuredLlm = this.chatModel.withStructuredOutput(options.schema)
-
       // Convert to LangChain message format
       const langchainMessages = messages.map((msg) => ({
         role: msg.role,
@@ -178,6 +209,32 @@ export class OpenAIProvider implements LLMProvider {
         })
       }
 
+      // GOAL-297: when metering is requested, ask LangChain to return the
+      // raw message too (`includeRaw`) so we can read `usage_metadata` — the
+      // plain structured path discards it. Non-metered callers keep the
+      // original zero-overhead path unchanged.
+      if (options.meter) {
+        const structuredLlm = this.chatModel.withStructuredOutput(
+          options.schema,
+          { includeRaw: true }
+        )
+        const result = (await structuredLlm.invoke(langchainMessages)) as {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          raw: any
+          parsed: T
+        }
+        const um = result.raw?.usage_metadata
+        if (um) {
+          this.meterUsage(options.meter, this.modelName, {
+            promptTokens: um.input_tokens || 0,
+            completionTokens: um.output_tokens || 0,
+            totalTokens: um.total_tokens || 0,
+          })
+        }
+        return result.parsed
+      }
+
+      const structuredLlm = this.chatModel.withStructuredOutput(options.schema)
       const result = await structuredLlm.invoke(langchainMessages)
       return result as T
     } catch (error) {
@@ -190,20 +247,18 @@ export class OpenAIProvider implements LLMProvider {
   }
 
   estimateCost(operation: 'chat' | 'embed', tokens: number): number {
+    // Delegates to the shared, env-overridable price table (GOAL-297).
     if (operation === 'embed') {
-      return (tokens / 1000) * this.pricing['text-embedding-3-small']
+      return computeCostUsd(EMBEDDING_MODEL_ID, {
+        promptTokens: tokens,
+        completionTokens: 0,
+      }).costUsd
     }
-
-    // For chat, assume 50/50 prompt/completion split for estimation.
-    // Pricing is keyed by model family; fall back to gpt-5.1 if a newer
-    // model id hasn't been added to the table yet.
-    const chatPricing = this.pricing as unknown as Record<
-      string,
-      { prompt: number; completion: number }
-    >
-    const modelPricing = chatPricing[this.modelName] || this.pricing['gpt-5.1']
-    const promptCost = (tokens / 2000) * modelPricing.prompt
-    const completionCost = (tokens / 2000) * modelPricing.completion
-    return promptCost + completionCost
+    // Chat: assume a 50/50 prompt/completion split for a rough estimate.
+    const half = tokens / 2
+    return computeCostUsd(this.modelName, {
+      promptTokens: half,
+      completionTokens: half,
+    }).costUsd
   }
 }

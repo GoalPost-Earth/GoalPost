@@ -2,6 +2,7 @@ import { openai } from '@ai-sdk/openai'
 import { google } from '@ai-sdk/google'
 import { generateObject } from 'ai'
 import { z } from 'zod'
+import { recordAiSdkUsage } from '@/lib/llm/usage/record-ai-sdk-usage'
 
 /**
  * Document summarizer — produces a 1-paragraph synopsis + up to ~5 concept
@@ -28,6 +29,11 @@ export interface DocumentSummaryInput {
   filename: string
   hint: string | null
   fieldContextTitle: string
+  /**
+   * Uploader this summary runs on behalf of. Used only for usage metering
+   * (GOAL-297), never for authorization. Null when unknown.
+   */
+  userId?: string | null
 }
 
 export interface DocumentSummaryResult {
@@ -97,6 +103,14 @@ export function createOpenAIDocumentSummarizer(): DocumentSummarizerClient {
       system: buildSystemPrompt(input),
       prompt: input.documentText,
     })
+    // GOAL-297: meter doc-summary spend against the uploader.
+    void recordAiSdkUsage(result.usage, {
+      source: 'doc-summary',
+      model: modelId,
+      provider: 'openai',
+      principal: 'user',
+      userId: input.userId ?? null,
+    })
     return {
       summary: result.object.summary.trim(),
       concepts: (result.object.concepts ?? [])
@@ -141,6 +155,14 @@ export function createGeminiDocumentSummarizer(): DocumentSummarizerClient {
           ],
         },
       ],
+    })
+    // GOAL-297: meter Gemini doc-summary spend against the uploader.
+    void recordAiSdkUsage(result.usage, {
+      source: 'doc-summary',
+      model: modelId,
+      provider: 'gemini',
+      principal: 'user',
+      userId: input.userId ?? null,
     })
     return {
       summary: result.object.summary.trim(),

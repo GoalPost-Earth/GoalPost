@@ -28,7 +28,10 @@ export interface PulseEmbeddingResult {
  */
 async function generateEmbedding(text: string): Promise<number[]> {
   const provider = getEmbeddingsProvider()
-  const embeddings = await provider.embed([text])
+  // GOAL-297: background embedding — system-attributed usage metering.
+  const embeddings = await provider.embed([text], {
+    meter: { source: 'embeddings', principal: 'system' },
+  })
   return embeddings[0]
 }
 

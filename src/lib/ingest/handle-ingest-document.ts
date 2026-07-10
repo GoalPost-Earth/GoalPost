@@ -536,6 +536,7 @@ export async function handleIngestDocument(
         fieldContextId: input.fieldContextId,
         fieldContextTitle,
         documentId,
+        userId: input.currentUserId,
       },
       modelClient
     ),
@@ -544,6 +545,7 @@ export async function handleIngestDocument(
       filename: input.filename,
       hint: input.hint,
       fieldContextTitle,
+      userId: input.currentUserId,
     }),
   ])
 
