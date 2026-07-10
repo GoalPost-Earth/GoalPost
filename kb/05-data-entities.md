@@ -751,6 +751,7 @@ spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
 | `pulse_id`                | FieldPulse.id UNIQUE          |
 | `resonance_link_id`       | ResonanceLink.id UNIQUE       |
 | `promise_weave_id`        | PromiseWeave.id UNIQUE        |
+| `document_id`             | Document.id UNIQUE           |
 | `conversation_thread_id`       | ConversationThread.id UNIQUE       |
 | `conversation_turn_id`         | ConversationTurn.id UNIQUE         |
 | `assistant_feedback_id`        | AssistantFeedback.id UNIQUE        |

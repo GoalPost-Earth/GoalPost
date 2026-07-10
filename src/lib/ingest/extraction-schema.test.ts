@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { zodSchema } from 'ai'
 import { ExtractionSchema, mapExtractionObject } from './extraction-schema'
 
 /**
@@ -18,7 +18,23 @@ import { ExtractionSchema, mapExtractionObject } from './extraction-schema'
  * so a single stray `.optional()` silently breaks document ingest. These
  * tests walk the generated JSON schema and fail if any property is not
  * required, catching a reintroduced `.optional()` before it ships.
+ *
+ * IMPORTANT — assert the WIRE schema, not an adjacent artifact. The GOAL-282
+ * failure was a property missing from `required` in the JSON Schema the AI SDK
+ * actually transmits to OpenAI. That payload is built by `zodSchema()` (the
+ * `@ai-sdk/provider-utils` converter `generateObject` calls under the hood and
+ * hands straight to the provider as `response_format.json_schema.schema`), NOT
+ * by zod's own `z.toJSONSchema`. The two are independent converters that can
+ * drift across zod / AI-SDK version bumps — precisely on how `.nullable()`
+ * renders into `required`. Walking `z.toJSONSchema` would let a wire-level
+ * regression stay green in CI while every docx/office upload breaks in prod.
+ * So we walk `zodSchema(...).jsonSchema` — the exact bytes OpenAI validates.
  */
+
+/** The JSON Schema the AI SDK transmits for a given zod schema (wire payload). */
+function wireSchema(): Record<string, unknown> {
+  return zodSchema(ExtractionSchema).jsonSchema as Record<string, unknown>
+}
 
 /** Collect `path.key` for every object property missing from its `required`. */
 function collectNonRequired(
@@ -52,14 +68,11 @@ function collectNonRequired(
 
 describe('ExtractionSchema — OpenAI strict-mode contract (GOAL-282)', () => {
   it('marks every property required so OpenAI strict structured outputs accepts it', () => {
-    // `z.toJSONSchema` is an adjacent artifact, not the exact payload the AI
-    // SDK transmits (the provider runs its own zod→JSON-schema conversion).
-    // Both conversions drop a `.optional()` field from `required`, so this
-    // still catches the GOAL-282 regression — it just isn't the wire schema.
-    const json = z.toJSONSchema(ExtractionSchema)
+    // Walk the exact wire payload the AI SDK sends to OpenAI (see file header).
+    const json = wireSchema()
     // The walker below assumes subschemas are inlined (no `$ref`/`$defs`).
-    // Zod 4 inlines by default; assert it so a future change to ref output
-    // can't let the walker silently skip a ref'd object's properties.
+    // The AI SDK converter inlines by default; assert it so a future change to
+    // ref output can't let the walker silently skip a ref'd object's properties.
     expect(JSON.stringify(json)).not.toContain('$ref')
     const violations: string[] = []
     collectNonRequired(json, '$', violations)
@@ -67,7 +80,7 @@ describe('ExtractionSchema — OpenAI strict-mode contract (GOAL-282)', () => {
   })
 
   it('still allows the model to omit values via null (existingId on persons)', () => {
-    const json = z.toJSONSchema(ExtractionSchema) as unknown as {
+    const json = wireSchema() as unknown as {
       properties: {
         persons: { items: { properties: { existingId: { anyOf?: unknown[] } } } }
       }

@@ -369,13 +369,31 @@ export async function setAssistantFeedbackStatus(
 }
 
 /**
- * Bulk-fetch rows that still need classification + embedding. Used by the
- * daily classify cron.
+ * Bulk-fetch the rows that still need failure classification + embedding.
+ * Used by the daily classify cron.
+ *
+ * Scoped to NEGATIVE-rated feedback on purpose. The downstream classifier
+ * (see llm-classify.ts) is a *failure* analyzer — its prompt force-fits
+ * every row it is handed into exactly one of a fixed set of failure modes,
+ * with no "not a failure" escape hatch. So only signals that represent a
+ * potential failure belong here:
+ *   - negative `user_thumb` — an explicit thumbs-down, OR a suggestion-card
+ *     DISMISS (the inline suggestion cards record accept/dismiss as
+ *     positive/negative `user_thumb` feedback via submitAssistantFeedback).
+ *   - every `auto_*` signal — empty text, tool errors, Rule-1 leaks: all
+ *     emitted as negative by the auto-detectors.
+ *
+ * Positive rows are SUCCESS signals, not failures: a thumbs-up, or a
+ * capture-and-connect card ACCEPT recorded as
+ * `"Accepted suggested resonance: …"`. Classifying those force-fits a
+ * success into a failure mode and clusters it into the triage dashboard as
+ * a bogus "bad row" (the exact false positive behind this fix). Exclude
+ * them at the source so they never get a classification or a cluster.
  */
 export async function listUnclassifiedFeedback(
   limit = 50
 ): Promise<AssistantFeedbackRow[]> {
-  return listAssistantFeedback({ limit }).then((rows) =>
+  return listAssistantFeedback({ rating: 'negative', limit }).then((rows) =>
     rows.filter((row) => row.classification === null)
   )
 }

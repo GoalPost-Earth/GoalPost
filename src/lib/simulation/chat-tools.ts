@@ -34,9 +34,22 @@ type ToolError = {
 }
 
 function toErrorResult(prefix: string, error: unknown): ToolError {
+  // The raw exception message routinely carries technical internals — Neo4j /
+  // Cypher errors like "LIMIT: Invalid input. '25.0' is not a valid value",
+  // stack fragments, GraphQL field names. Feeding that string back to the model
+  // means it paraphrases it into member-facing copy ("a search-tool limit error
+  // on this surface"), surfacing a technical failure a participant can't make
+  // sense of — the exact complaint behind kb/07 Rule 1. So we keep the real
+  // error in the server log (for debugging) and hand the model a clean,
+  // member-safe message it can relay without leaking internals.
+  console.error('[Assistant Tool Error]', {
+    prefix,
+    error: error instanceof Error ? error.message : String(error),
+  })
   return {
     status: 'error',
-    message: `${prefix}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    message:
+      'I couldn’t complete that just now because of a temporary problem on our end. Please try again in a moment.',
   }
 }
 
@@ -1111,9 +1124,14 @@ export async function buildSimulationChatTools(
 
     search_pulse: tool({
       description:
-        'Search pulses by title/content across EVERY field the member can access (any Space they own or belong to). By DEFAULT — for a general question like "what is X?" / "find the X pulse" — omit contextId so the search fans out across ALL the member\'s accessible fields; the member should never have to name the field. Pass contextId (or contextTitle) ONLY when the user explicitly restricts to one field (e.g. "search THIS field", "in the Care field"). Do NOT auto-narrow to the active field for a general lookup. Also handles "pulses related to <a person>": when no pulse text matches but the query names a person in the graph (e.g. someone identified from an uploaded document), results include pulses connected to that person and each carries relatedVia ("authored" | "sharedDocument" | "sharedField") plus relatedPersonName. Use relatedPersonName as the person\'s name, and translate relatedVia into plain English (never print the literal token): relay the relationship honestly — a "sharedField" pulse is only a fieldmate of the person, NOT their own contribution.',
+        'Search OR list pulses across every field the member can access (any Space they own or belong to). Two modes. (1) KEYWORD SEARCH — pass a `query` to match pulse title/content. (2) ENUMERATE / LIST — leave `query` blank to list ALL pulses in a scope; use this for "all value pulses in my Me Space", "every goal here", "what pulses are in the Care field". When listing you MUST narrow with at least one of: `pulseType`, `spaceId`/`spaceName`, or `contextId`/`contextTitle` (a blank query with no scope is refused). To answer "all <type> pulses in <a Space the user named>", pass that pulseType PLUS the Space (spaceName, or spaceId from get_my_spaces) and leave query blank — this walks every field in that Space for you, so the member never has to name a field. By DEFAULT (general "what is X?" search) omit contextId/spaceId so it fans out across ALL accessible fields; add a context or space scope ONLY when the user restricts to one ("this field", "in my Me Space"). Also handles "pulses related to <a person>": when no pulse text matches but the query names a person in the graph (e.g. someone identified from an uploaded document), results include pulses connected to that person and each carries relatedVia ("authored" | "sharedDocument" | "sharedField") plus relatedPersonName. Use relatedPersonName as the person\'s name, and translate relatedVia into plain English (never print the literal token): relay the relationship honestly — a "sharedField" pulse is only a fieldmate of the person, NOT their own contribution.',
       inputSchema: z.object({
-        query: z.string().describe('Pulse title or content keyword.'),
+        query: z
+          .string()
+          .optional()
+          .describe(
+            'Pulse title or content keyword for a KEYWORD search. OMIT / leave blank to LIST every pulse in the given scope (you must then pass pulseType, a space, or a context).'
+          ),
         contextId: z
           .string()
           .optional()
@@ -1124,6 +1142,18 @@ export async function buildSimulationChatTools(
           .string()
           .optional()
           .describe('Optional field context title filter.'),
+        spaceId: z
+          .string()
+          .optional()
+          .describe(
+            'Optional Space ID scope (e.g. an id from get_my_spaces). Restrict the search/list to one Space, walking all of its fields. Use when the user names a Space ("in my Me Space").'
+          ),
+        spaceName: z
+          .string()
+          .optional()
+          .describe(
+            'Optional Space name scope (fuzzy match). Alternative to spaceId when only the Space name is known.'
+          ),
         pulseType: z
           .enum([
             'GoalPulse',
@@ -1134,7 +1164,9 @@ export async function buildSimulationChatTools(
             'FieldPulse',
           ])
           .optional()
-          .describe('Optional pulse type filter.'),
+          .describe(
+            'Optional pulse type filter. For "value" / "value-like" pulses use CoreValuePulse.'
+          ),
         limit: z
           .number()
           .int()
@@ -1144,9 +1176,11 @@ export async function buildSimulationChatTools(
           .describe('Optional max result count.'),
       }),
       execute: async (input: {
-        query: string
+        query?: string
         contextId?: string
         contextTitle?: string
+        spaceId?: string
+        spaceName?: string
         pulseType?:
           | 'GoalPulse'
           | 'ResourcePulse'
@@ -1164,15 +1198,28 @@ export async function buildSimulationChatTools(
         // searchPulses gates every result on viewablePulsePredicate($userId),
         // so the broad path stays Space-authorized.
         const resolvedContextId = input.contextId?.trim() || undefined
+        const resolvedSpaceId = input.spaceId?.trim() || undefined
         logToolDispatch('search_pulse', ctx, {
           ...input,
           resolvedContextId,
+          resolvedSpaceId,
         })
+        // Defense in depth: when the user restricts to a specific Space BY ID,
+        // gate on it explicitly so a "no access" is a clear message rather than
+        // a silent empty list. The PRIMARY guarantee is still
+        // viewablePulsePredicate($userId) inside searchPulses — it gates every
+        // returned pulse, so a spaceName scope (or an unauthorized spaceId)
+        // never leaks pulses the caller can't already see (fail closed).
+        if (resolvedSpaceId) {
+          const check = await assertCanViewSpace(ctx, resolvedSpaceId)
+          if (check !== true) return check
+        }
         try {
           const graph = await initGraph()
           return await searchPulses(graph, {
             ...input,
             contextId: resolvedContextId,
+            spaceId: resolvedSpaceId,
             // Scope results to Spaces this caller can view (raw Cypher bypasses
             // the GraphQL @authorization filter). Fails closed when absent.
             userId: ctx.currentUserId,
