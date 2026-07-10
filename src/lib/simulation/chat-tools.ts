@@ -70,6 +70,12 @@ export interface SimulationChatToolContext {
   spaceType?: 'MeSpace' | 'WeSpace' | null
   fieldContextTitle?: string | null
   /**
+   * The authenticated user's resolved display name. Forwarded to
+   * `query_for_bloom` so the co-visualization rescue can recognise the user
+   * when the model names them in a third-person intent (see RunForBloomArgs).
+   */
+  currentUserName?: string | null
+  /**
    * Which canvas surface the user is currently looking at, plus the
    * flat list of entities rendered there. Forwarded to
    * `query_for_bloom` so the Cypher generator can prefer a
@@ -1411,6 +1417,7 @@ export async function buildSimulationChatTools(
           const result = await generateAndRunForBloom({
             intent,
             userId: ctx.currentUserId,
+            userName: ctx.currentUserName ?? null,
             activeSpaceId: ctx.spaceId,
             activeSpaceName: ctx.spaceName ?? null,
             activeSpaceType: ctx.spaceType ?? null,

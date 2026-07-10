@@ -24,12 +24,24 @@ export {
   anchorLabelForType,
   anchorLabelForId,
   referencedCanvasEntities,
+  harvestIntentEntityIds,
+  isSelfReferential,
   formatNameList,
 }
 
 export interface RunForBloomArgs {
   intent: string
   userId: string
+  /**
+   * The authenticated user's resolved display name (first name is enough).
+   * The chat model often rewrites a first-person request ("my connection to
+   * X and Y") into a third-person intent that NAMES the user instead
+   * ("connections among John-Dag Addy, …") — dropping the first-person
+   * pronoun the covis rescue keyed on. Matching this name in the intent lets
+   * the rescue anchor the user's REAL id even when the model embedded a wrong
+   * one for them. Null when the name could not be resolved.
+   */
+  userName?: string | null
   activeSpaceId: string | null
   activeSpaceName: string | null
   activeSpaceType: 'MeSpace' | 'WeSpace' | null
@@ -188,6 +200,66 @@ function referencedCanvasEntities(
   return out
 }
 
+/**
+ * GoalPost ids are type-prefixed (`pulse_…`, `person_…`, `mespace_…`). The
+ * chat model embeds each named entity's id in the query_for_bloom intent as
+ * `Name [id=<id>]` — it echoes the exact format it is shown in the SESSION
+ * CONTEXT canvas block (`session-context-prompt.ts`, the `[id=${entity.id}]`
+ * line). Crucially it reproduces those markers even when THIS turn's
+ * `canvasVisibleEntities` snapshot is empty/stale, because it learned the ids
+ * earlier in the conversation — which is exactly the case this harvest exists
+ * to rescue. (If session-context-prompt.ts ever drops the `[id=…]` rendering,
+ * this recovery weakens — keep the two in sync.) Longest prefixes first so
+ * `resonance_link_…`/`mespace_…` aren't shadowed by `rl`/`me`.
+ */
+const INTENT_ID_RE =
+  /\b(?:resonance_link|organization|community|context|wespace|mespace|person|pulse|space|ctx|org|rl|me|ws)_[A-Za-z0-9-]{6,}/gi
+
+/**
+ * Harvest anchorable GoalPost ids directly from the intent text. Deterministic
+ * and safe to anchor on: every id is bound as a Cypher PARAMETER (never
+ * inlined) and `executeForBloom` re-gates every returned node through the
+ * Space authorization post-filter, so a stale, wrong, or unauthorised id
+ * simply yields no node — it can never surface data the user may not see. Only
+ * ids whose prefix maps to a known base label are kept.
+ */
+function harvestIntentEntityIds(intent: string): CanvasRef[] {
+  const seen = new Set<string>()
+  const out: CanvasRef[] = []
+  for (const match of intent.matchAll(INTENT_ID_RE)) {
+    const id = match[0]
+    if (seen.has(id)) continue
+    // Only harvest ids we can map to a base label for an index seek. Type is
+    // left blank so tryCovisualizationFallback derives the label from the id
+    // prefix via anchorLabelForId.
+    if (anchorLabelForId(id) === null) continue
+    seen.add(id)
+    out.push({ id, name: '', type: '' })
+  }
+  return out
+}
+
+/**
+ * True when the intent is self-referential — the current user is one of the
+ * entities to co-visualize, so their real id should be anchored. Two signals:
+ *   - a first-person pronoun ("show MY connection to X and Y"), OR
+ *   - the model rewrote the request in the third person and NAMED the user
+ *     (matched against their resolved display name, whole-word) — the reported
+ *     failure, where the model wrote "connections among John-Dag Addy, …" with
+ *     a WRONG id for the user, so only the name recovers them.
+ *
+ * The name branch requires a reasonably distinctive name (≥ 3 chars) so a very
+ * short or common-word first name doesn't match incidental prose. A residual
+ * false positive is harmless: it injects only the AUTHENTICATED user's own
+ * node, and only on the already-empty-result fallback path.
+ */
+function isSelfReferential(intent: string, userName?: string | null): boolean {
+  if (FIRST_PERSON_RE.test(intent)) return true
+  const name = (userName ?? '').trim()
+  if (name.length < 3) return false
+  return nameAppearsInIntent(intent, name)
+}
+
 /** "A" / "A and B" / "A, B and C" from a list of names. */
 function formatNameList(names: string[]): string {
   const clean = names.map((n) => n.trim()).filter(Boolean)
@@ -292,12 +364,24 @@ export async function generateAndRunForBloom(
     args.intent,
     args.canvasVisibleEntities ?? []
   )
+  // Also anchor any GoalPost ids the model embedded straight in the intent
+  // (e.g. `Name [id=pulse_…]`). This is the load-bearing recovery for the
+  // reported failure: the chat model knew the entities' ids from earlier in
+  // the conversation but `canvasVisibleEntities` arrived empty/stale, so the
+  // canvas match above found nothing and the rescue never fired. Dedup by id —
+  // a canvas ref (which carries a proper type) always wins over a bare intent
+  // id (whose label is derived from its prefix).
+  for (const ref of harvestIntentEntityIds(args.intent)) {
+    if (!referenced.some((e) => e.id === ref.id)) referenced.push(ref)
+  }
   // "show my connection to X and Y": the current user is an implicit entity
   // the generator/intent may never name, so their self↔X / self↔Y edges would
-  // otherwise be missing. Add them when the intent speaks in the first person
-  // and they aren't already referenced (deduped by id).
+  // otherwise be missing. Add them when the request is self-referential (see
+  // isSelfReferential) and they aren't already referenced (deduped by id). The
+  // name-match branch also rescues the case where the model embedded a WRONG
+  // id for the user, since we anchor their real id here, not the intent's.
   if (
-    FIRST_PERSON_RE.test(args.intent) &&
+    isSelfReferential(args.intent, args.userName) &&
     !referenced.some((e) => e.id === args.userId)
   ) {
     referenced.push({ id: args.userId, name: 'you', type: 'User' })

@@ -8,8 +8,20 @@ import {
   anchorLabelForType,
   anchorLabelForId,
   referencedCanvasEntities,
+  harvestIntentEntityIds,
+  isSelfReferential,
   formatNameList,
 } from './index'
+
+// The exact intent the chat model produced for the reported failure
+// (feedback_e62eba1d). The user's real id is NOT person_d0c9c0e0 — the model
+// embedded a phantom id for "you" — but Freedom/Ashong ids are real.
+const CAPTURED_INTENT =
+  'Show the connections among the canvas-visible entities John-Dag Addy ' +
+  '[id=person_d0c9c0e0-32e2-437a-b910-06a5efb2809f], Freedom ' +
+  '[id=pulse_18b4abf2-616c-41de-9634-b92c65f575ae], and Ashong ' +
+  '[id=person_00090649-2fee-417b-b61a-5f38f339b30e], including any shortest ' +
+  'paths and immediate relationships between them that the current user can see.'
 
 describe('anchorLabelForType', () => {
   it('collapses subtypes to their id-indexed base label', () => {
@@ -86,6 +98,100 @@ describe('referencedCanvasEntities', () => {
 
   it('returns nothing when the intent references no canvas entity', () => {
     expect(referencedCanvasEntities('what is the weather', canvas)).toHaveLength(0)
+  })
+})
+
+describe('harvestIntentEntityIds', () => {
+  it('harvests every prefixed GoalPost id embedded in the intent', () => {
+    const ids = harvestIntentEntityIds(CAPTURED_INTENT).map((r) => r.id)
+    expect(ids).toEqual([
+      'person_d0c9c0e0-32e2-437a-b910-06a5efb2809f',
+      'pulse_18b4abf2-616c-41de-9634-b92c65f575ae',
+      'person_00090649-2fee-417b-b61a-5f38f339b30e',
+    ])
+  })
+
+  it('leaves harvested refs type-blank so the id prefix drives the anchor label', () => {
+    const refs = harvestIntentEntityIds('pull up [id=pulse_abc12345]')
+    expect(refs).toEqual([{ id: 'pulse_abc12345', name: '', type: '' }])
+    // The fallback derives the label from the prefix when type is blank.
+    expect(anchorLabelForType(refs[0].type) ?? anchorLabelForId(refs[0].id)).toBe(
+      'FieldPulse'
+    )
+  })
+
+  it('dedupes repeated ids and ignores non-id prose', () => {
+    const refs = harvestIntentEntityIds(
+      'show pulse_freedom111 and again pulse_freedom111 and the weather'
+    )
+    expect(refs.map((r) => r.id)).toEqual(['pulse_freedom111'])
+  })
+
+  it('does not harvest bare UUIDs (no recognisable prefix)', () => {
+    expect(
+      harvestIntentEntityIds('node 752a42be-9a65-4a12-b385-18aa791a03cf')
+    ).toHaveLength(0)
+  })
+
+  it('recovers the co-visualization anchors from an EMPTY canvas (the reported bug)', () => {
+    // canvasVisibleEntities arrived empty/stale, so the canvas matcher finds
+    // nothing — but the intent still carries the ids. Merging harvest results
+    // gives the >=2 anchors the fallback needs to fire.
+    const fromCanvas = referencedCanvasEntities(CAPTURED_INTENT, [])
+    expect(fromCanvas).toHaveLength(0)
+    const merged = [...fromCanvas]
+    for (const ref of harvestIntentEntityIds(CAPTURED_INTENT)) {
+      if (!merged.some((e) => e.id === ref.id)) merged.push(ref)
+    }
+    expect(merged.length).toBeGreaterThanOrEqual(2)
+    expect(merged.map((r) => r.id)).toContain(
+      'pulse_18b4abf2-616c-41de-9634-b92c65f575ae'
+    )
+    expect(merged.map((r) => r.id)).toContain(
+      'person_00090649-2fee-417b-b61a-5f38f339b30e'
+    )
+  })
+})
+
+describe('isSelfReferential', () => {
+  it('is true for first-person pronouns regardless of name', () => {
+    expect(isSelfReferential('show my connection to X and Y', null)).toBe(true)
+    expect(isSelfReferential('how am I connected to Freedom', null)).toBe(true)
+    expect(isSelfReferential('connect me to Ashong', 'ignored')).toBe(true)
+  })
+
+  it('is true when a third-person rewrite names the user (the reported bug)', () => {
+    // No I/me/my — the model rewrote it and named the user instead.
+    expect(isSelfReferential(CAPTURED_INTENT, 'John-Dag')).toBe(true)
+  })
+
+  it('is false for a third-person intent that does not name the user', () => {
+    expect(
+      isSelfReferential(
+        'show the connection between Freedom and Ashong that the current user can see',
+        'John-Dag'
+      )
+    ).toBe(false)
+  })
+
+  it('ignores a missing or too-short user name (no distinctiveness)', () => {
+    expect(isSelfReferential('connections among Ed and Freedom', 'Ed')).toBe(false)
+    expect(isSelfReferential('connections among Freedom and Ashong', null)).toBe(
+      false
+    )
+    expect(isSelfReferential('connections among Freedom and Ashong', '')).toBe(
+      false
+    )
+  })
+
+  it('matches the user name only as a whole word', () => {
+    // "Grace" the user vs. "disgraceful" prose — must not match inside a word.
+    expect(isSelfReferential('a disgraceful situation with Freedom', 'Grace')).toBe(
+      false
+    )
+    expect(isSelfReferential('connections among Grace and Freedom', 'Grace')).toBe(
+      true
+    )
   })
 })
 

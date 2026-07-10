@@ -550,6 +550,7 @@ export async function POST(req: Request) {
       spaceName: resolvedNames.activeSpaceName,
       spaceType: resolvedNames.activeSpaceType,
       fieldContextTitle: resolvedNames.activeFieldContextTitle,
+      currentUserName: resolvedNames.currentUserName,
       canvasView: canvasView ?? null,
       canvasVisibleEntities: canvasVisibleEntities ?? [],
     })
