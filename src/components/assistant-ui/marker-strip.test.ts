@@ -4,7 +4,6 @@ import {
   extractBalancedJson,
   stripMarker,
   stripTrailingPartialMarker,
-  collectPayloads,
   parsePersonElements,
 } from './marker-strip'
 
@@ -93,15 +92,6 @@ describe('stripTrailingPartialMarker', () => {
     expect(stripTrailingPartialMarker('in bloom B', BLOOM_MARKER)).toBe(
       'in bloom B'
     )
-  })
-})
-
-describe('collectPayloads', () => {
-  it('returns every closed payload and ignores an unbalanced trailing one', () => {
-    const a = '{"summary":"a","nodes":[],"relationships":[]}'
-    const b = '{"summary":"b","nodes":[],"relationships":[]}'
-    const text = `${bloom(a)} x ${bloom(b)} y ${BLOOM_MARKER} {"summary":"c"`
-    expect(collectPayloads(text, BLOOM_MARKER)).toEqual([a, b])
   })
 })
 

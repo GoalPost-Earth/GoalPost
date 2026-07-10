@@ -17,10 +17,13 @@ import type { NVLNode, NVLRelationship } from '@/lib/cypher-generator/types'
  * The flow:
  *   - The assistant calls `query_for_bloom`, the server validates +
  *     executes safe Cypher, the tool returns NVL nodes/rels.
- *   - The model emits a `BLOOM_GRAPH_OVERLAY: {…}` marker in its
- *     reply text.
- *   - `EnhancedTextPart` parses the marker, calls `setOverlay`, and
- *     switches the canvas to Bloom.
+ *   - `BloomOverlayToolPart` (the `query_for_bloom` tool-call renderer)
+ *     reads that tool RESULT directly and calls `setOverlay`, switching
+ *     the canvas to Bloom. The overlay is applied from the authoritative
+ *     tool result — NOT from any JSON the model re-serialises into its
+ *     reply text (that path dropped nodes; see kb/07 Rule 3). Any stray
+ *     `BLOOM_GRAPH_OVERLAY:` marker the model still emits is only stripped
+ *     from the visible bubble by `EnhancedTextPart`, never parsed for data.
  *   - `BloomView` reads `useBloomOverlay()`; when an overlay is
  *     present, it renders the overlay instead of the default
  *     MeSpace/WeSpace cluster.

@@ -22,6 +22,7 @@ import { ConnectionSuggestionsToolPart } from '@/components/chat/connection-sugg
 import { ResonanceSuggestionsToolPart } from '@/components/chat/resonance-suggestions-tool-ui'
 import { ResonantPulseSuggestionsToolPart } from '@/components/chat/resonant-pulse-suggestions-tool-ui'
 import { READ_TOOL_STATUS_COMPONENTS } from '@/components/chat/tool-status-tool-ui'
+import { BloomOverlayToolPart } from '@/components/chat/bloom-overlay-tool-ui'
 import { MODE_METADATA } from '@/lib/simulation'
 
 export const Thread: FC = () => {
@@ -121,6 +122,12 @@ const AssistantMessage: FC = () => {
             tools: {
               by_name: {
                 ...READ_TOOL_STATUS_COMPONENTS,
+                // query_for_bloom drives the Bloom canvas from its OWN tool
+                // result (the authoritative nodes/relationships), not from the
+                // model re-serialising the payload into text — which dropped
+                // nodes and left the canvas near-empty. Listed after the spread
+                // so it overrides the status-only chip in READ_TOOL_STATUS_*.
+                query_for_bloom: BloomOverlayToolPart,
                 suggest_pulses: PulseSuggestionsToolPart,
                 suggest_connections: ConnectionSuggestionsToolPart,
                 suggest_resonances: ResonanceSuggestionsToolPart,
