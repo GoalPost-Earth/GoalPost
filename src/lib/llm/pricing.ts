@@ -31,7 +31,7 @@ export interface ModelRate {
  * NOTE: prices are placeholders where a public rate is not authoritative
  * here — treat env override as the source of truth in a real deployment.
  */
-const DEFAULT_RATES: Record<string, ModelRate> = {
+export const DEFAULT_RATES: Record<string, ModelRate> = {
   // Assistant chat / reasoning, cypher-gen, enrichment, resonance, extraction.
   'gpt-5.4': { inputPer1k: 0.00125, outputPer1k: 0.01 },
   // Thread-title generation + resonance title generation.
@@ -41,6 +41,42 @@ const DEFAULT_RATES: Record<string, ModelRate> = {
   // PDF doc-ingestion extraction / summary (non-OpenAI, priced separately).
   'gemini-2.5-pro': { inputPer1k: 0.00125, outputPer1k: 0.01 },
 }
+
+/** Provider a known model is billed under — used to tag catalog-seeded rows. */
+export type KnownModelProvider = 'openai' | 'gemini'
+
+export interface KnownModel {
+  /** Exact model id passed to the SDK / provider. */
+  model: string
+  provider: KnownModelProvider
+}
+
+/**
+ * Every model GoalPost is wired to call, with its provider. The usage
+ * dashboard seeds a $0 row per entry so a configured-but-unused model —
+ * e.g. the Gemini multimodal extractor before any document has been
+ * ingested — still renders, instead of being invisible until its first
+ * recorded call.
+ *
+ * Keep in sync with `DEFAULT_RATES` and the call sites in `src/lib/llm`
+ * and `src/lib/ingest`. Env-overridden model ids (`LLM_PRICING_JSON`, the
+ * `*_INGEST_EXTRACTION_MODEL` vars) are not enumerated here but still
+ * appear in the report once they record usage. Caveat: if an ingest model
+ * is env-overridden, the default id below still seeds a $0 row alongside
+ * the overridden model's real spend — a harmless phantom on this dev-only
+ * surface, not a per-env catalog.
+ */
+export const KNOWN_MODELS: readonly KnownModel[] = [
+  // Assistant chat / reasoning, cypher-gen, enrichment, resonance, OpenAI
+  // extraction, doc-summary.
+  { model: 'gpt-5.4', provider: 'openai' },
+  // Thread-title + resonance-title generation.
+  { model: 'gpt-4o-mini', provider: 'openai' },
+  // Embeddings.
+  { model: 'text-embedding-3-small', provider: 'openai' },
+  // PDF / image multimodal extraction.
+  { model: 'gemini-2.5-pro', provider: 'gemini' },
+]
 
 /**
  * Fallback rate for an unknown model id. Deliberately non-zero so a newly

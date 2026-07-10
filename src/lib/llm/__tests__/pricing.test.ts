@@ -6,6 +6,8 @@ import { describe, it, expect, afterEach } from '@jest/globals'
 import {
   computeCostUsd,
   getModelRate,
+  DEFAULT_RATES,
+  KNOWN_MODELS,
   __resetPricingCacheForTests,
 } from '../pricing'
 
@@ -75,5 +77,25 @@ describe('computeCostUsd', () => {
     const { rate, priced } = getModelRate('gpt-4o-mini')
     expect(priced).toBe(true)
     expect(rate.inputPer1k).toBe(0.00015)
+  })
+})
+
+describe('KNOWN_MODELS catalog', () => {
+  // The usage dashboard seeds a $0 row per KNOWN_MODELS entry, and pricing is
+  // keyed off DEFAULT_RATES. If those two sets drift, a wired model either
+  // regresses to invisible-until-used (missing from KNOWN_MODELS) or is priced
+  // but uncatalogued. Assert they stay identical in both directions.
+  it('is the exact same model-id set as DEFAULT_RATES', () => {
+    const catalogIds = new Set(KNOWN_MODELS.map((m) => m.model))
+    const rateIds = new Set(Object.keys(DEFAULT_RATES))
+    expect([...catalogIds].sort()).toEqual([...rateIds].sort())
+  })
+
+  it('has a unique id and a real provider for every entry', () => {
+    const ids = KNOWN_MODELS.map((m) => m.model)
+    expect(new Set(ids).size).toBe(ids.length)
+    for (const m of KNOWN_MODELS) {
+      expect(['openai', 'gemini']).toContain(m.provider)
+    }
   })
 })
