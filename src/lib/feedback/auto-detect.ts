@@ -214,9 +214,14 @@ export function detectToolErrors(parts: unknown): AutoSignal[] {
  *     sensitivity is what distinguishes "MeSpace" (leak) from "me space"
  *     (legitimate copy).
  *
- * Returns one signal per distinct violation type so the dashboard can
- * filter / aggregate. Multiple regex hits within the same category
- * collapse to a single signal — we only need to know the rule was broken,
+ * Returns AT MOST ONE signal per turn. A single response that trips
+ * several categories (e.g. a bare UUID *and* a graph label) is ONE
+ * failure to triage, not several — emitting a row per category flooded
+ * the dashboard with same-question/same-timestamp "duplicates". All
+ * broken rules are folded into a single `+`-joined `ruleViolated` /
+ * `autoSignal` (e.g. `rule_1_uuid_leak+rule_1_graph_label_leak`) so the
+ * detail is preserved on one centralised row. Multiple regex hits within
+ * a category still collapse — we only need to know the rule was broken,
  * not how many times.
  */
 const RAW_ID_PATTERN =
@@ -229,46 +234,35 @@ const GRAPH_LABEL_PATTERN =
 
 export function detectRuleViolations(text: string): AutoSignal[] {
   if (!text) return []
-  const signals: AutoSignal[] = []
+  const rules: string[] = []
 
   if (RAW_ID_PATTERN.test(text)) {
-    signals.push({
-      source: 'auto_rule_violation',
-      rating: 'negative',
-      autoSignal: 'rule_1_raw_id_leak',
-      ruleViolated: 'rule_1_raw_id_leak',
-    })
+    rules.push('rule_1_raw_id_leak')
   } else if (UUID_PATTERN.test(text)) {
     // Only flag a bare UUID when we didn't already flag a prefixed id —
-    // they overlap (`me_<uuid>` matches both) and we want one signal per
+    // they overlap (`me_<uuid>` matches both) and we want one entry per
     // category, not duplicates.
-    signals.push({
-      source: 'auto_rule_violation',
-      rating: 'negative',
-      autoSignal: 'rule_1_uuid_leak',
-      ruleViolated: 'rule_1_uuid_leak',
-    })
+    rules.push('rule_1_uuid_leak')
   }
 
-  if (TYPENAME_PATTERN.test(text)) {
-    signals.push({
+  if (TYPENAME_PATTERN.test(text)) rules.push('rule_1_typename_leak')
+  if (GRAPH_LABEL_PATTERN.test(text)) rules.push('rule_1_graph_label_leak')
+
+  if (rules.length === 0) return []
+
+  // Fold every broken rule into a single centralised signal — one row per
+  // turn, not one per category. `+`-joined so the dashboard/fix-prompt can
+  // still see exactly which rules tripped (order matches severity: id/uuid,
+  // then typename, then graph label).
+  const combined = rules.join('+')
+  return [
+    {
       source: 'auto_rule_violation',
       rating: 'negative',
-      autoSignal: 'rule_1_typename_leak',
-      ruleViolated: 'rule_1_typename_leak',
-    })
-  }
-
-  if (GRAPH_LABEL_PATTERN.test(text)) {
-    signals.push({
-      source: 'auto_rule_violation',
-      rating: 'negative',
-      autoSignal: 'rule_1_graph_label_leak',
-      ruleViolated: 'rule_1_graph_label_leak',
-    })
-  }
-
-  return signals
+      autoSignal: combined,
+      ruleViolated: combined,
+    },
+  ]
 }
 
 /**

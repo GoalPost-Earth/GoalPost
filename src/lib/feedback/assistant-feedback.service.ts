@@ -340,6 +340,11 @@ export async function setAssistantFeedbackGoldenSet(
  *
  * Idempotent: setting the same status twice just updates the timestamp,
  * which is fine — the timestamp records the latest acknowledgement.
+ *
+ * NOTE: `build-fix-prompt.ts` hand-inlines this same status-update Cypher
+ * so a pasted Claude Code session can resolve a row via the neo4j-dev MCP
+ * (no app service in scope there). If the status model gains a field, keep
+ * that prompt's Step 0 / Step 6 Cypher in sync with this SET.
  */
 export async function setAssistantFeedbackStatus(
   feedbackId: string,

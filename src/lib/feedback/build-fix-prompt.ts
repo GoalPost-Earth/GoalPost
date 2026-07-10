@@ -116,7 +116,10 @@ function hintFor(row: AssistantFeedbackRow): FixHint | null {
         guidance: `The \`${toolName}\` tool threw. Read its implementation, the captured tool args + error in \`responseParts\`, and identify whether the failure is the tool's bug or bad input from the model. Fix the underlying issue, not the symptom.`,
       }
     }
-    if (row.autoSignal === 'rule_1_raw_id_leak' || row.autoSignal === 'rule_1_uuid_leak') {
+    // Any Rule-1 leak — including a centralised `+`-joined multi-rule
+    // signal like `rule_1_uuid_leak+rule_1_graph_label_leak` — routes to
+    // the raw-id-leak playbook (tool result shape first, prompt second).
+    if (row.autoSignal.startsWith('rule_1_')) {
       return CLASSIFICATION_HINTS.raw_id_leak
     }
   }
@@ -212,6 +215,17 @@ ${row.source === 'user_thumb' ? '- The user\'s comment above is ground truth. Wh
 ${hintBlock}
 ## What I want you to do
 
+0. **Claim this row** — before anything else, mark it in progress so a human watching /dev/ai-quality sees it's being worked (and won't double-assign it). Run \`mcp__neo4j-dev__neo4j-write_neo4j_cypher\` with:
+
+   \`\`\`cypher
+   MATCH (f:AssistantFeedback {id: $feedbackId})
+   SET f.status = 'in_progress',
+       f.statusUpdatedAt = datetime(),
+       f.statusNote = $statusNote
+   \`\`\`
+
+   params: \`{ "feedbackId": "${row.id}", "statusNote": "Claude Code investigating" }\`
+
 1. **Diagnose** — explain in 2-3 sentences what's broken and why the captured response happened.
 2. **Implement the fix** — edit the files above (or others if your diagnosis points elsewhere). Keep the change minimal — fix this failure, do not refactor surrounding code.
 3. **Preserve invariants** — don't break other modes, don't expose raw ids (Rule 1), keep \`stopWhen\` ≥ 8 on streamText (Rule 7), don't bypass \`runWriteTool\` for write tools (Rule 5).
@@ -220,6 +234,21 @@ ${hintBlock}
    - No raw ids / \`__typename\` / internal labels leak.
    - The tool loop completed without errors.
 5. **Summarize** — tell me what changed, in which files, and which Rule from \`kb/07\` your fix satisfies.
+6. **Resolve this feedback row** — ONLY after step 4 actually passes, mark the row resolved in Neo4j via the \`neo4j-dev\` MCP (this dashboard reads from the dev DB — the same DB that MCP writes to). Run \`mcp__neo4j-dev__neo4j-write_neo4j_cypher\` with:
+
+   \`\`\`cypher
+   MATCH (f:AssistantFeedback {id: $feedbackId})
+   SET f.status = 'resolved',
+       f.statusUpdatedAt = datetime(),
+       f.statusNote = substring($statusNote, 0, 500)
+   \`\`\`
+
+   params: \`{ "feedbackId": "${row.id}", "statusNote": "<one-line: what you changed + commit sha if any>" }\`
+
+   Rules for this step:
+   - Do NOT resolve if verification failed or you could not reproduce/fix the issue. Instead set \`f.status = 'in_progress'\` with a \`statusNote\` explaining what's left. If it's a genuine model/data limitation (a wontfix), set \`f.status = 'open'\` (Step 0 moved it to in_progress — reset it) with \`statusNote = 'wontfix — <reason>'\`.
+   - The \`substring(..., 0, 500)\` cap mirrors the dashboard's own status picker — the note renders verbatim on /dev/ai-quality, so keep it to one line regardless.
+   - This writes back to the exact row a human is looking at, so be accurate: the note is the audit trail for why this was closed.
 
 The original feedback row id is \`${row.id}\` — once your fix is verified, the matching cluster (\`${row.cluster ?? 'unclustered'}\`) should stop accumulating new bad rows. If new rows show up with the same classification within 24h of merging, the fix is incomplete.
 `
