@@ -2,10 +2,13 @@
  * Pure marker-stripping helpers for the assistant's streamed text.
  *
  * The assistant embeds machine-readable markers in its reply text that the UI
- * turns into side effects rather than prose:
+ * turns into inline rendering rather than prose:
  *   - `PERSON_PROFILE_FOUND: {…}` → render a PersonCard inline.
- *   - `BLOOM_GRAPH_OVERLAY: {…}`  → push the payload into the Bloom overlay
- *     context and switch the canvas to Bloom.
+ *   - `BLOOM_GRAPH_OVERLAY: {…}`  → stripped from the visible bubble ONLY. The
+ *     Bloom canvas overlay is applied from the `query_for_bloom` tool RESULT in
+ *     `BloomOverlayToolPart`, never parsed from this text (kb/07 Rule 3) — so
+ *     here the marker is just hidden so any stray JSON the model emits doesn't
+ *     leak into the bubble.
  *
  * These functions are deliberately React-free and side-effect-free so they can
  * be unit-tested in isolation (`marker-strip.test.ts`). `EnhancedTextPart`
@@ -75,9 +78,10 @@ export function extractBalancedJson(
  *     of the available text is hidden, and a trailing partial *prefix* of the
  *     marker token is trimmed too. This keeps the raw overlay payload (the
  *     "Bloom/NVL query code") from flashing into the visible bubble mid-stream
- *     and then vanishing once it completes. The overlay is still applied — the
- *     side effect reads the unstripped text — so hiding the payload here is
- *     purely cosmetic and never blocks the canvas render.
+ *     and then vanishing once it completes. Hiding the payload here is purely
+ *     cosmetic and never blocks the canvas render: the overlay is applied from
+ *     the `query_for_bloom` tool RESULT (`BloomOverlayToolPart`), independent of
+ *     this text — nothing reads the unstripped marker for data anymore.
  */
 export function stripMarker(
   text: string,
@@ -131,23 +135,6 @@ export function stripTrailingPartialMarker(
     }
   }
   return text
-}
-
-/**
- * Walk through `text` and return every closed JSON payload that follows
- * `marker`. Used by the Bloom side-effect that pushes overlays into context —
- * we want every overlay the model emitted, not just the first.
- */
-export function collectPayloads(text: string, marker: string): string[] {
-  const payloads: string[] = []
-  let cursor = text.indexOf(marker)
-  while (cursor !== -1) {
-    const extraction = extractBalancedJson(text, cursor + marker.length)
-    if (!extraction) break
-    payloads.push(extraction.json)
-    cursor = text.indexOf(marker, extraction.endIndex)
-  }
-  return payloads
 }
 
 export interface ParsedElement {

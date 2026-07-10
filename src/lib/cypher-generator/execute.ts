@@ -311,9 +311,23 @@ async function mapNodesToEnclosingSpaces(
     }
 
     if (labels.includes('FieldPulse') || CONTENT_VIA_SPACE.has(labels[0] ?? '')) {
+      // Seek the node by its indexed BASE label rather than a label-less
+      // `MATCH (p {id})`, which the planner can only satisfy with an
+      // AllNodesScan of the whole graph per content node (the id UNIQUE
+      // constraint only applies to a labelled pattern). Both base labels this
+      // branch handles — FieldPulse (all pulse subtypes) and ResonanceLink —
+      // carry a UNIQUE id constraint, so the seek is O(1). The label is taken
+      // from the node's OWN labels (never user input), so the seek returns the
+      // exact same node; only the plan changes. Fall back to label-less for the
+      // unexpected case where neither base label is present.
+      const seekLabel = labels.includes('FieldPulse')
+        ? 'FieldPulse'
+        : labels.includes('ResonanceLink')
+          ? 'ResonanceLink'
+          : null
       const r = await runRead(
         `
-        MATCH (p {id: $id})
+        MATCH (${seekLabel ? `p:${seekLabel}` : 'p'} {id: $id})
         OPTIONAL MATCH (p)<-[:HAS_PULSE]-(:FieldContext)<-[:HAS_CONTEXT]-(s1:Space)
         OPTIONAL MATCH (p)<-[:SOURCE|TARGET]-(:ResonanceLink)<-[:HAS_RESONANCE]-(:FieldContext)<-[:HAS_CONTEXT]-(s2:Space)
         OPTIONAL MATCH (p)<-[:HAS_RESONANCE]-(:FieldContext)<-[:HAS_CONTEXT]-(s3:Space)

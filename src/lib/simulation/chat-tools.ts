@@ -70,6 +70,12 @@ export interface SimulationChatToolContext {
   spaceType?: 'MeSpace' | 'WeSpace' | null
   fieldContextTitle?: string | null
   /**
+   * The authenticated user's resolved display name. Forwarded to
+   * `query_for_bloom` so the co-visualization rescue can recognise the user
+   * when the model names them in a third-person intent (see RunForBloomArgs).
+   */
+  currentUserName?: string | null
+  /**
    * Which canvas surface the user is currently looking at, plus the
    * flat list of entities rendered there. Forwarded to
    * `query_for_bloom` so the Cypher generator can prefer a
@@ -1388,7 +1394,7 @@ export async function buildSimulationChatTools(
 
     query_for_bloom: tool({
       description:
-        'Pull specific graph entities (spaces, field contexts, pulses, people, resonances) into the Bloom canvas so the user can SEE them. Use whenever the user wants to visualize, show, bring up, pull up, or see something in the graph — especially when the conversation has drifted to an entity that is not currently on the canvas. Provide a precise natural-language intent that names entity types and any names, titles, or keywords from the conversation. The tool generates safe read-only Cypher under the hood, runs it scoped to the current user, and returns NVL-shaped nodes and relationships. After this tool returns nodes, emit a BLOOM_GRAPH_OVERLAY marker in your reply text immediately followed by the JSON payload { summary, nodes, relationships }, then continue in plain English. Never paste the Cypher. Never mention raw ids.',
+        'Pull specific graph entities (spaces, field contexts, pulses, people, resonances) into the Bloom canvas so the user can SEE them. Use whenever the user wants to visualize, show, bring up, pull up, or see something in the graph — especially when the conversation has drifted to an entity that is not currently on the canvas. Provide a precise natural-language intent that names entity types and any names, titles, or keywords from the conversation. The tool generates safe read-only Cypher under the hood, runs it scoped to the current user, and returns NVL-shaped nodes and relationships. When this returns found=true the canvas renders the graph AUTOMATICALLY from the tool result — do NOT copy the nodes/relationships into your reply or emit any JSON/marker; just narrate in plain English what was pulled up, by name. Never paste the Cypher. Never mention raw ids.',
       inputSchema: z.object({
         intent: z
           .string()
@@ -1411,6 +1417,7 @@ export async function buildSimulationChatTools(
           const result = await generateAndRunForBloom({
             intent,
             userId: ctx.currentUserId,
+            userName: ctx.currentUserName ?? null,
             activeSpaceId: ctx.spaceId,
             activeSpaceName: ctx.spaceName ?? null,
             activeSpaceType: ctx.spaceType ?? null,
