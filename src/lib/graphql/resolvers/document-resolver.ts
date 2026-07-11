@@ -243,8 +243,6 @@ interface DocumentRow {
   mimeType: string
   sizeBytes: number
   pageCount: number | null
-  blobKey: string | null
-  blobUrl: string | null
   userHint: string | null
   summary: string | null
   concepts: string[]
@@ -276,8 +274,6 @@ export const documentQueries = {
             d.mimeType AS mimeType,
             d.sizeBytes AS sizeBytes,
             d.pageCount AS pageCount,
-            d.blobKey AS blobKey,
-            d.blobUrl AS blobUrl,
             d.userHint AS userHint,
             d.summary AS summary,
             d.concepts AS concepts,
@@ -296,8 +292,6 @@ export const documentQueries = {
           mimeType: r.get('mimeType') as string,
           sizeBytes: Number(r.get('sizeBytes') ?? 0),
           pageCount: rawPageCount === null ? null : Number(rawPageCount),
-          blobKey: (r.get('blobKey') as string | null) ?? null,
-          blobUrl: (r.get('blobUrl') as string | null) ?? null,
           userHint: (r.get('userHint') as string | null) ?? null,
           summary: (r.get('summary') as string | null) ?? null,
           concepts: Array.isArray(rawConcepts) ? rawConcepts : [],

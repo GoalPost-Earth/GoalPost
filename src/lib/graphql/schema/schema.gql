@@ -1014,10 +1014,20 @@ type Document
   sizeBytes: Int!
   """Page count for paginated formats (.pdf). 1 for .txt/.md. Null when unknown (legacy uploads)."""
   pageCount: Int
-  """Blob storage key. Internal — UI surfaces filename instead."""
+  """Blob storage key. Internal — UI surfaces filename instead. Never exposed
+  to any client: `@selectable(onRead: false)` removes it from read selection
+  sets and `@filterable(byValue: false)` blocks value inference via filters
+  (GOAL-302). The download route reads it server-side over raw Cypher, so the
+  file stays reachable to members through the opaque `downloadUrl` only."""
   blobKey: String
-  """Provider-issued URL for the blob. May be expiring/private; treat as opaque."""
+    @selectable(onRead: false, onAggregate: false)
+    @filterable(byValue: false, byAggregate: false)
+  """Provider-issued URL for the blob. May be expiring/private — never returned
+  to a client (GOAL-302); members open the file through `downloadUrl`. Same
+  non-selectable / non-filterable gate as `blobKey`."""
   blobUrl: String
+    @selectable(onRead: false, onAggregate: false)
+    @filterable(byValue: false, byAggregate: false)
   """Durable, Space-scoped in-app link to open/download the uploaded file
   (GOAL-283). Stable per document — resolves through
   GET /api/ingest/document/<id>/download, which re-checks Space read access and

@@ -8,12 +8,14 @@ import {
   ArrowRight,
   Activity,
   Calendar,
+  ExternalLink,
   Layers,
   MapPin,
   Sparkles,
   Target,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { parseDocumentDownloadLocation } from '@/lib/ingest/document-download-url'
 import {
   personDisplayName,
   resolvePulseAuthor,
@@ -110,6 +112,11 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
     location?: string | null
     time?: string | null
   }
+  // GOAL-302: when `location` is the durable document-download locator, surface
+  // an opaque "Open document" action instead of printing the full app URL
+  // verbatim. The stored value stays untouched; the affordance routes through
+  // the current origin's relative path, which re-checks Space access on hit.
+  const documentLocation = parseDocumentDownloadLocation(optional.location)
   // why / location / time are defined on the same three pulse types, so a
   // single guard covers reading them defensively, editing them, and writing
   // the `*_SET` fields back through the matching update inputs.
@@ -179,7 +186,12 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
       // Empty strings normalise to null so clearing a field actually unsets it.
       if (supportsFieldDetails) {
         update.why_SET = editWhy.trim() || null
-        update.location_SET = editLocation.trim() || null
+        // A document-linked location is managed automatically (GOAL-302) and is
+        // not shown as an editable field, so never write it back — leaving
+        // `location_SET` off preserves the durable download link untouched.
+        if (!documentLocation) {
+          update.location_SET = editLocation.trim() || null
+        }
         update.time_SET = editTime.trim() || null
       }
       const variables = { where: { id_EQ: pulseId }, update }
@@ -397,14 +409,26 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
           />
           {supportsFieldDetails && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <EditTextInput
-                id="pulse-edit-location"
-                label="Location"
-                value={editLocation}
-                onChange={setEditLocation}
-                placeholder="Address, link, or place"
-                disabled={isSaving}
-              />
+              {documentLocation ? (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-white/50">
+                    Location
+                  </p>
+                  <div className="flex items-center gap-2 rounded-xl border border-gp-glass-border bg-black/[0.03] dark:bg-white/[0.03] px-3.5 py-2.5 text-sm text-gp-ink-muted dark:text-white/55">
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                    <span className="truncate">Linked document — managed automatically</span>
+                  </div>
+                </div>
+              ) : (
+                <EditTextInput
+                  id="pulse-edit-location"
+                  label="Location"
+                  value={editLocation}
+                  onChange={setEditLocation}
+                  placeholder="Address, link, or place"
+                  disabled={isSaving}
+                />
+              )}
               <EditTextInput
                 id="pulse-edit-time"
                 label="Time"
@@ -440,15 +464,35 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
 
       {!isEditMode && (optional.location || optional.time) && (
         <section className="px-6 pb-5 space-y-2">
-          {optional.location && (
-            <div className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55">
-              <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-              <LinkifiedText
-                text={optional.location}
-                className="min-w-0 break-words"
-              />
-            </div>
-          )}
+          {optional.location &&
+            (documentLocation ? (
+              // GOAL-302: opaque "Open document" action — never render the raw
+              // download URL. The relative path re-checks Space access on hit.
+              <a
+                href={documentLocation.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  'inline-flex items-center gap-2 px-3 h-9 rounded-lg',
+                  'border border-gp-glass-border bg-black/[0.03] dark:bg-white/[0.03]',
+                  'hover:bg-black/[0.05] dark:hover:bg-white/[0.06]',
+                  'hover:border-black/15 dark:hover:border-white/20',
+                  'text-xs font-medium text-gp-ink-strong dark:text-white/85',
+                  'transition-all cursor-pointer'
+                )}
+              >
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                Open document
+              </a>
+            ) : (
+              <div className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55">
+                <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                <LinkifiedText
+                  text={optional.location}
+                  className="min-w-0 break-words"
+                />
+              </div>
+            ))}
           {optional.time && (
             <div className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55">
               <Calendar className="w-3.5 h-3.5 mt-0.5 shrink-0" />

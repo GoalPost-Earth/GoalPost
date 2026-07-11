@@ -29,3 +29,54 @@ export function documentDownloadPath(documentId: string): string {
 export function buildDocumentDownloadUrl(documentId: string): string {
   return `${resolveAppBaseUrl()}${documentDownloadPath(documentId)}`
 }
+
+/** Matches the durable download path, capturing the documentId. */
+const DOCUMENT_DOWNLOAD_PATH_RE =
+  /^\/api\/ingest\/document\/([^/]+)\/download\/?$/
+
+/**
+ * Recognise a stored `location` value that is one of our durable document
+ * download locators (GOAL-283) and return a clean, same-origin relative path
+ * plus the documentId. Returns `null` for any other location — a physical
+ * place, an external source URL (GOAL-285), free text — which callers render
+ * as before.
+ *
+ * Accepts BOTH the absolute form persisted by `buildDocumentDownloadUrl`
+ * (`https://<host>/api/ingest/document/<id>/download`) and a bare relative
+ * path, matching on the pathname only. That means a deploy-domain change never
+ * strands an old link, and — the point of GOAL-302 — the UI can open the file
+ * through an opaque "Open document" affordance rather than printing the full
+ * URL string verbatim. The host in the stored value is intentionally dropped;
+ * we always route through the current origin's relative path.
+ */
+export function parseDocumentDownloadLocation(
+  location: string | null | undefined
+): { documentId: string; path: string } | null {
+  const trimmed = location?.trim()
+  if (!trimmed) return null
+
+  // Reduce absolute URLs to their pathname; a relative path throws (no base),
+  // so fall through and match it directly.
+  let pathname = trimmed
+  try {
+    pathname = new URL(trimmed).pathname
+  } catch {
+    // not an absolute URL — treat the whole string as the path candidate
+  }
+
+  const match = DOCUMENT_DOWNLOAD_PATH_RE.exec(pathname)
+  if (!match) return null
+
+  // `[^/]+` can capture a lone `%` (free text, a bad re-encode), on which
+  // decodeURIComponent throws URIError. This runs in a render path, so a throw
+  // would take down the drawer — treat undecodable ids as "not a document link".
+  let documentId: string
+  try {
+    documentId = decodeURIComponent(match[1]).trim()
+  } catch {
+    return null
+  }
+  if (!documentId) return null
+
+  return { documentId, path: documentDownloadPath(documentId) }
+}

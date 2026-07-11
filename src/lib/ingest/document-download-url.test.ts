@@ -1,6 +1,7 @@
 import {
   buildDocumentDownloadUrl,
   documentDownloadPath,
+  parseDocumentDownloadLocation,
 } from './document-download-url'
 
 describe('document-download-url', () => {
@@ -71,6 +72,75 @@ describe('document-download-url', () => {
       expect(buildDocumentDownloadUrl('doc_1')).toBe(
         'http://localhost:3000/api/ingest/document/doc_1/download'
       )
+    })
+  })
+
+  describe('parseDocumentDownloadLocation', () => {
+    it('recognises the absolute durable URL and returns a clean relative path', () => {
+      const abs = buildDocumentDownloadUrl('document_abc')
+      expect(parseDocumentDownloadLocation(abs)).toEqual({
+        documentId: 'document_abc',
+        path: '/api/ingest/document/document_abc/download',
+      })
+    })
+
+    it('recognises a bare relative download path (deploy-domain change survives)', () => {
+      expect(
+        parseDocumentDownloadLocation('/api/ingest/document/document_abc/download')
+      ).toEqual({
+        documentId: 'document_abc',
+        path: '/api/ingest/document/document_abc/download',
+      })
+    })
+
+    it('matches regardless of the host in the stored absolute URL', () => {
+      expect(
+        parseDocumentDownloadLocation(
+          'https://old-deploy.example.com/api/ingest/document/document_xyz/download'
+        )
+      ).toEqual({
+        documentId: 'document_xyz',
+        path: '/api/ingest/document/document_xyz/download',
+      })
+    })
+
+    it('decodes a URL-encoded document id and re-encodes it in the path', () => {
+      expect(
+        parseDocumentDownloadLocation(
+          '/api/ingest/document/a%20b/download'
+        )
+      ).toEqual({
+        documentId: 'a b',
+        path: '/api/ingest/document/a%20b/download',
+      })
+    })
+
+    it('tolerates a trailing slash', () => {
+      expect(
+        parseDocumentDownloadLocation('/api/ingest/document/doc_1/download/')
+      ).toEqual({
+        documentId: 'doc_1',
+        path: '/api/ingest/document/doc_1/download',
+      })
+    })
+
+    it.each([
+      ['a physical place', 'Berlin, Germany'],
+      ['an external source URL', 'https://example.com/some-article'],
+      ['a look-alike but wrong path', '/api/ingest/document/doc_1/preview'],
+      ['a path with an extra segment', '/api/ingest/document/doc_1/download/extra'],
+      // A lone `%` makes the id segment undecodable — must fall through to null,
+      // never throw URIError during render.
+      ['an undecodable id segment', '/api/ingest/document/50%/download'],
+      ['empty string', ''],
+      ['whitespace only', '   '],
+    ])('returns null for %s', (_label, value) => {
+      expect(parseDocumentDownloadLocation(value)).toBeNull()
+    })
+
+    it('returns null for null / undefined', () => {
+      expect(parseDocumentDownloadLocation(null)).toBeNull()
+      expect(parseDocumentDownloadLocation(undefined)).toBeNull()
     })
   })
 })
