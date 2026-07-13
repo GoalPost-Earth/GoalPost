@@ -50,6 +50,12 @@ export async function initializeApolloServer() {
 
   const yogaServer = createYoga({
     schema,
+    // Build responses with the runtime-native Response class. Yoga's default
+    // (@whatwg-node/fetch) falls back to a ponyfilled Response when its
+    // Next.js detection fails — which it does inside Vercel's function
+    // launcher — and Next >= 16.2 rejects non-native Response instances from
+    // route handlers with a 500 ("Expected a Response object but received…").
+    fetchAPI: { Response },
     context: async (req) => {
       // Extract and VERIFY the JWT from the Authorization header. We must
       // verify the signature (not merely decode it) — Neo4jGraphQL trusts a
