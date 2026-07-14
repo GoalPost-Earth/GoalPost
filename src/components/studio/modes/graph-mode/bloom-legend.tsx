@@ -15,6 +15,7 @@ import {
   WEAVE_EDGE_COLOR,
   CONNECTED_EDGE_COLOR,
 } from './bloom-palette'
+import { NODE_STYLE, UNKNOWN_NODE_STYLE } from '@/lib/cypher-generator/node-style'
 
 /**
  * Scope-aware legend for the Bloom canvas.
@@ -32,12 +33,13 @@ import {
  * resonance edges, etc. — and keeps it permanently in sync with the paint.
  *
  * The native node/edge colors are imported straight from bloom-view (its
- * exported palette consts) so a swatch can never drift out of sync with the
- * paint. Only the coarser *overlay* palette — the colors a chat "custom view"
- * pushes, which live solely inside bloom-view's `colorToInfoEntityType`
- * switch — is mirrored as literals here, with a back-reference comment. The
- * surrounding chrome (glass, text) uses gp-* tokens so the panel itself
- * themes correctly in light + dark.
+ * exported palette consts), and the *overlay* palette — the colors a chat
+ * "custom view" pushes — is imported from the cypher generator's shared
+ * `node-style.ts`, so a swatch can never drift out of sync with either
+ * paint source (GOAL-288: the overlay colors used to be hand-mirrored
+ * literals here, and PromiseWeave's fuchsia was missing — assistant-rendered
+ * weaves showed no legend row). The surrounding chrome (glass, text) uses
+ * gp-* tokens so the panel itself themes correctly in light + dark.
  */
 
 type LegendItem = {
@@ -48,20 +50,31 @@ type LegendItem = {
   colors: string[]
 }
 
-// Coarse overlay palette — the colors a chat "custom view" pushes. These have
-// no shared home: they live only inside bloom-view's `colorToInfoEntityType`
-// switch, so they're mirrored here as literals. Keep in sync with that switch.
-const OVERLAY_SPACE = '#86efac'
-const OVERLAY_FIELD = '#fde68a'
-const OVERLAY_PULSE = ['#93c5fd', '#a7f3d0', '#c4b5fd', '#fca5a5', '#fcd34d']
-const OVERLAY_RESONANCE = ['#d8b4fe', '#e9d5ff']
-const OVERLAY_ORGANIZATION = '#5eead4'
+// Overlay palette — imported from the same module the executor styles its
+// nodes with, so every color the overlay can push is decodable here.
+const OVERLAY_SPACE = NODE_STYLE.MeSpace.color // Me/We/Space share one color
+const OVERLAY_FIELD = NODE_STYLE.FieldContext.color
+const OVERLAY_PULSE = [
+  NODE_STYLE.GoalPulse.color,
+  NODE_STYLE.ResourcePulse.color,
+  NODE_STYLE.StoryPulse.color,
+  NODE_STYLE.CarePulse.color,
+  NODE_STYLE.CoreValuePulse.color,
+  NODE_STYLE.FieldPulse.color,
+]
+const OVERLAY_RESONANCE = [
+  NODE_STYLE.ResonanceLink.color,
+  NODE_STYLE.FieldResonance.color,
+]
 
 // Node rows. Native scopes (root / space / field) carry fine-grained subtype
 // colors imported from bloom-view; the generic `Pulse` and `Resonance` rows
 // only ever match the coarser overlay palette, so they never double up with
-// the subtype rows above (the two palettes are disjoint apart from Person).
-const LEGEND_NODES: LegendItem[] = [
+// the subtype rows above (the two palettes are disjoint apart from Person,
+// whose native and overlay pinks are deliberately identical).
+// Exported for the drift test only — every NODE_STYLE color must be
+// decodable by some row here (bloom-legend.test.tsx).
+export const LEGEND_NODES: LegendItem[] = [
   { label: 'Your MeSpace', swatch: SPACE_COLOR.MeSpace, colors: [SPACE_COLOR.MeSpace] },
   {
     label: 'WeSpace',
@@ -80,13 +93,38 @@ const LEGEND_NODES: LegendItem[] = [
   { label: 'Core value', swatch: PULSE_COLOR.coreValue, colors: [PULSE_COLOR.coreValue] },
   { label: 'Pulse', swatch: OVERLAY_PULSE[0], colors: OVERLAY_PULSE },
   { label: 'Resonance', swatch: OVERLAY_RESONANCE[0], colors: OVERLAY_RESONANCE },
-  { label: 'Promise weave', swatch: WEAVE_NODE_COLOR, colors: [WEAVE_NODE_COLOR] },
+  {
+    label: 'Promise weave',
+    swatch: WEAVE_NODE_COLOR,
+    colors: [WEAVE_NODE_COLOR, NODE_STYLE.PromiseWeave.color],
+  },
   {
     label: 'Organization',
-    swatch: OVERLAY_ORGANIZATION,
-    colors: [OVERLAY_ORGANIZATION],
+    swatch: NODE_STYLE.Organization.color,
+    colors: [NODE_STYLE.Organization.color],
   },
-  { label: 'Person', swatch: PERSON_COLOR, colors: [PERSON_COLOR] },
+  {
+    label: 'Community',
+    swatch: NODE_STYLE.Community.color,
+    colors: [NODE_STYLE.Community.color],
+  },
+  {
+    label: 'Document',
+    swatch: NODE_STYLE.Document.color,
+    colors: [NODE_STYLE.Document.color],
+  },
+  {
+    label: 'Person',
+    swatch: PERSON_COLOR,
+    colors: [PERSON_COLOR, NODE_STYLE.Person.color],
+  },
+  // Catch-all: SpaceMembership shares the executor's unknown-label fallback
+  // slate, so one honest row decodes both.
+  {
+    label: 'Other',
+    swatch: UNKNOWN_NODE_STYLE.color,
+    colors: [UNKNOWN_NODE_STYLE.color],
+  },
 ]
 
 // Edge rows. The rendered edge colors (imported from bloom-view) are

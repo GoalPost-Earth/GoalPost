@@ -211,11 +211,15 @@ function colorToInfoEntityType(
     case '#d8b4fe':
     case '#e9d5ff':
       return 'ResonanceLink'
-    case '#2dd4bf':
+    case '#2dd4bf': // native weave teal (bloom-palette WEAVE_NODE_COLOR)
+    case '#f0abfc': // overlay weave fuchsia (node-style.ts, GOAL-288)
       return 'PromiseWeave'
     case '#5eead4':
       // Organization — the cypher generator's styleFor color (GOAL-298).
       return 'Organization'
+    case '#94a3b8':
+      // Document — the cypher generator's styleFor color (GOAL-288).
+      return 'Document'
     default:
       return null
   }

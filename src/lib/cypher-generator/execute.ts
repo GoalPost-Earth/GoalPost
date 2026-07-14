@@ -24,39 +24,12 @@ import {
   ALLOWED_RELATIONSHIPS,
   type AllowedRelationship,
 } from './schema-context'
+import { styleFor } from './node-style'
 import type { NVLNode, NVLRelationship } from './types'
 
 const MAX_NODES = 60
 const MAX_RELS = MAX_NODES * 3
 const QUERY_TIMEOUT_MS = 5_000
-
-const NODE_STYLE: Record<string, { color: string; size: number }> = {
-  MeSpace: { color: '#86efac', size: 42 },
-  WeSpace: { color: '#86efac', size: 42 },
-  Space: { color: '#86efac', size: 42 },
-  Community: { color: '#fdba74', size: 38 }, // orange-300 — public collective
-  Organization: { color: '#5eead4', size: 30 }, // teal-300 — named org/cooperative (GOAL-298)
-  FieldContext: { color: '#fde68a', size: 34 },
-  GoalPulse: { color: '#93c5fd', size: 26 },
-  ResourcePulse: { color: '#a7f3d0', size: 26 },
-  StoryPulse: { color: '#c4b5fd', size: 26 },
-  CarePulse: { color: '#fca5a5', size: 26 },
-  CoreValuePulse: { color: '#fcd34d', size: 26 },
-  FieldPulse: { color: '#93c5fd', size: 26 },
-  Person: { color: '#f9a8d4', size: 30 },
-  User: { color: '#f9a8d4', size: 30 },
-  PersonPulse: { color: '#f9a8d4', size: 26 },
-  ResonanceLink: { color: '#d8b4fe', size: 22 },
-  FieldResonance: { color: '#e9d5ff', size: 22 },
-  // Connective container, styled as a sibling of ResonanceLink (both are
-  // reified connector nodes) but with a distinct fuchsia hue so the two are
-  // tellable apart on the canvas.
-  PromiseWeave: { color: '#f0abfc', size: 22 },
-  // Uploaded source document — slate/steel hue, distinct from the pulses it
-  // was extracted into. Captioned by filename (see captionFor).
-  Document: { color: '#94a3b8', size: 24 },
-  SpaceMembership: { color: '#cbd5e1', size: 18 },
-}
 
 const SPACE_LABELS = new Set(['MeSpace', 'WeSpace', 'Space'])
 /**
@@ -85,13 +58,6 @@ const CONTENT_VIA_SPACE = new Set([
   'CoreValuePulse',
   'ResonanceLink',
 ])
-
-function styleFor(labels: string[]): { color: string; size: number } {
-  for (const l of labels) {
-    if (NODE_STYLE[l]) return NODE_STYLE[l]
-  }
-  return { color: '#cbd5e1', size: 24 }
-}
 
 function captionFor(node: Node): string {
   const p = node.properties as Record<string, unknown>
