@@ -22,6 +22,7 @@
     "normalize:person-emails": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/normalize-person-emails.ts",
     "seed:build-space": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/seed-build-space.ts",
     "backfill:resonance-created-at": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/backfill-resonance-created-at.ts",
+    "backfill:corevalue-labels": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/backfill-corevalue-pulse-labels.ts",
     "clean:orphan-pulses": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/clean-dev-orphan-pulses.ts",
     "clone:neo4j": "tsx scripts/clone-neo4j.ts",
     "clone:dev-to-demo": "tsx scripts/clone-neo4j.ts local demo",

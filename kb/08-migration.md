@@ -92,8 +92,8 @@ do not paste them in chat or commit them.
 
 | Prod label | Dev labels | Notes |
 |------------|------------|-------|
-| `CarePoint` | `FieldPulse:StoryPulse:CarePoint` | Merged with CoreValue into StoryPulse. Prod label kept for traceability. |
-| `CoreValue` | `FieldPulse:StoryPulse:CoreValue` | Same. |
+| `CarePoint` | `PromiseWeave:CarePoint` | A connector node, NOT a pulse (promise-weave design, GOAL-266). Prod label kept for traceability. |
+| `CoreValue` | `FieldPulse:CoreValuePulse:CoreValue` | Was `FieldPulse:StoryPulse:CoreValue` before `CoreValuePulse` existed as a distinct type; that made migrated values render as "Story" (GOAL-287). DBs migrated under the old mapping are fixed by `npm run backfill:corevalue-labels`. |
 | `Goal` | `FieldPulse:GoalPulse:Goal` | |
 | `Resource` | `FieldPulse:ResourcePulse:Resource` | |
 
@@ -372,7 +372,7 @@ verify the pulse renames and assert the exact identity `dev = prod + clones −
 dropped`:
 
 ```
-✓ StoryPulse merge: prod(CarePoint+CoreValue)=31, dev=29 −2 dropped
+✓ CoreValuePulse merge: prod(CoreValue)=31, dev=29 −2 dropped
 ✓ GoalPulse merge: prod(Goal)=49, dev=48 −1 dropped
 ✓ ResourcePulse merge: prod(Resource)=84, dev=80 −4 dropped
 ```

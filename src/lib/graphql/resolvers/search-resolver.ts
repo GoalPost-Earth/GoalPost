@@ -2,10 +2,12 @@ import { Context } from '@/config/types'
 
 type EntityRecord = Record<string, unknown>
 
-// Mirrors the schema's SearchResults type exactly. carePulses /
-// coreValuePulses are declared non-null there but not searched (manual-only
-// pulse types) — they must still be present as empty arrays or selecting
-// them errors with "Cannot return null for non-nullable field".
+// Mirrors the schema's SearchResults type exactly. carePulses is declared
+// non-null there but not searched (manual-only pulse type with no real
+// content yet) — it must still be present as an empty array or selecting
+// it errors with "Cannot return null for non-nullable field".
+// coreValuePulses IS searched: since GOAL-287 migrated core values are
+// :CoreValuePulse (they used to surface through the StoryPulse branch).
 interface SearchResults {
   people: EntityRecord[]
   meSpaces: EntityRecord[]
@@ -33,6 +35,7 @@ interface SearchResults {
  * - GoalPulses: content
  * - ResourcePulses: content
  * - StoryPulses: content
+ * - CoreValuePulses: content (GOAL-287 — migrated values are :CoreValuePulse)
  */
 export const searchResolvers = {
   searchAll: async (
@@ -79,6 +82,7 @@ export const searchResolvers = {
     const goalPulsesSession = context.executionContext.session()
     const resourcePulsesSession = context.executionContext.session()
     const storyPulsesSession = context.executionContext.session()
+    const coreValuePulsesSession = context.executionContext.session()
 
     try {
       // Execute all searches in parallel using separate sessions
@@ -90,6 +94,7 @@ export const searchResolvers = {
         goalPulsesResult,
         resourcePulsesResult,
         storyPulsesResult,
+        coreValuePulsesResult,
       ] = await Promise.all([
         // Search people by name only. GOAL-275: this custom resolver bypasses
         // the Person type's field-level @authorization, so it MUST NOT search
@@ -265,6 +270,34 @@ export const searchResolvers = {
             { searchTerm, userId: currentUserId }
           )
         ),
+
+        // Search CoreValuePulses by content - only in spaces user can access.
+        // GOAL-287: migrated core values are :CoreValuePulse (previously
+        // :StoryPulse, where the branch above found them).
+        coreValuePulsesSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (p:CoreValuePulse)<-[:HAS_PULSE]-(ctx:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+            WHERE (toLower(p.content) CONTAINS $searchTerm
+               OR toLower(p.title) CONTAINS $searchTerm)
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
+            WITH DISTINCT p, collect(DISTINCT ctx) as contexts
+            RETURN p, contexts
+            LIMIT 10
+            `,
+            { searchTerm, userId: currentUserId }
+          )
+        ),
       ])
 
       // Extract properties from Neo4j records
@@ -325,7 +358,11 @@ export const searchResolvers = {
           'contexts'
         ),
         carePulses: [],
-        coreValuePulses: [],
+        coreValuePulses: extractPulsesWithContexts(
+          coreValuePulsesResult.records,
+          'p',
+          'contexts'
+        ),
       }
     } catch (error) {
       console.error('❌ Search error:', error)
@@ -340,6 +377,7 @@ export const searchResolvers = {
         goalPulsesSession.close(),
         resourcePulsesSession.close(),
         storyPulsesSession.close(),
+        coreValuePulsesSession.close(),
       ])
     }
   },

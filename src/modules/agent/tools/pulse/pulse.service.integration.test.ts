@@ -9,12 +9,15 @@ import { searchPulses } from './pulse.service'
  * `:CoreValue` bridge added to fix the captured AI-quality failure
  * (feedback_d02d469f — "look for all value-like pulses in my Me Space"). The
  * bug had two roots: (1) a blank `query` was refused, so the model could not
- * LIST pulses by scope; (2) migrated values are `:FieldPulse:StoryPulse:CoreValue`
- * (kb/08), which a `pulseType='CoreValuePulse'` filter missed entirely.
+ * LIST pulses by scope; (2) pre-GOAL-287 migrated values were
+ * `:FieldPulse:StoryPulse:CoreValue`, which a `pulseType='CoreValuePulse'`
+ * filter missed entirely. GOAL-287 relabeled backfilled DBs to
+ * `:CoreValuePulse:CoreValue` (kb/08), but the bridge — and this fixture's
+ * legacy shape — stay to cover un-backfilled envs.
  *
  * These branches all live in `searchPulses` and were previously covered only by
  * a fully-mocked forwarding test (chat-tools-scope.test.ts). This suite exercises
- * the real Cypher against dev Neo4j: seed a MeSpace with a migrated-shaped value,
+ * the real Cypher against dev Neo4j: seed a MeSpace with a legacy-shaped value,
  * a native value, and a non-value, then assert enumeration finds + types the
  * values correctly, refuses an unscoped blank query, and stays auth-gated.
  *
@@ -60,8 +63,9 @@ beforeAll(async () => {
       CREATE (owner)-[:OWNS]->(me)
       CREATE (ctx:FieldContext {id: $ctxId, title: 'IT Field', createdAt: datetime()})
       CREATE (me)-[:HAS_CONTEXT]->(ctx)
-      // Migrated-shaped value: carries :StoryPulse + the legacy :CoreValue marker,
-      // NO :CoreValuePulse label (the exact case the fix bridges).
+      // Legacy-shaped value (pre-GOAL-287 migration shape, still possible in
+      // un-backfilled envs): carries :StoryPulse + the legacy :CoreValue
+      // marker, NO :CoreValuePulse label (the exact case the bridge rescues).
       CREATE (mv:FieldPulse:StoryPulse:CoreValue {id: $migValueId, title: 'IT Migrated Value', content: 'a migrated value', createdAt: datetime()})
       CREATE (ctx)-[:HAS_PULSE]->(mv)
       // Native value: modern :CoreValuePulse label.

@@ -9,9 +9,10 @@
  *     parity report subtracts the intentional drop from its expectations.
  *   - Nothing is ever written to or deleted from prod.
  *   - Map legacy prod ontology to the new dev ontology: Resource / Goal /
- *     CoreValue → pulses (FieldPulse + ResourcePulse / GoalPulse / StoryPulse),
- *     and CarePoint → a PromiseWeave connector node (NOT a pulse). Preserve
- *     original labels alongside the new ones so the prod provenance survives.
+ *     CoreValue → pulses (FieldPulse + ResourcePulse / GoalPulse /
+ *     CoreValuePulse), and CarePoint → a PromiseWeave connector node (NOT a
+ *     pulse). Preserve original labels alongside the new ones so the prod
+ *     provenance survives.
  *   - Do not invent data. The schema-driven adaptations are:
  *       - `name` is mirrored to both `content` and `title` on pulses (dev's
  *         pulse types require both as non-null; this is a 1:1 rename, not new
@@ -58,7 +59,7 @@
  *   - Person:Member:User     → Person:User:LifeSensor:RelationalEntity  (drop :Member)
  *   - Community              → Community:LifeSensor:RelationalEntity
  *   - CarePoint              → PromiseWeave:CarePoint   (connector, NOT a pulse)
- *   - CoreValue              → FieldPulse:StoryPulse:CoreValue
+ *   - CoreValue              → FieldPulse:CoreValuePulse:CoreValue
  *   - Goal                   → FieldPulse:GoalPulse:Goal
  *   - Resource               → FieldPulse:ResourcePulse:Resource
  *   - Log / Session /
@@ -140,13 +141,20 @@ if (DEV_URI && PROD_URI && DEV_URI === PROD_URI) {
 // Pulse-like prod labels and their dev label mappings.
 // We preserve the original prod label (`:CoreValue`, `:Goal`, etc.) on each dev
 // node alongside the new ontology labels — labels are free metadata that future
-// maintainers use to trace which dev StoryPulse came from a prod CoreValue, etc.
+// maintainers use to trace which dev CoreValuePulse came from a prod CoreValue,
+// etc.
 //
 // NOTE: `CarePoint` is intentionally absent here — it is NOT a pulse. A prod
 // CarePoint becomes a `PromiseWeave` connector node (see CAREPOINT_WEAVE_LABELS
 // and Phase 5d), per the promise-weave design (kb/05-data-entities.md, GOAL-266).
+//
+// NOTE: `CoreValue` maps to `CoreValuePulse`, NOT `StoryPulse`. Earlier
+// revisions merged CoreValue into StoryPulse (before CoreValuePulse existed as
+// a distinct type); that made migrated values render as "Story" everywhere the
+// UI branches on the GraphQL __typename (GOAL-287). Existing DBs migrated under
+// the old mapping are fixed by `scripts/backfill-corevalue-pulse-labels.ts`.
 const PULSE_LABEL_MAP: Record<string, string[]> = {
-  CoreValue: ['FieldPulse', 'StoryPulse', 'CoreValue'],
+  CoreValue: ['FieldPulse', 'CoreValuePulse', 'CoreValue'],
   Goal: ['FieldPulse', 'GoalPulse', 'Goal'],
   Resource: ['FieldPulse', 'ResourcePulse', 'Resource'],
 }
@@ -278,7 +286,7 @@ function devLabelsForProdLabels(prodLabels: string[]): string[] {
         break
       case 'CoreValue':
         out.add('FieldPulse')
-        out.add('StoryPulse')
+        out.add('CoreValuePulse')
         out.add('CoreValue')
         break
       case 'Goal':
@@ -579,7 +587,7 @@ async function phase3_migrateNodes(): Promise<{ totals: Record<string, number> }
   console.log(`   ✓ Community → Community:LifeSensor:RelationalEntity (${communities})`)
 
   // 3c. Pulse-like nodes — mirror name → content AND title if name exists.
-  // The dev pulse types (GoalPulse/ResourcePulse/StoryPulse) require BOTH
+  // The dev pulse types (GoalPulse/ResourcePulse/CoreValuePulse) require BOTH
   // `content: String!` and `title: String!`; legacy nodes only carry `name`,
   // so it seeds both. Without `title`, any GraphQL query selecting it throws
   // INTERNAL_SERVER_ERROR (a non-null field resolving to null).
@@ -593,14 +601,15 @@ async function phase3_migrateNodes(): Promise<{ totals: Record<string, number> }
       if (props.modifiedAt == null && props.createdAt != null)
         patch.modifiedAt = props.createdAt
       // status normalization. GoalPulse.status is a non-null GoalStatus enum;
-      // ResourcePulse/StoryPulse.status are free Strings. BUT the GraphQL layer
-      // cross-reads `status` against the GoalStatus enum whenever a FieldPulse
-      // *interface* list is queried (e.g. context.pulses with a
-      // `... on GoalPulse { status }` fragment): a sibling Resource/Story whose
-      // status is the legacy "Active"/"Inactive" then fails enum coercion and
-      // nulls the whole response. So normalize status to a valid GoalStatus
-      // member on *every* pulse: Goal always (required, fills missing), and
-      // Resource/Story whenever a legacy status is present.
+      // ResourcePulse.status is a free String and CoreValuePulse declares no
+      // status field at all. BUT the GraphQL layer cross-reads `status` against
+      // the GoalStatus enum whenever a FieldPulse *interface* list is queried
+      // (e.g. context.pulses with a `... on GoalPulse { status }` fragment): a
+      // sibling pulse whose status is the legacy "Active"/"Inactive" then fails
+      // enum coercion and nulls the whole response. So normalize status to a
+      // valid GoalStatus member on *every* pulse that carries one: Goal always
+      // (required, fills missing), others whenever a legacy status is present
+      // (on CoreValuePulse the property is GraphQL-invisible but harmless).
       if (prodLabel === 'Goal') {
         patch.status = normalizeGoalStatus(props.status)
       } else if (props.status != null) {
@@ -1556,9 +1565,10 @@ async function phase6_validate(
     // Validate the merged dev pulse counts match the sum of their prod
     // sources. This is the real "no data loss" check for the renamed nodes.
     // NOTE: CarePoint is NOT here — it migrates to a PromiseWeave (checked
-    // separately below), so StoryPulse derives from CoreValue alone now.
+    // separately below). CoreValue maps to CoreValuePulse (GOAL-287), so no
+    // prod label feeds StoryPulse anymore and it has no merge row.
     const pulseMerges = [
-      { devLabel: 'StoryPulse', prodLabels: ['CoreValue'] },
+      { devLabel: 'CoreValuePulse', prodLabels: ['CoreValue'] },
       { devLabel: 'GoalPulse', prodLabels: ['Goal'] },
       { devLabel: 'ResourcePulse', prodLabels: ['Resource'] },
     ]

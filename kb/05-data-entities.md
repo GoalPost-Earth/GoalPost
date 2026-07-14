@@ -247,9 +247,16 @@ Same fields as MeSpace.
 
 ### StoryPulse
 
-**Neo4j Labels:** `["FieldPulse", "StoryPulse"]` (nodes migrated from production also retain `:CarePoint` or `:CoreValue` for traceability — see [kb/08-migration.md](08-migration.md)).
+**Neo4j Labels:** `["FieldPulse", "StoryPulse"]`
 
-Merges legacy CarePoint and CoreValue entities.
+Historical note: StoryPulse originally absorbed the legacy CarePoint and
+CoreValue entities, which is why it still declares their optional fields
+below. Both have since been carved back out: migrated CarePoints are
+`PromiseWeave` connector nodes, and migrated CoreValues are
+`CoreValuePulse` (GOAL-287) — see [kb/08-migration.md](08-migration.md).
+No StoryPulse carries `:CarePoint` or `:CoreValue` anymore (in envs that
+have run `npm run backfill:corevalue-labels`; an un-backfilled env such as
+a stale demo box may still hold the old `:StoryPulse:CoreValue` shape).
 
 | Field               | Type     | Notes                        |
 | ------------------- | -------- | ---------------------------- |
@@ -291,7 +298,10 @@ Merges legacy CarePoint and CoreValue entities.
 
 ### CoreValuePulse
 
-**Neo4j Labels:** `["FieldPulse", "CoreValuePulse"]`
+**Neo4j Labels:** `["FieldPulse", "CoreValuePulse"]` (nodes migrated from
+production also retain `:CoreValue` for traceability — see
+[kb/08-migration.md](08-migration.md) and
+`scripts/backfill-corevalue-pulse-labels.ts`).
 
 Minimal additional fields beyond the base FieldPulse interface.
 

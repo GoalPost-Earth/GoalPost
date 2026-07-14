@@ -18,11 +18,13 @@ type EntityType =
   | 'goalPulse'
   | 'resourcePulse'
   | 'storyPulse'
+  | 'coreValuePulse'
 
 const PULSE_ENTITY_TYPES: ReadonlySet<EntityType> = new Set([
   'goalPulse',
   'resourcePulse',
   'storyPulse',
+  'coreValuePulse',
 ])
 
 function isPulseEntityType(type: EntityType): boolean {
@@ -77,6 +79,13 @@ interface GraphQLSearchResult {
       resourceType: string
     }>
     storyPulses: Array<{
+      id: string
+      title: string
+      content: string
+      createdAt: string
+      intensity: number
+    }>
+    coreValuePulses: Array<{
       id: string
       title: string
       content: string
@@ -185,6 +194,21 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
     })
   })
 
+  // Transform core value pulses
+  data.searchAll.coreValuePulses?.forEach((pulse) => {
+    entities.push({
+      id: pulse.id,
+      type: 'coreValuePulse',
+      title:
+        pulse.title ||
+        pulse.content.substring(0, 50) +
+          (pulse.content.length > 50 ? '...' : ''),
+      subtitle: 'Core Value',
+      description: pulse.content,
+      href: null,
+    })
+  })
+
   return entities
 }
 
@@ -196,6 +220,7 @@ const typeLabel: Record<EntityType, string> = {
   goalPulse: 'Goal',
   resourcePulse: 'Resource',
   storyPulse: 'Story',
+  coreValuePulse: 'Core Value',
 }
 
 const typeAccentClass: Record<EntityType, string> = {
@@ -206,6 +231,7 @@ const typeAccentClass: Record<EntityType, string> = {
   goalPulse: 'text-gp-resource',
   resourcePulse: 'text-gp-resource',
   storyPulse: 'text-gp-story',
+  coreValuePulse: 'text-gp-coreValue',
 }
 
 const typePillClass: Record<EntityType, string> = {
@@ -216,6 +242,7 @@ const typePillClass: Record<EntityType, string> = {
   goalPulse: 'bg-gp-resource/10 text-gp-resource border-gp-resource/20',
   resourcePulse: 'bg-gp-resource/10 text-gp-resource border-gp-resource/20',
   storyPulse: 'bg-gp-story/10 text-gp-story border-gp-story/20',
+  coreValuePulse: 'bg-gp-coreValue/10 text-gp-coreValue border-gp-coreValue/20',
 }
 
 function EntityCardWrapper({
@@ -356,6 +383,7 @@ export default function SearchPage() {
               { key: 'goalPulse', label: 'Goals' },
               { key: 'resourcePulse', label: 'Resources' },
               { key: 'storyPulse', label: 'Stories' },
+              { key: 'coreValuePulse', label: 'Core Values' },
             ].map((option) => {
               const isActive = activeType === option.key
               return (

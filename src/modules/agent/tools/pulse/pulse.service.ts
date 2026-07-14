@@ -156,12 +156,14 @@ function mapPulseRecord(raw: Record<string, unknown>): PulseRecord {
 }
 
 function typeFilterCypher(): string {
-  // The CoreValuePulse branch also matches the legacy `:CoreValue` label:
-  // prod→dev migration mapped a prod CoreValue to `FieldPulse:StoryPulse:CoreValue`
-  // ("merged with CoreValue into StoryPulse; prod label kept for traceability",
-  // kb/08). Those migrated values carry NO `:CoreValuePulse` label, so a
+  // The CoreValuePulse branch also matches the legacy `:CoreValue` label. The
+  // pre-GOAL-287 migration mapped a prod CoreValue to
+  // `FieldPulse:StoryPulse:CoreValue` (no `:CoreValuePulse` label), so a
   // `pulseType='CoreValuePulse'` filter (what "value-like pulses" resolves to)
-  // would miss every migrated value without this bridge — the captured failure.
+  // missed every migrated value without this bridge — the captured failure.
+  // Backfilled DBs now carry `FieldPulse:CoreValuePulse:CoreValue` (kb/08),
+  // but the bridge stays: it is harmless there and still rescues any
+  // un-backfilled env (e.g. a stale demo box) holding the legacy shape.
   return `
     (
       $pulseType IS NULL
@@ -176,12 +178,15 @@ function typeFilterCypher(): string {
   `
 }
 
-// Migrated values are labelled `:StoryPulse:CoreValue` (kb/08), so the type
-// CASE below checks the `:CoreValue` value-marker BEFORE `:StoryPulse` — a value
-// the user asked for is reported as a value, not a story, keeping the projected
-// type consistent with the `:CoreValue` bridge in typeFilterCypher(). Accepted
-// consequence: a `pulseType='StoryPulse'` enumeration reports such a node as
-// 'CoreValuePulse' — a value merged into story is still a value.
+// In an un-backfilled env, migrated values still carry the legacy
+// `:StoryPulse:CoreValue` shape (pre-GOAL-287), so the type CASE below checks
+// the `:CoreValue` value-marker BEFORE `:StoryPulse` — a value the user asked
+// for is reported as a value, not a story, keeping the projected type
+// consistent with the `:CoreValue` bridge in typeFilterCypher(). On backfilled
+// DBs (`:CoreValuePulse:CoreValue`, kb/08) the ordering is moot but correct.
+// Accepted consequence: a `pulseType='StoryPulse'` enumeration reports a
+// legacy-shaped node as 'CoreValuePulse' — a value merged into story is still
+// a value.
 function pulseProjectionCypher(): string {
   return `
     pulse.id AS id,
