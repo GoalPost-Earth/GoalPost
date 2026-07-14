@@ -433,9 +433,9 @@ const resolvers = {
   },
 
   FieldPulse: {
-    __resolveType: (obj: Record<string, unknown>) => {
+    __resolveType: async (obj: Record<string, unknown>) => {
       // The doc-ingestion list resolver already stamps __typename on extracted
-      // pulses; respect it before falling back to property sniffing.
+      // pulses; respect it before hitting the database.
       if (
         obj.__typename === 'GoalPulse' ||
         obj.__typename === 'ResourcePulse' ||
@@ -445,10 +445,68 @@ const resolvers = {
       ) {
         return obj.__typename
       }
-      // Check discriminator properties to determine concrete type
-      if ('status' in obj) return 'GoalPulse'
+
+      // Library-generated interface paths (PromiseWeave.weaves,
+      // FieldContext.pulses, ResonanceLink.source/target, ...) embed the
+      // concrete type name as `__resolveType` in every member row —
+      // @neo4j/graphql's own generated resolver just reads it, and this
+      // custom resolver shadows that. Reading it here keeps those paths
+      // zero-cost and consistent with the fragment fields the library
+      // actually projected for the row (GOAL-286).
+      if (
+        obj.__resolveType === 'GoalPulse' ||
+        obj.__resolveType === 'ResourcePulse' ||
+        obj.__resolveType === 'StoryPulse' ||
+        obj.__resolveType === 'CarePulse' ||
+        obj.__resolveType === 'CoreValuePulse'
+      ) {
+        return obj.__resolveType
+      }
+
+      // Resolve from node labels — the source of truth for custom resolvers
+      // that return raw node properties without stamping a type. Mirrors
+      // Space.__resolveType above. Property sniffing is NOT reliable here
+      // (GOAL-286): the old sniff defaulted everything without a
+      // discriminator field to StoryPulse (how this bug surfaced), and on
+      // full-property objects it misfired the other way, because the
+      // migration normalized `status` onto every legacy pulse (kb/08),
+      // typing migrated Resources/Stories as GoalPulse.
+      if (obj.id) {
+        const session = driver.session()
+        try {
+          const result = await session.executeRead(async (tx) => {
+            return await tx.run(
+              `MATCH (pulse:FieldPulse {id: $pulseId}) RETURN labels(pulse) as labels`,
+              { pulseId: obj.id }
+            )
+          })
+          if (result.records.length > 0) {
+            const labels: string[] = result.records[0].get('labels')
+            if (labels.includes('GoalPulse')) return 'GoalPulse'
+            if (labels.includes('ResourcePulse')) return 'ResourcePulse'
+            if (labels.includes('CarePulse')) return 'CarePulse'
+            // Value-marker before StoryPulse: an un-backfilled env (pre
+            // GOAL-287) still holds migrated values as :StoryPulse:CoreValue,
+            // and a value merged into story is still a value.
+            if (
+              labels.includes('CoreValuePulse') ||
+              labels.includes('CoreValue')
+            ) {
+              return 'CoreValuePulse'
+            }
+            if (labels.includes('StoryPulse')) return 'StoryPulse'
+          }
+        } finally {
+          await session.close()
+        }
+      }
+
+      // Last resort for objects with no id (should not happen — id is ID!
+      // on the interface). resourceType before status: resourceType is
+      // Resource-only, while status exists on many migrated pulses.
       if ('resourceType' in obj) return 'ResourcePulse'
-      return 'StoryPulse' // Default fallback
+      if ('status' in obj) return 'GoalPulse'
+      return 'StoryPulse'
     },
   },
 

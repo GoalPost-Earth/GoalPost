@@ -793,6 +793,11 @@ spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
 | `person_reset_token_hash`          | Person.resetTokenHash           |
 | `llm_usage_createdAt`              | LlmUsage.createdAt              |
 
+Uniqueness constraints also carry backing RANGE indexes — notably `pulse_id`
+on `FieldPulse.id` (`scripts/init-db.js`), which is what makes by-id pulse
+lookups (e.g. `FieldPulse.__resolveType`'s label query) index seeks rather
+than scans.
+
 ## ID Strategy
 
 All entities use string IDs — generated server-side or client-side as needed.
