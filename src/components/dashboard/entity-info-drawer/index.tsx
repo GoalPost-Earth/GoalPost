@@ -89,10 +89,30 @@ export const EntityInfoDrawer: FC = () => {
 
   useEntityDrawerUrl(entity, setEntity)
 
-  // Push focal entity into AppContext when we open. The body's own query
-  // resolves the label and refines the type via setFocalLabel afterward.
+  // Push focal entity into FocalEntityContext when we open. The body's own
+  // query resolves the label and refines the type via setFocalLabel afterward.
+  //
+  // On close, release the manual override so the focal falls back to the
+  // route derivation (GOAL-289). Closing only strips the `?entity=` query
+  // param — the pathname never changes — so FocalEntityContext's
+  // pathname-diff reset never fires, and without this the focal stays
+  // latched on the pulse. The studio action cluster (Upload, Add pulse)
+  // gates on `focalEntity.source === 'route'`, so a stale manual focal
+  // hid it in both Bloom and Dashboard views until a full refresh.
+  // `wasOpenRef` scopes the release to a real open→close transition —
+  // i.e. "a drawer session occurred". Today every manual-focal setter
+  // accompanies a drawer open, so this never clears a focal set elsewhere;
+  // if a drawer-less manual setter is ever added, revisit this guard.
+  const wasOpenRef = useRef(false)
   useEffect(() => {
-    if (!entity) return
+    if (!entity) {
+      if (wasOpenRef.current) {
+        wasOpenRef.current = false
+        setFocalEntity(null)
+      }
+      return
+    }
+    wasOpenRef.current = true
     const focalType = toFocalType(entity.type)
     if (!focalType) return
     setFocalEntity({
