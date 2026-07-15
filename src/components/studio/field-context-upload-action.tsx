@@ -10,22 +10,21 @@ import {
   type UploadDocumentSubmitInput,
 } from '@/components/ui/upload-document-modal'
 import { GET_DOCUMENTS_BY_FIELD_CONTEXT } from '@/app/graphql/queries/DOCUMENT_QUERIES'
-import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
-import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
-import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 
 /**
  * Studio-shell entry point for document upload (GOAL-235).
  *
  * Renders only when the focal entity is a FieldContext. The server gates
- * the actual upload on `canEditContent` (see `handleIngestDocument`), so
+ * the actual upload on `canEditContent` (see `enqueueIngestDocument`), so
  * showing the button to a non-editor is acceptable — they get an inline
  * error in the modal rather than a hidden control.
  *
- * On success, fires `emitOpenAssistantThread` with the returned ingest
- * thread id. `StudioShell` listens for this and switches the assistant
- * runtime to the new thread (opening the floating chat panel if needed).
+ * GOAL-292: `/process` now only anchors a PENDING Document and returns —
+ * extraction runs later in the `process-document-ingestion` background job.
+ * There's no ingest thread or entity count to report at upload time; the
+ * field-context page polls `documentsByFieldContext` and reflects
+ * PENDING/PROCESSING → COMPLETE/FAILED as the background job progresses.
  */
 export const FieldContextUploadAction: FC = () => {
   const { focalEntity } = useFocalEntity()
@@ -113,8 +112,9 @@ export const FieldContextUploadAction: FC = () => {
         throw new Error(`Upload to storage failed (${putRes.status}).`)
       }
 
-      // Step 3: tell the server the file is in place; it anchors the
-      // Document node and kicks off extraction.
+      // Step 3: tell the server the file is in place. This only anchors a
+      // PENDING Document and enqueues it — extraction runs later in the
+      // background job (GOAL-292), so there's no thread or entity count yet.
       const processRes = await fetch('/api/ingest/document/process', {
         method: 'POST',
         credentials: 'include',
@@ -131,43 +131,18 @@ export const FieldContextUploadAction: FC = () => {
       })
       if (!processRes.ok) {
         const errorBody = await processRes.json().catch(() => ({}))
-        throw new Error(errorBody.error ?? `Extraction failed (${processRes.status})`)
-      }
-      const processResult = (await processRes.json()) as {
-        threadId?: string
-        createdEntityCount?: number
-        failedEntityCount?: number
+        throw new Error(errorBody.error ?? `Upload failed (${processRes.status})`)
       }
 
-      if (processResult.threadId) {
-        emitOpenAssistantThread(processResult.threadId)
-      }
+      // Refetch the documents view so the new PENDING row shows up right
+      // away; the field-context page polls it until processing finishes.
+      await apolloClient.refetchQueries({
+        include: [GET_DOCUMENTS_BY_FIELD_CONTEXT],
+      })
 
-      // Refetch the documents + the field's pulse + people views so the
-      // dashboard surfaces newly-created entities without a route change.
-      await Promise.all([
-        apolloClient.refetchQueries({
-          include: [
-            GET_DOCUMENTS_BY_FIELD_CONTEXT,
-            GET_FIELD_CONTEXT_DETAILS,
-            GET_FIELD_CONTEXT_PEOPLE,
-          ],
-        }),
-      ])
-
-      const created = processResult.createdEntityCount ?? 0
-      const failed = processResult.failedEntityCount ?? 0
-      if (created === 0 && failed === 0) {
-        toast.success('Document uploaded. No entities were extracted.')
-      } else if (failed === 0) {
-        toast.success(
-          `Document uploaded. Created ${created} ${created === 1 ? 'entity' : 'entities'} from it.`
-        )
-      } else {
-        toast.success(
-          `Document uploaded. Created ${created} of ${created + failed} proposed entities; see the ingest thread for failures.`
-        )
-      }
+      toast.success(
+        `"${input.filename}" uploaded — processing in the background. It'll appear in the field once ready.`
+      )
       setPinnedFieldContextId(null)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Upload failed'

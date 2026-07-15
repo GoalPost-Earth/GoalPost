@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto'
+import neo4j from 'neo4j-driver'
 import type { Driver } from 'neo4j-driver'
 import type { BlobStore } from './blob-store'
 
@@ -126,6 +128,8 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
           userHint: $userHint,
           blobKey: $blobKey,
           blobUrl: $blobUrl,
+          status: 'PENDING',
+          failureReason: null,
           uploadedAt: datetime()
         })
         CREATE (c)-[:HAS_DOCUMENT]->(d)
@@ -230,6 +234,15 @@ export interface DocumentSummaryInput {
   documentId: string
   summary: string | null
   concepts: string[]
+  /**
+   * Real page count discovered once the blob is actually read (only the
+   * PDF text route resolves this — see `extraction-input-preparer.ts`). The
+   * background worker doesn't know this at anchor time (GOAL-292 deferred
+   * blob access out of the synchronous enqueue path), so it's set here
+   * alongside the summary instead. Omit/null leaves the anchored value
+   * (1 for .txt/.md, null when unknown) untouched.
+   */
+  pageCount?: number | null
 }
 
 /**
@@ -248,13 +261,149 @@ export async function setDocumentSummary(
         `
         MATCH (d:Document {id: $documentId})
         SET d.summary = $summary,
-            d.concepts = $concepts
+            d.concepts = $concepts,
+            d.pageCount = coalesce($pageCount, d.pageCount)
         `,
         {
           documentId: input.documentId,
           summary: input.summary?.trim() || null,
           concepts: input.concepts.filter((c) => c?.trim().length > 0),
+          pageCount: input.pageCount ?? null,
         }
+      )
+    )
+  } finally {
+    await session.close()
+  }
+}
+
+/**
+ * Background-job lifecycle for `Document.status` (GOAL-292). Documents are
+ * anchored PENDING (see `anchorDocument`), claimed PROCESSING by the cron
+ * worker, then move to a terminal COMPLETE/FAILED state.
+ */
+export type DocumentIngestStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'COMPLETE'
+  | 'FAILED'
+
+/**
+ * Atomically claims up to `batchSize` PENDING Documents by transitioning them
+ * to PROCESSING in the same write, oldest-first.
+ *
+ * A naive `MATCH (d:Document {status: 'PENDING'}) ... SET d.status =
+ * 'PROCESSING'` is NOT safe against two overlapping cron invocations: Neo4j
+ * evaluates the `status: 'PENDING'` predicate against each transaction's own
+ * read, and only takes a write lock on `d` when the `SET` actually runs. A
+ * second transaction that matched the same row before the first committed
+ * will still apply its `SET` once unblocked — it does not re-check the
+ * predicate — so both transactions "win" the same Document (confirmed
+ * empirically against a real concurrent-transaction test during review).
+ *
+ * The safe pattern re-checks `d.status` INSIDE the `SET`'s own `CASE`, and
+ * stamps a per-call `claimToken` so the caller can tell which rows it
+ * actually won (`won: true`) versus which were merely re-matched after
+ * losing the race (`won: false`, status already flipped by the other
+ * transaction). Only `won` rows are returned as claimed.
+ */
+export async function claimPendingDocuments(
+  driver: Driver,
+  batchSize: number
+): Promise<string[]> {
+  const claimToken = randomUUID()
+  const session = driver.session()
+  try {
+    const result = await session.executeWrite((tx) =>
+      tx.run(
+        `
+        MATCH (d:Document {status: 'PENDING'})
+        WITH d
+        ORDER BY d.uploadedAt ASC
+        LIMIT $batchSize
+        SET d.status = CASE WHEN d.status = 'PENDING' THEN 'PROCESSING' ELSE d.status END,
+            d.claimToken = CASE WHEN d.status = 'PENDING' THEN $claimToken ELSE d.claimToken END
+        RETURN d.id AS id, d.claimToken = $claimToken AS won
+        `,
+        // LIMIT requires an integer — the driver serializes a plain JS
+        // number as a Cypher Float, which LIMIT rejects at runtime.
+        { batchSize: neo4j.int(batchSize), claimToken }
+      )
+    )
+    return result.records
+      .filter((r) => r.get('won') === true)
+      .map((r) => r.get('id') as string)
+  } finally {
+    await session.close()
+  }
+}
+
+/**
+ * Single-document counterpart to `claimPendingDocuments`, used by the
+ * synchronous `handleIngestDocument` convenience wrapper (tests, and any
+ * caller that wants enqueue+process in one call) right after it anchors a
+ * brand-new PENDING Document. Returns `false` if the document was not found
+ * in PENDING state (already claimed, or doesn't exist). Uses the same
+ * CASE-guarded claim-token pattern as `claimPendingDocuments` — see its doc
+ * comment for why the naive form is unsafe.
+ */
+export async function claimDocumentById(
+  driver: Driver,
+  documentId: string
+): Promise<boolean> {
+  const claimToken = randomUUID()
+  const session = driver.session()
+  try {
+    const result = await session.executeWrite((tx) =>
+      tx.run(
+        `
+        MATCH (d:Document {id: $documentId})
+        SET d.status = CASE WHEN d.status = 'PENDING' THEN 'PROCESSING' ELSE d.status END,
+            d.claimToken = CASE WHEN d.status = 'PENDING' THEN $claimToken ELSE d.claimToken END
+        RETURN d.claimToken = $claimToken AS won
+        `,
+        { documentId, claimToken }
+      )
+    )
+    return result.records[0]?.get('won') === true
+  } finally {
+    await session.close()
+  }
+}
+
+export async function markDocumentComplete(
+  driver: Driver,
+  documentId: string
+): Promise<void> {
+  const session = driver.session()
+  try {
+    await session.executeWrite((tx) =>
+      tx.run(
+        `MATCH (d:Document {id: $documentId}) SET d.status = 'COMPLETE', d.failureReason = null`,
+        { documentId }
+      )
+    )
+  } finally {
+    await session.close()
+  }
+}
+
+/**
+ * Terminal failure — `failureReason` is a plain-English message (kb/07 Rule 1:
+ * no raw ids / internal artifacts) surfaced on the Document card so the user
+ * can decide whether to Re-extract (GOAL-241, the uniform retry path).
+ */
+export async function markDocumentFailed(
+  driver: Driver,
+  documentId: string,
+  failureReason: string
+): Promise<void> {
+  const session = driver.session()
+  try {
+    await session.executeWrite((tx) =>
+      tx.run(
+        `MATCH (d:Document {id: $documentId}) SET d.status = 'FAILED', d.failureReason = $failureReason`,
+        { documentId, failureReason }
       )
     )
   } finally {

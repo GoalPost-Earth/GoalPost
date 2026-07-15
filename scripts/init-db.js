@@ -300,6 +300,14 @@ async function initializeDatabase() {
        FOR (n:Notification) ON (n.createdAt)`,
       `CREATE INDEX notification_read IF NOT EXISTS
        FOR (n:Notification) ON (n.read)`,
+      // GOAL-292: process-document-ingestion cron claims
+      // `MATCH (d:Document {status: 'PENDING'}) WITH d ORDER BY d.uploadedAt
+      // ASC LIMIT $batchSize ...` every minute, forever (Documents are never
+      // auto-deleted per kb/05-data-entities.md). Without this index the
+      // claim degrades to a full NodeByLabelScan over every Document ever
+      // created, on every tick.
+      `CREATE INDEX document_status IF NOT EXISTS
+       FOR (d:Document) ON (d.status)`,
       // NOTE: no separate index on Person.email — the person_email_unique
       // constraint above provides its own backing index for the exact-match
       // email lookups (login, signup guard, findUserByEmail, invite).

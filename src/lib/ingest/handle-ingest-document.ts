@@ -1,7 +1,15 @@
 import { randomUUID } from 'node:crypto'
 import type { Driver } from 'neo4j-driver'
 import type { BlobStore } from './blob-store'
-import { anchorDocument, setDocumentSummary } from './document-storage'
+import {
+  anchorDocument,
+  claimDocumentById,
+  loadDocumentRecord,
+  markDocumentComplete,
+  markDocumentFailed,
+  setDocumentSummary,
+} from './document-storage'
+import { runContextResonanceDiscovery } from '@/lib/resonance/discovery/on-upload-discovery'
 import { prepareExtractionInputs } from './extraction-input-preparer'
 import { loadFieldContextRoster } from './field-context-roster'
 import {
@@ -393,6 +401,7 @@ export type IngestFailureReason =
   | 'oversize_chars'
   | 'parse_failure'
   | 'blob_missing'
+  | 'processing_error'
 
 export interface IngestSuccess {
   ok: true
@@ -411,6 +420,16 @@ export interface IngestFailure {
   reason: IngestFailureReason
 }
 export type IngestDocumentResult = IngestSuccess | IngestFailure
+
+/**
+ * GOAL-292: result of the fast, synchronous half of ingestion — permission
+ * gate + anchor. The route returns this to the browser as a 202; the slow
+ * extraction/summarization/write pipeline runs later in the background job
+ * (`processClaimedDocument`), keyed off the returned `documentId`.
+ */
+export type IngestEnqueueResult =
+  | { ok: true; documentId: string }
+  | { ok: false; reason: 'forbidden'; error: string }
 
 /**
  * Permission gate: caller must hold canEditContent on the FieldContext's
@@ -460,11 +479,17 @@ async function getFieldContextTitle(
   }
 }
 
-export async function handleIngestDocument(
-  deps: IngestDocumentDependencies,
+/**
+ * Fast, synchronous half of ingestion (GOAL-292). Gates on `canEditContent`,
+ * then anchors a PENDING Document — the enqueuing user's identity is
+ * persisted via `UPLOADED_BY` so the background job can act on their behalf
+ * without a live request context. Never touches the blob or calls a model;
+ * the route awaits this and returns 202 well under the old 60s ceiling.
+ */
+export async function enqueueIngestDocument(
+  deps: Pick<IngestDocumentDependencies, 'driver'>,
   input: IngestDocumentInput
-): Promise<IngestDocumentResult> {
-  // Permission gate FIRST so a bad caller never causes graph writes.
+): Promise<IngestEnqueueResult> {
   const allowed = await userCanEditContext(
     deps.driver,
     input.currentUserId,
@@ -478,31 +503,6 @@ export async function handleIngestDocument(
     }
   }
 
-  const fieldContextTitle =
-    (await getFieldContextTitle(deps.driver, input.fieldContextId)) ?? ''
-
-  // The browser has already uploaded the file to S3. Prepare extractor +
-  // summarizer inputs by route (multimodal / office / text) — shared with the
-  // re-extract path so the routing can never drift. See
-  // extraction-input-preparer.ts.
-  const prepared = await prepareExtractionInputs(deps, {
-    mimeType: input.mimeType,
-    blobKey: input.blobKey,
-    filename: input.filename,
-  })
-  if (!prepared.ok) {
-    return { ok: false, reason: prepared.reason, error: prepared.error }
-  }
-  const {
-    extractionModelInputExtras,
-    summarizerExtras,
-    modelClient,
-    summarizerClient,
-    pageCount,
-  } = prepared
-
-  // Anchor the Document node in the graph. The blob already lives at
-  // input.blobKey; we record both the key and a stable identifier URL.
   const documentId = `document_${randomUUID()}`
   await anchorDocument({
     driver: deps.driver,
@@ -512,7 +512,9 @@ export async function handleIngestDocument(
     filename: input.filename,
     mimeType: input.mimeType,
     sizeBytes: input.sizeBytes,
-    pageCount,
+    // Real page count (PDF route) isn't known until the background job
+    // actually reads the blob — `setDocumentSummary` fills it in later.
+    pageCount: null,
     userHint: input.hint,
     blobKey: input.blobKey,
     // The canonical blob locator is the key — presigned URLs are minted on
@@ -520,63 +522,165 @@ export async function handleIngestDocument(
     blobUrl: input.blobKey,
   })
 
-  // Load roster + run extraction and summarizer concurrently.
-  const roster = await loadFieldContextRoster({
-    driver: deps.driver,
-    fieldContextId: input.fieldContextId,
-  })
+  return { ok: true, documentId }
+}
 
-  const [extraction, summary] = await Promise.all([
-    extractEntities(
-      {
-        ...extractionModelInputExtras,
-        filename: input.filename,
-        hint: input.hint,
-        roster,
-        fieldContextId: input.fieldContextId,
-        fieldContextTitle,
-        documentId,
-        userId: input.currentUserId,
-      },
-      modelClient
-    ),
-    summarizeDocument(summarizerClient, {
-      ...summarizerExtras,
-      filename: input.filename,
-      hint: input.hint,
-      fieldContextTitle,
-      userId: input.currentUserId,
-    }),
-  ])
-
-  await setDocumentSummary({
-    driver: deps.driver,
-    documentId,
-    summary: summary.summary,
-    concepts: summary.concepts,
-  })
-
-  const threadId = await createIngestThread(
-    deps.driver,
-    input.currentUserId,
-    documentId,
-    `Ingest: ${input.filename}`
-  )
-
-  const userTurnContent = input.hint
-    ? `Uploaded ${input.filename}. Hint: ${input.hint}`
-    : `Uploaded ${input.filename}`
-  const executedToolCalls = await appendSynthesizedIngestTurns(
-    input.currentUserId,
-    threadId,
-    userTurnContent,
-    extraction
-  )
-
-  return {
-    ok: true,
-    documentId,
-    threadId,
-    executedToolCalls,
+/**
+ * Slow half of ingestion — runs in the `process-document-ingestion` cron
+ * worker against a Document the cron job has already claimed (status
+ * PROCESSING). Loads everything it needs from the graph (no request context
+ * survives into the background), runs extraction + summarization + entity
+ * writes, and lands the Document in a terminal COMPLETE/FAILED state.
+ *
+ * Entities are written attributed to `record.uploaderUserId` — the identity
+ * captured at enqueue time — never a "current" user, since none exists here.
+ */
+export async function processClaimedDocument(
+  deps: IngestDocumentDependencies,
+  documentId: string
+): Promise<IngestDocumentResult> {
+  const record = await loadDocumentRecord(deps.driver, documentId)
+  if (!record) {
+    return {
+      ok: false,
+      reason: 'processing_error',
+      error: 'Document not found.',
+    }
   }
+
+  try {
+    const fieldContextTitle =
+      (await getFieldContextTitle(deps.driver, record.fieldContextId)) ?? ''
+
+    // The blob was uploaded before enqueue; this is the first point the
+    // pipeline actually reads it. Shared with the re-extract path so PDF /
+    // office / text routing can never drift. See extraction-input-preparer.ts.
+    const prepared = await prepareExtractionInputs(deps, {
+      mimeType: record.mimeType,
+      blobKey: record.blobKey,
+      filename: record.filename,
+    })
+    if (!prepared.ok) {
+      await markDocumentFailed(deps.driver, documentId, prepared.error)
+      return { ok: false, reason: prepared.reason, error: prepared.error }
+    }
+    const {
+      extractionModelInputExtras,
+      summarizerExtras,
+      modelClient,
+      summarizerClient,
+      pageCount,
+    } = prepared
+
+    const roster = await loadFieldContextRoster({
+      driver: deps.driver,
+      fieldContextId: record.fieldContextId,
+    })
+
+    const [extraction, summary] = await Promise.all([
+      extractEntities(
+        {
+          ...extractionModelInputExtras,
+          filename: record.filename,
+          hint: record.userHint,
+          roster,
+          fieldContextId: record.fieldContextId,
+          fieldContextTitle,
+          documentId,
+          userId: record.uploaderUserId,
+        },
+        modelClient
+      ),
+      summarizeDocument(summarizerClient, {
+        ...summarizerExtras,
+        filename: record.filename,
+        hint: record.userHint,
+        fieldContextTitle,
+        userId: record.uploaderUserId,
+      }),
+    ])
+
+    await setDocumentSummary({
+      driver: deps.driver,
+      documentId,
+      summary: summary.summary,
+      concepts: summary.concepts,
+      pageCount,
+    })
+
+    const threadId = await createIngestThread(
+      deps.driver,
+      record.uploaderUserId,
+      documentId,
+      `Ingest: ${record.filename}`
+    )
+
+    const userTurnContent = record.userHint
+      ? `Uploaded ${record.filename}. Hint: ${record.userHint}`
+      : `Uploaded ${record.filename}`
+    const executedToolCalls = await appendSynthesizedIngestTurns(
+      record.uploaderUserId,
+      threadId,
+      userTurnContent,
+      extraction
+    )
+
+    await markDocumentComplete(deps.driver, documentId)
+
+    // On-upload resonance discovery (GOAL-294), moved out of the request path
+    // along with everything else — the worker already runs off-request, so
+    // this just awaits inline instead of deferring via `after()`.
+    const createdAPulse = executedToolCalls.some(
+      (c) => c.tool === 'create_pulse' && c.result.success !== false
+    )
+    if (createdAPulse) {
+      await runContextResonanceDiscovery({
+        contextId: record.fieldContextId,
+        actorUserId: record.uploaderUserId,
+      })
+    }
+
+    return { ok: true, documentId, threadId, executedToolCalls }
+  } catch (err) {
+    // The raw error (S3 SDK, Neo4j driver, etc.) can carry internal details —
+    // blob keys/hosts, request ids, stack fragments — that must never reach a
+    // Space member (kb/07 Rule 1). Log it server-side only; persist/return a
+    // curated, generic message. Mirrors the existing curation already applied
+    // to extraction-model errors in extraction-model-invoker.ts.
+    console.error(
+      `[processClaimedDocument] unexpected error processing ${documentId}:`,
+      err
+    )
+    const message = `Something went wrong while processing "${record.filename}". Please try Re-extract.`
+    await markDocumentFailed(deps.driver, documentId, message)
+    return { ok: false, reason: 'processing_error', error: message }
+  }
+}
+
+/**
+ * Synchronous convenience wrapper composing enqueue + claim + process in one
+ * call. Production code no longer calls this directly (the route enqueues;
+ * the cron worker claims + processes on its own schedule) — it exists so
+ * tests and any local/offline caller can still exercise the full pipeline
+ * end-to-end without standing up the cron route.
+ */
+export async function handleIngestDocument(
+  deps: IngestDocumentDependencies,
+  input: IngestDocumentInput
+): Promise<IngestDocumentResult> {
+  const enqueued = await enqueueIngestDocument(deps, input)
+  if (!enqueued.ok) return enqueued
+
+  // Claim should always succeed — this Document was just anchored PENDING by
+  // the call above and nothing else could have raced a brand-new id yet.
+  const claimed = await claimDocumentById(deps.driver, enqueued.documentId)
+  if (!claimed) {
+    return {
+      ok: false,
+      reason: 'processing_error',
+      error: 'Document could not be claimed for processing.',
+    }
+  }
+
+  return processClaimedDocument(deps, enqueued.documentId)
 }

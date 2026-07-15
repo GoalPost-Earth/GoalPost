@@ -1048,6 +1048,16 @@ type Document
   the summarizer returned nothing or the call failed."""
   concepts: [String!]
   uploadedAt: DateTime!
+  """Ingest lifecycle (GOAL-292): PENDING (anchored, awaiting the background
+  job) → PROCESSING (claimed by the cron worker) → COMPLETE / FAILED. Null on
+  Documents created before GOAL-292 shipped — treat null as COMPLETE (a
+  sensible default; no backfill migration was run, per the story's Out of
+  Scope)."""
+  status: String
+  """Plain-English reason a FAILED Document didn't complete — surfaced on the
+  Document card so the user can decide whether to Re-extract (GOAL-241 remains
+  the recovery path). Null unless status is FAILED."""
+  failureReason: String
   fieldContext: [FieldContext!]! @relationship(type: "HAS_DOCUMENT", direction: IN)
   uploadedBy: [Person!]! @relationship(type: "UPLOADED_BY", direction: OUT)
   """People extracted from this document (provenance — see EXTRACTED_FROM)."""

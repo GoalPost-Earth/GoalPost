@@ -247,6 +247,8 @@ interface DocumentRow {
   summary: string | null
   concepts: string[]
   uploadedAt: string
+  status: string
+  failureReason: string | null
 }
 
 export const documentQueries = {
@@ -277,7 +279,9 @@ export const documentQueries = {
             d.userHint AS userHint,
             d.summary AS summary,
             d.concepts AS concepts,
-            toString(d.uploadedAt) AS uploadedAt
+            toString(d.uploadedAt) AS uploadedAt,
+            coalesce(d.status, 'COMPLETE') AS status,
+            d.failureReason AS failureReason
           ORDER BY d.uploadedAt DESC
           `,
           { fieldContextId: args.fieldContextId, userId }
@@ -296,6 +300,8 @@ export const documentQueries = {
           summary: (r.get('summary') as string | null) ?? null,
           concepts: Array.isArray(rawConcepts) ? rawConcepts : [],
           uploadedAt: (r.get('uploadedAt') as string) ?? '',
+          status: (r.get('status') as string) ?? 'COMPLETE',
+          failureReason: (r.get('failureReason') as string | null) ?? null,
         }
       })
     } finally {

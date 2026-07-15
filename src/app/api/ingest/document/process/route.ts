@@ -1,16 +1,6 @@
-import { after } from 'next/server'
 import { driver } from '@/lib/neo4j/driver'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
-import { handleIngestDocument } from '@/lib/ingest/handle-ingest-document'
-import { runContextResonanceDiscovery } from '@/lib/resonance/discovery/on-upload-discovery'
-import { createOpenAIExtractionModelClient } from '@/lib/ingest/openai-extraction-model-client'
-import { createGeminiExtractionModelClient } from '@/lib/ingest/gemini-extraction-model-client'
-import {
-  createOpenAIDocumentSummarizer,
-  createGeminiDocumentSummarizer,
-} from '@/lib/ingest/document-summarizer'
-import { createS3BlobStore } from '@/lib/ingest/s3-blob-store'
-import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
+import { enqueueIngestDocument } from '@/lib/ingest/handle-ingest-document'
 
 /**
  * Step 2 of the direct-to-S3 upload flow.
@@ -19,15 +9,19 @@ import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
  *   { documentId, blobKey, fieldContextId, filename, mimeType, sizeBytes, hint? }
  *
  * Called once the browser has finished PUT-ing the file to S3 via the
- * URL handed back by `/presign`. The orchestrator anchors the Document
- * node, mints a fresh presigned GET URL, and routes to Gemini (PDF) or
- * OpenAI (text) for entity extraction + summarization.
+ * URL handed back by `/presign`. This step validates the body, enforces the
+ * `canEditContent` permission gate, and anchors a PENDING Document node — it
+ * never touches the blob or calls a model. The heavy extraction +
+ * summarization + Neo4j entity-write pipeline runs later, off-request, in the
+ * `/api/cron/process-document-ingestion` background job (GOAL-292).
  *
- * The orchestrator never holds the file bytes. `maxDuration` is raised to the
- * Pro-plan ceiling (300s) as a stopgap for large documents whose Gemini/OpenAI
- * extraction + summarization was blowing past 60s and returning 504s. The
- * durable fix is to make ingestion asynchronous (enqueue + background job) so
- * the request no longer holds the full pipeline — tracked in GOAL-292.
+ * This replaces the former synchronous orchestrator, which ran the full
+ * pipeline inline and could exceed even the raised 300s `maxDuration`
+ * stopgap on large documents / slow LLM calls, returning a 504 to the
+ * browser. Enqueuing keeps this route's own work (permission check + one
+ * Cypher write) well under the original 60s ceiling — `maxDuration` itself is
+ * left at the stopgap's 300s (lowering it is explicitly out of scope for
+ * GOAL-292; it can be revisited once async ingestion is proven).
  */
 
 export const maxDuration = 300
@@ -40,13 +34,6 @@ function badRequest(message: string, reason?: string) {
   return Response.json(reason ? { error: message, reason } : { error: message }, {
     status: 400,
   })
-}
-
-function resolveBlobStore() {
-  if (process.env.INGEST_BLOB_BACKEND === 'memory') {
-    return createMemoryBlobStore()
-  }
-  return createS3BlobStore()
 }
 
 // The presign step mints keys as `documents/document_<uuid>/<sanitized-name>`.
@@ -97,15 +84,8 @@ export async function POST(req: Request) {
     return badRequest('sizeBytes must be a positive number.')
   }
 
-  const result = await handleIngestDocument(
-    {
-      driver,
-      blobStore: resolveBlobStore(),
-      pdfExtractionClient: createGeminiExtractionModelClient(),
-      textExtractionClient: createOpenAIExtractionModelClient(),
-      pdfSummarizerClient: createGeminiDocumentSummarizer(),
-      textSummarizerClient: createOpenAIDocumentSummarizer(),
-    },
+  const result = await enqueueIngestDocument(
+    { driver },
     {
       currentUserId,
       fieldContextId,
@@ -118,44 +98,15 @@ export async function POST(req: Request) {
   )
 
   if (!result.ok) {
-    const status =
-      result.reason === 'forbidden'
-        ? 403
-        : result.reason === 'blob_missing'
-          ? 404
-          : 400
-    return Response.json({ error: result.error, reason: result.reason }, { status })
+    return Response.json({ error: result.error, reason: result.reason }, { status: 403 })
   }
 
-  const createdEntityCount = result.executedToolCalls.filter(
-    (c) => c.result.success !== false
-  ).length
-  const failedEntityCount = result.executedToolCalls.length - createdEntityCount
-
-  // On-upload resonance discovery (GOAL-294). Trigger only when the upload
-  // actually created a pulse — discovery over a context with no new pulse is
-  // wasted work. Scheduled via `after()` so the (potentially minute-long)
-  // embed + LLM analysis runs AFTER the upload response is sent, without
-  // blocking the user and without the dropped-floating-promise risk of a bare
-  // fire-and-forget (the platform keeps the invocation alive up to
-  // `maxDuration`). `runContextResonanceDiscovery` never throws, is
-  // Space-scoped, and dedups so repeated uploads don't duplicate suggestions.
-  const createdAPulse = result.executedToolCalls.some(
-    (c) => c.tool === 'create_pulse' && c.result.success !== false
+  // The background job (`/api/cron/process-document-ingestion`) picks this
+  // Document up from PENDING on its next run and does the actual extraction
+  // + summarization + entity writes. The UI polls `documentsByFieldContext`
+  // to reflect PENDING → PROCESSING → COMPLETE/FAILED.
+  return Response.json(
+    { documentId: result.documentId, status: 'PENDING' },
+    { status: 202 }
   )
-  if (createdAPulse) {
-    after(async () => {
-      await runContextResonanceDiscovery({
-        contextId: fieldContextId,
-        actorUserId: currentUserId,
-      })
-    })
-  }
-
-  return Response.json({
-    documentId: result.documentId,
-    threadId: result.threadId,
-    createdEntityCount,
-    failedEntityCount,
-  })
 }

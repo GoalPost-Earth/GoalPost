@@ -593,6 +593,8 @@ and ADR-014 / ADR-015 in `kb/06-adr.md`.
 | summary    | string   | AI-generated 1-paragraph synopsis; refreshed on re-extract; null on summarizer failure |
 | concepts   | string[] | Up to 5 short concept phrases the AI surfaced as top-level themes; empty on failure    |
 | uploadedAt | datetime | Immutable, set on create                                                               |
+| status     | string   | GOAL-292 ingest lifecycle: `PENDING` \| `PROCESSING` \| `COMPLETE` \| `FAILED`. Anchored `PENDING` by `enqueueIngestDocument`; transitioned by the `process-document-ingestion` cron job. Null on Documents created before GOAL-292 — treat null as `COMPLETE` (no backfill migration was run; see `kb/04-state-machines.md`). |
+| failureReason | string | Plain-English reason a `FAILED` Document didn't complete (unsupported mime, oversize, parse failure, or an unexpected error). Null unless `status = FAILED`. Cleared back to null on a successful Re-extract or a future successful processing pass. |
 
 **Relationships:**
 

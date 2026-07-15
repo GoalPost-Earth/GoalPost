@@ -160,22 +160,31 @@ WF-09: Data Import                       (User imports CSV/XLSX data into the sy
 
 **Actor:** Authenticated User with `canEditContent` on the parent Space.
 
-See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage + `EXTRACTED_FROM` edges) in `kb/06-adr.md` for rationale.
+See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage + `EXTRACTED_FROM` edges) in `kb/06-adr.md` for rationale. Extraction is asynchronous (GOAL-292) — see the Document Ingest Status state machine in `kb/04-state-machines.md`.
 
 1. User picks a `.txt` / `.md` / `.pdf` from the studio with a
    FieldContext focused. The browser POSTs to
    `/api/ingest/document/presign` to get a short-lived presigned PUT URL,
    then uploads the file **directly to S3** (bytes never traverse our
-   server). It then POSTs `/api/ingest/document/process` to trigger
+   server). It then POSTs `/api/ingest/document/process` to enqueue
    extraction. (The legacy GraphQL `uploadDocument` mutation has been
    removed — see ADR-015.)
-2. The process endpoint gates on `canEditContent`, anchors a Document
-   node to the FieldContext via `HAS_DOCUMENT` and to the uploader via
-   `UPLOADED_BY`, and stamps the S3 `blobKey`.
-3. A dedicated extraction model (independent of the chat assistant; may
-   be reasoning — `kb/07-ai-assistant-ux.md` Rule 6) reads the document
-   alongside the FieldContext roster (persons + pulses + **organizations**)
-   and proposes Persons, Organizations, and FieldPulses — plus, per pulse,
+2. The process endpoint gates on `canEditContent`, anchors a `PENDING`
+   Document node to the FieldContext via `HAS_DOCUMENT` and to the uploader
+   via `UPLOADED_BY`, stamps the S3 `blobKey`, and returns `202` — it never
+   touches the blob or calls a model, so the request stays well under the
+   old 60s ceiling regardless of document size (GOAL-292). The uploader's
+   identity persisted via `UPLOADED_BY` is what the background job later
+   acts on behalf of; there is no live request context by the time
+   extraction runs.
+3. A `process-document-ingestion` Vercel Cron job (every minute) claims a
+   batch of `PENDING` Documents — atomically transitioning each to
+   `PROCESSING` in the same write so an overlapping run can't double-pick one
+   — and runs the rest of this workflow per Document. A dedicated extraction
+   model (independent of the chat assistant; may be reasoning —
+   `kb/07-ai-assistant-ux.md` Rule 6) reads the document alongside the
+   FieldContext roster (persons + pulses + **organizations**) and proposes
+   Persons, Organizations, and FieldPulses — plus, per pulse,
    the people/orgs *related to* it (GOAL-298). PDFs route through Gemini
    multimodal via a freshly minted presigned GET URL (`file_data.fileUri`);
    `.txt`/`.md` route through OpenAI against the decoded body.
@@ -203,18 +212,26 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    to a pulse is linked to it via `MENTIONED_IN`, with endpoints resolved by
    name/title from the entities created earlier in the same run.
 7. A synthesized assistant turn carries the **execution result** of each
-   tool call (not a pending-approval payload). The chat panel auto-
-   switches to the new ingest thread so the user sees a record of what
-   ran, plus a one-line "Created N entities" header. Partial failures
-   render per-row.
-8. Re-extract reuses the stored blob + original hint, creates a new
-   ingest thread, refreshes the summary + concepts, and auto-executes
-   the new proposals. Delete removes the blob and Document node;
-   extracted entities survive (their `EXTRACTED_FROM` edges drop with
-   the Document).
+   tool call (not a pending-approval payload), plus a one-line "Created N
+   entities" header; partial failures render per-row. The worker then sets
+   `Document.status = 'COMPLETE'`. Unlike the pre-GOAL-292 synchronous flow,
+   the chat panel does **not** auto-switch to the new thread — there's no
+   live request to carry that signal by the time a background job finishes.
+   The Document card's ingest-thread list (`document-list.tsx`) is how the
+   user opens it once ready; the field-context page polls
+   `documentsByFieldContext` so the card's status updates without a manual
+   refresh.
+8. Re-extract (unchanged, still synchronous — GOAL-292 only made the
+   *initial* upload async) reuses the stored blob + original hint, creates a
+   new ingest thread, refreshes the summary + concepts, and auto-executes
+   the new proposals. Delete removes the blob and Document node; extracted
+   entities survive (their `EXTRACTED_FROM` edges drop with the Document).
 9. Extracted pulses flow through the existing post-creation embedding and
    enrichment jobs (WF-05) and become eligible for daily resonance
-   discovery (WF-06) without any ingest-specific pipeline.
+   discovery (WF-06) without any ingest-specific pipeline. On-upload
+   resonance discovery (GOAL-294) also runs inline at the end of the
+   background job when a pulse landed, same as it did synchronously before
+   GOAL-292 — just off-request now instead of via `after()`.
 
 ### WF-10 v1 implementation constraints
 
@@ -224,5 +241,5 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
 - **Deduplication is in-extractor.** The process endpoint pre-loads the FieldContext roster (persons + pulses + organizations, projected to id + name + minimal context) and inlines it in the model prompt; the model emits `update_person` / `update_pulse` for roster matches rather than creating duplicates (orgs dedup at write time by name-in-context).
 - **Partial persons are skipped.** `create_person` / `update_person` is emitted only when both `firstName` AND `lastName` can be confidently filled. First-name-only / initial-only / role-only mentions are listed in the assistant's free-text reply for manual follow-up — but a single-name mention that is actually an organization is routed to `organizations`, not dropped.
 - **No auto-`CONNECTED_TO`.** Extraction does not create `CONNECTED_TO` edges between the uploader and extracted Persons. `EXTRACTED_FROM` records "this person came from a doc the user has"; `CONNECTED_TO` remains a deliberate user gesture.
-- **Failure path.** On extraction failure (model error, malformed output, empty result), the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message. The Document persists; re-extract is the uniform retry path.
+- **Failure path.** Two distinct failure shapes (GOAL-292): a *soft* failure (model error, malformed output, empty result) still reaches `Document.status = 'COMPLETE'` — the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message instead. A *hard* failure (unsupported mime, oversize, unreadable blob, or any unhandled exception in the pipeline) never creates a thread at all and instead sets `Document.status = 'FAILED'` with `Document.failureReason` (plain English, no raw ids — kb/07 Rule 1) for the Document card to surface. Either way the Document persists; re-extract is the uniform retry path.
 - **Re-upload semantics.** Uploading the same file again creates a new `Document` node with its own ingest thread — no file versioning in v1.

@@ -43,6 +43,13 @@ export type DocumentExtractedPulseRecord = {
   title: string
 }
 
+/** Ingest lifecycle (GOAL-292). Null/legacy rows read as COMPLETE. */
+export type DocumentIngestStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'COMPLETE'
+  | 'FAILED'
+
 export type DocumentRecord = {
   id: string
   filename: string
@@ -53,9 +60,43 @@ export type DocumentRecord = {
   summary?: string | null
   concepts?: string[] | null
   uploadedAt: string
+  status?: string | null
+  failureReason?: string | null
   extractedPeople?: DocumentExtractedPersonRecord[] | null
   extractedPulses?: DocumentExtractedPulseRecord[] | null
   ingestThreads?: DocumentIngestThreadRecord[] | null
+}
+
+function normalizeStatus(status: string | null | undefined): DocumentIngestStatus {
+  return status === 'PENDING' || status === 'PROCESSING' || status === 'FAILED'
+    ? status
+    : 'COMPLETE'
+}
+
+function StatusBadge({ status }: { status: DocumentIngestStatus }) {
+  if (status === 'COMPLETE') return null
+  if (status === 'FAILED') {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full border border-red-500/40 bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-700 dark:text-red-300">
+        <span className="material-symbols-outlined text-[13px]" aria-hidden="true">
+          error
+        </span>
+        Failed
+      </span>
+    )
+  }
+  const label = status === 'PROCESSING' ? 'Processing' : 'Pending'
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-gp-primary/40 bg-gp-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-gp-primary">
+      <span
+        className="material-symbols-outlined text-[13px] animate-spin"
+        aria-hidden="true"
+      >
+        progress_activity
+      </span>
+      {label}
+    </span>
+  )
 }
 
 interface DocumentListProps {
@@ -104,6 +145,8 @@ function DocumentRow({
   const threads = document.ingestThreads ?? []
   const sizeKb = (document.sizeBytes / 1024).toFixed(1)
   const uploaded = formatDate(document.uploadedAt)
+  const status = normalizeStatus(document.status)
+  const isTerminal = status === 'COMPLETE' || status === 'FAILED'
 
   return (
     <li className="rounded-xl border border-gp-glass-border bg-white/50 dark:bg-white/5 transition-colors">
@@ -116,7 +159,7 @@ function DocumentRow({
         >
           <span
             className={cn(
-              'material-symbols-outlined text-[18px] text-gp-ink-muted transition-transform',
+              'material-symbols-outlined text-[18px] text-gp-ink-muted transition-transform shrink-0',
               isExpanded && 'rotate-90'
             )}
             aria-hidden="true"
@@ -126,9 +169,12 @@ function DocumentRow({
           <span className="truncate font-medium" title={document.filename}>
             {document.filename}
           </span>
+          <span className="shrink-0">
+            <StatusBadge status={status} />
+          </span>
         </button>
-        <div className="flex items-center gap-3 shrink-0">
-          <span className="text-xs text-gp-ink-muted whitespace-nowrap">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <span className="hidden sm:inline text-xs text-gp-ink-muted whitespace-nowrap">
             {sizeKb} KB
             {typeof document.pageCount === 'number' && document.pageCount > 0
               ? ` · ${document.pageCount} ${document.pageCount === 1 ? 'page' : 'pages'}`
@@ -141,7 +187,12 @@ function DocumentRow({
               event.stopPropagation()
               onReExtract()
             }}
-            disabled={isReExtracting || isDeleting}
+            disabled={!isTerminal || isReExtracting || isDeleting}
+            title={
+              isTerminal
+                ? undefined
+                : 'Wait for the initial extraction to finish before re-extracting.'
+            }
             className="rounded-full px-3 py-1 text-xs font-medium border border-amber-500/50 text-amber-700 dark:text-amber-400 hover:bg-amber-500/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             {isReExtracting ? 'Re-extracting…' : 'Re-extract'}
@@ -161,6 +212,17 @@ function DocumentRow({
           </button>
         </div>
       </div>
+
+      {status === 'FAILED' && (
+        <div
+          role="alert"
+          className="mx-3 mb-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300"
+        >
+          {document.failureReason?.trim()
+            ? document.failureReason
+            : 'This document could not be processed. Re-extract to try again.'}
+        </div>
+      )}
 
       {isExpanded && (
         <div className="border-t border-gp-glass-border px-4 py-3 space-y-3 text-xs">

@@ -39,6 +39,8 @@ const GET_DOCUMENT_BY_ID = gql`
       summary
       concepts
       uploadedAt
+      status
+      failureReason
       uploadedBy {
         id
         firstName
@@ -79,6 +81,8 @@ interface DocumentDetail {
   summary: string | null
   concepts: string[] | null
   uploadedAt: string
+  status: string | null
+  failureReason: string | null
   uploadedBy?: {
     id: string
     firstName: string | null

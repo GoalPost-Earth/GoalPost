@@ -83,6 +83,29 @@ Not Started → In Progress → Completed
 
 ---
 
+## Document Ingest Status (GOAL-292)
+
+```
+PENDING → PROCESSING → COMPLETE
+                     → FAILED
+```
+
+| Status       | Description                                                                 | Who Triggers                                    |
+| ------------ | ----------------------------------------------------------------------------- | ------------------------------------------------ |
+| `PENDING`    | Document anchored by `POST /api/ingest/document/process`; awaiting the background job | Enqueue route (`enqueueIngestDocument`)   |
+| `PROCESSING` | Claimed by a `process-document-ingestion` cron run (conditional PENDING→PROCESSING transition, safe against double-pickup) | Cron job (`claimPendingDocuments`) |
+| `COMPLETE`   | Extraction + summarization + entity writes finished                          | Cron job (`processClaimedDocument`)              |
+| `FAILED`     | Unrecoverable error (unsupported mime, oversize, parse failure, or an unexpected exception) — `Document.failureReason` carries a plain-English reason | Cron job (`processClaimedDocument`) |
+
+Mirrors the shape of the existing Pulse Processing Job below. `FAILED` is not
+a dead end — Re-extract (GOAL-241, `reExtractDocument` mutation) remains the
+uniform retry path and does not depend on the ingest status. Documents
+created before GOAL-292 have no `status` property; readers treat a null
+status as `COMPLETE` (see `kb/05-data-entities.md`) rather than backfilling
+every legacy row.
+
+---
+
 ## Background Job States
 
 ### Pulse Processing Job

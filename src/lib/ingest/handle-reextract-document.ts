@@ -2,7 +2,12 @@ import type { Driver } from 'neo4j-driver'
 import type { BlobStore } from './blob-store'
 import type { ExtractionModelClient } from './extraction-model-invoker'
 import type { ExecutedToolCallRecord } from './synthesized-turn-appender'
-import { loadDocumentRecord, setDocumentSummary } from './document-storage'
+import {
+  loadDocumentRecord,
+  setDocumentSummary,
+  markDocumentComplete,
+  markDocumentFailed,
+} from './document-storage'
 import {
   summarizeDocument,
   type DocumentSummarizerClient,
@@ -207,6 +212,11 @@ export async function handleReExtractDocument(
     filename: record.filename,
   })
   if (!prepared.ok) {
+    // GOAL-292: keep Document.status/failureReason in sync with the latest
+    // attempt — otherwise a Document the async worker already marked FAILED
+    // stays FAILED with a stale reason even after a re-extract attempt that
+    // hit the same (or a new) hard failure.
+    await markDocumentFailed(deps.driver, record.id, prepared.error)
     return { ok: false, reason: prepared.reason, error: prepared.error }
   }
   const {
@@ -292,6 +302,12 @@ export async function handleReExtractDocument(
     executedToolCalls.length,
     outcome
   )
+
+  // GOAL-292: a re-extract that reaches this point ran the pipeline
+  // end-to-end (even a soft "nothing to extract" outcome is a completed
+  // pass, not a hard failure) — clear any prior FAILED state so the
+  // Document card reflects the latest attempt rather than a stale error.
+  await markDocumentComplete(deps.driver, record.id)
 
   return {
     ok: true,

@@ -187,13 +187,15 @@ export default function FieldContextDetailsPage() {
     }
   )
 
-  const { data: documentsData, refetch: refetchDocuments } = useQuery(
-    GET_DOCUMENTS_BY_FIELD_CONTEXT,
-    {
-      variables: { fieldContextId: contextId },
-      skip: !contextId,
-    }
-  )
+  const {
+    data: documentsData,
+    refetch: refetchDocuments,
+    startPolling: startDocumentsPolling,
+    stopPolling: stopDocumentsPolling,
+  } = useQuery(GET_DOCUMENTS_BY_FIELD_CONTEXT, {
+    variables: { fieldContextId: contextId },
+    skip: !contextId,
+  })
   const documents = useMemo<DocumentRecord[]>(() => {
     const raw = (
       documentsData as
@@ -202,6 +204,22 @@ export default function FieldContextDetailsPage() {
     )?.documentsByFieldContext
     return raw ?? []
   }, [documentsData])
+
+  // GOAL-292: ingestion runs in a background cron job now, so the page polls
+  // documentsByFieldContext while anything is still PENDING/PROCESSING and
+  // stops once every document has reached a terminal (COMPLETE/FAILED)
+  // status — no websocket/push in v1, polling is the documented v1 approach.
+  useEffect(() => {
+    const hasInFlightDocument = documents.some(
+      (doc) => doc.status === 'PENDING' || doc.status === 'PROCESSING'
+    )
+    if (hasInFlightDocument) {
+      startDocumentsPolling(4000)
+    } else {
+      stopDocumentsPolling()
+    }
+    return () => stopDocumentsPolling()
+  }, [documents, startDocumentsPolling, stopDocumentsPolling])
 
   // Setup mutations
   const [createGoalPulse] = useMutation(CREATE_GOAL_PULSE_MUTATION)

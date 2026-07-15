@@ -20,6 +20,8 @@ export const GET_DOCUMENTS_BY_FIELD_CONTEXT = gql`
       summary
       concepts
       uploadedAt
+      status
+      failureReason
       extractedPeople {
         id
         firstName

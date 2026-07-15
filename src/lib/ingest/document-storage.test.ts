@@ -1,7 +1,15 @@
 import { randomUUID } from 'node:crypto'
 import { driver } from '@/lib/neo4j/driver'
 import { createMemoryBlobStore } from './blob-store'
-import { uploadDocument, deleteDocument } from './document-storage'
+import {
+  uploadDocument,
+  deleteDocument,
+  anchorDocument,
+  claimPendingDocuments,
+  claimDocumentById,
+  markDocumentComplete,
+  markDocumentFailed,
+} from './document-storage'
 
 /**
  * Integration test: exercises the real Neo4j driver against the dev Aura
@@ -249,6 +257,160 @@ describe('DocumentStorage — uploadDocument', () => {
       expect(rows.records).toHaveLength(0)
     } finally {
       await session.close()
+    }
+  })
+})
+
+/**
+ * GOAL-292 — Document ingest status lifecycle (anchor PENDING → claim
+ * PROCESSING → terminal COMPLETE/FAILED) and the claim helpers the
+ * background cron worker relies on to avoid double-processing.
+ */
+describe('DocumentStorage — GOAL-292 status lifecycle', () => {
+  // `claimPendingDocuments` is intentionally global (no Space/prefix scope —
+  // it mirrors the real cron job's platform-wide sweep), so a stray PENDING
+  // Document left by an earlier test — either "doc_a" above (never deleted),
+  // or one of THIS describe block's own tests deliberately leaving a
+  // Document PENDING to prove batchSize/ordering — would sort ahead of a
+  // later test's fixtures and break its oldest-first/batch-size assertions.
+  // Drain before EVERY test (not just once) so each one starts on a clean
+  // PENDING slate regardless of what the previous test left behind.
+  beforeEach(async () => {
+    if (!neo4jAvailable) return
+    for (let guard = 0; guard < 20; guard++) {
+      const claimed = await claimPendingDocuments(driver, 50)
+      if (claimed.length === 0) break
+      await Promise.all(claimed.map((id) => markDocumentComplete(driver, id)))
+    }
+  })
+
+  async function anchorPending(docId: string, filename = 'status-test.txt') {
+    const blobKey = `documents/${docId}/${filename}`
+    await anchorDocument({
+      driver,
+      documentId: docId,
+      fieldContextId: ids.fieldContext,
+      uploaderUserId: ids.user,
+      filename,
+      mimeType: 'text/plain',
+      sizeBytes: 42,
+      pageCount: null,
+      userHint: null,
+      blobKey,
+      blobUrl: blobKey,
+    })
+  }
+
+  async function getStatus(docId: string): Promise<{ status: string | null; failureReason: string | null }> {
+    const session = driver.session()
+    try {
+      const rows = await session.run(
+        `MATCH (d:Document {id: $docId}) RETURN d.status AS status, d.failureReason AS failureReason`,
+        { docId }
+      )
+      return {
+        status: (rows.records[0]?.get('status') as string | null) ?? null,
+        failureReason: (rows.records[0]?.get('failureReason') as string | null) ?? null,
+      }
+    } finally {
+      await session.close()
+    }
+  }
+
+  itIf(true)('anchorDocument anchors a new Document as PENDING with no failureReason', async () => {
+    if (!neo4jAvailable) return
+    const docId = `test_${testRunId}_status_pending`
+    await anchorPending(docId)
+    const { status, failureReason } = await getStatus(docId)
+    expect(status).toBe('PENDING')
+    expect(failureReason).toBeNull()
+  })
+
+  itIf(true)('claimDocumentById transitions PENDING → PROCESSING exactly once', async () => {
+    if (!neo4jAvailable) return
+    const docId = `test_${testRunId}_status_claim_once`
+    await anchorPending(docId)
+
+    const firstClaim = await claimDocumentById(driver, docId)
+    expect(firstClaim).toBe(true)
+    expect((await getStatus(docId)).status).toBe('PROCESSING')
+
+    // Already PROCESSING — a second claim attempt (e.g. an overlapping cron
+    // run racing the same id) must not re-claim it.
+    const secondClaim = await claimDocumentById(driver, docId)
+    expect(secondClaim).toBe(false)
+  })
+
+  itIf(true)('markDocumentComplete/markDocumentFailed set terminal state', async () => {
+    if (!neo4jAvailable) return
+    const completeId = `test_${testRunId}_status_complete`
+    const failedId = `test_${testRunId}_status_failed`
+    await anchorPending(completeId)
+    await anchorPending(failedId)
+
+    await markDocumentComplete(driver, completeId)
+    expect(await getStatus(completeId)).toEqual({ status: 'COMPLETE', failureReason: null })
+
+    await markDocumentFailed(driver, failedId, 'Could not read the uploaded file.')
+    expect(await getStatus(failedId)).toEqual({
+      status: 'FAILED',
+      failureReason: 'Could not read the uploaded file.',
+    })
+  })
+
+  itIf(true)('claimPendingDocuments claims oldest-first, respects batchSize, and skips non-PENDING rows', async () => {
+    if (!neo4jAvailable) return
+    const prefix = `test_${testRunId}_status_batch`
+    const oldestId = `${prefix}_a`
+    const middleId = `${prefix}_b`
+    const newestId = `${prefix}_c`
+    const alreadyProcessingId = `${prefix}_d`
+
+    // Stagger uploadedAt so ORDER BY uploadedAt ASC is meaningful — anchor
+    // sets uploadedAt = datetime() at write time, so anchor sequentially.
+    await anchorPending(oldestId)
+    await anchorPending(middleId)
+    await anchorPending(newestId)
+    await anchorPending(alreadyProcessingId)
+    await claimDocumentById(driver, alreadyProcessingId) // pre-claim — should be skipped
+
+    const claimed = await claimPendingDocuments(driver, 2)
+    // Only the two oldest PENDING docs are claimed; the pre-claimed one and
+    // the third-oldest are left untouched.
+    expect(claimed).toEqual([oldestId, middleId])
+    expect((await getStatus(oldestId)).status).toBe('PROCESSING')
+    expect((await getStatus(middleId)).status).toBe('PROCESSING')
+    expect((await getStatus(newestId)).status).toBe('PENDING')
+    expect((await getStatus(alreadyProcessingId)).status).toBe('PROCESSING')
+  })
+
+  itIf(true)('claimPendingDocuments is safe against double-processing across overlapping calls', async () => {
+    if (!neo4jAvailable) return
+    const prefix = `test_${testRunId}_status_concurrent`
+    const docIds = Array.from({ length: 6 }, (_, i) => `${prefix}_${i}`)
+    for (const docId of docIds) {
+      await anchorPending(docId)
+    }
+
+    // Simulate two overlapping cron invocations racing the same PENDING
+    // batch. Each requests up to 4 — more than half the pool — so if the
+    // claim weren't atomic, both could return the same document.
+    const [claimedA, claimedB] = await Promise.all([
+      claimPendingDocuments(driver, 4),
+      claimPendingDocuments(driver, 4),
+    ])
+
+    const allClaimed = [...claimedA, ...claimedB]
+    const uniqueClaimed = new Set(allClaimed)
+    // No document claimed twice across the two overlapping calls.
+    expect(uniqueClaimed.size).toBe(allClaimed.length)
+    // Every claimed id came from this test's pool, and together the two
+    // calls claimed everything available (6 docs, 4 + 4 requested).
+    expect(allClaimed.every((id) => docIds.includes(id))).toBe(true)
+    expect(uniqueClaimed.size).toBe(docIds.length)
+
+    for (const docId of docIds) {
+      expect((await getStatus(docId)).status).toBe('PROCESSING')
     }
   })
 })
