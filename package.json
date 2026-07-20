@@ -25,6 +25,7 @@
     "backfill:corevalue-labels": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/backfill-corevalue-pulse-labels.ts",
     "normalize:log-created-at": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/normalize-log-created-at.ts",
     "clean:orphan-pulses": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/clean-dev-orphan-pulses.ts",
+    "purge:e2e-users": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/purge-e2e-users.ts",
     "clone:neo4j": "tsx scripts/clone-neo4j.ts",
     "clone:dev-to-demo": "tsx scripts/clone-neo4j.ts local demo",
     "clone:dev-to-prod": "tsx scripts/clone-neo4j.ts local production",
