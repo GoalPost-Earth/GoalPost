@@ -13,7 +13,11 @@ import { getConfigForType } from '@/lib/pulse-type-config'
 import { useFocalEntity } from '@/contexts'
 import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 
-type PulseType = 'GoalPulse' | 'ResourcePulse' | 'StoryPulse'
+type PulseType =
+  | 'GoalPulse'
+  | 'ResourcePulse'
+  | 'StoryPulse'
+  | 'CoreValuePulse'
 
 interface PulseConfig {
   icon: string
@@ -39,6 +43,12 @@ const pulseConfig: Record<PulseType, PulseConfig> = {
     color: 'text-gp-story',
     bgClass:
       'bg-purple-50 border-purple-100 text-gp-story dark:bg-purple-500/20 dark:border-purple-500/30',
+  },
+  CoreValuePulse: {
+    icon: getConfigForType('coreValue').icon,
+    color: 'text-gp-coreValue',
+    bgClass:
+      'bg-violet-50 border-violet-100 text-gp-coreValue dark:bg-violet-500/20 dark:border-violet-500/30',
   },
 }
 
@@ -103,11 +113,12 @@ export function ActivePulses({
 
   // Clear cache when scope flips so a stale wider/narrower result set never
   // bleeds across the focal switch. The eviction is keyed by field name, not
-  // query, so it covers all three pulse types.
+  // query, so it covers every pulse type the widget lists.
   React.useEffect(() => {
     client.cache.evict({ fieldName: 'goalPulses' })
     client.cache.evict({ fieldName: 'resourcePulses' })
     client.cache.evict({ fieldName: 'storyPulses' })
+    client.cache.evict({ fieldName: 'coreValuePulses' })
     client.cache.gc()
   }, [client, scope, activeSpaceId, activeFieldContextId])
 
@@ -119,6 +130,7 @@ export function ActivePulses({
       ...(data.goalPulses || []),
       ...(data.resourcePulses || []),
       ...(data.storyPulses || []),
+      ...(data.coreValuePulses || []),
     ]
 
     // Sort by createdAt descending

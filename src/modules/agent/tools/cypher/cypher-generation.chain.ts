@@ -44,9 +44,9 @@ export default async function initCypherGenerationChain(
 
   Example Question: What can you tell me about the core value of Vulnerability?
   Example Cypher:
-  MATCH (coreValue:CoreValue) 
-  WHERE toLower(trim(coreValue.name)) CONTAINS toLower(trim('Vulnerability'))
-  RETURN coreValue.name AS name, elementId(coreValue) AS _id, coreValue.description AS description
+  MATCH (coreValue:CoreValuePulse)
+  WHERE toLower(trim(coreValue.title)) CONTAINS toLower(trim('Vulnerability'))
+  RETURN coreValue.title AS name, elementId(coreValue) AS _id, coreValue.content AS description
 
   Example Question: Show me pulses in the field context called Mutual Aid
   Example Cypher:

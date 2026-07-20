@@ -10,7 +10,8 @@
 # Migration Notes:
 # - Legacy Goals → GoalPulse (in FieldContext within MeSpace/WeSpace)
 # - Legacy Resources → ResourcePulse (in FieldContext within MeSpace/WeSpace)
-# - Legacy CoreValues & CarePoints → StoryPulse (properties merged as optional fields)
+# - Legacy CoreValues → CoreValuePulse (GOAL-287; migrated nodes also keep :CoreValue for provenance)
+# - Legacy CarePoints → PromiseWeave connector nodes (GOAL-266); StoryPulse still declares their optional fields for any un-migrated rows
 # - Legacy Communities → WeSpaces (properties merged into Space interface)
 # - Direct relationships → ResonanceLinks (AI-discovered patterns within FieldContext)
 #
@@ -2683,7 +2684,7 @@ type Query {
     )
   
   """
-  Search for story pulses (including care points & core values) by substring match on title or content.
+  Search for story pulses by substring match on title or content.
   LEGACY: Consider using searchAll for unified search experience.
   """
   storyPulseSubstringSearch(key: String!): [StoryPulse!]!
@@ -2696,39 +2697,15 @@ type Query {
       """
       columnName: "story"
     )
-  
-  """
-  Search for care points (now StoryPulse, identified by having CarePoint-specific fields).
-  LEGACY: Consider using searchAll for unified search experience.
-  """
-  carePointSubstringSearch(key: String!): [StoryPulse!]!
-    @cypher(
-      statement: """
-      MATCH (carePoint:StoryPulse)
-      WHERE (carePoint.levelFulfilled IS NOT NULL OR carePoint.issuesIdentified IS NOT NULL)
-        AND (toLower(carePoint.title) CONTAINS toLower($key)
-          OR toLower(carePoint.content) CONTAINS toLower($key))
-      RETURN carePoint
-      """
-      columnName: "carePoint"
-    )
-  
-  """
-  Search for core values (now StoryPulse, identified by having CoreValue-specific fields).
-  LEGACY: Consider using searchAll for unified search experience.
-  """
-  coreValueSubstringSearch(key: String!): [StoryPulse!]!
-    @cypher(
-      statement: """
-      MATCH (coreValue:StoryPulse)
-      WHERE (coreValue.alignmentChallenges IS NOT NULL OR coreValue.alignmentExamples IS NOT NULL)
-        AND (toLower(coreValue.title) CONTAINS toLower($key)
-          OR toLower(coreValue.content) CONTAINS toLower($key))
-      RETURN coreValue
-      """
-      columnName: "coreValue"
-    )
-  
+
+  # Retired (GOAL-307): carePointSubstringSearch + coreValueSubstringSearch.
+  # Both matched (x:StoryPulse) filtered by legacy CarePoint/CoreValue optional
+  # fields. Since GOAL-287 migrated core values are :CoreValuePulse and migrated
+  # care points are :PromiseWeave, so both queries returned empty for every real
+  # row. No live callers (LEGACY, superseded by searchAll, which covers core
+  # values via its coreValuePulses branch). Removed rather than retargeted to
+  # shrink the @cypher surface.
+
   # ============================================================================
   # ACTIVITY LOGS & NOTIFICATIONS
   # ============================================================================
