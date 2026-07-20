@@ -62,7 +62,7 @@ export async function createLog(input: CreateLogInput): Promise<string> {
       CREATE (log:Log {
         id: $logId,
         description: $description,
-        createdAt: $createdAt,
+        createdAt: datetime($createdAt),
         metadata: $metadataJson,
         metadataJson: $metadataJson
       })
