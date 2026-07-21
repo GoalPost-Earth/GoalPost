@@ -96,7 +96,9 @@ describe('ExtractionSchema — OpenAI strict-mode contract (GOAL-282)', () => {
 describe('mapExtractionObject (GOAL-282)', () => {
   it('normalises null optional fields back to undefined', () => {
     const out = mapExtractionObject({
-      persons: [{ firstName: 'Sarah', lastName: 'Chen', existingId: null }],
+      persons: [
+        { firstName: 'Sarah', lastName: 'Chen', description: null, existingId: null },
+      ],
       organizations: null,
       pulses: [
         {
@@ -121,6 +123,8 @@ describe('mapExtractionObject (GOAL-282)', () => {
     })
 
     expect(out.persons[0].existingId).toBeUndefined()
+    // GOAL-314: a null person description normalises back to undefined.
+    expect(out.persons[0].description).toBeUndefined()
     expect(out.pulses?.[0].existingId).toBeUndefined()
     expect(out.pulses?.[0].authorName).toBeUndefined()
     expect(out.pulses?.[0].relatedPersonNames).toBeUndefined()
@@ -151,7 +155,14 @@ describe('mapExtractionObject (GOAL-282)', () => {
 
   it('preserves real values (including 0) and existing ids', () => {
     const out = mapExtractionObject({
-      persons: [{ firstName: 'Ada', lastName: 'Lovelace', existingId: 'person_1' }],
+      persons: [
+        {
+          firstName: 'Ada',
+          lastName: 'Lovelace',
+          description: 'A mathematician and the first programmer.',
+          existingId: 'person_1',
+        },
+      ],
       organizations: [
         {
           name: 'Analytical Engine Co',
@@ -182,6 +193,10 @@ describe('mapExtractionObject (GOAL-282)', () => {
     })
 
     expect(out.persons[0].existingId).toBe('person_1')
+    // GOAL-314: a real person description is preserved through the mapping.
+    expect(out.persons[0].description).toBe(
+      'A mathematician and the first programmer.'
+    )
     expect(out.organizations?.[0].name).toBe('Analytical Engine Co')
     expect(out.organizations?.[0].description).toBe('Builds mechanical computers.')
     expect(out.organizations?.[0].existingId).toBe('org_1')

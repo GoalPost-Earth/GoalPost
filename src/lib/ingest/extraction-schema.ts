@@ -28,6 +28,12 @@ export const ExtractionSchema = z.object({
       z.object({
         firstName: z.string().describe('Given name. Empty string if uncertain.'),
         lastName: z.string().describe('Family name. Empty string if uncertain.'),
+        description: z
+          .string()
+          .nullable()
+          .describe(
+            'One short phrase on who this person is or their role, drawn ONLY from what the document says (e.g. "community organizer at the co-op", "the author\'s mentor"). No invented detail. Use null when the document gives nothing beyond the name.'
+          ),
         existingId: z
           .string()
           .nullable()
@@ -156,6 +162,7 @@ export function mapExtractionObject(
     persons: object.persons.map((p) => ({
       firstName: p.firstName ?? '',
       lastName: p.lastName ?? '',
+      description: p.description ?? undefined,
       existingId: p.existingId ?? undefined,
     })),
     organizations: (object.organizations ?? []).map((o) => ({

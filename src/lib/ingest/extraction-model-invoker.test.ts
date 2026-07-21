@@ -36,6 +36,37 @@ describe('ExtractionModelInvoker', () => {
     expect(result.assistantText).toContain('Sarah Chen')
   })
 
+  it('carries an extracted person description into the create_person args (GOAL-314)', async () => {
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [
+        {
+          firstName: 'Sarah',
+          lastName: 'Chen',
+          description: 'Led the migration; engineering lead on the co-op.',
+        },
+      ],
+      assistantText: 'I found one person.',
+    })
+    const result = await extractEntities(baseInput, modelClient)
+    if (result.kind !== 'ok') throw new Error('unreachable')
+    expect(result.toolCalls[0].tool).toBe('create_person')
+    expect(result.toolCalls[0].args).toMatchObject({
+      firstName: 'Sarah',
+      lastName: 'Chen',
+      description: 'Led the migration; engineering lead on the co-op.',
+    })
+  })
+
+  it('omits description from create_person args when the extractor gives none', async () => {
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [{ firstName: 'Sarah', lastName: 'Chen' }],
+      assistantText: '',
+    })
+    const result = await extractEntities(baseInput, modelClient)
+    if (result.kind !== 'ok') throw new Error('unreachable')
+    expect(result.toolCalls[0].args).not.toHaveProperty('description')
+  })
+
   it('filters out partial persons (missing lastName) and surfaces them in assistantText, never as tool calls', async () => {
     const modelClient: ExtractionModelClient = async () => ({
       persons: [
