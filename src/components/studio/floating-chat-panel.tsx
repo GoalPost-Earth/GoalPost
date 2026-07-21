@@ -83,7 +83,15 @@ export const FloatingChatPanel: FC<FloatingChatPanelProps> = ({
           : 'bottom-6 right-6 w-[400px] h-[68vh] max-h-[640px] rounded-2xl'
       )}
     >
-      <header className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-gp-glass-border bg-gp-glass-bg backdrop-blur-md shrink-0">
+      {/* `relative z-10` is load-bearing, not cosmetic: `backdrop-blur-md`
+          (backdrop-filter) makes this header its own stacking context, which
+          traps the ThreadSwitcher popover's `z-50` *inside* the header. As a
+          static (z-auto) element the header paints at the same level as — but
+          earlier in the DOM than — the ChatMode body below, so the chat content
+          would paint OVER the popover and the previous-conversations dropdown
+          would be invisible (GOAL-312). Promoting the header to a positioned
+          z-10 element lifts its whole stacking context above the body. */}
+      <header className="relative z-10 flex items-center justify-between gap-2 px-3 py-1.5 border-b border-gp-glass-border bg-gp-glass-bg backdrop-blur-md shrink-0">
         {/* Thread controls — the floating/mobile equivalent of the docked
             ThreadsSidebar: switch to a previous conversation (switcher) or
             start a new one (＋). */}
