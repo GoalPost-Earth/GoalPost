@@ -43,6 +43,13 @@ export const GET_RESONANCE_LINK_DETAILS = graphql(`
           location
           createdAt
         }
+        ... on CoreValuePulse {
+          id
+          title
+          content
+          intensity
+          createdAt
+        }
       }
       target {
         __typename
@@ -72,6 +79,13 @@ export const GET_RESONANCE_LINK_DETAILS = graphql(`
           content
           intensity
           location
+          createdAt
+        }
+        ... on CoreValuePulse {
+          id
+          title
+          content
+          intensity
           createdAt
         }
       }

@@ -42,6 +42,12 @@ function typenameToNodeType(typename: string): NodeType {
   return map[typename] ?? 'goal'
 }
 
+// Endpoint pulse subtypes GET_RESONANCE_LINK_DETAILS carries a fragment for and
+// this view can render. CoreValuePulse included (GOAL-307) since resonance
+// discovery can mint a link against a core value; CarePulse stays excluded (no
+// query fragment, no real content yet — search-resolver.ts).
+const RENDERABLE_TYPES = ['GoalPulse', 'ResourcePulse', 'StoryPulse', 'CoreValuePulse']
+
 export const ResonanceDetailsBody: FC<{
   resonanceId: string
   label?: string
@@ -73,20 +79,16 @@ export const ResonanceDetailsBody: FC<{
     return <NotFoundBody />
   }
 
-  // Filter out CarePulse / CoreValuePulse — the query only resolves the
-  // three pulse subtypes that carry the fields this view renders.
+  // Resolve each endpoint to the concrete pulse subtype the query carries a
+  // fragment for (see RENDERABLE_TYPES at module scope).
   const sourceArr = resonance.source || []
   const targetArr = resonance.target || []
   const source = sourceArr.find(
-    (p) =>
-      p?.__typename &&
-      ['GoalPulse', 'ResourcePulse', 'StoryPulse'].includes(p.__typename)
+    (p) => p?.__typename && RENDERABLE_TYPES.includes(p.__typename)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) as any
   const target = targetArr.find(
-    (p) =>
-      p?.__typename &&
-      ['GoalPulse', 'ResourcePulse', 'StoryPulse'].includes(p.__typename)
+    (p) => p?.__typename && RENDERABLE_TYPES.includes(p.__typename)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) as any
   const contextId = resonance.context?.[0]?.id

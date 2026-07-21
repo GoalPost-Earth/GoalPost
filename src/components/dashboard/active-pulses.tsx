@@ -9,37 +9,33 @@ import {
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { useQuery, useApolloClient } from '@apollo/client/react'
-import { getConfigForType } from '@/lib/pulse-type-config'
+import { getConfigForType, type NodeType } from '@/lib/pulse-type-config'
 import { useFocalEntity } from '@/contexts'
 import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
 
-type PulseType = 'GoalPulse' | 'ResourcePulse' | 'StoryPulse'
+type PulseType =
+  | 'GoalPulse'
+  | 'ResourcePulse'
+  | 'StoryPulse'
+  | 'CoreValuePulse'
 
-interface PulseConfig {
-  icon: string
-  color: string
-  bgClass: string
+// Map each pulse __typename to its NodeType key so icon, text color, and the
+// themed color token all come from pulse-type-config (the single source of
+// truth) instead of hardcoded palette classes — this keeps the card tints in
+// lock-step with the active theme in light, dark, and every theme variant.
+const typenameToNodeType: Record<PulseType, NodeType> = {
+  GoalPulse: 'goal',
+  ResourcePulse: 'resource',
+  StoryPulse: 'story',
+  CoreValuePulse: 'coreValue',
 }
 
-const pulseConfig: Record<PulseType, PulseConfig> = {
-  GoalPulse: {
-    icon: getConfigForType('goal').icon,
-    color: 'text-gp-goal',
-    bgClass:
-      'bg-sky-50 border-sky-100 text-gp-goal dark:bg-sky-500/20 dark:border-sky-500/30',
-  },
-  ResourcePulse: {
-    icon: getConfigForType('resource').icon,
-    color: 'text-gp-resource',
-    bgClass:
-      'bg-green-50 border-green-100 text-gp-resource dark:bg-green-500/20 dark:border-green-500/30',
-  },
-  StoryPulse: {
-    icon: getConfigForType('story').icon,
-    color: 'text-gp-story',
-    bgClass:
-      'bg-purple-50 border-purple-100 text-gp-story dark:bg-purple-500/20 dark:border-purple-500/30',
-  },
+/** Soft, theme-aware tint for an entity's icon chip + type pill. */
+function entityTint(cssVar: string): React.CSSProperties {
+  return {
+    backgroundColor: `color-mix(in srgb, var(${cssVar}) 14%, transparent)`,
+    borderColor: `color-mix(in srgb, var(${cssVar}) 30%, transparent)`,
+  }
 }
 
 interface ActivePulsesProps {
@@ -103,11 +99,12 @@ export function ActivePulses({
 
   // Clear cache when scope flips so a stale wider/narrower result set never
   // bleeds across the focal switch. The eviction is keyed by field name, not
-  // query, so it covers all three pulse types.
+  // query, so it covers every pulse type the widget lists.
   React.useEffect(() => {
     client.cache.evict({ fieldName: 'goalPulses' })
     client.cache.evict({ fieldName: 'resourcePulses' })
     client.cache.evict({ fieldName: 'storyPulses' })
+    client.cache.evict({ fieldName: 'coreValuePulses' })
     client.cache.gc()
   }, [client, scope, activeSpaceId, activeFieldContextId])
 
@@ -119,6 +116,7 @@ export function ActivePulses({
       ...(data.goalPulses || []),
       ...(data.resourcePulses || []),
       ...(data.storyPulses || []),
+      ...(data.coreValuePulses || []),
     ]
 
     // Sort by createdAt descending
@@ -127,8 +125,6 @@ export function ActivePulses({
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
   }, [data])
-
-  console.log('Fetched pulses:', allPulses)
 
   if (error) {
     return (
@@ -151,12 +147,12 @@ export function ActivePulses({
         <h3 className="section-title text-accent-glow text-sm font-bold uppercase tracking-widest">
           Active Pulses
         </h3>
-        {!showAll && (
+        {onViewAll && (allPulses.length > 5 || showAll) && (
           <button
             onClick={onViewAll}
             className="cursor-pointer text-xs text-slate-400 hover:text-slate-700 transition-colors font-medium dark:text-white/50 dark:hover:text-white"
           >
-            View Pulses
+            {showAll ? 'Show less' : 'View all'}
           </button>
         )}
       </div>
@@ -191,12 +187,14 @@ export function ActivePulses({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {(showAll ? allPulses : allPulses.slice(0, 5)).map((pulse) => {
-            const config = pulseConfig[pulse.__typename as PulseType]
+            const nodeType =
+              typenameToNodeType[pulse.__typename as PulseType] ?? 'goal'
+            const config = getConfigForType(nodeType)
+            const tint = entityTint(config.cssVar)
             const pulseTypeLabel = pulse.__typename
               .replace('Pulse', '')
               .replace(/([A-Z])/g, ' $1')
               .trim()
-            console.log('Pulses:', pulse)
             const timeAgo = formatDistanceToNow(new Date(pulse.createdAt), {
               addSuffix: true,
             })
@@ -209,13 +207,14 @@ export function ActivePulses({
                 }
                 className="chat-card rounded-xl p-4 cursor-pointer group"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-start justify-between mb-3 gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div
                       className={cn(
                         'size-8 rounded-full border flex items-center justify-center shadow-sm flex-shrink-0',
-                        config.bgClass
+                        config.color
                       )}
+                      style={tint}
                     >
                       <span className="material-symbols-outlined text-sm">
                         {config.icon}
@@ -223,14 +222,15 @@ export function ActivePulses({
                     </div>
                     <span
                       className={cn(
-                        'text-[10px] font-semibold px-2 py-1 rounded-full',
-                        config.bgClass
+                        'text-[10px] font-semibold px-2 py-1 rounded-full shrink-0',
+                        config.color
                       )}
+                      style={tint}
                     >
                       {pulseTypeLabel}
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-400 font-medium dark:text-white/40">
+                  <span className="text-[10px] text-slate-400 font-medium dark:text-white/40 shrink-0">
                     {timeAgo}
                   </span>
                 </div>

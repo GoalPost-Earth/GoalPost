@@ -768,6 +768,7 @@ spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
 | `organization_id`              | Organization.id UNIQUE             |
 | `llm_usage_id`                 | LlmUsage.id UNIQUE                 |
 | `system_principal_id`          | SystemPrincipal.id UNIQUE         |
+| `log_id_unique`                | Log.id UNIQUE                     |
 
 ## Vector Indexes (1536 dimensions, cosine similarity)
 

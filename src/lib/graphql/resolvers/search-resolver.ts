@@ -119,6 +119,7 @@ export const searchResolvers = {
               CONTAINS $searchTerm
             RETURN p.id AS id, coalesce(p.firstName, '') AS firstName,
                    coalesce(p.lastName, '') AS lastName, p.photo AS photo
+            ORDER BY lastName, firstName, id
             LIMIT 10
             `,
             { searchTerm: searchTerm.replace(/\s+/g, ' ') }
@@ -138,6 +139,7 @@ export const searchResolvers = {
               WHERE owner.id = $userId
             }
             RETURN s
+            ORDER BY s.createdAt DESC, s.id
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }
@@ -163,6 +165,7 @@ export const searchResolvers = {
               }
             )
             RETURN s
+            ORDER BY s.createdAt DESC, s.id
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }
@@ -187,6 +190,7 @@ export const searchResolvers = {
               }
             )
             RETURN f
+            ORDER BY f.createdAt DESC, f.id
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }
@@ -213,6 +217,7 @@ export const searchResolvers = {
             )
             WITH DISTINCT p, collect(DISTINCT ctx) as contexts
             RETURN p, contexts
+            ORDER BY p.createdAt DESC, p.id
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }
@@ -239,6 +244,7 @@ export const searchResolvers = {
             )
             WITH DISTINCT p, collect(DISTINCT ctx) as contexts
             RETURN p, contexts
+            ORDER BY p.createdAt DESC, p.id
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }
@@ -265,6 +271,7 @@ export const searchResolvers = {
             )
             WITH DISTINCT p, collect(DISTINCT ctx) as contexts
             RETURN p, contexts
+            ORDER BY p.createdAt DESC, p.id
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }
@@ -293,6 +300,7 @@ export const searchResolvers = {
             )
             WITH DISTINCT p, collect(DISTINCT ctx) as contexts
             RETURN p, contexts
+            ORDER BY p.createdAt DESC, p.id
             LIMIT 10
             `,
             { searchTerm, userId: currentUserId }

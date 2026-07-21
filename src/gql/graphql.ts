@@ -732,8 +732,6 @@ export type CarePulseDocumentExtractedFromAggregationSelection = {
 
 export type CarePulseDocumentExtractedFromNodeAggregateSelection = {
   __typename?: 'CarePulseDocumentExtractedFromNodeAggregateSelection'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -781,36 +779,6 @@ export type CarePulseExtractedFromNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<CarePulseExtractedFromNodeAggregationWhereInput>>
   NOT?: InputMaybe<CarePulseExtractedFromNodeAggregationWhereInput>
   OR?: InputMaybe<Array<CarePulseExtractedFromNodeAggregationWhereInput>>
-  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2038,8 +2006,6 @@ export type CoreValuePulseDocumentExtractedFromAggregationSelection = {
 
 export type CoreValuePulseDocumentExtractedFromNodeAggregateSelection = {
   __typename?: 'CoreValuePulseDocumentExtractedFromNodeAggregateSelection'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -2087,36 +2053,6 @@ export type CoreValuePulseExtractedFromNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<CoreValuePulseExtractedFromNodeAggregationWhereInput>>
   NOT?: InputMaybe<CoreValuePulseExtractedFromNodeAggregationWhereInput>
   OR?: InputMaybe<Array<CoreValuePulseExtractedFromNodeAggregationWhereInput>>
-  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3202,10 +3138,6 @@ export type DeletePersonConnectionResponsesConnection = {
  */
 export type Document = {
   __typename?: 'Document'
-  /** Blob storage key. Internal — UI surfaces filename instead. */
-  blobKey?: Maybe<Scalars['String']['output']>
-  /** Provider-issued URL for the blob. May be expiring/private; treat as opaque. */
-  blobUrl?: Maybe<Scalars['String']['output']>
   /**
    * Up to ~5 short concept phrases the AI surfaced as the document's
    * high-level themes. Rendered as chips on the Document card so the user can
@@ -3484,8 +3416,6 @@ export type DocumentAggregate = {
 
 export type DocumentAggregateNode = {
   __typename?: 'DocumentAggregateNode'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -3499,8 +3429,6 @@ export type DocumentAggregateNode = {
 
 export type DocumentAggregateSelection = {
   __typename?: 'DocumentAggregateSelection'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   count: Scalars['Int']['output']
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
@@ -4669,16 +4597,6 @@ export type DocumentWhere = {
   AND?: InputMaybe<Array<DocumentWhere>>
   NOT?: InputMaybe<DocumentWhere>
   OR?: InputMaybe<Array<DocumentWhere>>
-  blobKey_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  blobKey_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  blobKey_EQ?: InputMaybe<Scalars['String']['input']>
-  blobKey_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  blobKey_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  blobUrl_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  blobUrl_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  blobUrl_EQ?: InputMaybe<Scalars['String']['input']>
-  blobUrl_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  blobUrl_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   concepts_EQ?: InputMaybe<Array<Scalars['String']['input']>>
   concepts_INCLUDES?: InputMaybe<Scalars['String']['input']>
   extractedPeopleAggregate?: InputMaybe<DocumentExtractedPeopleAggregateInput>
@@ -5744,8 +5662,6 @@ export type FieldContextDocumentDocumentsAggregationSelection = {
 
 export type FieldContextDocumentDocumentsNodeAggregateSelection = {
   __typename?: 'FieldContextDocumentDocumentsNodeAggregateSelection'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -5816,36 +5732,6 @@ export type FieldContextDocumentsNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<FieldContextDocumentsNodeAggregationWhereInput>>
   NOT?: InputMaybe<FieldContextDocumentsNodeAggregationWhereInput>
   OR?: InputMaybe<Array<FieldContextDocumentsNodeAggregationWhereInput>>
-  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8255,36 +8141,6 @@ export type FieldPulseExtractedFromNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<FieldPulseExtractedFromNodeAggregationWhereInput>>
   NOT?: InputMaybe<FieldPulseExtractedFromNodeAggregationWhereInput>
   OR?: InputMaybe<Array<FieldPulseExtractedFromNodeAggregationWhereInput>>
-  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9486,8 +9342,6 @@ export type GoalPulseDocumentExtractedFromAggregationSelection = {
 
 export type GoalPulseDocumentExtractedFromNodeAggregateSelection = {
   __typename?: 'GoalPulseDocumentExtractedFromNodeAggregateSelection'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -9535,36 +9389,6 @@ export type GoalPulseExtractedFromNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<GoalPulseExtractedFromNodeAggregationWhereInput>>
   NOT?: InputMaybe<GoalPulseExtractedFromNodeAggregationWhereInput>
   OR?: InputMaybe<Array<GoalPulseExtractedFromNodeAggregationWhereInput>>
-  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14750,8 +14574,6 @@ export type OrganizationDocumentExtractedFromAggregationSelection = {
 
 export type OrganizationDocumentExtractedFromNodeAggregateSelection = {
   __typename?: 'OrganizationDocumentExtractedFromNodeAggregateSelection'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -14809,36 +14631,6 @@ export type OrganizationExtractedFromNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<OrganizationExtractedFromNodeAggregationWhereInput>>
   NOT?: InputMaybe<OrganizationExtractedFromNodeAggregationWhereInput>
   OR?: InputMaybe<Array<OrganizationExtractedFromNodeAggregationWhereInput>>
-  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16150,8 +15942,6 @@ export type PersonDocumentExtractedFromAggregationSelection = {
 
 export type PersonDocumentExtractedFromNodeAggregateSelection = {
   __typename?: 'PersonDocumentExtractedFromNodeAggregateSelection'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -16228,36 +16018,6 @@ export type PersonExtractedFromNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<PersonExtractedFromNodeAggregationWhereInput>>
   NOT?: InputMaybe<PersonExtractedFromNodeAggregationWhereInput>
   OR?: InputMaybe<Array<PersonExtractedFromNodeAggregationWhereInput>>
-  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -18763,11 +18523,6 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "addSpaceMemberResponsesConnection" instead */
   addSpaceMemberResponsesAggregate: AddSpaceMemberResponseAggregateSelection
   addSpaceMemberResponsesConnection: AddSpaceMemberResponsesConnection
-  /**
-   * Search for care points (now StoryPulse, identified by having CarePoint-specific fields).
-   * LEGACY: Consider using searchAll for unified search experience.
-   */
-  carePointSubstringSearch: Array<StoryPulse>
   carePulses: Array<CarePulse>
   /** @deprecated Please use the explicit field "aggregate" inside "carePulsesConnection" instead */
   carePulsesAggregate: CarePulseAggregateSelection
@@ -18780,11 +18535,6 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "coreValuePulsesConnection" instead */
   coreValuePulsesAggregate: CoreValuePulseAggregateSelection
   coreValuePulsesConnection: CoreValuePulsesConnection
-  /**
-   * Search for core values (now StoryPulse, identified by having CoreValue-specific fields).
-   * LEGACY: Consider using searchAll for unified search experience.
-   */
-  coreValueSubstringSearch: Array<StoryPulse>
   createLogResponses: Array<CreateLogResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "createLogResponsesConnection" instead */
   createLogResponsesAggregate: CreateLogResponseAggregateSelection
@@ -18977,7 +18727,7 @@ export type Query = {
   spacesAggregate: SpaceAggregateSelection
   spacesConnection: SpacesConnection
   /**
-   * Search for story pulses (including care points & core values) by substring match on title or content.
+   * Search for story pulses by substring match on title or content.
    * LEGACY: Consider using searchAll for unified search experience.
    */
   storyPulseSubstringSearch: Array<StoryPulse>
@@ -19052,10 +18802,6 @@ export type QueryAddSpaceMemberResponsesConnectionArgs = {
   where?: InputMaybe<AddSpaceMemberResponseWhere>
 }
 
-export type QueryCarePointSubstringSearchArgs = {
-  key: Scalars['String']['input']
-}
-
 export type QueryCarePulsesArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -19108,10 +18854,6 @@ export type QueryCoreValuePulsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<CoreValuePulseSort>>
   where?: InputMaybe<CoreValuePulseWhere>
-}
-
-export type QueryCoreValueSubstringSearchArgs = {
-  key: Scalars['String']['input']
 }
 
 export type QueryCreateLogResponsesArgs = {
@@ -21353,8 +21095,6 @@ export type ResourcePulseDocumentExtractedFromAggregationSelection = {
 
 export type ResourcePulseDocumentExtractedFromNodeAggregateSelection = {
   __typename?: 'ResourcePulseDocumentExtractedFromNodeAggregateSelection'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -21402,36 +21142,6 @@ export type ResourcePulseExtractedFromNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<ResourcePulseExtractedFromNodeAggregationWhereInput>>
   NOT?: InputMaybe<ResourcePulseExtractedFromNodeAggregationWhereInput>
   OR?: InputMaybe<Array<ResourcePulseExtractedFromNodeAggregationWhereInput>>
-  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -24321,8 +24031,6 @@ export type StoryPulseDocumentExtractedFromAggregationSelection = {
 
 export type StoryPulseDocumentExtractedFromNodeAggregateSelection = {
   __typename?: 'StoryPulseDocumentExtractedFromNodeAggregateSelection'
-  blobKey: StringAggregateSelection
-  blobUrl: StringAggregateSelection
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
@@ -24370,36 +24078,6 @@ export type StoryPulseExtractedFromNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<StoryPulseExtractedFromNodeAggregationWhereInput>>
   NOT?: InputMaybe<StoryPulseExtractedFromNodeAggregationWhereInput>
   OR?: InputMaybe<Array<StoryPulseExtractedFromNodeAggregationWhereInput>>
-  blobKey_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobKey_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobKey_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobKey_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  blobUrl_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  blobUrl_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   filename_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   filename_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -29158,6 +28836,23 @@ export type GetAllPulsesQuery = {
       email?: string | null
     }>
   }>
+  coreValuePulses: Array<{
+    __typename: 'CoreValuePulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
+  }>
 }
 
 export type GetAllPulsesByContextQueryVariables = Exact<{
@@ -29217,6 +28912,23 @@ export type GetAllPulsesByContextQuery = {
       email?: string | null
     }>
   }>
+  coreValuePulses: Array<{
+    __typename: 'CoreValuePulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
+  }>
 }
 
 export type GetAllPulsesBySpaceQueryVariables = Exact<{
@@ -29261,6 +28973,23 @@ export type GetAllPulsesBySpaceQuery = {
   }>
   storyPulses: Array<{
     __typename: 'StoryPulse'
+    id: string
+    title: string
+    content: string
+    createdAt: any
+    intensity?: number | null
+    context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
+    createdBy: Array<{
+      __typename?: 'Person'
+      id: string
+      firstName: string
+      lastName: string
+      name: string
+      email?: string | null
+    }>
+  }>
+  coreValuePulses: Array<{
+    __typename: 'CoreValuePulse'
     id: string
     title: string
     content: string
@@ -30643,7 +30372,14 @@ export type GetResonanceLinkDetailsQuery = {
     context: Array<{ __typename?: 'FieldContext'; id: string }>
     source: Array<
       | { __typename: 'CarePulse' }
-      | { __typename: 'CoreValuePulse' }
+      | {
+          __typename: 'CoreValuePulse'
+          id: string
+          title: string
+          content: string
+          intensity?: number | null
+          createdAt: any
+        }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -30678,7 +30414,14 @@ export type GetResonanceLinkDetailsQuery = {
     >
     target: Array<
       | { __typename: 'CarePulse' }
-      | { __typename: 'CoreValuePulse' }
+      | {
+          __typename: 'CoreValuePulse'
+          id: string
+          title: string
+          content: string
+          intensity?: number | null
+          createdAt: any
+        }
       | {
           __typename: 'GoalPulse'
           id: string
@@ -30748,6 +30491,14 @@ export type SearchAllQuery = {
     }>
     storyPulses: Array<{
       __typename: 'StoryPulse'
+      id: string
+      title: string
+      content: string
+      createdAt: any
+      intensity?: number | null
+    }>
+    coreValuePulses: Array<{
+      __typename: 'CoreValuePulse'
       id: string
       title: string
       content: string
@@ -40428,6 +40179,52 @@ export const GetAllPulsesDocument = {
               ],
             },
           },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'coreValuePulses' },
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
         ],
       },
     },
@@ -40607,6 +40404,80 @@ export const GetAllPulsesByContextDocument = {
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'storyPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'id_EQ' },
+                            value: {
+                              kind: 'Variable',
+                              name: { kind: 'Name', value: 'contextId' },
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'coreValuePulses' },
             arguments: [
               {
                 kind: 'Argument',
@@ -40986,6 +40857,143 @@ export const GetAllPulsesBySpaceDocument = {
           {
             kind: 'Field',
             name: { kind: 'Name', value: 'storyPulses' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'context_SOME' },
+                      value: {
+                        kind: 'ObjectValue',
+                        fields: [
+                          {
+                            kind: 'ObjectField',
+                            name: { kind: 'Name', value: 'OR' },
+                            value: {
+                              kind: 'ListValue',
+                              values: [
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: {
+                                        kind: 'Name',
+                                        value: 'meSpace_SOME',
+                                      },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'id_EQ',
+                                            },
+                                            value: {
+                                              kind: 'Variable',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'spaceId',
+                                              },
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                                {
+                                  kind: 'ObjectValue',
+                                  fields: [
+                                    {
+                                      kind: 'ObjectField',
+                                      name: {
+                                        kind: 'Name',
+                                        value: 'weSpace_SOME',
+                                      },
+                                      value: {
+                                        kind: 'ObjectValue',
+                                        fields: [
+                                          {
+                                            kind: 'ObjectField',
+                                            name: {
+                                              kind: 'Name',
+                                              value: 'id_EQ',
+                                            },
+                                            value: {
+                                              kind: 'Variable',
+                                              name: {
+                                                kind: 'Name',
+                                                value: 'spaceId',
+                                              },
+                                            },
+                                          },
+                                        ],
+                                      },
+                                    },
+                                  ],
+                                },
+                              ],
+                            },
+                          },
+                        ],
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: '__typename' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'content' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'context' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'coreValuePulses' },
             arguments: [
               {
                 kind: 'Argument',
@@ -45959,6 +45967,38 @@ export const GetResonanceLinkDetailsDocument = {
                           ],
                         },
                       },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CoreValuePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'content' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'intensity' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46088,6 +46128,38 @@ export const GetResonanceLinkDetailsDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'location' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'createdAt' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'InlineFragment',
+                        typeCondition: {
+                          kind: 'NamedType',
+                          name: { kind: 'Name', value: 'CoreValuePulse' },
+                        },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'content' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'intensity' },
                             },
                             {
                               kind: 'Field',
@@ -46247,6 +46319,33 @@ export const SearchAllDocument = {
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'storyPulses' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: '__typename' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'content' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'intensity' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'coreValuePulses' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
