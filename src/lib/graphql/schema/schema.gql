@@ -495,6 +495,24 @@ type Person implements PersonInterface
       direction: OUT
       nestedOperations: [DISCONNECT]
     )
+  """
+  Pulses this person authored — the reverse of `FieldPulse.initiatedBy`, the
+  canonical `(:FieldPulse)-[:INITIATED_BY]->(:Person)` author edge written by
+  the assistant + doc-ingestion paths (GOAL-298). A relational-world
+  PersonPulse owns no Space, so the profile/drawer surfaces can only reach the
+  pulses they authored through this edge, not through owned WeSpaces — without
+  it, an upload-created person's contributions never render (GOAL-314). Each
+  FieldPulse is auth-filtered by its OWN @authorization directive, so a
+  non-member of the parent Space sees an empty list even though the edge
+  exists. Open nested CONNECT is disabled — authorship is written server-side
+  at pulse-create time, never via a client mutation on Person.
+  """
+  initiatedPulses: [FieldPulse!]!
+    @relationship(
+      type: "INITIATED_BY"
+      direction: IN
+      nestedOperations: [DISCONNECT]
+    )
 }
 
 """

@@ -224,7 +224,13 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
         { threadId: result.threadId }
       )
       expect(turnRows.records).toHaveLength(1)
-      expect(String(turnRows.records[0].get('content')).toLowerCase()).toContain('extraction failed')
+      // The member-facing copy is deliberately generic (b64856b6 —
+      // "stop leaking raw extraction errors into member-facing chat"): it names
+      // only the filename and a "something went wrong" apology, never the raw
+      // provider error. Assert that member-safe failure signal, not internals.
+      expect(String(turnRows.records[0].get('content')).toLowerCase()).toMatch(
+        /couldn't read|something went wrong/
+      )
       const parts = JSON.parse(turnRows.records[0].get('parts') as string) as Array<{ type: string }>
       const toolParts = parts.filter((p) => p.type.startsWith('tool-'))
       expect(toolParts).toHaveLength(0)

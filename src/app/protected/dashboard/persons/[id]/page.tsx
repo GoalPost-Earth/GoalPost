@@ -6,8 +6,18 @@ import { SectionHeader } from '@/components/persons/section-header'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { ProfileBackground } from '@/components/persons/profile-background'
 import { ProfileLayout } from '@/components/persons/profile-layout'
-import { GET_PERSON_PROFILE } from '@/app/graphql/queries/PERSON_QUERIES'
+import {
+  GET_PERSON_PROFILE,
+  GET_PERSON_RELATED_PULSES,
+} from '@/app/graphql/queries/PERSON_QUERIES'
 import { SEARCH_PEOPLE_QUERY } from '@/app/graphql/queries/DASHBOARD_QUERIES'
+import { buildRelatedPulseRows } from '@/lib/person-related-pulses'
+import { RelatedPulsesList } from '@/components/persons/related-pulses-list'
+// Import from the lightweight `types` module, NOT the drawer barrel — the barrel
+// (index.tsx) statically pulls in all nine drawer body components + gsap, which
+// would bloat this route's client bundle (and can crash the dev compile worker
+// on this already-large route). person-details-body.tsx imports it the same way.
+import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer/types'
 import {
   CREATE_PERSON_CONNECTION_MUTATION,
   UPDATE_PERSON_CONNECTION_MUTATION,
@@ -48,6 +58,14 @@ export default function PersonProfilePage() {
   }, [setPageTitle])
 
   const { data, loading, error, refetch } = useQuery(GET_PERSON_PROFILE, {
+    variables: { personId },
+    skip: !personId,
+  })
+
+  // Pulses this person authored (INITIATED_BY) or is mentioned in (MENTIONED_IN).
+  // Separate query (fails in isolation) and the only surface for an
+  // upload-created PersonPulse's pulses — they own no WeSpace (GOAL-314).
+  const { data: relatedPulsesData } = useQuery(GET_PERSON_RELATED_PULSES, {
     variables: { personId },
     skip: !personId,
   })
@@ -306,6 +324,13 @@ export default function PersonProfilePage() {
       }
     })
   }
+
+  // Authored + mentioned pulses, minus any already listed via an owned WeSpace
+  // above, so a User's own pulse never double-lists.
+  const relatedRows = buildRelatedPulseRows(
+    relatedPulsesData?.people?.[0]
+  ).filter((row) => !allPulses.some((p) => p.id === row.id))
+  const totalPulseCount = allPulses.length + relatedRows.length
 
   if (loading) {
     return (
@@ -731,29 +756,46 @@ export default function PersonProfilePage() {
               <div className="flex-1 h-full">
                 <ProfileCard>
                   <div className="space-y-3">
-                    {allPulses.length > 0 ? (
-                      allPulses.slice(0, 5).map((pulse, idx) => (
-                        <div
-                          key={pulse.id}
-                          className={
-                            idx > 0
-                              ? 'border-t border-gp-glass-border pt-3'
-                              : ''
-                          }
-                        >
-                          <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white mb-1">
-                            {pulse.title}
-                          </h4>
-                          <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                            {pulse.spaceType} • {pulse.spaceName} •{' '}
-                            {pulse.contextName}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
+                    {allPulses.length === 0 && relatedRows.length === 0 && (
                       <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
                         No pulses yet
                       </p>
+                    )}
+                    {allPulses.slice(0, 5).map((pulse, idx) => (
+                      <div
+                        key={pulse.id}
+                        className={
+                          idx > 0 ? 'border-t border-gp-glass-border pt-3' : ''
+                        }
+                      >
+                        <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white mb-1">
+                          {pulse.title}
+                        </h4>
+                        <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
+                          {pulse.spaceType} • {pulse.spaceName} •{' '}
+                          {pulse.contextName}
+                        </p>
+                      </div>
+                    ))}
+                    {relatedRows.length > 0 && (
+                      <div
+                        className={
+                          allPulses.length > 0
+                            ? 'border-t border-gp-glass-border pt-3'
+                            : ''
+                        }
+                      >
+                        <RelatedPulsesList
+                          rows={relatedRows}
+                          onOpen={(id, title) =>
+                            dispatchOpenInfoDrawer({
+                              type: 'Pulse',
+                              id,
+                              label: title,
+                            })
+                          }
+                        />
+                      </div>
                     )}
                   </div>
                 </ProfileCard>
@@ -771,7 +813,7 @@ export default function PersonProfilePage() {
                         Total Pulses
                       </span>
                       <span className="text-lg font-bold text-gp-primary">
-                        {allPulses.length}
+                        {totalPulseCount}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">

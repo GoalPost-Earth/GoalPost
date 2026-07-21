@@ -1690,6 +1690,12 @@ interface UpdatePersonAuthorizedInput {
   firstName?: string
   lastName?: string
   currentName?: string
+  /**
+   * GOAL-314: an optional role/bio phrase for this person carried in from a
+   * document. Filled in only when the existing node has no description (never
+   * overwrites a richer note).
+   */
+  description?: string
   contextId?: string
   contextTitle?: string
   documentId?: string
@@ -1754,6 +1760,9 @@ async function updatePersonAuthorized(
   const newFirstName = firstName || null
   const newLastName = lastName || null
   const hasNameChange = Boolean(newFirstName || newLastName)
+  // GOAL-314: fill-gaps-only — a description from this document is applied only
+  // when the node currently has none, so a richer existing note is never lost.
+  const newDescription = input.description?.trim() || null
 
   const documentFilename = documentId
     ? await lookupDocumentFilename(graph, documentId)
@@ -1786,6 +1795,12 @@ async function updatePersonAuthorized(
     FOREACH (_ IN CASE WHEN NOT $hasNameChange THEN [] ELSE [1] END |
       SET p.name = trim(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, ''))
     )
+    // Fill-gaps-only: set the description from this document only when the
+    // person has none, so a re-encountered contact gains detail without a
+    // terser re-mention clobbering a richer existing note.
+    FOREACH (_ IN CASE WHEN $newDescription IS NOT NULL AND (p.description IS NULL OR trim(p.description) = '') THEN [1] ELSE [] END |
+      SET p.description = $newDescription
+    )
     SET p.updatedAt = datetime()
     CREATE (log:Log {
       id: $logId,
@@ -1809,6 +1824,7 @@ async function updatePersonAuthorized(
       newFirstName,
       newLastName,
       hasNameChange,
+      newDescription,
       logId,
       description,
       metadata,

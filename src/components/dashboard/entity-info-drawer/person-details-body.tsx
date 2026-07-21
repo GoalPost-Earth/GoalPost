@@ -11,8 +11,11 @@ import {
   GET_PERSON_DIRECTORY,
   GET_PERSON_OWNED_PULSES,
   GET_PERSON_PROFILE,
+  GET_PERSON_RELATED_PULSES,
 } from '@/app/graphql/queries/PERSON_QUERIES'
 import { GET_PERSON_PROVENANCE } from '@/app/graphql/queries/PROVENANCE_QUERIES'
+import { buildRelatedPulseRows } from '@/lib/person-related-pulses'
+import { RelatedPulsesList } from '@/components/persons/related-pulses-list'
 import {
   EntityProvenance,
   type ProvenanceDocument,
@@ -85,6 +88,15 @@ export const PersonDetailsBody: FC<{
     variables: { personId },
   })
   const provenanceDocuments = provenanceData?.people?.[0]?.extractedFrom ?? null
+
+  // Pulses this person authored (INITIATED_BY) or is mentioned in (MENTIONED_IN),
+  // in their own query so a malformed pulse fails in isolation. This is the only
+  // way an upload-created PersonPulse's contributions surface — they own no
+  // WeSpace, so GET_PERSON_OWNED_PULSES misses them entirely (GOAL-314).
+  const { data: relatedPulsesData } = useQuery(GET_PERSON_RELATED_PULSES, {
+    variables: { personId },
+    fetchPolicy: 'cache-and-network',
+  })
 
   const person = data?.people?.[0]
   const pulsesPerson = pulsesData?.people?.[0]
@@ -163,6 +175,12 @@ export const PersonDetailsBody: FC<{
     })
   })
 
+  // Authored (INITIATED_BY) + mentioned (MENTIONED_IN) pulses, minus any already
+  // shown via an owned WeSpace above, so a User's own pulse never double-lists.
+  const relatedRows = buildRelatedPulseRows(
+    relatedPulsesData?.people?.[0]
+  ).filter((row) => !allPulses.some((p) => p.id === row.id))
+
   const handleOpenPersonNode = () => {
     if (!person?.id || !person?.name) return
     const typename = (person as { __typename?: string }).__typename
@@ -221,7 +239,15 @@ export const PersonDetailsBody: FC<{
         <StatCell
           icon={<Sparkles className="w-3.5 h-3.5" />}
           label="Pulses"
-          value={pulsesFailed ? '—' : String(allPulses.length)}
+          // Only the owned-WeSpace pulse query can fail here; related pulses come
+          // from a separate query. Show `—` only when the owned count is unknown
+          // AND no related pulses resolved, so a populated Related section below
+          // is never contradicted by a `—` header.
+          value={
+            pulsesFailed && relatedRows.length === 0
+              ? '—'
+              : String(allPulses.length + relatedRows.length)
+          }
         />
         <StatCell
           icon={<Layers className="w-3.5 h-3.5" />}
@@ -243,6 +269,15 @@ export const PersonDetailsBody: FC<{
       {provenanceDocuments && provenanceDocuments.length > 0 && (
         <section className="px-6 pb-5">
           <EntityProvenance documents={provenanceDocuments} />
+        </section>
+      )}
+
+      {/* A short relational note about who this person is. Often the only rich
+          field an upload-created PersonPulse carries (GOAL-314), so render it
+          even though the drawer is read-mostly. */}
+      {person.description && (
+        <section className="px-6 pb-5">
+          <AttrBlock label="Description" text={person.description} />
         </section>
       )}
 
@@ -409,6 +444,20 @@ export const PersonDetailsBody: FC<{
               </li>
             ))}
           </ul>
+        </section>
+      )}
+
+      {relatedRows.length > 0 && (
+        <section className="px-6 pb-5">
+          <SectionHeader>Related pulses ({relatedRows.length})</SectionHeader>
+          <div className="mt-2">
+            <RelatedPulsesList
+              rows={relatedRows}
+              onOpen={(id, title) =>
+                dispatchOpenInfoDrawer({ type: 'Pulse', id, label: title })
+              }
+            />
+          </div>
         </section>
       )}
 

@@ -28,6 +28,12 @@ import { buildDocumentDownloadUrl } from './document-download-url'
 export interface ExtractedPersonCandidate {
   firstName: string
   lastName: string
+  /**
+   * GOAL-314: one short phrase on who this person is / their role, drawn from
+   * the document. Persisted as the PersonPulse's `description` so an
+   * upload-created person carries more than just a name. Optional.
+   */
+  description?: string
   /** Optional id of a roster person the model thinks this mention matches. */
   existingId?: string
 }
@@ -439,13 +445,19 @@ function buildCreatePersonArgs(
   p: ExtractedPersonCandidate,
   input: ExtractionModelInput
 ): Record<string, unknown> {
-  return {
+  const args: Record<string, unknown> = {
     firstName: p.firstName.trim(),
     lastName: p.lastName.trim(),
     contextId: input.fieldContextId,
     contextTitle: input.fieldContextTitle,
     documentId: input.documentId,
   }
+  // GOAL-314: carry the extracted role/bio phrase so the new PersonPulse has
+  // renderable content beyond its name (persisted as p.description).
+  if (p.description && p.description.trim()) {
+    args.description = p.description.trim()
+  }
+  return args
 }
 
 function buildUpdatePersonArgs(
@@ -453,7 +465,7 @@ function buildUpdatePersonArgs(
   match: RosterPerson,
   input: ExtractionModelInput
 ): Record<string, unknown> {
-  return {
+  const args: Record<string, unknown> = {
     personId: match.id,
     firstName: p.firstName.trim(),
     lastName: p.lastName.trim(),
@@ -462,6 +474,12 @@ function buildUpdatePersonArgs(
     contextTitle: input.fieldContextTitle,
     documentId: input.documentId,
   }
+  // GOAL-314: a re-encountered person may arrive with a description from this
+  // document; pass it so update_person can fill it in when the node has none.
+  if (p.description && p.description.trim()) {
+    args.description = p.description.trim()
+  }
+  return args
 }
 
 export async function extractEntities(
