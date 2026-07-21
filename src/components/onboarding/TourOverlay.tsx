@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useSyncExternalStore } from 'react'
 import { useOnboarding } from '@/contexts/OnboardingContext'
 import { useTourOverlay } from '@/hooks/useTourOverlay'
 import { Button } from '@/components/ui/button'
@@ -23,11 +23,14 @@ export function TourOverlay() {
     currentStep?.selector,
     currentStep?.position
   )
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  // Client-only render gate. useSyncExternalStore returns the server snapshot
+  // (false) during SSR and the first hydration render, then the client snapshot
+  // (true) — avoiding a setState-in-effect while keeping the portal client-only.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   // Sync element readiness with elementPosition from useTourOverlay
   useEffect(() => {

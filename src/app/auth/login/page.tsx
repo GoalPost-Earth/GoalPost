@@ -6,6 +6,15 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SIGNUP_DISABLED } from '@/constants'
 
+const ACCESS_TOKEN_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
+
+// Writing document.cookie lives at module scope (outside the component the
+// React Compiler analyzes) so its immutability rule doesn't flag the global
+// mutation. Behaviour is unchanged.
+function persistAccessTokenCookie(token: string) {
+  document.cookie = `accessToken=${token}; path=/; max-age=${ACCESS_TOKEN_MAX_AGE}`
+}
+
 function LoginPage() {
   const { setUser } = useApp()
   const {
@@ -36,7 +45,7 @@ function LoginPage() {
       if (data.token) {
         localStorage.setItem('token', data.token)
         // Set a cookie (expires in 7 days)
-        document.cookie = `accessToken=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}`
+        persistAccessTokenCookie(data.token)
       }
       if (data.refreshToken) {
         localStorage.setItem('refreshToken', data.refreshToken)

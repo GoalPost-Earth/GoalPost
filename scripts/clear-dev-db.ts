@@ -35,7 +35,7 @@ async function clearDevDatabase() {
 
     // Delete in batches to avoid memory issues
     let deletedCount = 0
-    let batchSize = 1000
+    const batchSize = 1000
 
     while (true) {
       const result = await session.run(`

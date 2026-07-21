@@ -124,21 +124,23 @@ export function NavigationHistoryProvider({ children }: { children: ReactNode })
   const userId = user?.id ?? null
 
   // Lazy init from localStorage scoped to the current user. If a different
-  // user logs in later, the userId-keyed effect below swaps the in-memory
-  // state to that user's history.
+  // user logs in later, the render-time sync below swaps the in-memory state
+  // to that user's history.
   const [history, setHistory] = useState<NavigationHistoryEntry[]>(() =>
     readPersisted(userId).map(hydrateLabel)
   )
 
-  // Swap to the right user's history when the auth state resolves /
-  // changes. Without this, a hard reload on a protected route picks up the
-  // previous tab's user (if there ever was one) until the next click.
-  const lastUserIdRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (lastUserIdRef.current === userId) return
-    lastUserIdRef.current = userId
+  // Swap to the right user's history when the auth state resolves / changes.
+  // Without this, a hard reload on a protected route picks up the previous
+  // tab's user (if there ever was one) until the next click. This is React's
+  // "adjust state while rendering" idiom (a conditional setState during render,
+  // which React applies before committing) rather than a setState-in-effect —
+  // seeded with the same userId the lazy init used so mount does no extra work.
+  const [lastUserId, setLastUserId] = useState<string | null>(userId)
+  if (userId !== lastUserId) {
+    setLastUserId(userId)
     setHistory(readPersisted(userId).map(hydrateLabel))
-  }, [userId])
+  }
 
   // Suppress the next focal-driven push after a user clicks a chip — the
   // truncation already moved that entry to the head, and the resulting

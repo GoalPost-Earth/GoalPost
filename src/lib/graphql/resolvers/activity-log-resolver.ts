@@ -1,3 +1,4 @@
+import type { Session } from 'neo4j-driver'
 import { Context } from '@/config/types'
 import {
   createLog,
@@ -91,7 +92,7 @@ function formatSpaceDisplay(
 }
 
 async function getContextAndSpaceDetails(
-  session: any,
+  session: Session,
   contextId: string
 ): Promise<ContextAndSpaceDetails> {
   const result = await session.run(
@@ -131,7 +132,7 @@ async function getContextAndSpaceDetails(
 }
 
 async function getPulseTitles(
-  session: any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  session: Session,
   sourceId: string,
   targetId: string,
   // The actor logging the resonance. Titles are only revealed for pulses this

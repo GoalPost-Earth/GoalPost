@@ -12,7 +12,7 @@ export interface CreateLogInput {
   pulseIds?: string[] // Related pulses (e.g., newly created pulse)
   spaceId?: string // Related space (for space membership changes)
   contextId?: string // Related context
-  metadata?: Record<string, any> // Additional context (role changes, etc.)
+  metadata?: Record<string, unknown> // Additional context (role changes, etc.)
 }
 
 export interface LogEntry {
@@ -26,20 +26,20 @@ export interface LogEntry {
     lastName?: string
     photo?: string
   }
-  metadata?: Record<string, any>
+  metadata?: Record<string, unknown>
 }
 
-function parseMetadata(metadata: unknown): Record<string, any> | undefined {
+function parseMetadata(metadata: unknown): Record<string, unknown> | undefined {
   if (!metadata) return undefined
   if (typeof metadata === 'string') {
     try {
-      return JSON.parse(metadata) as Record<string, any>
+      return JSON.parse(metadata) as Record<string, unknown>
     } catch {
       return { raw: metadata }
     }
   }
   if (typeof metadata === 'object') {
-    return metadata as Record<string, any>
+    return metadata as Record<string, unknown>
   }
   return { raw: metadata }
 }

@@ -420,7 +420,7 @@ class MigrationEngine {
 
           // Determine primary context (based on creator)
           let primaryContextId: string | null = null
-          let secondaryContextIds: string[] = []
+          const secondaryContextIds: string[] = []
 
           if (creatorId) {
             // Creator determines primary context
@@ -624,7 +624,7 @@ class MigrationEngine {
 
           // Determine primary context (based on creator)
           let primaryContextId: string | null = null
-          let secondaryContextIds: string[] = []
+          const secondaryContextIds: string[] = []
 
           if (creatorId) {
             // Creator determines primary context
@@ -811,7 +811,7 @@ class MigrationEngine {
 
           // Determine primary context (based on creator)
           let primaryContextId: string | null = null
-          let secondaryContextIds: string[] = []
+          const secondaryContextIds: string[] = []
 
           if (creatorId) {
             // Creator determines primary context
@@ -1002,7 +1002,7 @@ class MigrationEngine {
 
           // Determine primary context (based on creator)
           let primaryContextId: string | null = null
-          let secondaryContextIds: string[] = []
+          const secondaryContextIds: string[] = []
 
           if (creatorId) {
             // Creator determines primary context

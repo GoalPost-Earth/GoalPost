@@ -34,7 +34,9 @@ export function DraggableResonanceLinkNode({
   const [isLocalDragging, setIsLocalDragging] = useState(false)
   const hasDraggedRef = useRef(false)
   const velocityRef = useRef({ x: 0, y: 0 })
-  const lastMoveTimeRef = useRef(Date.now())
+  // Seeded on drag start (handleMouseDown) rather than at render time —
+  // calling Date.now() during render is impure. 0 until the first drag.
+  const lastMoveTimeRef = useRef(0)
   const animationRef = useRef<gsap.core.Tween | null>(null)
   const displayPositionRef = useRef({
     x: canvasPosition.x,
@@ -48,10 +50,24 @@ export function DraggableResonanceLinkNode({
     startY: number
   }>(null)
 
+  // While animations are off, the gsap effect doesn't run, so keep displayPosition
+  // tracking canvasPosition here (render-time adjustment, not a setState-in-effect).
+  // This means enabling animations later starts the tween from the current
+  // position instead of a stale one, and there is no snap-back glitch.
+  if (
+    !animationsEnabled &&
+    !isLocalDragging &&
+    (displayPosition.x !== canvasPosition.x ||
+      displayPosition.y !== canvasPosition.y)
+  ) {
+    setDisplayPosition(canvasPosition)
+  }
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     hasDraggedRef.current = false
+    lastMoveTimeRef.current = Date.now()
     setDragContext({
       startMouseX: e.clientX,
       startMouseY: e.clientY,
@@ -131,9 +147,20 @@ export function DraggableResonanceLinkNode({
     onClick?.()
   }
 
-  // Animate to externally imposed positions (e.g., collision resolution) with a soft bounce
+  // Mirror canvasPosition into the animation ref while animations are off, so a
+  // later re-enable starts the tween from the current position (not a stale one).
   useEffect(() => {
-    if (isLocalDragging) return
+    if (!animationsEnabled && !isLocalDragging) {
+      displayPositionRef.current = { x: canvasPosition.x, y: canvasPosition.y }
+    }
+  }, [animationsEnabled, isLocalDragging, canvasPosition])
+
+  // Animate to externally imposed positions (e.g., collision resolution) with a soft bounce
+  // Only handles the gsap-animated path; the instant (animations-off) case is
+  // derived directly from canvasPosition in `renderedPosition` below, so there
+  // is no synchronous setState in this effect.
+  useEffect(() => {
+    if (isLocalDragging || !animationsEnabled) return
 
     const { x, y } = canvasPosition
     const current = displayPositionRef.current
@@ -146,27 +173,27 @@ export function DraggableResonanceLinkNode({
       animationRef.current.kill()
     }
 
-    if (animationsEnabled) {
-      animationRef.current = gsap.to(displayPositionRef.current, {
-        x,
-        y,
-        duration: 0.45,
-        ease: 'elastic.out(0.42, 0.8)',
-        overwrite: true,
-        onUpdate: () => {
-          setDisplayPosition({ ...displayPositionRef.current })
-        },
-      })
-    } else {
-      // Instantly update position without animation
-      displayPositionRef.current = { x, y }
-      setDisplayPosition({ x, y })
-    }
+    animationRef.current = gsap.to(displayPositionRef.current, {
+      x,
+      y,
+      duration: 0.45,
+      ease: 'elastic.out(0.42, 0.8)',
+      overwrite: true,
+      onUpdate: () => {
+        setDisplayPosition({ ...displayPositionRef.current })
+      },
+    })
 
     return () => {
       animationRef.current?.kill()
     }
   }, [canvasPosition, isLocalDragging, animationsEnabled])
+
+  // While dragging we follow the live drag state; with animations enabled the
+  // gsap tween drives displayPosition. Otherwise the position is the canvas
+  // position itself (instant, no state needed).
+  const renderedPosition =
+    isLocalDragging || animationsEnabled ? displayPosition : canvasPosition
 
   useEffect(() => {
     if (nodeRef.current) {
@@ -227,7 +254,7 @@ export function DraggableResonanceLinkNode({
       style={{
         top: 0,
         left: 0,
-        transform: `translate(${displayPosition.x}px, ${displayPosition.y}px) translate(-50%, -50%)`,
+        transform: `translate(${renderedPosition.x}px, ${renderedPosition.y}px) translate(-50%, -50%)`,
         opacity: isDragging ? 0.85 : 1,
       }}
       onMouseDown={handleMouseDown}

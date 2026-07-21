@@ -1,6 +1,6 @@
 import { ChatOpenAI } from '@langchain/openai'
 import { config } from 'dotenv'
-import { BaseChatModel } from 'langchain/chat_models/base'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { RunnableSequence } from '@langchain/core/runnables'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import initCypherEvaluationChain from './cypher-evaluation.chain'
