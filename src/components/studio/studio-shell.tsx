@@ -369,12 +369,20 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
             {/* The trigger needs no runtime — keep it outside the boundary so
                 it stays mounted while the chat thread re-hydrates. */}
             <FloatingChatTrigger />
+            {/* Show the scoped loading spinner only while the mobile
+                (fullViewport) panel is OPEN. Mobile now surfaces a thread
+                switcher (GOAL-312), so selecting a previous thread re-keys this
+                boundary and re-hydrates; without an overlay it would return null
+                and the fullscreen panel would blank out, flashing the canvas
+                behind it. When the panel is closed (background hydration on load)
+                or in the desktop corner-panel layout, keep it null so the
+                spinner never covers the canvas. */}
             <AssistantRuntimeBoundary
               key={threadKey}
               threadId={selectedThreadId ?? undefined}
               skipHydration={skipHydration}
               onConsumeFresh={consumeFreshThread}
-              showLoadingOverlay={false}
+              showLoadingOverlay={floatingChatOpen && isMobile}
             >
               <FloatingChatPanel
                 fullViewport={isMobile}
@@ -569,7 +577,13 @@ const AssistantRuntimeBoundary: FC<{
   if (hydration.status === 'loading') {
     if (!showLoadingOverlay) return null
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-gp-surface dark:bg-gp-surface-dark">
+      // `z-50` matches the floating panel's own stacking level: in the mobile
+      // floating layout this overlay shares a stacking context with the canvas
+      // `<main class="z-10">`, so without an explicit z-index (auto → 0) the
+      // dashboard paints over the spinner and the panel appears to flash the
+      // canvas mid thread-switch. In the docked layout the overlay is alone in
+      // its panel, so the raised z-index is a harmless no-op there.
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-gp-surface dark:bg-gp-surface-dark">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gp-ink-soft/40" />
       </div>
     )
