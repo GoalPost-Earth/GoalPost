@@ -94,10 +94,12 @@ export const StudioShell: FC<StudioShellProps> = ({ children }) => {
 const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
   const {
     canvasOpen,
+    chatOpen,
     fullscreenSide,
     chatLayout,
     floatingChatOpen,
     setCanvasOpen,
+    setChatOpen,
     toggleCanvas,
     toggleFullscreen,
     exitFullscreen,
@@ -178,9 +180,14 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     return onOpenAssistantThread(({ threadId }) => {
       if (threadId) setSelectedThreadId(threadId)
       setCanvasOpen(true)
+      // Whichever layout is active, the assistant has to actually become
+      // visible: without this the docked panel stays collapsed at zero width
+      // and the requested thread hydrates where nobody can see it, so the
+      // doc-ingest flow (GOAL-235) looks like it silently did nothing.
+      setChatOpen(true)
       if (effectiveLayout === 'floating') setFloatingChatOpen(true)
     })
-  }, [setCanvasOpen, setFloatingChatOpen, effectiveLayout])
+  }, [setCanvasOpen, setChatOpen, setFloatingChatOpen, effectiveLayout])
 
   // Keyboard shortcuts.
   //   C   → toggle canvas (docked only)
@@ -213,6 +220,12 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
         e.preventDefault()
         if (effectiveLayout === 'floating') {
           toggleFloatingChat()
+        } else if (!chatOpen) {
+          // Chat hidden (GOAL-313): the canvas is already the whole studio, so
+          // there is no second pane to fullscreen. Treat F as "give me the
+          // assistant back" rather than a silent no-op — otherwise the most
+          // obvious key to press does nothing at all in this state.
+          setChatOpen(true)
         } else {
           toggleFullscreen(canvasOpen ? 'canvas' : 'chat')
         }
@@ -243,12 +256,14 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
   }, [
     effectiveLayout,
     canvasOpen,
+    chatOpen,
     fullscreenSide,
     floatingChatOpen,
     toggleCanvas,
     toggleFullscreen,
     exitFullscreen,
     toggleFloatingChat,
+    setChatOpen,
     setFloatingChatOpen,
   ])
 
@@ -267,7 +282,11 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
   const skipHydration = !!selectedThreadId && selectedThreadId === freshThreadId
 
   const chatNode = (
-    <div className="relative h-full w-full">
+    // `inert` while hidden: a collapsed Panel is only zero-width with
+    // `overflow: hidden`, so without this the composer, send button and thread
+    // rows stay focusable and screen-reader-visible — tabbing off the canvas
+    // would walk into a chat the user deliberately dismissed.
+    <div className="relative h-full w-full" inert={!chatOpen}>
       <AssistantRuntimeBoundary
         key={threadKey}
         threadId={selectedThreadId ?? undefined}
@@ -293,7 +312,7 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     const chat = chatPanelRef.current
     const canvas = canvasPanelRef.current
     if (!chat || !canvas) return
-    if (fullscreenSide === 'canvas') {
+    if (fullscreenSide === 'canvas' || !chatOpen) {
       chat.collapse()
       canvas.expand()
     } else if (fullscreenSide === 'chat' || !canvasOpen) {
@@ -303,7 +322,7 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
       chat.expand()
       canvas.expand()
     }
-  }, [isDocked, fullscreenSide, canvasOpen])
+  }, [isDocked, fullscreenSide, canvasOpen, chatOpen])
 
   const mainView = (() => {
     // Floating layout (desktop pref OR mobile): canvas always takes the full
@@ -313,7 +332,7 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
     // Docked: both panels stay mounted; fullscreen/closed states collapse a
     // panel (see the effect above) so neither the chat runtime nor the canvas
     // route is torn down when the user toggles fullscreen.
-    const hideHandle = fullscreenSide !== null || !canvasOpen
+    const hideHandle = fullscreenSide !== null || !canvasOpen || !chatOpen
     return (
       <PanelGroup
         direction="horizontal"
@@ -364,11 +383,27 @@ const StudioBody: FC<{ children: ReactNode }> = ({ children }) => {
       <div className="relative flex-1 overflow-hidden">
         {mainView}
 
+        {/* Docked layout with the chat hidden (GOAL-313): the same glass pill
+            the floating layout uses, wired to bring the docked panel back.
+            The panel is only *collapsed*, so restoring it lands the user in
+            the thread they left — no remount, no re-hydration. */}
+        {effectiveLayout === 'docked' && (
+          <FloatingChatTrigger
+            hidden={chatOpen}
+            onOpen={() => setChatOpen(true)}
+            label="Show chat"
+          />
+        )}
+
         {effectiveLayout === 'floating' && (
           <>
             {/* The trigger needs no runtime — keep it outside the boundary so
                 it stays mounted while the chat thread re-hydrates. */}
-            <FloatingChatTrigger />
+            <FloatingChatTrigger
+              hidden={floatingChatOpen}
+              onOpen={toggleFloatingChat}
+              label="Open chat"
+            />
             {/* Show the scoped loading spinner only while the mobile
                 (fullViewport) panel is OPEN. Mobile now surfaces a thread
                 switcher (GOAL-312), so selecting a previous thread re-keys this

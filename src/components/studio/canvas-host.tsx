@@ -33,7 +33,8 @@ interface CanvasHostProps {
  * back to the dashboard.
  */
 export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
-  const { canvasView, toggleFullscreen, setCanvasOpen } = useStudioCanvas()
+  const { canvasView, chatOpen, toggleFullscreen, setCanvasOpen } =
+    useStudioCanvas()
   const { overlay, clearOverlay } = useBloomOverlay()
   const pathname = usePathname()
 
@@ -92,19 +93,26 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
           )}
         </div>
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => toggleFullscreen('canvas')}
-            aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen canvas'}
-            title={fullscreen ? 'Exit fullscreen (Esc)' : 'Fullscreen (F)'}
-            className="hidden md:flex items-center justify-center size-7 rounded-md text-gp-ink-muted hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 transition-colors cursor-pointer"
-          >
-            {fullscreen ? (
-              <Minimize2 className="w-3.5 h-3.5" />
-            ) : (
-              <Maximize2 className="w-3.5 h-3.5" />
-            )}
-          </button>
+          {/* With the chat hidden (GOAL-313) the canvas already fills the
+              studio, so "fullscreen" has nothing left to collapse — the
+              control would flip its own icon and change nothing on screen.
+              Hide it rather than offer a dead button; the restore pill is
+              the meaningful action in that state. */}
+          {chatOpen && (
+            <button
+              type="button"
+              onClick={() => toggleFullscreen('canvas')}
+              aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen canvas'}
+              title={fullscreen ? 'Exit fullscreen (Esc)' : 'Fullscreen (F)'}
+              className="hidden md:flex items-center justify-center size-7 rounded-md text-gp-ink-muted hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 transition-colors cursor-pointer"
+            >
+              {fullscreen ? (
+                <Minimize2 className="w-3.5 h-3.5" />
+              ) : (
+                <Maximize2 className="w-3.5 h-3.5" />
+              )}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setCanvasOpen(false)}
