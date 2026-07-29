@@ -7,6 +7,7 @@ import { userLookupResolvers } from './user-lookup-resolver'
 import { connectionMutations } from './connection-resolver'
 import { personPulseMutations } from './person-pulse-resolver'
 import { fieldContextPeopleMutations } from './field-context-people-resolver'
+import { fieldContextMutations } from './field-context-resolver'
 import {
   activityLogMutations,
   activityLogQueries,
@@ -517,6 +518,7 @@ const resolvers = {
     ...connectionMutations,
     ...personPulseMutations,
     ...fieldContextPeopleMutations,
+    ...fieldContextMutations,
     ...spaceMembershipResolvers,
     ...activityLogMutations,
     ...documentMutations,

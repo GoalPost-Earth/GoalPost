@@ -175,10 +175,16 @@ async function searchChunksByVector(
     MATCH (pulse:FieldPulse)-[:HAS_CHUNK]->(node)
     MATCH (pulse)-[:CREATED_BY|INITIATED_BY]->(:Person {id: $userId})
     WHERE
-      $contextId IS NULL
-      OR EXISTS {
-        MATCH (:FieldContext {id: $contextId})-[:HAS_PULSE]->(pulse)
-      }
+      // This gate is authorship-based, not Space-reachability-based, so a
+      // soft-deleted pulse (GOAL-319) would otherwise still surface its
+      // conversation chunks here. Exclude by stamp.
+      pulse.deletedAt IS NULL
+      AND (
+        $contextId IS NULL
+        OR EXISTS {
+          MATCH (:FieldContext {id: $contextId})-[:HAS_PULSE]->(pulse)
+        }
+      )
     OPTIONAL MATCH (context:FieldContext)-[:HAS_PULSE]->(pulse)
     WITH
       node, pulse, score,

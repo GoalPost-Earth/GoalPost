@@ -1108,7 +1108,7 @@ export async function buildSimulationChatTools(
 
     delete_field_context: tool({
       description:
-        'Delete a field context the user can edit. If it has pulses, set deletePulses=true to remove them too. This write is gated by user approval (HITL).',
+        'Delete a field context. Only the space owner or an admin may delete one. The context and ALL of its pulses are deleted together — if it has pulses, confirm with the user first and set deletePulses=true to proceed. This write is gated by user approval (HITL).',
       inputSchema: z.object({
         contextId: z.string().optional(),
         contextTitle: z.string().optional(),

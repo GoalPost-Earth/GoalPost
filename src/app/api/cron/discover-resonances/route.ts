@@ -47,6 +47,9 @@ export async function GET(request: NextRequest) {
       `
       MATCH (p:FieldPulse)
       WHERE p.embedding IS NULL
+        // Soft-deleted pulses (GOAL-319) await the purge cron — never spend
+        // embedding calls on them.
+        AND p.deletedAt IS NULL
       RETURN p.id as id
       LIMIT 100
     `,

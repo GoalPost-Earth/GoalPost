@@ -2706,6 +2706,12 @@ export type CreateDeleteDocumentResponsesMutationResponse = {
   info: CreateInfo
 }
 
+export type CreateDeleteFieldContextResponsesMutationResponse = {
+  __typename?: 'CreateDeleteFieldContextResponsesMutationResponse'
+  deleteFieldContextResponses: Array<DeleteFieldContextResponse>
+  info: CreateInfo
+}
+
 export type CreateDeletePersonConnectionResponsesMutationResponse = {
   __typename?: 'CreateDeletePersonConnectionResponsesMutationResponse'
   deletePersonConnectionResponses: Array<DeletePersonConnectionResponse>
@@ -3047,6 +3053,94 @@ export type DeleteDocumentResponsesConnection = {
   __typename?: 'DeleteDocumentResponsesConnection'
   aggregate: DeleteDocumentResponseAggregate
   edges: Array<DeleteDocumentResponseEdge>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+/**
+ * Response payload for `deleteFieldContext` (GOAL-319). The context and its
+ * pulses are soft deleted in one transaction — immediately hidden from every
+ * read surface — and hard-purged with all nested content by the daily purge
+ * cron once the 90-day retention window passes.
+ */
+export type DeleteFieldContextResponse = {
+  __typename?: 'DeleteFieldContextResponse'
+  contextId: Scalars['ID']['output']
+  deleted: Scalars['Boolean']['output']
+  /** Number of pulses soft-deleted along with the context. */
+  deletedPulseCount: Scalars['Int']['output']
+}
+
+export type DeleteFieldContextResponseAggregate = {
+  __typename?: 'DeleteFieldContextResponseAggregate'
+  count: Count
+  node: DeleteFieldContextResponseAggregateNode
+}
+
+export type DeleteFieldContextResponseAggregateNode = {
+  __typename?: 'DeleteFieldContextResponseAggregateNode'
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  contextId: IdAggregateSelection
+  deletedPulseCount: IntAggregateSelection
+}
+
+export type DeleteFieldContextResponseAggregateSelection = {
+  __typename?: 'DeleteFieldContextResponseAggregateSelection'
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  contextId: IdAggregateSelection
+  count: Scalars['Int']['output']
+  deletedPulseCount: IntAggregateSelection
+}
+
+export type DeleteFieldContextResponseCreateInput = {
+  contextId: Scalars['ID']['input']
+  deleted: Scalars['Boolean']['input']
+  deletedPulseCount: Scalars['Int']['input']
+}
+
+export type DeleteFieldContextResponseEdge = {
+  __typename?: 'DeleteFieldContextResponseEdge'
+  cursor: Scalars['String']['output']
+  node: DeleteFieldContextResponse
+}
+
+/** Fields to sort DeleteFieldContextResponses by. The order in which sorts are applied is not guaranteed when specifying many fields in one DeleteFieldContextResponseSort object. */
+export type DeleteFieldContextResponseSort = {
+  contextId?: InputMaybe<SortDirection>
+  deleted?: InputMaybe<SortDirection>
+  deletedPulseCount?: InputMaybe<SortDirection>
+}
+
+export type DeleteFieldContextResponseUpdateInput = {
+  contextId_SET?: InputMaybe<Scalars['ID']['input']>
+  deletedPulseCount_DECREMENT?: InputMaybe<Scalars['Int']['input']>
+  deletedPulseCount_INCREMENT?: InputMaybe<Scalars['Int']['input']>
+  deletedPulseCount_SET?: InputMaybe<Scalars['Int']['input']>
+  deleted_SET?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type DeleteFieldContextResponseWhere = {
+  AND?: InputMaybe<Array<DeleteFieldContextResponseWhere>>
+  NOT?: InputMaybe<DeleteFieldContextResponseWhere>
+  OR?: InputMaybe<Array<DeleteFieldContextResponseWhere>>
+  contextId_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  contextId_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  contextId_EQ?: InputMaybe<Scalars['ID']['input']>
+  contextId_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  contextId_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  deletedPulseCount_EQ?: InputMaybe<Scalars['Int']['input']>
+  deletedPulseCount_GT?: InputMaybe<Scalars['Int']['input']>
+  deletedPulseCount_GTE?: InputMaybe<Scalars['Int']['input']>
+  deletedPulseCount_IN?: InputMaybe<Array<Scalars['Int']['input']>>
+  deletedPulseCount_LT?: InputMaybe<Scalars['Int']['input']>
+  deletedPulseCount_LTE?: InputMaybe<Scalars['Int']['input']>
+  deleted_EQ?: InputMaybe<Scalars['Boolean']['input']>
+}
+
+export type DeleteFieldContextResponsesConnection = {
+  __typename?: 'DeleteFieldContextResponsesConnection'
+  aggregate: DeleteFieldContextResponseAggregate
+  edges: Array<DeleteFieldContextResponseEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
 }
@@ -11985,8 +12079,6 @@ export type MeSpaceContextsUpdateConnectionInput = {
 export type MeSpaceContextsUpdateFieldInput = {
   connect?: InputMaybe<Array<MeSpaceContextsConnectFieldInput>>
   create?: InputMaybe<Array<MeSpaceContextsCreateFieldInput>>
-  delete?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   update?: InputMaybe<MeSpaceContextsUpdateConnectionInput>
 }
 
@@ -12007,13 +12099,11 @@ export type MeSpaceCreateInput = {
 }
 
 export type MeSpaceDeleteInput = {
-  contexts?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
   members?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
   owner?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
 }
 
 export type MeSpaceDisconnectInput = {
-  contexts?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   members?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   owner?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
 }
@@ -12581,6 +12671,7 @@ export type Mutation = {
   createCreateLogResponses: CreateCreateLogResponsesMutationResponse
   createCreatePersonConnectionResponses: CreateCreatePersonConnectionResponsesMutationResponse
   createDeleteDocumentResponses: CreateDeleteDocumentResponsesMutationResponse
+  createDeleteFieldContextResponses: CreateDeleteFieldContextResponsesMutationResponse
   createDeletePersonConnectionResponses: CreateDeletePersonConnectionResponsesMutationResponse
   createDocumentIngestThreads: CreateDocumentIngestThreadsMutationResponse
   createDocuments: CreateDocumentsMutationResponse
@@ -12615,6 +12706,7 @@ export type Mutation = {
   deleteCreateLogResponses: DeleteInfo
   deleteCreatePersonConnectionResponses: DeleteInfo
   deleteDeleteDocumentResponses: DeleteInfo
+  deleteDeleteFieldContextResponses: DeleteInfo
   deleteDeletePersonConnectionResponses: DeleteInfo
   /**
    * Delete a Document and its backing blob. Caller must hold canEditContent
@@ -12628,7 +12720,21 @@ export type Mutation = {
   deleteDocument: DeleteDocumentResponse
   deleteDocumentIngestThreads: DeleteInfo
   deleteDocuments: DeleteInfo
-  deleteFieldContexts: DeleteInfo
+  /**
+   * Delete a FieldContext and everything nested under it (GOAL-319). The
+   * context and its pulses are SOFT deleted in a single transaction: stamped
+   * with deletedAt and detached from their Space (the HAS_CONTEXT edge is
+   * re-pointed to HAS_DELETED_CONTEXT), which hides the whole subtree from
+   * every read surface at once. The daily purge cron hard-deletes the context
+   * and all nested entities (pulses, chunks, resonance links, suggestions,
+   * weaves, documents + blobs, orphaned organizations) after 90 days.
+   *
+   * Authorization (enforced server-side in the resolver, matching the
+   * kb/02-user-roles.md DELETE matrix): Space owner or ADMIN only. The
+   * generated deleteFieldContexts mutation is disabled — it deleted the bare
+   * context node and orphaned all nested content.
+   */
+  deleteFieldContext: DeleteFieldContextResponse
   deleteGoalPulses: DeleteInfo
   deleteIngestDocumentResponses: DeleteInfo
   deleteLogs: DeleteInfo
@@ -12767,6 +12873,7 @@ export type Mutation = {
   updateCreateLogResponses: UpdateCreateLogResponsesMutationResponse
   updateCreatePersonConnectionResponses: UpdateCreatePersonConnectionResponsesMutationResponse
   updateDeleteDocumentResponses: UpdateDeleteDocumentResponsesMutationResponse
+  updateDeleteFieldContextResponses: UpdateDeleteFieldContextResponsesMutationResponse
   updateDeletePersonConnectionResponses: UpdateDeletePersonConnectionResponsesMutationResponse
   updateDocumentIngestThreads: UpdateDocumentIngestThreadsMutationResponse
   updateDocuments: UpdateDocumentsMutationResponse
@@ -12863,6 +12970,10 @@ export type MutationCreateCreatePersonConnectionResponsesArgs = {
 
 export type MutationCreateDeleteDocumentResponsesArgs = {
   input: Array<DeleteDocumentResponseCreateInput>
+}
+
+export type MutationCreateDeleteFieldContextResponsesArgs = {
+  input: Array<DeleteFieldContextResponseCreateInput>
 }
 
 export type MutationCreateDeletePersonConnectionResponsesArgs = {
@@ -12990,6 +13101,10 @@ export type MutationDeleteDeleteDocumentResponsesArgs = {
   where?: InputMaybe<DeleteDocumentResponseWhere>
 }
 
+export type MutationDeleteDeleteFieldContextResponsesArgs = {
+  where?: InputMaybe<DeleteFieldContextResponseWhere>
+}
+
 export type MutationDeleteDeletePersonConnectionResponsesArgs = {
   where?: InputMaybe<DeletePersonConnectionResponseWhere>
 }
@@ -13007,9 +13122,8 @@ export type MutationDeleteDocumentsArgs = {
   where?: InputMaybe<DocumentWhere>
 }
 
-export type MutationDeleteFieldContextsArgs = {
-  delete?: InputMaybe<FieldContextDeleteInput>
-  where?: InputMaybe<FieldContextWhere>
+export type MutationDeleteFieldContextArgs = {
+  contextId: Scalars['ID']['input']
 }
 
 export type MutationDeleteGoalPulsesArgs = {
@@ -13195,6 +13309,11 @@ export type MutationUpdateCreatePersonConnectionResponsesArgs = {
 export type MutationUpdateDeleteDocumentResponsesArgs = {
   update?: InputMaybe<DeleteDocumentResponseUpdateInput>
   where?: InputMaybe<DeleteDocumentResponseWhere>
+}
+
+export type MutationUpdateDeleteFieldContextResponsesArgs = {
+  update?: InputMaybe<DeleteFieldContextResponseUpdateInput>
+  where?: InputMaybe<DeleteFieldContextResponseWhere>
 }
 
 export type MutationUpdateDeletePersonConnectionResponsesArgs = {
@@ -18547,6 +18666,10 @@ export type Query = {
   /** @deprecated Please use the explicit field "aggregate" inside "deleteDocumentResponsesConnection" instead */
   deleteDocumentResponsesAggregate: DeleteDocumentResponseAggregateSelection
   deleteDocumentResponsesConnection: DeleteDocumentResponsesConnection
+  deleteFieldContextResponses: Array<DeleteFieldContextResponse>
+  /** @deprecated Please use the explicit field "aggregate" inside "deleteFieldContextResponsesConnection" instead */
+  deleteFieldContextResponsesAggregate: DeleteFieldContextResponseAggregateSelection
+  deleteFieldContextResponsesConnection: DeleteFieldContextResponsesConnection
   deletePersonConnectionResponses: Array<DeletePersonConnectionResponse>
   /** @deprecated Please use the explicit field "aggregate" inside "deletePersonConnectionResponsesConnection" instead */
   deletePersonConnectionResponsesAggregate: DeletePersonConnectionResponseAggregateSelection
@@ -18908,6 +19031,24 @@ export type QueryDeleteDocumentResponsesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<DeleteDocumentResponseSort>>
   where?: InputMaybe<DeleteDocumentResponseWhere>
+}
+
+export type QueryDeleteFieldContextResponsesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DeleteFieldContextResponseSort>>
+  where?: InputMaybe<DeleteFieldContextResponseWhere>
+}
+
+export type QueryDeleteFieldContextResponsesAggregateArgs = {
+  where?: InputMaybe<DeleteFieldContextResponseWhere>
+}
+
+export type QueryDeleteFieldContextResponsesConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<DeleteFieldContextResponseSort>>
+  where?: InputMaybe<DeleteFieldContextResponseWhere>
 }
 
 export type QueryDeletePersonConnectionResponsesArgs = {
@@ -24930,6 +25071,12 @@ export type UpdateDeleteDocumentResponsesMutationResponse = {
   info: UpdateInfo
 }
 
+export type UpdateDeleteFieldContextResponsesMutationResponse = {
+  __typename?: 'UpdateDeleteFieldContextResponsesMutationResponse'
+  deleteFieldContextResponses: Array<DeleteFieldContextResponse>
+  info: UpdateInfo
+}
+
 export type UpdateDeletePersonConnectionResponsesMutationResponse = {
   __typename?: 'UpdateDeletePersonConnectionResponsesMutationResponse'
   deletePersonConnectionResponses: Array<DeletePersonConnectionResponse>
@@ -26122,8 +26269,6 @@ export type WeSpaceContextsUpdateConnectionInput = {
 export type WeSpaceContextsUpdateFieldInput = {
   connect?: InputMaybe<Array<WeSpaceContextsConnectFieldInput>>
   create?: InputMaybe<Array<WeSpaceContextsCreateFieldInput>>
-  delete?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   update?: InputMaybe<WeSpaceContextsUpdateConnectionInput>
 }
 
@@ -26144,13 +26289,11 @@ export type WeSpaceCreateInput = {
 }
 
 export type WeSpaceDeleteInput = {
-  contexts?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
   members?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
   owner?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
 }
 
 export type WeSpaceDisconnectInput = {
-  contexts?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   members?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   owner?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
 }
@@ -26877,10 +27020,11 @@ export type DeleteFieldContextMutationVariables = Exact<{
 
 export type DeleteFieldContextMutation = {
   __typename?: 'Mutation'
-  deleteFieldContexts: {
-    __typename?: 'DeleteInfo'
-    nodesDeleted: number
-    relationshipsDeleted: number
+  deleteFieldContext: {
+    __typename?: 'DeleteFieldContextResponse'
+    contextId: string
+    deleted: boolean
+    deletedPulseCount: number
   }
 }
 
@@ -31705,36 +31849,25 @@ export const DeleteFieldContextDocument = {
         selections: [
           {
             kind: 'Field',
-            name: { kind: 'Name', value: 'deleteFieldContexts' },
+            name: { kind: 'Name', value: 'deleteFieldContext' },
             arguments: [
               {
                 kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
+                name: { kind: 'Name', value: 'contextId' },
                 value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'id_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'id' },
-                      },
-                    },
-                  ],
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'id' },
                 },
               },
             ],
             selectionSet: {
               kind: 'SelectionSet',
               selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'contextId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'deleted' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'nodesDeleted' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'relationshipsDeleted' },
+                  name: { kind: 'Name', value: 'deletedPulseCount' },
                 },
               ],
             },
