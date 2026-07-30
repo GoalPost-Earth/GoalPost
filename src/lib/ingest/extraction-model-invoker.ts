@@ -395,12 +395,15 @@ function buildCreatePulseArgs(
   if (p.why && p.why.trim()) args.why = p.why.trim()
   if (p.location && p.location.trim()) {
     args.location = p.location.trim()
-  } else if (p.kind === 'ResourcePulse' && input.documentId) {
-    // GOAL-283: a member-uploaded document is itself the resource. When the
-    // extractor didn't read an explicit location from the text, fall back to a
-    // durable, Space-scoped link to the uploaded file so the Resource is always
-    // openable/shareable. Never clobber an extracted/manual location above; the
-    // `documentId` guard keeps the fallback from writing a malformed URL.
+  } else if (input.documentId) {
+    // GOAL-283 (ResourcePulse) + GOAL-316 (all extracted kinds): the uploaded
+    // document is the pulse's source. When the extractor didn't read an
+    // explicit location from the text, fall back to a durable, Space-scoped
+    // link to the uploaded file so every pulse created from a document leads
+    // back to it. `location` is the chosen user-facing provenance surface —
+    // the `EXTRACTED_FROM` edge stays a graph-only audit trail. Never clobber
+    // an extracted/manual location above; the `documentId` guard keeps the
+    // fallback from writing a malformed URL.
     args.location = buildDocumentDownloadUrl(input.documentId)
   }
   if (p.time && p.time.trim()) args.time = p.time.trim()
