@@ -841,4 +841,140 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
       }
     }
   )
+
+  itIf(true)(
+    'GOAL-318: a second upload matching an existing pulse (update_pulse) corrects default uploader attribution to the credited author',
+    async () => {
+      if (!neo4jAvailable) return
+      const blobStore = createMemoryBlobStore()
+
+      // Run 1: the document names the person but no author — the pulse lands
+      // INITIATED_BY the uploader (default attribution).
+      const firstClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Farida', lastName: 'Noor' }],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Weave the mutual aid roster',
+            content: 'Coordinate the neighbourhood support roster.',
+          },
+        ],
+        assistantText: '',
+      })
+      const first = await seedAndIngest(
+        { driver, blobStore, modelClient: firstClient },
+        {
+          currentUserId: ids.user,
+          fieldContextId: ids.fieldContext,
+          filename: 'roster-v1.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from('Roster notes mentioning Farida Noor.', 'utf8'),
+          hint: null,
+        }
+      )
+      expect(first.ok).toBe(true)
+      if (!first.ok) throw new Error('unreachable')
+      const firstPulseExec = first.executedToolCalls.find(
+        (c) => c.tool === 'create_pulse'
+      )
+      const pulseId = firstPulseExec!.result.pulseId as string
+      const personExec = first.executedToolCalls.find(
+        (c) => c.tool === 'create_person'
+      )
+      const faridaId = personExec!.result.personId as string
+
+      // Run 2: a revision of the document carries the byline. The roster now
+      // holds both the pulse and Farida, so the model emits update_pulse with
+      // the live existingId + a roster-resolvable authorName.
+      const secondClient: ExtractionModelClient = async (input) => {
+        const rosterPulse = input.roster.pulses.find(
+          (p) => p.title === 'Weave the mutual aid roster'
+        )
+        return {
+          persons: [],
+          pulses: [
+            {
+              kind: 'GoalPulse',
+              title: 'Weave the mutual aid roster',
+              content: 'Coordinate the neighbourhood support roster, weekly.',
+              existingId: rosterPulse?.id,
+              authorName: 'Farida Noor',
+            },
+          ],
+          assistantText: '',
+        }
+      }
+      const second = await seedAndIngest(
+        { driver, blobStore, modelClient: secondClient },
+        {
+          currentUserId: ids.user,
+          fieldContextId: ids.fieldContext,
+          filename: 'roster-v2.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from('By Farida Noor. Roster notes, revised.', 'utf8'),
+          hint: null,
+        }
+      )
+      expect(second.ok).toBe(true)
+      if (!second.ok) throw new Error('unreachable')
+
+      const updateExec = second.executedToolCalls.find(
+        (c) => c.tool === 'update_pulse'
+      )
+      expect(updateExec).toBeDefined()
+      expect(updateExec!.result.success).not.toBe(false)
+      // The invoker stamped the roster author's live id on the update args.
+      expect(updateExec!.args.attributedToPersonId).toBe(faridaId)
+      // Execution reports the corrected attribution by display name (Rule 1).
+      expect(updateExec!.result.attributedTo).toBe('Farida Noor')
+
+      const session = driver.session()
+      try {
+        const rows = await session.run(
+          `
+          MATCH (p:FieldPulse {id: $pulseId})-[:INITIATED_BY]->(author)
+          RETURN author.id AS authorId,
+                 size([(p)-[:INITIATED_BY]->() | 1]) AS initiatedByCount
+          `,
+          { pulseId }
+        )
+        expect(rows.records).toHaveLength(1)
+        // Re-pointed: the author edge now targets Farida, not the uploader.
+        expect(rows.records[0].get('authorId')).toBe(faridaId)
+        expect(Number(rows.records[0].get('initiatedByCount'))).toBe(1)
+
+        // The update Log is CREATED_BY the uploader and names the author.
+        const logRows = await session.run(
+          `
+          MATCH (log:Log)-[:LOGGED_FOR]->(:FieldPulse {id: $pulseId})
+          MATCH (log)-[:CREATED_BY]->(creator)
+          WHERE log.description CONTAINS 'attributed to Farida Noor'
+          RETURN creator.id AS creatorId, log.description AS description
+          `,
+          { pulseId }
+        )
+        expect(logRows.records.length).toBeGreaterThanOrEqual(1)
+        expect(logRows.records[0].get('creatorId')).toBe(ids.user)
+        expect(String(logRows.records[0].get('description'))).not.toContain(
+          faridaId
+        )
+
+        // The synthesized turn for run 2 reports the corrected attribution.
+        const turnRows = await session.run(
+          `MATCH (t:ConversationThread {id: $threadId})-[:HAS_TURN]->(turn:ConversationTurn {role: 'assistant'})
+           RETURN turn.content AS content`,
+          { threadId: second.threadId }
+        )
+        expect(turnRows.records).toHaveLength(1)
+        const content = String(turnRows.records[0].get('content'))
+        expect(content).toContain(
+          '"Weave the mutual aid roster" is attributed to Farida Noor'
+        )
+        expect(content).not.toContain(faridaId)
+        expect(content).not.toContain(pulseId)
+      } finally {
+        await session.close()
+      }
+    }
+  )
 })

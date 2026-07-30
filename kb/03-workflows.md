@@ -201,7 +201,12 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    `link_entity_to_pulse` (MENTIONED_IN). The single pulse author is linked
    via `INITIATED_BY`; every other person/org the extractor named as related
    to a pulse is linked to it via `MENTIONED_IN`, with endpoints resolved by
-   name/title from the entities created earlier in the same run.
+   name/title from the entities created earlier in the same run. Attribution
+   also rides on `update_pulse` (GOAL-318): when a re-extract or a second
+   document matches an existing pulse, the write re-points `INITIATED_BY` at
+   the credited author — but only when the pulse's current author is the
+   acting uploader or absent, so corrected default attribution never steals
+   authorship a different person already holds.
 7. A synthesized assistant turn carries the **execution result** of each
    tool call (not a pending-approval payload). The chat panel auto-
    switches to the new ingest thread so the user sees a record of what

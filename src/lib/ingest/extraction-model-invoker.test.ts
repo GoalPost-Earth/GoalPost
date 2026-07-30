@@ -556,8 +556,11 @@ describe('ExtractionModelInvoker', () => {
   // in canonical display casing so the orchestrator can map it to the
   // person's live id after the person calls execute. An unresolved name is
   // dropped — the hallucination guard means attribution can never invent a
-  // person. update_pulse never carries attribution.
-  describe('attribution — authorName → attributedToName on create_pulse', () => {
+  // person. update_pulse carries the same attribution args (GOAL-318) — the
+  // write side re-points INITIATED_BY only when the pulse's current author is
+  // the acting uploader, so a re-extract corrects default attribution without
+  // ever stealing authorship a different person already holds.
+  describe('attribution — authorName → attributedToName on create/update_pulse', () => {
     it('carries attributedToName with canonical casing when authorName matches an extracted person', async () => {
       const modelClient: ExtractionModelClient = async () => ({
         persons: [{ firstName: 'Gurindereet', lastName: 'Singh' }],
@@ -641,7 +644,7 @@ describe('ExtractionModelInvoker', () => {
       expect(pulseCall!.args).not.toHaveProperty('attributedToPersonId')
     })
 
-    it('never carries attribution on update_pulse (roster existingId match), even when authorName resolves', async () => {
+    it('carries attribution on update_pulse (roster existingId match) so a re-extract can correct default uploader attribution (GOAL-318)', async () => {
       const input: ExtractionModelInput = {
         ...baseInput,
         roster: {
@@ -664,8 +667,50 @@ describe('ExtractionModelInvoker', () => {
             title: 'Increase event attendance',
             content: 'Boost the next two events.',
             existingId: 'pulse_goal_existing',
-            // Resolvable name — must still be ignored on the update path.
-            authorName: 'Sarah Chen',
+            authorName: 'sarah chen',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(input, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('update_pulse')
+      // Same contract as create_pulse: canonical roster display name + the
+      // already-live roster id. The write side re-points INITIATED_BY only
+      // when the pulse's current author is the acting uploader — carrying the
+      // args here never steals authorship by itself.
+      expect(result.toolCalls[0].args.attributedToName).toBe('Sarah Chen')
+      expect(result.toolCalls[0].args.attributedToPersonId).toBe(
+        'person_sarah_existing'
+      )
+    })
+
+    it('drops an unresolvable authorName on update_pulse (hallucination guard)', async () => {
+      const input: ExtractionModelInput = {
+        ...baseInput,
+        roster: {
+          persons: [],
+          pulses: [
+            {
+              id: 'pulse_goal_existing',
+              title: 'Grow event attendance',
+              pulseType: 'GoalPulse',
+            },
+          ],
+          organizations: [],
+        },
+      }
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Increase event attendance',
+            content: 'Boost the next two events.',
+            existingId: 'pulse_goal_existing',
+            authorName: 'Rumpel Stiltskin',
           },
         ],
         assistantText: '',

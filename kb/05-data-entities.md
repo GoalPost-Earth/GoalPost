@@ -618,6 +618,22 @@ brought the document in. Any `HAS_PERSON`-attached Person qualifies —
 including a registered `:User` (e.g. a WeSpace co-member): deliberate, since
 the Log keeps the uploader accountable for the write itself.
 
+The update paths re-attribute **conservatively** (GOAL-318): a re-extract or
+a second document that roster-matches an existing pulse (`update_pulse`, or
+`create_pulse`'s enrich-don't-duplicate branch) carries the same
+`authorName`, and the write re-points `INITIATED_BY` at the credited person
+ONLY when the pulse's current displayed author (`initiatedBy[0]`, else
+`createdBy[0]` — `resolvePulseAuthor` precedence) is the acting uploader or
+absent. Default uploader attribution gets corrected; authorship a different
+person already holds is never stolen (`reattributeIngestPulseAuthor` in
+`src/lib/chat/hitl.ts`). Each re-attribution writes its own attribution
+suffix into the update Log. Context-attached Persons lacking embeddings are
+also swept at upload time (`on-upload-discovery.ts` Step 1b) so authors
+become visible to person vector search without waiting for the nightly
+resonance cron — the pass runs after any upload or re-extract whose run
+created a pulse **or a person** (`process/route.ts`, `document-resolver.ts`);
+an update-only run that mints no new entity still defers to the cron.
+
 **Related people & organizations (GOAL-298):** beyond the single author,
 the extractor also emits, per pulse, the people and organizations the document
 names as *related to* it (subjects, contributors, the cooperative offering a
