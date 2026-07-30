@@ -100,6 +100,9 @@ type FieldContextSectionsProps = {
   /** Optional upload entry attached to a Documents-related empty state.
    *  Omit when the user lacks edit permission. */
   onUploadDocument?: () => void
+  /** Spreadsheet-driven bulk article import (GOAL-317). Omit when the user
+   *  lacks edit permission. */
+  onImportArticles?: () => void
   onEditPulse: (
     e: React.MouseEvent,
     pulseId: string,
@@ -155,6 +158,7 @@ export function FieldContextSections({
   onSharePulses,
   onOpenShare,
   onUploadDocument,
+  onImportArticles,
   onEditPulse,
   onDeletePulse,
   onPulseClick,
@@ -268,6 +272,7 @@ export function FieldContextSections({
         pulses={pulses}
         onAddPulse={onAddPulse}
         onUploadDocument={onUploadDocument}
+        onImportArticles={onImportArticles}
         onEditPulse={onEditPulse}
         onDeletePulse={onDeletePulse}
         onPulseClick={onPulseClick}

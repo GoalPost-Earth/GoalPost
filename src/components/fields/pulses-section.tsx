@@ -36,6 +36,9 @@ export type PulsesSectionProps = {
   pulses: PulseRecord[]
   onAddPulse: () => void
   onUploadDocument?: () => void
+  /** Spreadsheet-driven bulk article import (GOAL-317). Omit when the user
+   *  lacks edit permission. */
+  onImportArticles?: () => void
   onEditPulse: (
     e: React.MouseEvent,
     pulseId: string,
@@ -69,6 +72,7 @@ export function PulsesSection({
   pulses,
   onAddPulse,
   onUploadDocument,
+  onImportArticles,
   onEditPulse,
   onDeletePulse,
   onPulseClick,
@@ -103,9 +107,9 @@ export function PulsesSection({
 
   return (
     <div className="flex flex-col gap-4 md:col-span-2">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <SectionHeader icon="waves" title="Pulses" />
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           {richSharing && pulses.length > 0 ? (
             selectMode ? (
               <button
@@ -147,6 +151,20 @@ export function PulsesSection({
                 share
               </span>
               Share
+            </button>
+          )}
+          {!selectMode && onImportArticles && (
+            <button
+              onClick={onImportArticles}
+              className={cn(
+                pillBase,
+                'bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10'
+              )}
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                newspaper
+              </span>
+              Import Articles
             </button>
           )}
           {!selectMode && (

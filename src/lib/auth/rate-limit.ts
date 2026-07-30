@@ -32,7 +32,11 @@ import { Redis } from '@upstash/redis'
  *     and torch our sender reputation.
  */
 
-export type PolicyName = 'auth-burst' | 'invite-blast' | 'reset-request'
+export type PolicyName =
+  | 'auth-burst'
+  | 'invite-blast'
+  | 'reset-request'
+  | 'bulk-import'
 
 interface RateLimitArgs {
   policy: PolicyName
@@ -100,6 +104,18 @@ function getLimiter(policy: PolicyName): Ratelimit | null {
         prefix: 'rl:reset-request',
       })
       break
+    case 'bulk-import':
+      // 10 spreadsheet imports per hour per account (GOAL-317). At the
+      // 300-row cap that's 3000 rows/hour — generous for a member working
+      // through a large article list in batches, but it bounds the
+      // post-response embedding spend (each batch schedules a resonance
+      // discovery sweep with OpenAI round-trips) a looping caller can incur.
+      limiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(10, '1 h'),
+        prefix: 'rl:bulk-import',
+      })
+      break
   }
   limiterCache.set(policy, limiter)
   return limiter
@@ -111,6 +127,9 @@ const POLICY_FAILURE_MODE: Record<PolicyName, 'allow' | 'deny'> = {
   'auth-burst': 'allow',
   'invite-blast': 'deny',
   'reset-request': 'allow',
+  // Fail-open: imports are authenticated + size-capped; blocking a member's
+  // legitimate batch on a Redis outage is worse than briefly unmetered spend.
+  'bulk-import': 'allow',
 }
 
 export async function rateLimit({

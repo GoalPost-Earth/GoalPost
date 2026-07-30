@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { useQuery, useMutation } from '@apollo/client/react'
 import { useEffect, useState, useMemo, type FC } from 'react'
 import { toast } from 'sonner'
@@ -22,6 +23,16 @@ import {
   UploadDocumentModal,
   type UploadDocumentSubmitInput,
 } from '@/components/ui/upload-document-modal'
+// Dynamic + conditionally mounted: the modal pulls in SheetJS (~hundreds of
+// KB), which must not land in the dashboard bundle for members who never
+// open the import flow.
+const ImportArticlesModal = dynamic(
+  () =>
+    import('@/components/fields/import-articles-modal').then(
+      (mod) => mod.ImportArticlesModal
+    ),
+  { ssr: false }
+)
 import type { NodeType } from '@/components/ui/pulse-node'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import {
@@ -140,6 +151,8 @@ export default function FieldContextDetailsPage() {
   const [isUploadDocumentModalOpen, setIsUploadDocumentModalOpen] =
     useState(false)
   const [isUploadingDocument, setIsUploadingDocument] = useState(false)
+  const [isImportArticlesModalOpen, setIsImportArticlesModalOpen] =
+    useState(false)
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
   const [selectedPerson, setSelectedPerson] = useState<{
     id: string
@@ -1463,6 +1476,11 @@ export default function FieldContextDetailsPage() {
                 ? () => setIsUploadDocumentModalOpen(true)
                 : undefined
             }
+            onImportArticles={
+              canEditContent
+                ? () => setIsImportArticlesModalOpen(true)
+                : undefined
+            }
             onEditPulse={handleEditPulse}
             onDeletePulse={handleDeletePulse}
             onPersonClick={handlePersonClick}
@@ -1681,6 +1699,20 @@ export default function FieldContextDetailsPage() {
         onClose={() => setIsUploadDocumentModalOpen(false)}
         onSubmit={handleUploadDocument}
       />
+
+      {isImportArticlesModalOpen && (
+        <ImportArticlesModal
+          isOpen
+          fieldContextId={contextId}
+          onClose={() => setIsImportArticlesModalOpen(false)}
+          onImported={() => {
+            // Imported pulses land in the Pulses section; new/matched authors
+            // land in the People section.
+            void refetch()
+            void refetchFieldPeople()
+          }}
+        />
+      )}
 
       {spaceId ? (
         <ResonanceSuggestionsModal
