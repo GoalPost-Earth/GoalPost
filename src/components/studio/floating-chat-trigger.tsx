@@ -2,33 +2,48 @@
 
 import { useEffect, useRef, useState, type FC } from 'react'
 import { gsap } from 'gsap'
-import { useStudioCanvas } from './studio-canvas-context'
+
+interface FloatingChatTriggerProps {
+  /** Hides the pill — the surface it summons is already on screen. */
+  hidden: boolean
+  /** Brings the chat back. */
+  onOpen: () => void
+  /** Tooltip + accessible name. */
+  label: string
+}
 
 /**
- * Glass pill that opens the floating chat panel. Anchored to bottom-right
- * on every viewport. Visible only when the effective chat layout is
- * 'floating' (desktop preference) or on mobile (where docked is forced off).
+ * Glass pill that summons the chat. Anchored to bottom-right on every
+ * viewport.
  *
- * Hidden when the floating panel itself is already open — the panel has
- * its own close affordance.
+ * Two callers, one affordance:
+ *  - floating layout (desktop preference / mobile) — opens the slide-out panel
+ *  - docked layout with the chat hidden (GOAL-313) — restores the docked panel
+ *
+ * It's deliberately the same pill in both cases: once a user has learned that
+ * the bottom-right glass pill brings the assistant back, that has to hold
+ * regardless of which layout they're in.
  */
-export const FloatingChatTrigger: FC = () => {
-  const { floatingChatOpen, toggleFloatingChat } = useStudioCanvas()
+export const FloatingChatTrigger: FC<FloatingChatTriggerProps> = ({
+  hidden,
+  onOpen,
+  label,
+}) => {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const groupRef = useRef<HTMLDivElement>(null)
   const [showTooltip, setShowTooltip] = useState(false)
 
   useEffect(() => {
-    if (floatingChatOpen) return
+    if (hidden) return
     if (!groupRef.current) return
     gsap.fromTo(
       groupRef.current,
       { scale: 0, opacity: 0, y: 20 },
       { scale: 1, opacity: 1, y: 0, duration: 0.4, ease: 'back.out(1.7)' }
     )
-  }, [floatingChatOpen])
+  }, [hidden])
 
-  if (floatingChatOpen) return null
+  if (hidden) return null
 
   const handleClick = () => {
     if (buttonRef.current) {
@@ -40,7 +55,7 @@ export const FloatingChatTrigger: FC = () => {
         ease: 'power2.inOut',
       })
     }
-    toggleFloatingChat()
+    onOpen()
   }
 
   return (
@@ -61,7 +76,7 @@ export const FloatingChatTrigger: FC = () => {
           onMouseLeave={(e) => {
             e.currentTarget.style.boxShadow = 'none'
           }}
-          aria-label="Open chat"
+          aria-label={label}
         >
           <span className="material-symbols-outlined text-2xl text-slate-700 dark:text-white/70 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
             psychology
@@ -77,7 +92,7 @@ export const FloatingChatTrigger: FC = () => {
           }
         >
           <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-white/10 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-900 dark:text-white/90 shadow-xl">
-            Open chat
+            {label}
           </div>
         </div>
       </div>
