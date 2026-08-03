@@ -650,21 +650,23 @@ export async function extractEntities(
       })
     }
 
-    if (match) {
-      return { tool: 'update_pulse', args: buildUpdatePulseArgs(p, match, input) }
-    }
-    const args = buildCreatePulseArgs(p, input)
+    const args = match
+      ? buildUpdatePulseArgs(p, match, input)
+      : buildCreatePulseArgs(p, input)
     // Attribution: always carry the validated author NAME. A roster match
     // also carries its live id — that person may get no person call this run
     // (the model doesn't re-emit hint-only mentions), so the orchestrator's
     // name→id map would never learn them. Extracted candidates carry the name
     // only; the orchestrator resolves their id after the person calls (which
-    // run first) have executed.
+    // run first) have executed. update_pulse carries the same args (GOAL-318):
+    // its write re-points INITIATED_BY only when the pulse's current author is
+    // the acting uploader — a re-extract corrects default attribution, never
+    // steals authorship a different person already holds.
     if (author) {
       args.attributedToName = author.name
       if (author.personId) args.attributedToPersonId = author.personId
     }
-    return { tool: 'create_pulse', args }
+    return { tool: match ? 'update_pulse' : 'create_pulse', args }
   })
 
   // Order matters: persons + orgs create the nodes, pulses create the pulses,

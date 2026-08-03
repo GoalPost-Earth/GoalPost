@@ -22,8 +22,10 @@ const ids = {
   document: `test_${testRunId}_doc`,
   // Attribution fixtures: one PersonPulse attached to the context via
   // HAS_PERSON (valid attribution target) and one deliberately unattached
-  // (must fall back to the acting user).
+  // (must fall back to the acting user). The second attached person exercises
+  // the GOAL-318 "never steal authorship" gate on the re-attribution paths.
   attachedPerson: `test_attr_${testRunId}`,
+  attachedPerson2: `test_attr2_${testRunId}`,
   unattachedPerson: `test_unatt_${testRunId}`,
 }
 
@@ -47,12 +49,14 @@ beforeAll(async () => {
       CREATE (c:FieldContext {id: $ctxId, title: 'Care Practices', createdAt: datetime()})
       CREATE (d:Document {id: $docId, filename: 'meeting-notes.txt', mimeType: 'text/plain', sizeBytes: 42, uploadedAt: datetime()})
       CREATE (ap:Person:PersonPulse {id: $attachedPersonId, firstName: 'Nadia', lastName: 'Woods', name: 'Nadia Woods', createdAt: datetime()})
+      CREATE (ap2:Person:PersonPulse {id: $attachedPerson2Id, firstName: 'Priya', lastName: 'Raman', name: 'Priya Raman', createdAt: datetime()})
       CREATE (up:Person:PersonPulse {id: $unattachedPersonId, firstName: 'Omar', lastName: 'Haddad', name: 'Omar Haddad', createdAt: datetime()})
       CREATE (u)-[:OWNS]->(s)
       CREATE (s)-[:HAS_CONTEXT]->(c)
       CREATE (c)-[:HAS_DOCUMENT]->(d)
       CREATE (d)-[:UPLOADED_BY]->(u)
       CREATE (c)-[:HAS_PERSON]->(ap)
+      CREATE (c)-[:HAS_PERSON]->(ap2)
       `,
       {
         userId: ids.user,
@@ -60,6 +64,7 @@ beforeAll(async () => {
         ctxId: ids.fieldContext,
         docId: ids.document,
         attachedPersonId: ids.attachedPerson,
+        attachedPerson2Id: ids.attachedPerson2,
         unattachedPersonId: ids.unattachedPerson,
       }
     )
@@ -83,7 +88,7 @@ afterAll(async () => {
     await session.run(
       `
       MATCH (n)
-      WHERE n.id IN [$userId, $spaceId, $ctxId, $docId, $attachedPersonId, $unattachedPersonId]
+      WHERE n.id IN [$userId, $spaceId, $ctxId, $docId, $attachedPersonId, $attachedPerson2Id, $unattachedPersonId]
       DETACH DELETE n
       `,
       {
@@ -92,6 +97,7 @@ afterAll(async () => {
         ctxId: ids.fieldContext,
         docId: ids.document,
         attachedPersonId: ids.attachedPerson,
+        attachedPerson2Id: ids.attachedPerson2,
         unattachedPersonId: ids.unattachedPerson,
       }
     )
@@ -425,6 +431,243 @@ describe('executeAuthorizedWriteTool — create_pulse attribution (INITIATED_BY)
       } finally {
         await session.close()
       }
+    }
+  )
+})
+
+// GOAL-318 — re-attribution on the ingest update/enrich paths. A re-extract
+// (or a second document matching an existing pulse) corrects DEFAULT uploader
+// attribution: the write re-points INITIATED_BY at the credited person only
+// when the pulse's current author is the acting user or absent — authorship a
+// different person already holds is never stolen.
+describe('executeAuthorizedWriteTool — ingest re-attribution (GOAL-318)', () => {
+  async function readAuthor(pulseId: string) {
+    const session = driver.session()
+    try {
+      const rows = await session.run(
+        `
+        MATCH (p:FieldPulse {id: $pulseId})-[:INITIATED_BY]->(author)
+        RETURN author.id AS authorId,
+               size([(p)-[:INITIATED_BY]->() | 1]) AS initiatedByCount
+        `,
+        { pulseId }
+      )
+      return rows.records.map((r) => ({
+        authorId: r.get('authorId') as string,
+        initiatedByCount: Number(r.get('initiatedByCount')),
+      }))
+    } finally {
+      await session.close()
+    }
+  }
+
+  itIf(true)(
+    'create_pulse enrich branch re-points INITIATED_BY from the uploader to the credited author; Log stays CREATED_BY the acting user',
+    async () => {
+      if (!neo4jAvailable) return
+      const graph = await initGraph()
+      const title = `Re-upload corrects attribution ${testRunId}`
+
+      const first = await executeAuthorizedWriteTool(graph, ids.user, 'create_pulse', {
+        pulseType: 'StoryPulse',
+        title,
+        content: 'First upload carried no byline.',
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+      })
+      expect(first.success).toBe(true)
+      const pulseId = (first as { pulseId?: string }).pulseId as string
+
+      const second = await executeAuthorizedWriteTool(graph, ids.user, 'create_pulse', {
+        pulseType: 'StoryPulse',
+        title,
+        content: 'Second upload names the author.',
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+        attributedToPersonId: ids.attachedPerson,
+        attributedToName: 'Nadia Woods',
+      })
+      expect(second.success).toBe(true)
+      expect((second as { alreadyExisted?: boolean }).alreadyExisted).toBe(true)
+      expect((second as { pulseId?: string }).pulseId).toBe(pulseId)
+      expect(
+        (second as { attributedTo?: string | null }).attributedTo
+      ).toBe('Nadia Woods')
+      expect(String(second.message || '')).toContain(
+        'attributed to Nadia Woods'
+      )
+
+      const authors = await readAuthor(pulseId)
+      expect(authors).toHaveLength(1)
+      expect(authors[0].authorId).toBe(ids.attachedPerson)
+      expect(authors[0].initiatedByCount).toBe(1)
+
+      const session = driver.session()
+      try {
+        const logRows = await session.run(
+          `
+          MATCH (log:Log)-[:LOGGED_FOR]->(:FieldPulse {id: $pulseId})
+          MATCH (log)-[:CREATED_BY]->(creator)
+          WHERE log.description CONTAINS 'attributed to Nadia Woods'
+          RETURN creator.id AS creatorId, log.description AS description
+          `,
+          { pulseId }
+        )
+        expect(logRows.records.length).toBeGreaterThanOrEqual(1)
+        expect(logRows.records[0].get('creatorId')).toBe(ids.user)
+        // Rule 1 — no raw person id in activity copy.
+        expect(String(logRows.records[0].get('description'))).not.toContain(
+          ids.attachedPerson
+        )
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
+  itIf(true)(
+    'enrich branch never steals authorship a different person already holds (attributedTo null, edge untouched)',
+    async () => {
+      if (!neo4jAvailable) return
+      const graph = await initGraph()
+      const title = `Authorship is never stolen ${testRunId}`
+
+      const first = await executeAuthorizedWriteTool(graph, ids.user, 'create_pulse', {
+        pulseType: 'StoryPulse',
+        title,
+        content: 'Nadia authored this one from the start.',
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+        attributedToPersonId: ids.attachedPerson,
+        attributedToName: 'Nadia Woods',
+      })
+      expect(first.success).toBe(true)
+      const pulseId = (first as { pulseId?: string }).pulseId as string
+
+      const second = await executeAuthorizedWriteTool(graph, ids.user, 'create_pulse', {
+        pulseType: 'StoryPulse',
+        title,
+        content: 'A later document claims a different author.',
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+        attributedToPersonId: ids.attachedPerson2,
+        attributedToName: 'Priya Raman',
+      })
+      expect(second.success).toBe(true)
+      expect((second as { alreadyExisted?: boolean }).alreadyExisted).toBe(true)
+      expect(
+        (second as { attributedTo?: string | null }).attributedTo
+      ).toBeNull()
+
+      const authors = await readAuthor(pulseId)
+      expect(authors).toHaveLength(1)
+      expect(authors[0].authorId).toBe(ids.attachedPerson)
+      expect(authors[0].initiatedByCount).toBe(1)
+    }
+  )
+
+  itIf(true)(
+    'update_pulse re-points INITIATED_BY at the credited author and logs the attribution',
+    async () => {
+      if (!neo4jAvailable) return
+      const graph = await initGraph()
+      const title = `Update path corrects attribution ${testRunId}`
+
+      const created = await executeAuthorizedWriteTool(graph, ids.user, 'create_pulse', {
+        pulseType: 'GoalPulse',
+        title,
+        content: 'Originally attributed to the uploader by default.',
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+      })
+      expect(created.success).toBe(true)
+      const pulseId = (created as { pulseId?: string }).pulseId as string
+
+      // Mirror buildUpdatePulseArgs — the shape the ingest orchestrator sends.
+      const updated = await executeAuthorizedWriteTool(graph, ids.user, 'update_pulse', {
+        pulseId,
+        newTitle: title,
+        newContent: 'The re-extract read the byline this time.',
+        pulseType: 'GoalPulse',
+        currentTitle: title,
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+        attributedToPersonId: ids.attachedPerson,
+        attributedToName: 'Nadia Woods',
+      })
+      expect(updated.success).toBe(true)
+      expect(
+        (updated as { attributedTo?: string | null }).attributedTo
+      ).toBe('Nadia Woods')
+
+      const authors = await readAuthor(pulseId)
+      expect(authors).toHaveLength(1)
+      expect(authors[0].authorId).toBe(ids.attachedPerson)
+      expect(authors[0].initiatedByCount).toBe(1)
+
+      const session = driver.session()
+      try {
+        const logRows = await session.run(
+          `
+          MATCH (log:Log)-[:LOGGED_FOR]->(:FieldPulse {id: $pulseId})
+          MATCH (log)-[:CREATED_BY]->(creator)
+          WHERE log.description CONTAINS 'attributed to Nadia Woods'
+          RETURN creator.id AS creatorId
+          `,
+          { pulseId }
+        )
+        expect(logRows.records.length).toBeGreaterThanOrEqual(1)
+        expect(logRows.records[0].get('creatorId')).toBe(ids.user)
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
+  itIf(true)(
+    'update_pulse without attribution args leaves the author edge untouched (interactive chat parity)',
+    async () => {
+      if (!neo4jAvailable) return
+      const graph = await initGraph()
+      const title = `Plain update keeps authorship ${testRunId}`
+
+      const created = await executeAuthorizedWriteTool(graph, ids.user, 'create_pulse', {
+        pulseType: 'GoalPulse',
+        title,
+        content: 'Attributed to Nadia from the start.',
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+        attributedToPersonId: ids.attachedPerson,
+        attributedToName: 'Nadia Woods',
+      })
+      expect(created.success).toBe(true)
+      const pulseId = (created as { pulseId?: string }).pulseId as string
+
+      const updated = await executeAuthorizedWriteTool(graph, ids.user, 'update_pulse', {
+        pulseId,
+        newContent: 'A plain edit with no attribution args.',
+        pulseType: 'GoalPulse',
+        currentTitle: title,
+        contextId: ids.fieldContext,
+        contextTitle: 'Care Practices',
+        documentId: ids.document,
+      })
+      expect(updated.success).toBe(true)
+      expect(
+        (updated as { attributedTo?: string | null }).attributedTo
+      ).toBeUndefined()
+
+      const authors = await readAuthor(pulseId)
+      expect(authors).toHaveLength(1)
+      expect(authors[0].authorId).toBe(ids.attachedPerson)
+      expect(authors[0].initiatedByCount).toBe(1)
     }
   )
 })

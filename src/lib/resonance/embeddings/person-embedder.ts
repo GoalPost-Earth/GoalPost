@@ -6,7 +6,10 @@
  * resonance cron's "embedding IS NULL" sweep. Two write paths depend on that
  * sweep existing for Persons: document ingest creates PersonPulses without an
  * embedding, and update_person deliberately nulls the embedding on semantic
- * edits (see person-pulse-resolver.ts).
+ * edits (see person-pulse-resolver.ts). Since GOAL-318 the ingest-created gap
+ * closes at upload time too — on-upload-discovery.ts runs the same sweep
+ * scoped to the upload's context, so the cron is the safety net rather than
+ * the only path.
  */
 
 import { initGraph } from '../../../modules/graph'

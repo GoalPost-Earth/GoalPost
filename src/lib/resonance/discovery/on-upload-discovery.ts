@@ -19,6 +19,7 @@
 import neo4j from 'neo4j-driver'
 import { initGraph } from '@/modules/graph'
 import { generatePulseEmbeddings } from '../embeddings/pulse-embedder'
+import { generatePersonEmbedding } from '../embeddings/person-embedder'
 import {
   discoverResonancesForContext,
   discoverCrossContextResonancesForContext,
@@ -38,6 +39,12 @@ export interface ContextDiscoveryResult {
   contextId: string
   spaceId: string | null
   embeddedCount: number
+  /**
+   * Persons attached to the context that were embedded this run (GOAL-318).
+   * Doc ingest mints author / mentioned PersonPulses without an embedding;
+   * until they carry one they are invisible to person vector search.
+   */
+  personsEmbeddedCount: number
   suggestionsCreated: number
   /**
    * Cross-context suggestions (GOAL-293) — connections between the upload's
@@ -91,6 +98,7 @@ export async function runContextResonanceDiscovery(params: {
         contextId,
         spaceId: null,
         embeddedCount: 0,
+        personsEmbeddedCount: 0,
         suggestionsCreated: 0,
         crossContextSuggestionsCreated: 0,
         error: 'No Space owns this context',
@@ -124,6 +132,40 @@ export async function runContextResonanceDiscovery(params: {
     }
     console.log(
       `[OnUploadDiscovery] Embedded ${embeddedCount}/${missingIds.length} missing pulses in context ${contextId}`
+    )
+
+    // Step 1b (GOAL-318): embed context-attached Persons that lack embeddings.
+    // Doc ingest mints author / mentioned PersonPulses without one, and until
+    // the nightly cron sweeps them they are invisible to person vector search
+    // (personBioVectorIndex). Same non-empty-profile predicate as the cron
+    // sweep in /api/cron/discover-resonances; failures are per-person and
+    // non-fatal, mirroring the pulse loop above.
+    const missingPersons = await graph.query<{ id: string }>(
+      `MATCH (:FieldContext {id: $contextId})-[:HAS_PERSON]->(p:Person)
+       WHERE p.embedding IS NULL
+         AND trim(coalesce(p.name, '') + coalesce(p.firstName, '')
+           + coalesce(p.lastName, '') + coalesce(p.description, '')) <> ''
+       RETURN DISTINCT p.id AS id
+       LIMIT $limit`,
+      { contextId, limit: neo4j.int(MAX_EMBEDDING_BACKFILL) }
+    )
+    const missingPersonIds = Array.isArray(missingPersons)
+      ? missingPersons.map((r) => r.id)
+      : []
+    let personsEmbeddedCount = 0
+    for (const personId of missingPersonIds) {
+      try {
+        await generatePersonEmbedding(personId)
+        personsEmbeddedCount++
+      } catch (err) {
+        console.error(
+          `[OnUploadDiscovery] Failed to embed person ${personId}:`,
+          err
+        )
+      }
+    }
+    console.log(
+      `[OnUploadDiscovery] Embedded ${personsEmbeddedCount}/${missingPersonIds.length} missing persons in context ${contextId}`
     )
 
     // Step 2: discover resonances scoped to this context only.
@@ -228,6 +270,7 @@ export async function runContextResonanceDiscovery(params: {
             contextId,
             spaceId,
             embeddedCount,
+            personsEmbeddedCount,
             suggestionsCreated: suggestions.length,
             crossContextSuggestionsCreated: crossCount,
           },
@@ -242,6 +285,7 @@ export async function runContextResonanceDiscovery(params: {
       contextId,
       spaceId,
       embeddedCount,
+      personsEmbeddedCount,
       suggestionsCreated: suggestions.length,
       crossContextSuggestionsCreated: crossContext.length,
     }
@@ -254,6 +298,7 @@ export async function runContextResonanceDiscovery(params: {
       contextId,
       spaceId: null,
       embeddedCount: 0,
+      personsEmbeddedCount: 0,
       suggestionsCreated: 0,
       crossContextSuggestionsCreated: 0,
       error: err instanceof Error ? err.message : 'Unknown error',

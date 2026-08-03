@@ -165,7 +165,7 @@ export async function appendSynthesizedIngestTurns(
     const graph = await initGraph()
     for (const call of toolCalls) {
       let args = call.args
-      if (call.tool === 'create_pulse') {
+      if (call.tool === 'create_pulse' || call.tool === 'update_pulse') {
         const attributedToName =
           typeof args.attributedToName === 'string'
             ? args.attributedToName.trim().toLowerCase()
@@ -318,10 +318,25 @@ export async function appendSynthesizedIngestTurns(
   // the person (names only in chat copy, per kb/07 Rule 1).
   const pulsesByAuthor = new Map<string, string[]>()
   for (const e of executed) {
-    if (e.tool !== 'create_pulse' || e.result.success === false) continue
+    // update_pulse counts too (GOAL-318): a re-extract that corrected a
+    // pulse's default uploader attribution reports the credited author the
+    // same way a fresh create does.
+    if (
+      (e.tool !== 'create_pulse' && e.tool !== 'update_pulse') ||
+      e.result.success === false
+    )
+      continue
     const author =
       typeof e.result.attributedTo === 'string' ? e.result.attributedTo.trim() : ''
-    const title = typeof e.result.title === 'string' ? e.result.title.trim() : ''
+    // update_pulse nests the title under result.pulse (updatePulse service
+    // shape); create_pulse reports it top-level. Fall back to the args the
+    // invoker sent so a rename-free update still reports a title.
+    const nestedTitle = (e.result.pulse as { title?: string } | undefined)
+      ?.title
+    const title =
+      (typeof e.result.title === 'string' && e.result.title.trim()) ||
+      (typeof nestedTitle === 'string' && nestedTitle.trim()) ||
+      String(e.args.newTitle ?? e.args.currentTitle ?? '').trim()
     if (!author || !title) continue
     pulsesByAuthor.set(author, [...(pulsesByAuthor.get(author) ?? []), title])
   }

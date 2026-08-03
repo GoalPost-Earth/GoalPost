@@ -1,7 +1,9 @@
 import type { Session } from 'neo4j-driver'
 import { GraphQLError } from 'graphql'
+import { after } from 'next/server'
 import { driver } from '@/lib/neo4j/driver'
 import { handleReExtractDocument } from '@/lib/ingest/handle-reextract-document'
+import { runContextResonanceDiscovery } from '@/lib/resonance/discovery/on-upload-discovery'
 import { createOpenAIExtractionModelClient } from '@/lib/ingest/openai-extraction-model-client'
 import { createGeminiExtractionModelClient } from '@/lib/ingest/gemini-extraction-model-client'
 import {
@@ -83,6 +85,26 @@ export const documentMutations = {
             : 'BAD_USER_INPUT'
       throw new GraphQLError(result.error, {
         extensions: { code, reason: result.reason },
+      })
+    }
+
+    // Post-run resonance discovery + embedding backfill (GOAL-318). The
+    // initial-upload route schedules the same pass; without this, a
+    // re-extract that mints the document's author (create_person) or a new
+    // pulse would leave them unembedded until the nightly cron. Same
+    // predicate as the upload route; `after()` runs it once the response is
+    // sent, and `runContextResonanceDiscovery` never throws.
+    const createdAPulseOrPerson = result.executedToolCalls.some(
+      (c) =>
+        (c.tool === 'create_pulse' || c.tool === 'create_person') &&
+        c.result.success !== false
+    )
+    if (createdAPulseOrPerson) {
+      after(async () => {
+        await runContextResonanceDiscovery({
+          contextId: result.fieldContextId,
+          actorUserId: userId,
+        })
       })
     }
 
