@@ -84,16 +84,9 @@ export function CreateFieldModal({
         return
       }
 
-      // Check if field has any pulses (use fresh data from query)
-      if (freshPulseCount > 0) {
-        toast.error(
-          `Cannot delete a field with ${freshPulseCount} pulse${freshPulseCount !== 1 ? 's' : ''}. Please delete all pulses first.`
-        )
-        setShowDeleteConfirm(false)
-        setIsMutationLoading(false)
-        return
-      }
-
+      // Deletion cascades server-side (GOAL-319): the field and all of its
+      // pulses are soft deleted together, so no pulse-count guard here —
+      // the confirm dialog warns about the pulses instead.
       await deleteFieldContext({
         variables: {
           id: fieldId,
@@ -354,24 +347,14 @@ export function CreateFieldModal({
                   Delete Field
                 </h2>
                 <p className="text-sm mb-8">
-                  {freshPulseCount > 0 ? (
-                    <>
-                      <span className="text-orange-600 dark:text-orange-400 font-medium">
-                        This field cannot be deleted
-                      </span>
-                      <br />
-                      <span className="text-gp-ink-muted dark:text-gp-ink-soft text-xs block mt-2">
-                        This field has {freshPulseCount} pulse
-                        {freshPulseCount !== 1 ? 's' : ''}. Please delete all
-                        pulses to remove this field.
-                      </span>
-                    </>
-                  ) : (
-                    <span className="text-red-700 dark:text-red-400">
-                      Are you sure? This action cannot be undone. All content
-                      will be permanently deleted.
-                    </span>
-                  )}
+                  <span className="text-red-700 dark:text-red-400">
+                    Are you sure? This action cannot be undone.
+                  </span>
+                  <span className="text-gp-ink-muted dark:text-gp-ink-soft text-xs block mt-2">
+                    {freshPulseCount > 0
+                      ? `This will delete the field and its ${freshPulseCount} pulse${freshPulseCount !== 1 ? 's' : ''}.`
+                      : 'All content in this field will be deleted.'}
+                  </span>
                 </p>
 
                 {/* Buttons */}
@@ -381,21 +364,19 @@ export function CreateFieldModal({
                     disabled={isMutationLoading || isLoadingFieldData}
                     className="flex-1 px-6 py-3 rounded-xl bg-gp-surface-soft dark:bg-gp-surface-strong text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong dark:hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {freshPulseCount > 0 ? 'Close' : 'Cancel'}
+                    Cancel
                   </button>
-                  {freshPulseCount === 0 && (
-                    <button
-                      onClick={handleDelete}
-                      disabled={isMutationLoading || isLoadingFieldData}
-                      className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {isMutationLoading
-                        ? 'Deleting...'
-                        : isLoadingFieldData
-                          ? 'Checking...'
-                          : 'Delete'}
-                    </button>
-                  )}
+                  <button
+                    onClick={handleDelete}
+                    disabled={isMutationLoading || isLoadingFieldData}
+                    className="flex-1 px-6 py-3 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isMutationLoading
+                      ? 'Deleting...'
+                      : isLoadingFieldData
+                        ? 'Checking...'
+                        : 'Delete'}
+                  </button>
                 </div>
               </div>
             </div>

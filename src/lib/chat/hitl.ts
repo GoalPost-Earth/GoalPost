@@ -11,6 +11,8 @@ import {
   type PulseContextLinkInput,
 } from '@/modules/agent/tools/pulse/pulse.service'
 import { createHash, randomUUID } from 'crypto'
+import { driver } from '@/lib/neo4j/driver'
+import { softDeleteFieldContext } from '@/lib/field-context/soft-delete-field-context'
 
 export type WriteToolName =
   | 'rename_space'
@@ -123,8 +125,14 @@ export function describeWriteAction(
       // Rule 1: never surface the raw spaceId — prefer the resolved name, fall
       // back to a generic phrase rather than an id.
       return `Create field context "${String(args.title || '')}" in ${String(args.spaceName || 'the selected space')}`
-    case 'delete_field_context':
-      return `Delete field context ${String(args.contextId || args.currentTitle || 'target context')}`
+    case 'delete_field_context': {
+      // Rule 1: never surface the raw contextId — prefer the human title,
+      // fall back to a generic phrase rather than an id.
+      const title = String(args.contextTitle || args.currentTitle || '').trim()
+      return title
+        ? `Delete field context "${title}" and its pulses`
+        : 'Delete the selected field context and its pulses'
+    }
     case 'update_pulse': {
       const title = String(args.currentTitle || args.newTitle || '').trim()
       const where = String(args.contextTitle || args.contextName || '').trim()
@@ -959,58 +967,39 @@ async function deleteFieldContextAuthorized(
     }
   }
 
-  if (deletePulses) {
-    const deleteQuery = `
-      MATCH (context:FieldContext {id: $contextId})
-      OPTIONAL MATCH (context)-[:HAS_PULSE]->(pulse:FieldPulse)
-      OPTIONAL MATCH (pulse)-[:HAS_CHUNK]->(chunk:ConversationChunk)
-      WITH context,
-           collect(DISTINCT pulse) AS pulses,
-           collect(DISTINCT chunk) AS chunks
-      FOREACH (c IN chunks | DETACH DELETE c)
-      FOREACH (p IN pulses | DETACH DELETE p)
-      WITH context, size(pulses) AS deletedPulseCount
-      DETACH DELETE context
-      RETURN deletedPulseCount
-    `
+  // Shared soft-delete orchestrator (GOAL-319) — the same path as the
+  // GraphQL deleteFieldContext mutation. One transaction: owner-or-ADMIN
+  // gate, deletedAt stamps on the context + its pulses, suggestion cleanup,
+  // Space edge re-pointed to HAS_DELETED_CONTEXT, activity Log. The 90-day
+  // purge cron hard-deletes later. Note the gate is stricter than
+  // resolveAuthorizedContextId's edit gate: per kb/02, MEMBERs can edit
+  // fields but only the owner or an ADMIN may delete one.
+  const outcome = await softDeleteFieldContext(
+    { driver },
+    { currentUserId, contextId }
+  )
 
-    const rows = await graph.query<{ deletedPulseCount: number }>(deleteQuery, {
-      contextId,
-    })
-
-    return {
-      success: true,
-      contextId,
-      deletedPulseCount: Number(rows?.[0]?.deletedPulseCount || 0),
-      message: `Deleted field context "${details[0].title}" and its pulses.`,
-    }
-  }
-
-  const deleteContextOnlyQuery = `
-    MATCH (context:FieldContext {id: $contextId})
-    WHERE NOT EXISTS {
-      MATCH (context)-[:HAS_PULSE]->(:FieldPulse)
-    }
-    DETACH DELETE context
-    RETURN 1 AS deleted
-  `
-
-  const rows = await graph.query<{ deleted: number }>(deleteContextOnlyQuery, {
-    contextId,
-  })
-
-  if (!rows || rows.length === 0) {
+  if (!outcome.ok) {
     return {
       success: false,
-      message: 'Could not delete field context.',
+      message:
+        outcome.reason === 'forbidden'
+          ? 'Only the space owner or an admin can delete a field context.'
+          : outcome.error,
     }
   }
 
+  const deletedPulseCount = outcome.deletedPulseCount
   return {
     success: true,
     contextId,
-    deletedPulseCount: 0,
-    message: `Deleted field context "${details[0].title}".`,
+    deletedPulseCount,
+    message:
+      deletedPulseCount > 0
+        ? `Deleted field context "${outcome.title}" and its ${
+            deletedPulseCount === 1 ? 'pulse' : `${deletedPulseCount} pulses`
+          }.`
+        : `Deleted field context "${outcome.title}".`,
   }
 }
 

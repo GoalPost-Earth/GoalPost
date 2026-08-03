@@ -706,7 +706,18 @@ type MeSpace implements Space
   createdAt: DateTime!
   owner: [Person!]! @relationship(type: "OWNS", direction: IN)
   members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
-  contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
+  # Nested DELETE/DISCONNECT are disabled (GOAL-319): a nested
+  # `contexts: { delete: ... }` ran the same bare DETACH DELETE the removed
+  # deleteFieldContexts mutation did (orphaning every nested pulse), and a
+  # nested disconnect stranded the context invisible AND un-purgeable (the
+  # purge cron matches on deletedAt, which a disconnect never sets). All
+  # deletion flows through the custom `deleteFieldContext` mutation.
+  contexts: [FieldContext!]!
+    @relationship(
+      type: "HAS_CONTEXT"
+      direction: OUT
+      nestedOperations: [CONNECT, CREATE, UPDATE]
+    )
 }
 
 """
@@ -765,7 +776,18 @@ type WeSpace implements Space
   createdAt: DateTime!
   owner: [Person!]! @relationship(type: "OWNS", direction: IN)
   members: [SpaceMembership!]! @relationship(type: "HAS_MEMBER", direction: OUT)
-  contexts: [FieldContext!]! @relationship(type: "HAS_CONTEXT", direction: OUT)
+  # Nested DELETE/DISCONNECT are disabled (GOAL-319): a nested
+  # `contexts: { delete: ... }` ran the same bare DETACH DELETE the removed
+  # deleteFieldContexts mutation did (orphaning every nested pulse), and a
+  # nested disconnect stranded the context invisible AND un-purgeable (the
+  # purge cron matches on deletedAt, which a disconnect never sets). All
+  # deletion flows through the custom `deleteFieldContext` mutation.
+  contexts: [FieldContext!]!
+    @relationship(
+      type: "HAS_CONTEXT"
+      direction: OUT
+      nestedOperations: [CONNECT, CREATE, UPDATE]
+    )
 }
 
 """
@@ -818,6 +840,12 @@ MIGRATION PATTERN:
 """
 type FieldContext
   @node(labels: ["FieldContext"])
+  # DELETE is custom-only (GOAL-319): the generated deleteFieldContexts ran a
+  # bare DETACH DELETE on the context node, orphaning every nested pulse.
+  # Deletion now flows through the custom `deleteFieldContext` mutation, which
+  # soft-deletes the context and its pulses (deletedAt stamp + the Space edge
+  # re-pointed to HAS_DELETED_CONTEXT) ahead of the 90-day purge cron.
+  @mutation(operations: [CREATE, UPDATE])
   @authorization(
     # READ — anyone with access to the owning space (Me owner, or We
     # owner + any member regardless of role) can see the FieldContext.
@@ -1124,6 +1152,17 @@ EXTRACTED_FROM edges drop with the Document)."""
 type DeleteDocumentResponse {
   documentId: ID!
   deleted: Boolean!
+}
+
+"""Response payload for `deleteFieldContext` (GOAL-319). The context and its
+pulses are soft deleted in one transaction — immediately hidden from every
+read surface — and hard-purged with all nested content by the daily purge
+cron once the 90-day retention window passes."""
+type DeleteFieldContextResponse {
+  contextId: ID!
+  deleted: Boolean!
+  """Number of pulses soft-deleted along with the context."""
+  deletedPulseCount: Int!
 }
 
 # ============================================================================
@@ -2530,6 +2569,22 @@ type Mutation {
   to their extractions).
   """
   deleteDocument(documentId: ID!): DeleteDocumentResponse!
+
+  """
+  Delete a FieldContext and everything nested under it (GOAL-319). The
+  context and its pulses are SOFT deleted in a single transaction: stamped
+  with deletedAt and detached from their Space (the HAS_CONTEXT edge is
+  re-pointed to HAS_DELETED_CONTEXT), which hides the whole subtree from
+  every read surface at once. The daily purge cron hard-deletes the context
+  and all nested entities (pulses, chunks, resonance links, suggestions,
+  weaves, documents + blobs, orphaned organizations) after 90 days.
+
+  Authorization (enforced server-side in the resolver, matching the
+  kb/02-user-roles.md DELETE matrix): Space owner or ADMIN only. The
+  generated deleteFieldContexts mutation is disabled — it deleted the bare
+  context node and orphaned all nested content.
+  """
+  deleteFieldContext(contextId: ID!): DeleteFieldContextResponse!
 }
 
 # ============================================================================

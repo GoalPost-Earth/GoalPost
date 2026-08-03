@@ -283,6 +283,11 @@ async function initializeDatabase() {
       // a per-row property check.
       `CREATE INDEX assistant_feedback_classification IF NOT EXISTS
        FOR (f:AssistantFeedback) ON (f.classification)`,
+      // Purge cron (GOAL-319) sweeps `WHERE c.deletedAt IS NOT NULL AND
+      // c.deletedAt < cutoff` daily; the index keeps that a seek instead of
+      // a full FieldContext label scan as contexts accumulate.
+      `CREATE INDEX context_deletedAt IF NOT EXISTS
+       FOR (c:FieldContext) ON (c.deletedAt)`,
       // Default dashboard view filters `WHERE coalesce(f.status, 'open') IN
       // ['open', 'in_progress']` — once the table has thousands of rows the
       // unindexed property check becomes the long pole. Index it.

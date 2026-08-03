@@ -2,6 +2,25 @@
 
 Valid states and transitions for core entities in GoalPost.
 
+## FieldContext Lifecycle (GOAL-319)
+
+```
+Live → Soft-deleted → (purged after 90 days)
+```
+
+| State        | Marked By                                                                                   | Trigger                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Live         | `deletedAt` absent; `(Space)-[:HAS_CONTEXT]->(ctx)`                                          | Creation                                                                |
+| Soft-deleted | `deletedAt` set on the context AND its pulses; Space edge re-pointed to `HAS_DELETED_CONTEXT` | `deleteFieldContext` mutation / assistant `delete_field_context` (owner or ADMIN only) |
+| Purged       | Node and all nested entities removed from the graph                                          | Daily `/api/cron/purge-deleted-contexts` once `deletedAt` > 90 days old  |
+
+Soft-deleted content is invisible to every read surface (all access flows
+through `HAS_CONTEXT`). There is no user-facing restore; within the 90-day
+window an operator can manually reverse the stamp + edge. The transition is
+one-way per surface — nothing moves a purged context back.
+
+---
+
 ## GoalPulse Status
 
 ```

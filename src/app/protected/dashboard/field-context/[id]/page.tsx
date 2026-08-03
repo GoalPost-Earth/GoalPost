@@ -497,39 +497,20 @@ export default function FieldContextDetailsPage() {
     try {
       if (!context) return
 
-      // Check if field context has any pulses
-      if (pulses && pulses.length > 0) {
-        toast.error(
-          `Cannot delete a field with ${pulses.length} pulse${pulses.length !== 1 ? 's' : ''}. Please delete all pulses first.`
-        )
-        setShowDeleteConfirm(false)
-        return
-      }
-
       setIsDeleteLoading(true)
 
+      // Deletion cascades server-side (GOAL-319): the field and all of its
+      // pulses are soft deleted together, and the server writes the activity
+      // Log in the same transaction — no client-side log call here.
       await deleteFieldContext({
         variables: { id: contextId },
       })
 
-      // Log field context deletion activity
-      logFieldActivity({
-        variables: {
-          input: {
-            action: 'deleted',
-            fieldId: contextId,
-            fieldName: context.title,
-            contextId,
-            spaceName: space?.name,
-          },
-        },
-      }).catch((err) => console.warn('Failed to log field deletion:', err))
-
-      toast.success('Field context deleted successfully')
+      toast.success('Field deleted successfully')
       router.push('/protected/dashboard')
     } catch (err) {
       console.error('Failed to delete context:', err)
-      toast.error('Failed to delete field context. Please try again.')
+      toast.error('Failed to delete field. Please try again.')
       setShowDeleteConfirm(false)
     } finally {
       setIsDeleteLoading(false)
@@ -1268,27 +1249,17 @@ export default function FieldContextDetailsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="relative bg-gp-surface dark:bg-gp-surface-dark rounded-2xl shadow-2xl max-w-md w-full mx-4 p-5 sm:p-8 border border-gp-glass-border">
             <h2 className="text-2xl font-semibold text-gp-ink-strong dark:text-white mb-3">
-              Delete Field Context?
+              Delete Field?
             </h2>
 
             <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft mb-3">
-              {pulses && pulses.length > 0 ? (
-                <>
-                  <span className="font-medium text-orange-500 dark:text-orange-400">
-                    This field cannot be deleted
-                  </span>
-                  <span>
-                    {' '}
-                    because it has {pulses.length} pulse
-                    {pulses.length !== 1 ? 's' : ''}.
-                  </span>
-                  <br />
-                  <span className="text-xs mt-2 block">
-                    Please delete all pulses within this field first.
-                  </span>
-                </>
-              ) : (
-                'Are you sure you want to delete this context? This action cannot be undone.'
+              Are you sure you want to delete this field? This action cannot
+              be undone.
+              {pulses && pulses.length > 0 && (
+                <span className="text-xs mt-2 block">
+                  This will also delete its {pulses.length} pulse
+                  {pulses.length !== 1 ? 's' : ''}.
+                </span>
               )}
             </p>
 
@@ -1298,27 +1269,25 @@ export default function FieldContextDetailsPage() {
                 disabled={isDeleteLoading || loading}
                 className="px-6 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {pulses && pulses.length > 0 ? 'Close' : 'Cancel'}
+                Cancel
               </button>
-              {(!pulses || pulses.length === 0) && (
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleteLoading || loading}
-                  className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {isDeleteLoading && (
-                    <span
-                      className={cn(
-                        'material-symbols-outlined text-base',
-                        'motion-safe:animate-spin'
-                      )}
-                    >
-                      hourglass_bottom
-                    </span>
-                  )}
-                  {isDeleteLoading ? 'Deleting...' : 'Delete'}
-                </button>
-              )}
+              <button
+                onClick={handleDelete}
+                disabled={isDeleteLoading || loading}
+                className="px-6 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isDeleteLoading && (
+                  <span
+                    className={cn(
+                      'material-symbols-outlined text-base',
+                      'motion-safe:animate-spin'
+                    )}
+                  >
+                    hourglass_bottom
+                  </span>
+                )}
+                {isDeleteLoading ? 'Deleting...' : 'Delete'}
+              </button>
             </div>
           </div>
         </div>

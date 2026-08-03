@@ -90,13 +90,20 @@ export const UPDATE_FIELD_CONTEXT_MUTATION = graphql(`
 `)
 
 /**
- * Delete a FieldContext by ID
+ * Delete a FieldContext by ID (GOAL-319).
+ *
+ * Cascades: the context and ALL of its pulses are soft deleted together
+ * (hidden everywhere immediately, hard-purged with every nested entity by
+ * the daily cron after 90 days). The server writes the activity Log inside
+ * the same transaction — callers must NOT also fire logFieldActivity for
+ * the deletion. Requires Space owner or ADMIN.
  */
 export const DELETE_FIELD_CONTEXT_MUTATION = graphql(`
   mutation DeleteFieldContext($id: ID!) {
-    deleteFieldContexts(where: { id_EQ: $id }) {
-      nodesDeleted
-      relationshipsDeleted
+    deleteFieldContext(contextId: $id) {
+      contextId
+      deleted
+      deletedPulseCount
     }
   }
 `)

@@ -24,7 +24,7 @@ type Documents = {
   '\n  mutation DeleteDocument($documentId: ID!) {\n    deleteDocument(documentId: $documentId) {\n      documentId\n      deleted\n    }\n  }\n': typeof types.DeleteDocumentDocument
   '\n  mutation CreateFieldContext($input: [FieldContextCreateInput!]!) {\n    createFieldContexts(input: $input) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n        weSpace {\n          id\n          name\n          visibility\n          createdAt\n        }\n      }\n      info {\n        nodesCreated\n        relationshipsCreated\n      }\n    }\n  }\n': typeof types.CreateFieldContextDocument
   '\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n        }\n        weSpace {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n': typeof types.UpdateFieldContextDocument
-  '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n': typeof types.DeleteFieldContextDocument
+  '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContext(contextId: $id) {\n      contextId\n      deleted\n      deletedPulseCount\n    }\n  }\n': typeof types.DeleteFieldContextDocument
   '\n  mutation ConnectFieldToSpace($fieldId: ID!, $spaceId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $fieldId }\n      update: {\n        meSpace: { connect: [{ where: { node: { id_EQ: $spaceId } } }] }\n      }\n    ) {\n      fieldContexts {\n        id\n        title\n        space {\n          id\n          name\n        }\n      }\n    }\n  }\n': typeof types.ConnectFieldToSpaceDocument
   '\n  mutation AddPersonToFieldContext($contextId: ID!, $personId: ID!) {\n    addPersonToFieldContext(contextId: $contextId, personId: $personId) {\n      success\n      message\n      person {\n        id\n        name\n      }\n    }\n  }\n': typeof types.AddPersonToFieldContextDocument
   "\n  mutation RemovePersonFromFieldContext($contextId: ID!, $personId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $contextId }\n      update: {\n        people: { disconnect: [{ where: { node: { id_EQ: $personId } } }] }\n      }\n    ) {\n      # Only id is read — the caller refetches the people list. Selecting the\n      # GOAL-275-gated email here would needlessly AND the Person auth filter\n      # onto this write's return for data nobody consumes.\n      fieldContexts {\n        id\n      }\n    }\n  }\n": typeof types.RemovePersonFromFieldContextDocument
@@ -146,7 +146,7 @@ const documents: Documents = {
     types.CreateFieldContextDocument,
   '\n  mutation UpdateFieldContext(\n    $where: FieldContextWhere!\n    $update: FieldContextUpdateInput!\n  ) {\n    updateFieldContexts(where: $where, update: $update) {\n      fieldContexts {\n        id\n        title\n        emergentName\n        createdAt\n        meSpace {\n          id\n          name\n          visibility\n        }\n        weSpace {\n          id\n          name\n          visibility\n        }\n      }\n      info {\n        nodesCreated\n        nodesDeleted\n        relationshipsCreated\n        relationshipsDeleted\n      }\n    }\n  }\n':
     types.UpdateFieldContextDocument,
-  '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n':
+  '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContext(contextId: $id) {\n      contextId\n      deleted\n      deletedPulseCount\n    }\n  }\n':
     types.DeleteFieldContextDocument,
   '\n  mutation ConnectFieldToSpace($fieldId: ID!, $spaceId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $fieldId }\n      update: {\n        meSpace: { connect: [{ where: { node: { id_EQ: $spaceId } } }] }\n      }\n    ) {\n      fieldContexts {\n        id\n        title\n        space {\n          id\n          name\n        }\n      }\n    }\n  }\n':
     types.ConnectFieldToSpaceDocument,
@@ -426,8 +426,8 @@ export function graphql(
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(
-  source: '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n'
-): (typeof documents)['\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContexts(where: { id_EQ: $id }) {\n      nodesDeleted\n      relationshipsDeleted\n    }\n  }\n']
+  source: '\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContext(contextId: $id) {\n      contextId\n      deleted\n      deletedPulseCount\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeleteFieldContext($id: ID!) {\n    deleteFieldContext(contextId: $id) {\n      contextId\n      deleted\n      deletedPulseCount\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
