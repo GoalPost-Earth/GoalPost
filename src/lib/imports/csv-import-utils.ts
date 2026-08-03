@@ -153,6 +153,43 @@ export function getRowValue(
   return undefined
 }
 
+/**
+ * Project the first worksheet of an already-read workbook into
+ * normalized-header string rows. Returns null when the workbook has no
+ * worksheets. Shared by the base64 (legacy xlsx) and ArrayBuffer (article
+ * import) entry points so the row shape can't drift between them.
+ */
+export function workbookToNormalizedRows(
+  workbook: XLSX.WorkBook
+): Record<string, string>[] | null {
+  const firstSheetName = workbook.SheetNames[0]
+  if (!firstSheetName) return null
+
+  const worksheet = workbook.Sheets[firstSheetName]
+  const sheetRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
+    worksheet,
+    {
+      defval: '',
+      raw: false,
+    }
+  )
+
+  return sheetRows.map((row) => {
+    const normalizedRow: Record<string, string> = {}
+
+    for (const [key, value] of Object.entries(row)) {
+      if (!key) {
+        continue
+      }
+
+      normalizedRow[normalizeHeader(key)] =
+        value === null || value === undefined ? '' : String(value)
+    }
+
+    return normalizedRow
+  })
+}
+
 export function parseXlsxBase64(workbookBase64: string): ParsedSpreadsheetData {
   try {
     const workbookBuffer = Buffer.from(workbookBase64, 'base64')
@@ -162,9 +199,9 @@ export function parseXlsxBase64(workbookBase64: string): ParsedSpreadsheetData {
       raw: false,
     })
 
-    const firstSheetName = workbook.SheetNames[0]
+    const rows = workbookToNormalizedRows(workbook)
 
-    if (!firstSheetName) {
+    if (rows === null) {
       return {
         rows: [],
         parseErrors: [
@@ -172,30 +209,6 @@ export function parseXlsxBase64(workbookBase64: string): ParsedSpreadsheetData {
         ],
       }
     }
-
-    const worksheet = workbook.Sheets[firstSheetName]
-    const sheetRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(
-      worksheet,
-      {
-        defval: '',
-        raw: false,
-      }
-    )
-
-    const rows = sheetRows.map((row) => {
-      const normalizedRow: Record<string, string> = {}
-
-      for (const [key, value] of Object.entries(row)) {
-        if (!key) {
-          continue
-        }
-
-        normalizedRow[normalizeHeader(key)] =
-          value === null || value === undefined ? '' : String(value)
-      }
-
-      return normalizedRow
-    })
 
     return { rows, parseErrors: [] }
   } catch {
