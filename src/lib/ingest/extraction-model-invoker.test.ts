@@ -441,12 +441,13 @@ describe('ExtractionModelInvoker', () => {
     })
   })
 
-  // GOAL-283 — a member-uploaded document IS the resource. When the extractor
-  // reads no explicit location for a ResourcePulse, create_pulse.location is
-  // auto-populated with the durable, Space-scoped download URL for the file so
-  // the Resource is always openable/shareable. An extracted location is never
-  // clobbered, and the fallback is ResourcePulse-only.
-  describe('GOAL-283 — ResourcePulse location auto-populate', () => {
+  // GOAL-283 / GOAL-316 — a member-uploaded document is the source of every
+  // pulse extracted from it. When the extractor reads no explicit location,
+  // create_pulse.location is auto-populated with the durable, Space-scoped
+  // download URL for the file — for ALL three extracted kinds (GoalPulse /
+  // ResourcePulse / StoryPulse), so each pulse leads back to its document.
+  // An extracted location is never clobbered.
+  describe('GOAL-283/GOAL-316 — pulse location auto-populate from document', () => {
     // Pin the base url so the expected download URL is deterministic and the
     // suite never depends on the ambient environment.
     const ORIGINAL_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
@@ -519,7 +520,7 @@ describe('ExtractionModelInvoker', () => {
       )
     })
 
-    it('does NOT auto-populate location for a GoalPulse or StoryPulse with no location', async () => {
+    it('auto-populates location for a GoalPulse and StoryPulse with no location (GOAL-316)', async () => {
       const modelClient: ExtractionModelClient = async () => ({
         persons: [],
         pulses: [
@@ -545,8 +546,43 @@ describe('ExtractionModelInvoker', () => {
       )
       expect(byType.get('GoalPulse')).toBeDefined()
       expect(byType.get('StoryPulse')).toBeDefined()
-      expect(byType.get('GoalPulse')!.location).toBeUndefined()
-      expect(byType.get('StoryPulse')!.location).toBeUndefined()
+      // GOAL-316: a Goal/Story extracted from a document must also carry the
+      // durable link back to its source file, exactly like a ResourcePulse.
+      expect(byType.get('GoalPulse')!.location).toBe(
+        buildDocumentDownloadUrl(baseInput.documentId)
+      )
+      expect(byType.get('StoryPulse')!.location).toBe(
+        buildDocumentDownloadUrl(baseInput.documentId)
+      )
+    })
+
+    it('does not clobber an extracted location on a GoalPulse or StoryPulse', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Open the seed library',
+            content: 'Launch by spring.',
+            location: 'Riverside Commons',
+          },
+          {
+            kind: 'StoryPulse',
+            title: 'The first harvest',
+            content: 'How the garden began.',
+            location: 'Community Garden',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      const byType = new Map(
+        result.toolCalls.map((c) => [c.args.pulseType as string, c.args])
+      )
+      expect(byType.get('GoalPulse')!.location).toBe('Riverside Commons')
+      expect(byType.get('StoryPulse')!.location).toBe('Community Garden')
     })
   })
 
