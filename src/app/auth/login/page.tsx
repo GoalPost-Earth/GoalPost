@@ -7,15 +7,6 @@ import Link from 'next/link'
 import { SIGNUP_DISABLED } from '@/constants'
 import { sanitizeReturnTo } from '@/lib/auth/safe-return-to'
 
-const ACCESS_TOKEN_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
-
-// Writing document.cookie lives at module scope (outside the component the
-// React Compiler analyzes) so its immutability rule doesn't flag the global
-// mutation. Behaviour is unchanged.
-function persistAccessTokenCookie(token: string) {
-  document.cookie = `accessToken=${token}; path=/; max-age=${ACCESS_TOKEN_MAX_AGE}`
-}
-
 function LoginPage() {
   const { setUser } = useApp()
   const {
@@ -57,9 +48,9 @@ function LoginPage() {
         setUser(data.user)
       }
       if (data.token) {
+        // The `accessToken` cookie is set by /api/auth/login itself —
+        // HttpOnly, scoped to the token's real 30-minute TTL.
         localStorage.setItem('token', data.token)
-        // Set a cookie (expires in 7 days)
-        persistAccessTokenCookie(data.token)
       }
       if (data.refreshToken) {
         localStorage.setItem('refreshToken', data.refreshToken)

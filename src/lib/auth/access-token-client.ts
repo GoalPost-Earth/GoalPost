@@ -49,9 +49,15 @@ let denyUntil = 0
  * Dispatched when `/api/auth/access-token` definitively reports the
  * caller is unauthenticated (`ERR_UNAUTHENTICATED` — refresh also
  * failed). `AppContext` listens via `onSessionExpired` and runs
- * `handleLogout()` to clear local state + redirect to /auth/login, so a
- * logged-in user whose refresh cookie expired/revoked gets logged out
+ * `clearLocalSession()` to clear local state + redirect to /auth/login, so
+ * a logged-in user whose refresh cookie expired/revoked gets logged out
  * cleanly instead of seeing a stream of 401s.
+ *
+ * Note this is deliberately the LOCAL cleanup, not the full `logout()`:
+ * the 401 response already expired the auth cookies (`clearAuthCookies` in
+ * `/api/auth/access-token`), and the refresh token that got us here is
+ * revoked or expired — so a round-trip to `/api/auth/logout` would be a
+ * request that can authenticate nothing.
  *
  * Uses a module-private `EventTarget` rather than `window` so other
  * in-page scripts (including any future XSS) can't dispatch a forged

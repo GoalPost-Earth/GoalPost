@@ -18,7 +18,10 @@ interface AppContextType {
   setUser: (user: ContextUser) => void
   isAuthenticated: boolean
   isLoading: boolean
-  logout: () => void
+  // Async since GOAL-323: logout round-trips to /api/auth/logout so the
+  // server can expire the HttpOnly cookies and revoke the refresh token.
+  // Callers that only need the UI to flip logged-out can fire-and-forget.
+  logout: () => Promise<void>
 }
 
 const AppContext = createContext<AppContextType>({
@@ -42,7 +45,7 @@ export const useApp = () => {
       setUser: () => {},
       isAuthenticated: false,
       isLoading: false,
-      logout: () => {},
+      logout: async () => {},
     }
   }
   return context
@@ -106,21 +109,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  const handleLogout = () => {
+  // Browser-side half of logout. Deliberately separate from the server call
+  // below so the `session-expired` path — where the server has already
+  // expired the cookies and the refresh token is already dead — can reuse it
+  // without firing a pointless second request.
+  const clearLocalSession = () => {
     setUser(undefined)
     // Drop the in-memory access token cache so the next sign-in can't see
     // the previous user's bearer.
     invalidateAccessTokenCache()
-    // Clear all session data
-    localStorage.removeItem('user')
-    localStorage.removeItem('token')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('meSpaceId')
-    localStorage.removeItem('goalpost.focalEntity.v1')
-    // Per-user navigation history keys (one per user that ever logged in
-    // on this browser). Sweep them all so the next login doesn't see
-    // anyone else's trail.
+    // Every localStorage touch sits inside the try: a throw here (private
+    // mode, quota, a disabled-storage browser) must not reject the caller's
+    // promise, which both logout call sites fire un-awaited.
     try {
+      localStorage.removeItem('user')
+      localStorage.removeItem('token')
+      localStorage.removeItem('refreshToken')
+      localStorage.removeItem('meSpaceId')
+      localStorage.removeItem('goalpost.focalEntity.v1')
+      // Per-user navigation history keys (one per user that ever logged in
+      // on this browser). Sweep them all so the next login doesn't see
+      // anyone else's trail.
       const toRemove: string[] = []
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
@@ -132,7 +141,47 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       /* non-fatal */
     }
-    document.cookie = 'accessToken=; path=/; max-age=0'
+  }
+
+  // GOAL-323: the auth cookies are HttpOnly, so no amount of
+  // `document.cookie` clearing here can touch them — only the server can
+  // expire them, and only the server can revoke the 30-day refresh token.
+  // Without this round-trip "Log out" left a fully usable session in the
+  // browser, which is the whole bug on a shared device.
+  //
+  // The local clear runs FIRST, and the request is deliberately not awaited.
+  // Awaiting it left the dashboard fully rendered for the duration of the
+  // round-trip — measured at ~2.3s against remote Aura, since the route does
+  // a Neo4j write — so every logout had a window where the app still looked
+  // signed in and the button read as broken. On a shared device that window
+  // is the bug this ticket exists to close.
+  //
+  // `keepalive` lets the request outlive the redirect (and a closed tab), so
+  // revocation still happens even though nothing is waiting on it.
+  //
+  // Residual, accepted: if the user re-logs-in before the in-flight POST
+  // lands, its `Max-Age=0` response can clear the *new* session's cookies.
+  // That needs a re-login inside ~2s and is self-healing — the next
+  // access-token call 401s and bounces to /auth/login — whereas the dead
+  // window it replaces was guaranteed on every single logout.
+  const handleLogout = async () => {
+    clearLocalSession()
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        // The HttpOnly cookies are the credential the route authenticates
+        // against; same-origin sends them without exposing them to JS.
+        // Cookies are attached by the browser regardless of the localStorage
+        // wipe above, so clearing first costs the request nothing.
+        credentials: 'same-origin',
+        keepalive: true,
+        signal: AbortSignal.timeout(5000),
+      })
+    } catch {
+      // Offline / timeout / 5xx: the server-side revocation didn't happen.
+      // Local state is already wiped, and the stale cookies are rejected on
+      // the next refresh cycle.
+    }
   }
 
   // The shared access-token helper emits `session-expired` when the
@@ -142,16 +191,20 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   // of 401s in the network panel.
   useEffect(() => {
     return onSessionExpired(() => {
-      handleLogout()
+      // Local cleanup only: `/api/auth/access-token` already cleared the
+      // cookies on its terminal 401, and the refresh token that got us here
+      // is expired or revoked. Calling /api/auth/logout would be a request
+      // that can authenticate nothing.
+      clearLocalSession()
       if (typeof window === 'undefined') return
       const path = window.location.pathname
       if (path.startsWith('/auth')) return
       const returnTo = encodeURIComponent(path + window.location.search)
       window.location.href = `/auth/login?returnTo=${returnTo}`
     })
-    // handleLogout closes over setUser only; it's effectively stable
-    // for the lifetime of the provider.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // clearLocalSession closes over setUser only; it's effectively stable
+    // for the lifetime of the provider, so an empty dep array is correct —
+    // re-subscribing on every render would churn the listener for nothing.
   }, [])
 
   const value = {

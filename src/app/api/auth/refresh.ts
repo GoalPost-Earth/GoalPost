@@ -24,6 +24,20 @@ export type RefreshResult =
     }
 
 /**
+ * Pull the Person id out of a raw refresh token. Tokens are minted as
+ * `${userId}.${secret}` so we can do an indexed Person-by-id MATCH instead
+ * of bcrypt-scanning every user — the prefix is a routing hint, never
+ * proof. Callers MUST still verify possession against the stored hash.
+ *
+ * Returns null for anything that isn't the expected shape.
+ */
+function parseRefreshTokenUserId(rawToken: string): string | null {
+  const dotIdx = rawToken.indexOf('.')
+  if (dotIdx <= 0 || dotIdx === rawToken.length - 1) return null
+  return rawToken.slice(0, dotIdx)
+}
+
+/**
  * Shared refresh-token logic, callable from both the `/api/auth/refresh-token`
  * route and from `/api/auth/access-token` (which auto-refreshes when the
  * access cookie is missing or expired so callers don't have to chain two
@@ -85,15 +99,14 @@ export async function tryRefreshAccessToken(
     }
   }
 
-  const dotIdx = rawToken.indexOf('.')
-  if (dotIdx <= 0 || dotIdx === rawToken.length - 1) {
+  const userId = parseRefreshTokenUserId(rawToken)
+  if (!userId) {
     return {
       ok: false,
       code: 'ERR_INVALID_REFRESH_TOKEN',
       message: 'Invalid refresh token',
     }
   }
-  const userId = rawToken.slice(0, dotIdx)
 
   initializeDB()
   const session = getSession()
@@ -195,6 +208,54 @@ export async function tryRefreshAccessToken(
       code: 'ERR_REFRESH_FAILED',
       message: 'Failed to refresh token',
     }
+  } finally {
+    await session.close()
+  }
+}
+
+/**
+ * Identify the Person a refresh cookie belongs to, without rotating or
+ * minting anything. `/api/auth/logout` falls back to this when the access
+ * token has already lapsed: the 30-minute access token expiring long before
+ * the 30-day refresh token is exactly the case where revocation matters most
+ * (user walks away from a shared machine, comes back, clicks "Log out").
+ * Refusing to revoke there would leave the 30-day credential live.
+ *
+ * Proof of possession is the bcrypt comparison below, so a forged
+ * `${userId}.` prefix identifies nobody.
+ *
+ * Deliberately does NOT check `refreshTokenRevoked` / `refreshTokenExp`: an
+ * already-revoked or expired token still proves who the caller is, and
+ * re-revoking is idempotent. Returns null on any failure — no refresh
+ * cookie, malformed value, unknown Person, or hash mismatch.
+ */
+export async function resolveUserIdFromRefreshCookie(
+  request: NextRequest
+): Promise<string | null> {
+  const rawToken = (request.cookies.get('refreshToken')?.value || '').trim()
+  if (!rawToken) return null
+
+  const userId = parseRefreshTokenUserId(rawToken)
+  if (!userId) return null
+
+  initializeDB()
+  const session = getSession()
+
+  try {
+    const result = await session.run(
+      `MATCH (user:Person {id: $userId})
+       RETURN user.refreshToken AS refreshToken`,
+      { userId }
+    )
+    if (result.records.length === 0) return null
+
+    const hashedToken = result.records[0].get('refreshToken')
+    if (typeof hashedToken !== 'string' || !hashedToken) return null
+
+    return (await comparePassword(rawToken, hashedToken)) ? userId : null
+  } catch (err) {
+    console.error('Refresh cookie identification error:', err)
+    return null
   } finally {
     await session.close()
   }
