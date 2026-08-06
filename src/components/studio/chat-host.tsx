@@ -1,7 +1,7 @@
 'use client'
 
 import { type FC } from 'react'
-import { Maximize2, Minimize2, PanelRightOpen } from 'lucide-react'
+import { Maximize2, Minimize2, PanelRightOpen, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useStudioCanvas } from './studio-canvas-context'
 import { ChatMode } from './modes/chat-mode'
@@ -25,7 +25,8 @@ export const ChatHost: FC<ChatHostProps> = ({
   onSelectThread,
   compact = false,
 }) => {
-  const { canvasOpen, setCanvasOpen, toggleFullscreen } = useStudioCanvas()
+  const { canvasOpen, setCanvasOpen, setChatOpen, toggleFullscreen } =
+    useStudioCanvas()
 
   return (
     <section
@@ -62,6 +63,28 @@ export const ChatHost: FC<ChatHostProps> = ({
             >
               <PanelRightOpen className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Show canvas</span>
+            </button>
+          )}
+          {/* Fully hides the assistant (GOAL-313), which is a different thing
+              from fullscreening the canvas: the panel collapses to zero width
+              and STAYS collapsed across navigation and reloads until the user
+              asks for it back. The panel is collapsed rather than unmounted
+              (see studio-shell), so the live thread is exactly where it was
+              when the chat is restored.
+
+              Only offered while the canvas is showing. With the canvas closed
+              the chat IS the whole studio, so hiding it would have to force the
+              canvas back open — the "Show canvas" pill above already does that,
+              and says so. */}
+          {canvasOpen && (
+            <button
+              type="button"
+              onClick={() => setChatOpen(false)}
+              aria-label="Hide chat"
+              title="Hide chat"
+              className="hidden md:flex items-center justify-center size-7 rounded-md text-gp-ink-muted hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 transition-colors cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>

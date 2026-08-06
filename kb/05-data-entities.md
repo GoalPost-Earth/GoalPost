@@ -172,10 +172,18 @@ Same fields as MeSpace.
 | title        | string   | Required               |
 | emergentName | string   | AI-generated, optional |
 | createdAt    | datetime |                        |
+| deletedAt    | datetime | Soft-delete stamp (GOAL-319). Null while live. Deliberately NOT exposed in the GraphQL schema — the graph property only. Also stamped on the context's pulses at delete time. |
 
 **Relationships:**
 
-- `HAS_CONTEXT` ← Space (MeSpace or WeSpace)
+- `HAS_CONTEXT` ← Space (MeSpace or WeSpace) — live contexts only
+- `HAS_DELETED_CONTEXT` ← Space — a soft-deleted context (GOAL-319). Replaces
+  `HAS_CONTEXT` in the delete transaction. Because every read surface (GraphQL
+  `@authorization` filters, `viewablePulsePredicate`, resonance discovery, the
+  bloom generator's fail-closed Space anchoring) reaches content via
+  `HAS_CONTEXT`, re-pointing the edge hides the context and its whole subtree
+  at once. Deliberately NOT whitelisted in the cypher-generator
+  (`schema-context.ts`) — the assistant must never surface deleted content.
 - `HAS_PULSE` → FieldPulse
 - `HAS_PERSON` → Person — people attached to this context. Usually a
   `:Person:PersonPulse` (relational-world contact), but may also be a real
@@ -186,6 +194,27 @@ Same fields as MeSpace.
 - `CREATED_BY` → Person
 
 **Authorization:** Inherits from parent Space.
+
+**Deletion lifecycle (GOAL-319):** deleting a FieldContext is a cascading
+SOFT delete — one transaction (shared orchestrator
+`src/lib/field-context/soft-delete-field-context.ts`, used by both the
+custom GraphQL `deleteFieldContext` mutation and the assistant's
+`delete_field_context` HITL tool) that stamps `deletedAt` on the context and
+its pulses, hard-deletes ResonanceSuggestions touching them (the suggestion
+inbox is Space-anchored and regenerable), re-points `HAS_CONTEXT` →
+`HAS_DELETED_CONTEXT`, and writes the activity Log. **Shared pulses are
+protected:** a pulse `HAS_PULSE`-attached to another LIVE context is neither
+stamped nor purged — it stays fully live there and is hard-deleted only with
+its LAST holding context (the same exclusive-holder rule as Organizations). Requires Space owner or
+ADMIN (kb/02 DELETE matrix). The generated `deleteFieldContexts` mutation is
+disabled (`@mutation(operations: [CREATE, UPDATE])`) — it deleted the bare
+node and orphaned nested content. After 90 days the daily
+`/api/cron/purge-deleted-contexts` cron hard-deletes the context plus all
+nested entities (pulses, chunks, resonance links + suggestions either
+anchored on the context or touching its pulses, weaves, documents + blobs,
+organizations left with no other context). Persons, Logs, ContextExtractions
+and ingest ConversationThreads survive; their edges drop. See
+`kb/04-state-machines.md` for the state diagram.
 
 ---
 
@@ -618,6 +647,22 @@ brought the document in. Any `HAS_PERSON`-attached Person qualifies —
 including a registered `:User` (e.g. a WeSpace co-member): deliberate, since
 the Log keeps the uploader accountable for the write itself.
 
+The update paths re-attribute **conservatively** (GOAL-318): a re-extract or
+a second document that roster-matches an existing pulse (`update_pulse`, or
+`create_pulse`'s enrich-don't-duplicate branch) carries the same
+`authorName`, and the write re-points `INITIATED_BY` at the credited person
+ONLY when the pulse's current displayed author (`initiatedBy[0]`, else
+`createdBy[0]` — `resolvePulseAuthor` precedence) is the acting uploader or
+absent. Default uploader attribution gets corrected; authorship a different
+person already holds is never stolen (`reattributeIngestPulseAuthor` in
+`src/lib/chat/hitl.ts`). Each re-attribution writes its own attribution
+suffix into the update Log. Context-attached Persons lacking embeddings are
+also swept at upload time (`on-upload-discovery.ts` Step 1b) so authors
+become visible to person vector search without waiting for the nightly
+resonance cron — the pass runs after any upload or re-extract whose run
+created a pulse **or a person** (`process/route.ts`, `document-resolver.ts`);
+an update-only run that mints no new entity still defers to the cron.
+
 **Related people & organizations (GOAL-298):** beyond the single author,
 the extractor also emits, per pulse, the people and organizations the document
 names as *related to* it (subjects, contributors, the cooperative offering a
@@ -768,6 +813,7 @@ spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
 | `organization_id`              | Organization.id UNIQUE             |
 | `llm_usage_id`                 | LlmUsage.id UNIQUE                 |
 | `system_principal_id`          | SystemPrincipal.id UNIQUE         |
+| `log_id_unique`                | Log.id UNIQUE                     |
 
 ## Vector Indexes (1536 dimensions, cosine similarity)
 

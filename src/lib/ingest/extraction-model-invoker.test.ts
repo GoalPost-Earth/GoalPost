@@ -36,6 +36,37 @@ describe('ExtractionModelInvoker', () => {
     expect(result.assistantText).toContain('Sarah Chen')
   })
 
+  it('carries an extracted person description into the create_person args (GOAL-314)', async () => {
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [
+        {
+          firstName: 'Sarah',
+          lastName: 'Chen',
+          description: 'Led the migration; engineering lead on the co-op.',
+        },
+      ],
+      assistantText: 'I found one person.',
+    })
+    const result = await extractEntities(baseInput, modelClient)
+    if (result.kind !== 'ok') throw new Error('unreachable')
+    expect(result.toolCalls[0].tool).toBe('create_person')
+    expect(result.toolCalls[0].args).toMatchObject({
+      firstName: 'Sarah',
+      lastName: 'Chen',
+      description: 'Led the migration; engineering lead on the co-op.',
+    })
+  })
+
+  it('omits description from create_person args when the extractor gives none', async () => {
+    const modelClient: ExtractionModelClient = async () => ({
+      persons: [{ firstName: 'Sarah', lastName: 'Chen' }],
+      assistantText: '',
+    })
+    const result = await extractEntities(baseInput, modelClient)
+    if (result.kind !== 'ok') throw new Error('unreachable')
+    expect(result.toolCalls[0].args).not.toHaveProperty('description')
+  })
+
   it('filters out partial persons (missing lastName) and surfaces them in assistantText, never as tool calls', async () => {
     const modelClient: ExtractionModelClient = async () => ({
       persons: [
@@ -410,12 +441,13 @@ describe('ExtractionModelInvoker', () => {
     })
   })
 
-  // GOAL-283 — a member-uploaded document IS the resource. When the extractor
-  // reads no explicit location for a ResourcePulse, create_pulse.location is
-  // auto-populated with the durable, Space-scoped download URL for the file so
-  // the Resource is always openable/shareable. An extracted location is never
-  // clobbered, and the fallback is ResourcePulse-only.
-  describe('GOAL-283 — ResourcePulse location auto-populate', () => {
+  // GOAL-283 / GOAL-316 — a member-uploaded document is the source of every
+  // pulse extracted from it. When the extractor reads no explicit location,
+  // create_pulse.location is auto-populated with the durable, Space-scoped
+  // download URL for the file — for ALL three extracted kinds (GoalPulse /
+  // ResourcePulse / StoryPulse), so each pulse leads back to its document.
+  // An extracted location is never clobbered.
+  describe('GOAL-283/GOAL-316 — pulse location auto-populate from document', () => {
     // Pin the base url so the expected download URL is deterministic and the
     // suite never depends on the ambient environment.
     const ORIGINAL_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
@@ -488,7 +520,7 @@ describe('ExtractionModelInvoker', () => {
       )
     })
 
-    it('does NOT auto-populate location for a GoalPulse or StoryPulse with no location', async () => {
+    it('auto-populates location for a GoalPulse and StoryPulse with no location (GOAL-316)', async () => {
       const modelClient: ExtractionModelClient = async () => ({
         persons: [],
         pulses: [
@@ -514,8 +546,43 @@ describe('ExtractionModelInvoker', () => {
       )
       expect(byType.get('GoalPulse')).toBeDefined()
       expect(byType.get('StoryPulse')).toBeDefined()
-      expect(byType.get('GoalPulse')!.location).toBeUndefined()
-      expect(byType.get('StoryPulse')!.location).toBeUndefined()
+      // GOAL-316: a Goal/Story extracted from a document must also carry the
+      // durable link back to its source file, exactly like a ResourcePulse.
+      expect(byType.get('GoalPulse')!.location).toBe(
+        buildDocumentDownloadUrl(baseInput.documentId)
+      )
+      expect(byType.get('StoryPulse')!.location).toBe(
+        buildDocumentDownloadUrl(baseInput.documentId)
+      )
+    })
+
+    it('does not clobber an extracted location on a GoalPulse or StoryPulse', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Open the seed library',
+            content: 'Launch by spring.',
+            location: 'Riverside Commons',
+          },
+          {
+            kind: 'StoryPulse',
+            title: 'The first harvest',
+            content: 'How the garden began.',
+            location: 'Community Garden',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      const byType = new Map(
+        result.toolCalls.map((c) => [c.args.pulseType as string, c.args])
+      )
+      expect(byType.get('GoalPulse')!.location).toBe('Riverside Commons')
+      expect(byType.get('StoryPulse')!.location).toBe('Community Garden')
     })
   })
 
@@ -525,8 +592,11 @@ describe('ExtractionModelInvoker', () => {
   // in canonical display casing so the orchestrator can map it to the
   // person's live id after the person calls execute. An unresolved name is
   // dropped — the hallucination guard means attribution can never invent a
-  // person. update_pulse never carries attribution.
-  describe('attribution — authorName → attributedToName on create_pulse', () => {
+  // person. update_pulse carries the same attribution args (GOAL-318) — the
+  // write side re-points INITIATED_BY only when the pulse's current author is
+  // the acting uploader, so a re-extract corrects default attribution without
+  // ever stealing authorship a different person already holds.
+  describe('attribution — authorName → attributedToName on create/update_pulse', () => {
     it('carries attributedToName with canonical casing when authorName matches an extracted person', async () => {
       const modelClient: ExtractionModelClient = async () => ({
         persons: [{ firstName: 'Gurindereet', lastName: 'Singh' }],
@@ -610,7 +680,7 @@ describe('ExtractionModelInvoker', () => {
       expect(pulseCall!.args).not.toHaveProperty('attributedToPersonId')
     })
 
-    it('never carries attribution on update_pulse (roster existingId match), even when authorName resolves', async () => {
+    it('carries attribution on update_pulse (roster existingId match) so a re-extract can correct default uploader attribution (GOAL-318)', async () => {
       const input: ExtractionModelInput = {
         ...baseInput,
         roster: {
@@ -633,8 +703,50 @@ describe('ExtractionModelInvoker', () => {
             title: 'Increase event attendance',
             content: 'Boost the next two events.',
             existingId: 'pulse_goal_existing',
-            // Resolvable name — must still be ignored on the update path.
-            authorName: 'Sarah Chen',
+            authorName: 'sarah chen',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(input, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+      expect(result.toolCalls).toHaveLength(1)
+      expect(result.toolCalls[0].tool).toBe('update_pulse')
+      // Same contract as create_pulse: canonical roster display name + the
+      // already-live roster id. The write side re-points INITIATED_BY only
+      // when the pulse's current author is the acting uploader — carrying the
+      // args here never steals authorship by itself.
+      expect(result.toolCalls[0].args.attributedToName).toBe('Sarah Chen')
+      expect(result.toolCalls[0].args.attributedToPersonId).toBe(
+        'person_sarah_existing'
+      )
+    })
+
+    it('drops an unresolvable authorName on update_pulse (hallucination guard)', async () => {
+      const input: ExtractionModelInput = {
+        ...baseInput,
+        roster: {
+          persons: [],
+          pulses: [
+            {
+              id: 'pulse_goal_existing',
+              title: 'Grow event attendance',
+              pulseType: 'GoalPulse',
+            },
+          ],
+          organizations: [],
+        },
+      }
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Increase event attendance',
+            content: 'Boost the next two events.',
+            existingId: 'pulse_goal_existing',
+            authorName: 'Rumpel Stiltskin',
           },
         ],
         assistantText: '',

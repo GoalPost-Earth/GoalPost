@@ -148,6 +148,35 @@ describe('executeAuthorizedWriteTool — create_person', () => {
     }
   })
 
+  itIf(true)('persists an extracted person description on the node (GOAL-314)', async () => {
+    if (!neo4jAvailable) return
+    const graph = await initGraph()
+
+    const result = await executeAuthorizedWriteTool(graph, ids.user, 'create_person', {
+      firstName: 'Rosa',
+      lastName: 'Delgado',
+      description: 'Founder of the weavers cooperative named in the roster.',
+      contextId: ids.fieldContext,
+      contextTitle: 'Care Practices',
+      documentId: ids.document,
+    })
+    expect(result.success).toBe(true)
+    const personId = (result as { personId?: string }).personId
+
+    const session = driver.session()
+    try {
+      const rows = await session.run(
+        `MATCH (p:Person {id: $personId}) RETURN p.description AS description`,
+        { personId }
+      )
+      expect(rows.records[0].get('description')).toBe(
+        'Founder of the weavers cooperative named in the roster.'
+      )
+    } finally {
+      await session.close()
+    }
+  })
+
   itIf(true)('skips the EXTRACTED_FROM edge when documentId is omitted (parity with manual creation)', async () => {
     if (!neo4jAvailable) return
     const graph = await initGraph()

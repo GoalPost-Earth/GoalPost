@@ -71,8 +71,9 @@ export const errorLink = onError((error) => {
  * (chat thread client, focal-entity, onboarding). The helper itself
  * dispatches a `session-expired` event when the server confirms the
  * session is gone (refresh also failed); `AppContext` listens for that
- * event and runs the full logout + redirect, so this link just needs to
- * attach the bearer when available and otherwise let the request go.
+ * event and runs the local session cleanup + redirect (the server already
+ * expired the cookies on that 401), so this link just needs to attach the
+ * bearer when available and otherwise let the request go.
  */
 export const authLink = setContext(async (_, { headers }) => {
   try {

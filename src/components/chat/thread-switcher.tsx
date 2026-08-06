@@ -66,10 +66,14 @@ export function ThreadSwitcher({
     ? deriveDisplayTitle(activeThread)
     : 'Conversations'
 
-  // Fetch on open and whenever the parent bumps refreshKey.
+  // Fetch on open and whenever the parent bumps refreshKey. This is a
+  // data-fetching effect (synchronizing with an external system), and the
+  // immediate setLoading(true) is intentional — it shows the spinner before the
+  // async fetch resolves. The remaining state updates run in the async .then.
   useEffect(() => {
     if (!open && refreshKey === undefined) return
     const controller = new AbortController()
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional loading flag for effect-driven fetch
     setLoading(true)
     fetchThreadList(controller.signal).then((list) => {
       if (controller.signal.aborted) return

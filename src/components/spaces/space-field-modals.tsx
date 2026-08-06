@@ -158,28 +158,9 @@ export function SpaceFieldModals({
             onCloseEdit()
           }}
           onDeleteSuccess={async () => {
-            const editingField = contexts.find(
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (ctx: any) => ctx.id === editingFieldId
-            )
-            if (editingField?.title && editingFieldId) {
-              await logFieldActivity({
-                variables: {
-                  input: {
-                    action: 'deleted',
-                    fieldId: editingFieldId,
-                    fieldName: editingField.title,
-                    contextId: editingFieldId,
-                    spaceName: space.name,
-                  },
-                },
-              })
-                .then(() => toast.info('Field deletion logged'))
-                .catch((err) => {
-                  console.error('Failed to log field deletion:', err)
-                  toast.error('Failed to log field deletion')
-                })
-            }
+            // The deleteFieldContext mutation writes the activity Log
+            // server-side in the same transaction (GOAL-319) — no client
+            // log call here.
             await onRefetch()
             onCloseEdit()
           }}

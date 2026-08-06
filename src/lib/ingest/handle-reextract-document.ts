@@ -61,6 +61,11 @@ export interface ReExtractSuccess {
   documentId: string
   threadId: string
   /**
+   * The context the document is anchored to — lets the caller schedule the
+   * post-run resonance/embedding pass (GOAL-318) without a second lookup.
+   */
+  fieldContextId: string
+  /**
    * Same shape as `IngestSuccess.executedToolCalls`. Re-extract auto-
    * executes the new proposals just like the initial upload path.
    */
@@ -297,6 +302,7 @@ export async function handleReExtractDocument(
     ok: true,
     documentId: record.id,
     threadId,
+    fieldContextId: record.fieldContextId,
     executedToolCalls,
   }
 }

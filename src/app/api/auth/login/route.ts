@@ -10,6 +10,7 @@ import {
 } from '../utils'
 import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
 import { normalizeEmail } from '@/lib/auth/normalize-email'
+import { sanitizeReturnTo } from '@/lib/auth/safe-return-to'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -56,9 +57,12 @@ export async function POST(req: NextRequest) {
   initializeDB()
   const session = getSession()
 
-  // Get returnTo param from the request URL
+  // Post-login destination, echoed back to the client which navigates to it
+  // (GOAL-316: e.g. the durable document-download path a signed-out member was
+  // bounced away from). Sanitized to a same-origin path so a crafted login
+  // link can never turn the echo into an open redirect.
   const { searchParams } = new URL(req.url)
-  const returnTo = searchParams.get('returnTo') || undefined
+  const returnTo = sanitizeReturnTo(searchParams.get('returnTo')) ?? undefined
 
   try {
     const result = await session.run(

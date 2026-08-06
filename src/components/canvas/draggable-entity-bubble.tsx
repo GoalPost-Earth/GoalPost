@@ -44,6 +44,19 @@ export function DraggableEntityBubble({
     startY: number
   }>(null)
 
+  // While animations are off, the gsap effect doesn't run, so keep displayPosition
+  // tracking canvasPosition here (render-time adjustment, not a setState-in-effect).
+  // This means enabling animations later starts the tween from the current
+  // position instead of a stale one, and there is no snap-back glitch.
+  if (
+    !animationsEnabled &&
+    !isLocalDragging &&
+    (displayPosition.x !== canvasPosition.x ||
+      displayPosition.y !== canvasPosition.y)
+  ) {
+    setDisplayPosition(canvasPosition)
+  }
+
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
@@ -94,9 +107,20 @@ export function DraggableEntityBubble({
     }
   }, [isLocalDragging, dragContext, onPositionChange, scale])
 
-  // Animate to externally imposed positions with a soft bounce when not dragging
+  // Mirror canvasPosition into the animation ref while animations are off, so a
+  // later re-enable starts the tween from the current position (not a stale one).
   useEffect(() => {
-    if (isLocalDragging) return
+    if (!animationsEnabled && !isLocalDragging) {
+      displayPositionRef.current = { x: canvasPosition.x, y: canvasPosition.y }
+    }
+  }, [animationsEnabled, isLocalDragging, canvasPosition])
+
+  // Animate to externally imposed positions with a soft bounce when not
+  // dragging. This effect only handles the gsap-animated path; the instant
+  // (animations-off) case is derived directly from canvasPosition in
+  // `renderedPosition` below, so there is no synchronous setState here.
+  useEffect(() => {
+    if (isLocalDragging || !animationsEnabled) return
 
     const { x, y } = canvasPosition
     const current = displayPositionRef.current
@@ -109,25 +133,25 @@ export function DraggableEntityBubble({
       animationRef.current.kill()
     }
 
-    if (animationsEnabled) {
-      animationRef.current = gsap.to(displayPositionRef.current, {
-        x,
-        y,
-        duration: 0.45,
-        ease: 'elastic.out(0.42, 0.8)',
-        overwrite: true,
-        onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
-      })
-    } else {
-      // Instantly update position without animation
-      displayPositionRef.current = { x, y }
-      setDisplayPosition({ x, y })
-    }
+    animationRef.current = gsap.to(displayPositionRef.current, {
+      x,
+      y,
+      duration: 0.45,
+      ease: 'elastic.out(0.42, 0.8)',
+      overwrite: true,
+      onUpdate: () => setDisplayPosition({ ...displayPositionRef.current }),
+    })
 
     return () => {
       animationRef.current?.kill()
     }
   }, [canvasPosition, isLocalDragging, animationsEnabled])
+
+  // While dragging we follow the live drag state; with animations enabled the
+  // gsap tween drives displayPosition. Otherwise the position is the canvas
+  // position itself (instant, no state needed).
+  const renderedPosition =
+    isLocalDragging || animationsEnabled ? displayPosition : canvasPosition
 
   const handleClick = () => {
     if (hasDraggedRef.current) {
@@ -152,7 +176,7 @@ export function DraggableEntityBubble({
         left: 0,
         width: radius * 2,
         height: radius * 2,
-        transform: `translate(${displayPosition.x}px, ${displayPosition.y}px) translate(-50%, -50%)`,
+        transform: `translate(${renderedPosition.x}px, ${renderedPosition.y}px) translate(-50%, -50%)`,
         opacity: isDragging ? 0.8 : 1,
       }}
       onMouseDown={handleMouseDown}

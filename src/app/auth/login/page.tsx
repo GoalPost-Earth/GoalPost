@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SIGNUP_DISABLED } from '@/constants'
+import { sanitizeReturnTo } from '@/lib/auth/safe-return-to'
 
 function LoginPage() {
   const { setUser } = useApp()
@@ -22,11 +23,24 @@ function LoginPage() {
   const onSubmit = async (values: { email: string; password: string }) => {
     setError('')
     try {
-      const res = await fetch('/api/auth/login?returnTo=/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      })
+      // GOAL-316: honour the `?returnTo=` this page was reached with — the
+      // document-download route and session-expiry bounces both park the
+      // member here with their original destination in the query string.
+      // Read at submit time (client-only handler) so the page needs no
+      // useSearchParams/Suspense plumbing; sanitized to a same-origin path
+      // on both sides (here and in the login route) against open redirects.
+      const returnTo =
+        sanitizeReturnTo(
+          new URLSearchParams(window.location.search).get('returnTo')
+        ) ?? '/'
+      const res = await fetch(
+        `/api/auth/login?returnTo=${encodeURIComponent(returnTo)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(values),
+        }
+      )
       const data = await res.json()
       if (data.user) {
         // setUser handles both state update and localStorage persistence
@@ -34,9 +48,9 @@ function LoginPage() {
         setUser(data.user)
       }
       if (data.token) {
+        // The `accessToken` cookie is set by /api/auth/login itself —
+        // HttpOnly, scoped to the token's real 30-minute TTL.
         localStorage.setItem('token', data.token)
-        // Set a cookie (expires in 7 days)
-        document.cookie = `accessToken=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}`
       }
       if (data.refreshToken) {
         localStorage.setItem('refreshToken', data.refreshToken)
@@ -44,7 +58,18 @@ function LoginPage() {
       if (!res.ok) {
         setError(data.error || 'Login failed')
       } else {
-        router.push(data.returnTo || '/')
+        // Re-sanitize the echoed value (defense in depth), then navigate.
+        // An /api/ returnTo — e.g. the durable document download endpoint,
+        // which 302s to the file — is not a page the client router can
+        // render, so it needs a full browser navigation. Page routes (the
+        // plain "/" sign-in, session-expiry bounces back into /protected/*)
+        // keep the soft SPA transition.
+        const target = sanitizeReturnTo(data.returnTo) ?? '/'
+        if (target.startsWith('/api/')) {
+          window.location.assign(target)
+        } else {
+          router.push(target)
+        }
       }
     } catch {
       setError('An unexpected error occurred')

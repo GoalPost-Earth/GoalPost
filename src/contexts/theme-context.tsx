@@ -18,36 +18,44 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
 
 const THEME_STORAGE_KEY = 'goalpost-theme-color'
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [themeColor, setThemeColorState] = useState<ThemeColor>('default')
+// Module-level so it has a stable identity (no effect-dep churn) and lives
+// outside the component the React Compiler analyzes.
+function applyTheme(color: ThemeColor) {
+  // Remove all theme classes
+  document.documentElement.classList.remove(
+    'theme-warm',
+    'theme-forest',
+    'theme-purple',
+    'theme-emerald'
+  )
 
-  const applyTheme = (color: ThemeColor) => {
-    // Remove all theme classes
-    document.documentElement.classList.remove(
-      'theme-warm',
-      'theme-forest',
-      'theme-purple',
-      'theme-emerald'
-    )
-
-    // Add new theme class if not default
-    if (color !== 'default') {
-      document.documentElement.classList.add(`theme-${color}`)
-    }
+  // Add new theme class if not default
+  if (color !== 'default') {
+    document.documentElement.classList.add(`theme-${color}`)
   }
+}
 
-  // Load and apply theme before first paint to avoid flashes of default theme
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  // Lazy initializer reads the persisted theme on the client and falls back to
+  // 'default' during SSR. themeColor is never rendered into markup (only the
+  // <html> class is mutated imperatively), so there is no hydration mismatch.
+  const [themeColor, setThemeColorState] = useState<ThemeColor>(() =>
+    typeof window === 'undefined'
+      ? 'default'
+      : (localStorage.getItem(THEME_STORAGE_KEY) as ThemeColor) || 'default'
+  )
+
+  // Apply the theme class to <html> before first paint whenever it changes.
+  // A DOM mutation in a layout effect is a side effect, not a setState, so it
+  // avoids the cascading-render the effect-driven initializer used to cause.
   useLayoutEffect(() => {
-    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) as ThemeColor
-    const nextTheme = savedTheme || 'default'
-    setThemeColorState(nextTheme)
-    applyTheme(nextTheme)
-  }, [])
+    applyTheme(themeColor)
+  }, [themeColor])
 
   const setThemeColor = (color: ThemeColor) => {
     setThemeColorState(color)
     localStorage.setItem(THEME_STORAGE_KEY, color)
-    applyTheme(color)
+    // The layout effect above re-applies the DOM class on the resulting render.
   }
 
   // Always render provider so consumers never see undefined context

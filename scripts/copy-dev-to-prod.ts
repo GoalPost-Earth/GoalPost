@@ -20,14 +20,14 @@ const TARGET_PASSWORD = 'XSKVpR_9FFYsbaeMswPY8QD0txhSIvEWm0Q7dUfOnkI'
 interface NodeData {
   id: string
   labels: string[]
-  properties: Record<string, any>
+  properties: Record<string, unknown>
 }
 
 interface RelationshipData {
   type: string
   startNodeId: string
   endNodeId: string
-  properties: Record<string, any>
+  properties: Record<string, unknown>
 }
 
 async function getAllNodes(session: Session): Promise<NodeData[]> {
@@ -106,10 +106,10 @@ async function createNodes(
       if ((created + merged) % 50 === 0) {
         console.log(`   Processed ${created + merged}/${nodes.length} nodes...`)
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(
         `   ❌ Error creating node with labels ${labels}:`,
-        error.message
+        error instanceof Error ? error.message : String(error)
       )
     }
   }
@@ -162,10 +162,10 @@ async function createRelationships(
           `   Created ${created}/${relationships.length} relationships...`
         )
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error(
         `   ❌ Error creating relationship ${rel.type}:`,
-        error.message
+        error instanceof Error ? error.message : String(error)
       )
     }
   }
@@ -232,9 +232,12 @@ async function main() {
     } finally {
       await sourceSession.close()
     }
-  } catch (error: any) {
-    console.error('❌ Migration failed:', error.message)
-    if (error.stack) {
+  } catch (error) {
+    console.error(
+      '❌ Migration failed:',
+      error instanceof Error ? error.message : String(error)
+    )
+    if (error instanceof Error && error.stack) {
       console.error(error.stack)
     }
     process.exit(1)

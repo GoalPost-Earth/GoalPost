@@ -1,11 +1,11 @@
 import { ChatOpenAI } from '@langchain/openai'
 import { config } from 'dotenv'
-import { BaseChatModel } from 'langchain/chat_models/base'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { RunnableSequence } from '@langchain/core/runnables'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import initCypherGenerationChain from './cypher-generation.chain'
 import { close } from '../../../graph'
-import { extractIds } from '../../../../pages/api/utils'
+import { extractIds } from './cypher-retrieval.chain'
 
 describe('Cypher Generation Chain', () => {
   let graph: Neo4jGraph

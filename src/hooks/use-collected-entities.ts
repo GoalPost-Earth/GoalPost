@@ -40,7 +40,10 @@ export function useCollectedEntities(): CollectedEntity[] {
   const [entities, setEntities] = useState<CollectedEntity[]>([])
   const seenRef = useRef<Set<string>>(new Set())
 
-  // Capture focal navigation.
+  // Capture focal navigation. This is a temporal accumulator — it records each
+  // distinct entity the user focuses over the session, deduped via seenRef and
+  // order-preserving. That history cannot be derived from the current
+  // focalEntity alone, so the setState genuinely belongs in this effect.
   useEffect(() => {
     if (!focalEntity) return
     if (!isFocalEntityType(focalEntity.type)) return
@@ -48,6 +51,7 @@ export function useCollectedEntities(): CollectedEntity[] {
     const key = `${focalEntity.type}:${focalEntity.id}`
     if (seenRef.current.has(key)) return
     seenRef.current.add(key)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- temporal accumulator, not derivable from current render state
     setEntities((prev) => [
       ...prev,
       {
@@ -77,6 +81,7 @@ export function useCollectedEntities(): CollectedEntity[] {
       }
     }
     if (additions.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- temporal accumulator over streamed tool-results, deduped via seenRef
       setEntities((prev) => [...prev, ...additions])
     }
   }, [messages])

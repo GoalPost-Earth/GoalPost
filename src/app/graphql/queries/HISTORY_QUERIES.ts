@@ -2,7 +2,7 @@ import { graphql } from '@/gql'
 
 /**
  * Query to fetch all pulses for the history page
- * Includes GoalPulse, ResourcePulse, and StoryPulse with their contexts and initiators
+ * Includes GoalPulse, ResourcePulse, StoryPulse, and CoreValuePulse with their contexts and initiators
  */
 export const GET_ALL_PULSES = graphql(`
   query GetAllPulses {
@@ -45,6 +45,25 @@ export const GET_ALL_PULSES = graphql(`
       }
     }
     storyPulses {
+      __typename
+      id
+      title
+      content
+      createdAt
+      intensity
+      context {
+        id
+        title
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+        email
+      }
+    }
+    coreValuePulses {
       __typename
       id
       title
@@ -135,6 +154,25 @@ export const GET_ALL_PULSES_BY_CONTEXT = graphql(`
         email
       }
     }
+    coreValuePulses(where: { context_SOME: { id_EQ: $contextId } }) {
+      __typename
+      id
+      title
+      content
+      createdAt
+      intensity
+      context {
+        id
+        title
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+        email
+      }
+    }
   }
 `)
 
@@ -207,6 +245,34 @@ export const GET_ALL_PULSES_BY_SPACE = graphql(`
       }
     }
     storyPulses(
+      where: {
+        context_SOME: {
+          OR: [
+            { meSpace_SOME: { id_EQ: $spaceId } }
+            { weSpace_SOME: { id_EQ: $spaceId } }
+          ]
+        }
+      }
+    ) {
+      __typename
+      id
+      title
+      content
+      createdAt
+      intensity
+      context {
+        id
+        title
+      }
+      createdBy {
+        id
+        firstName
+        lastName
+        name
+        email
+      }
+    }
+    coreValuePulses(
       where: {
         context_SOME: {
           OR: [

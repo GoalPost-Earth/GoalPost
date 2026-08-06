@@ -28,6 +28,12 @@ import { buildDocumentDownloadUrl } from './document-download-url'
 export interface ExtractedPersonCandidate {
   firstName: string
   lastName: string
+  /**
+   * GOAL-314: one short phrase on who this person is / their role, drawn from
+   * the document. Persisted as the PersonPulse's `description` so an
+   * upload-created person carries more than just a name. Optional.
+   */
+  description?: string
   /** Optional id of a roster person the model thinks this mention matches. */
   existingId?: string
 }
@@ -389,12 +395,15 @@ function buildCreatePulseArgs(
   if (p.why && p.why.trim()) args.why = p.why.trim()
   if (p.location && p.location.trim()) {
     args.location = p.location.trim()
-  } else if (p.kind === 'ResourcePulse' && input.documentId) {
-    // GOAL-283: a member-uploaded document is itself the resource. When the
-    // extractor didn't read an explicit location from the text, fall back to a
-    // durable, Space-scoped link to the uploaded file so the Resource is always
-    // openable/shareable. Never clobber an extracted/manual location above; the
-    // `documentId` guard keeps the fallback from writing a malformed URL.
+  } else if (input.documentId) {
+    // GOAL-283 (ResourcePulse) + GOAL-316 (all extracted kinds): the uploaded
+    // document is the pulse's source. When the extractor didn't read an
+    // explicit location from the text, fall back to a durable, Space-scoped
+    // link to the uploaded file so every pulse created from a document leads
+    // back to it. `location` is the chosen user-facing provenance surface —
+    // the `EXTRACTED_FROM` edge stays a graph-only audit trail. Never clobber
+    // an extracted/manual location above; the `documentId` guard keeps the
+    // fallback from writing a malformed URL.
     args.location = buildDocumentDownloadUrl(input.documentId)
   }
   if (p.time && p.time.trim()) args.time = p.time.trim()
@@ -439,13 +448,19 @@ function buildCreatePersonArgs(
   p: ExtractedPersonCandidate,
   input: ExtractionModelInput
 ): Record<string, unknown> {
-  return {
+  const args: Record<string, unknown> = {
     firstName: p.firstName.trim(),
     lastName: p.lastName.trim(),
     contextId: input.fieldContextId,
     contextTitle: input.fieldContextTitle,
     documentId: input.documentId,
   }
+  // GOAL-314: carry the extracted role/bio phrase so the new PersonPulse has
+  // renderable content beyond its name (persisted as p.description).
+  if (p.description && p.description.trim()) {
+    args.description = p.description.trim()
+  }
+  return args
 }
 
 function buildUpdatePersonArgs(
@@ -453,7 +468,7 @@ function buildUpdatePersonArgs(
   match: RosterPerson,
   input: ExtractionModelInput
 ): Record<string, unknown> {
-  return {
+  const args: Record<string, unknown> = {
     personId: match.id,
     firstName: p.firstName.trim(),
     lastName: p.lastName.trim(),
@@ -462,6 +477,12 @@ function buildUpdatePersonArgs(
     contextTitle: input.fieldContextTitle,
     documentId: input.documentId,
   }
+  // GOAL-314: a re-encountered person may arrive with a description from this
+  // document; pass it so update_person can fill it in when the node has none.
+  if (p.description && p.description.trim()) {
+    args.description = p.description.trim()
+  }
+  return args
 }
 
 export async function extractEntities(
@@ -629,21 +650,23 @@ export async function extractEntities(
       })
     }
 
-    if (match) {
-      return { tool: 'update_pulse', args: buildUpdatePulseArgs(p, match, input) }
-    }
-    const args = buildCreatePulseArgs(p, input)
+    const args = match
+      ? buildUpdatePulseArgs(p, match, input)
+      : buildCreatePulseArgs(p, input)
     // Attribution: always carry the validated author NAME. A roster match
     // also carries its live id — that person may get no person call this run
     // (the model doesn't re-emit hint-only mentions), so the orchestrator's
     // name→id map would never learn them. Extracted candidates carry the name
     // only; the orchestrator resolves their id after the person calls (which
-    // run first) have executed.
+    // run first) have executed. update_pulse carries the same args (GOAL-318):
+    // its write re-points INITIATED_BY only when the pulse's current author is
+    // the acting uploader — a re-extract corrects default attribution, never
+    // steals authorship a different person already holds.
     if (author) {
       args.attributedToName = author.name
       if (author.personId) args.attributedToPersonId = author.personId
     }
-    return { tool: 'create_pulse', args }
+    return { tool: match ? 'update_pulse' : 'create_pulse', args }
   })
 
   // Order matters: persons + orgs create the nodes, pulses create the pulses,

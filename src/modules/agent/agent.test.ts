@@ -1,8 +1,8 @@
 import initAgent from './agent'
 import { config } from 'dotenv'
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai'
-import { Embeddings } from 'langchain/embeddings/base'
-import { BaseChatModel } from 'langchain/chat_models/base'
+import { Embeddings } from '@langchain/core/embeddings'
+import { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import { Runnable } from '@langchain/core/runnables'
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 

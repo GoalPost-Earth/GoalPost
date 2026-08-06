@@ -170,7 +170,7 @@ export default async function initCypherRetrievalChain(
   )
 }
 
-function extractIds(
+export function extractIds(
   results: Record<string, any> | Record<string, any>[]
 ): string[] {
   const ids = new Set<string>()

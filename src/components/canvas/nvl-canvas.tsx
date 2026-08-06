@@ -7,6 +7,7 @@ import type {
   Relationship,
   NvlOptions,
   ExternalCallbacks,
+  HitTargets,
 } from '@neo4j-nvl/base'
 import type { InteractiveNvlWrapperProps } from '@neo4j-nvl/react'
 import { useNvlTouchGestures } from '@/hooks'
@@ -60,6 +61,10 @@ export function NvlCanvas({
   emptyState,
   maxInitialZoom = 1.4,
 }: NvlCanvasProps) {
+  // NVL instance handle. Typed as `any` to bridge a dependency version skew:
+  // the app depends on @neo4j-nvl/base@1.2.0 while @neo4j-nvl/react bundles its
+  // own @neo4j-nvl/base@0.3.9, so the two NVL types are nominally incompatible.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const wrapperRef = useRef<any>(null)
   const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const isDraggingRef = useRef(false)
@@ -179,7 +184,7 @@ export function NvlCanvas({
   const mouseEventCallbacks: InteractiveNvlWrapperProps['mouseEventCallbacks'] =
     useMemo(
       () => ({
-        onNodeClick: (node: Node, hitElements: any, event: MouseEvent) => {
+        onNodeClick: (node: Node, hitElements: HitTargets, event: MouseEvent) => {
           onNodeClick?.(node)
         },
         onNodeDoubleClick: (node: Node) => {
@@ -371,6 +376,10 @@ export function NvlCanvas({
           rels={relationships}
           layout={layout}
           layoutOptions={finalLayoutOptions}
+          // Cross-version bridge: our NvlOptions (base@1.2.0) vs the react
+          // wrapper's bundled base@0.3.9 NvlOptions — structurally identical,
+          // nominally distinct. See wrapperRef note above.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           nvlOptions={finalNvlOptions as any}
           interactionOptions={finalInteractionOptions}
           mouseEventCallbacks={mouseEventCallbacks}

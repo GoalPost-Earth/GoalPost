@@ -24,6 +24,16 @@ export type CanvasView = 'dashboard' | 'bloom'
 
 interface CanvasState {
   canvasOpen: boolean
+  /**
+   * Whether the docked chat panel is shown at all. Distinct from
+   * `fullscreenSide`: fullscreening the canvas is a temporary "focus this
+   * side" state, whereas `chatOpen: false` is the user opting OUT of the
+   * assistant entirely (GOAL-313) — it survives navigation and reloads, and
+   * only an explicit "Show chat" affordance brings the panel back.
+   *
+   * Docked layout only; the floating layout uses `floatingChatOpen`.
+   */
+  chatOpen: boolean
   fullscreenSide: FullscreenSide
   /** User's desktop layout preference. Mobile always forces 'floating'. */
   chatLayout: ChatLayout
@@ -36,6 +46,7 @@ interface CanvasState {
 interface StudioCanvasContextValue extends CanvasState {
   toggleCanvas: () => void
   setCanvasOpen: (open: boolean) => void
+  setChatOpen: (open: boolean) => void
   toggleFullscreen: (side: 'canvas' | 'chat') => void
   exitFullscreen: () => void
   setChatLayout: (layout: ChatLayout) => void
@@ -50,6 +61,7 @@ const STORAGE_KEY = 'goalpost.studio.canvas.v1'
 
 const DEFAULT_STATE: CanvasState = {
   canvasOpen: true,
+  chatOpen: true,
   fullscreenSide: null,
   chatLayout: 'docked',
   floatingChatOpen: false,
@@ -70,8 +82,24 @@ function readStored(): CanvasState | null {
         typeof parsed.canvasOpen === 'boolean'
           ? parsed.canvasOpen
           : DEFAULT_STATE.canvasOpen,
+      // Unlike `floatingChatOpen`, this one IS restored: hiding the assistant
+      // is a deliberate "leave me alone" preference, so it has to survive a
+      // reload the way `canvasView` does. Falling back to `true` when the
+      // stored `canvasOpen` is false repairs a both-panels-closed payload,
+      // which would otherwise restore an empty studio.
+      chatOpen:
+        typeof parsed.chatOpen === 'boolean'
+          ? parsed.chatOpen || parsed.canvasOpen === false
+          : DEFAULT_STATE.chatOpen,
+      // A fullscreened side only means something when both panels are
+      // available, so clamp it to null if either is stored closed — otherwise
+      // a `{ chatOpen: false, fullscreenSide: 'chat' }` payload rehydrates
+      // into a panel that is fullscreened and hidden at the same time.
       fullscreenSide:
-        parsed.fullscreenSide === 'canvas' || parsed.fullscreenSide === 'chat'
+        (parsed.fullscreenSide === 'canvas' ||
+          parsed.fullscreenSide === 'chat') &&
+        parsed.canvasOpen !== false &&
+        parsed.chatOpen !== false
           ? parsed.fullscreenSide
           : null,
       chatLayout:
@@ -119,6 +147,9 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
       // Closing the canvas while it's fullscreened would leave the layout
       // in a dead state, so always clear the fullscreen flag on close.
       fullscreenSide: prev.canvasOpen ? null : prev.fullscreenSide,
+      // Never leave the studio with nothing in it — closing the canvas
+      // implies the chat comes back.
+      chatOpen: prev.canvasOpen ? true : prev.chatOpen,
     }))
   }, [])
 
@@ -129,6 +160,26 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
         ...prev,
         canvasOpen: open,
         fullscreenSide: open ? prev.fullscreenSide : null,
+        chatOpen: open ? prev.chatOpen : true,
+      }
+    })
+  }, [])
+
+  const setChatOpen = useCallback((open: boolean) => {
+    setState((prev) => {
+      if (prev.chatOpen === open) return prev
+      return {
+        ...prev,
+        chatOpen: open,
+        // Cleared in BOTH directions, unlike `setCanvasOpen`. Hiding a
+        // fullscreened panel would strand the layout; and on the way back,
+        // `fullscreenSide: 'canvas'` would out-rank `chatOpen` in the shell's
+        // reconcile effect and immediately re-collapse the panel the user just
+        // asked for — with the restore pill now gone (it hides itself once
+        // `chatOpen` is true), leaving no obvious way back to the assistant.
+        // "Show chat" has to be authoritative.
+        fullscreenSide: null,
+        canvasOpen: open ? prev.canvasOpen : true,
       }
     })
   }, [])
@@ -139,6 +190,8 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
       // Fullscreening either side implicitly keeps the canvas mounted so
       // toggling back is instant.
       canvasOpen: true,
+      // Likewise, a side can't be fullscreened while it's hidden.
+      chatOpen: side === 'chat' ? true : prev.chatOpen,
       fullscreenSide: prev.fullscreenSide === side ? null : side,
     }))
   }, [])
@@ -189,6 +242,7 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
       ...state,
       toggleCanvas,
       setCanvasOpen,
+      setChatOpen,
       toggleFullscreen,
       exitFullscreen,
       setChatLayout,
@@ -200,6 +254,7 @@ export function StudioCanvasProvider({ children }: { children: ReactNode }) {
       state,
       toggleCanvas,
       setCanvasOpen,
+      setChatOpen,
       toggleFullscreen,
       exitFullscreen,
       setChatLayout,

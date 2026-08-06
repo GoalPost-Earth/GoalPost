@@ -179,7 +179,7 @@ export const StudioChrome: FC = () => {
 
             <button
               onClick={toggleTheme}
-              className="hidden md:flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
+              className="flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
               aria-label="Toggle theme"
             >
               {isMounted && (isDark ? <MoonIcon /> : <SunIcon />)}

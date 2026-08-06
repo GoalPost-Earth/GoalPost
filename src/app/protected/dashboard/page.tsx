@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { SpacesOverview } from '@/components/dashboard/spaces-overview'
+import { ActivePulses } from '@/components/dashboard/active-pulses'
 import { FocusedEntities } from '@/components/dashboard/focused-entities'
 import { usePageContext } from '@/contexts'
 
@@ -19,6 +20,7 @@ export default function DashboardPage() {
   const { setPageTitle } = usePageContext()
   const searchParams = useSearchParams()
   const focusParam = searchParams.get('focus')
+  const [showAllPulses, setShowAllPulses] = useState(false)
 
   useEffect(() => {
     setPageTitle('Dashboard')
@@ -60,7 +62,13 @@ export default function DashboardPage() {
           {focusParam ? (
             <FocusedEntities focus={focusParam} />
           ) : (
-            <SpacesOverview />
+            <div className="space-y-6 sm:space-y-8">
+              <SpacesOverview />
+              <ActivePulses
+                showAll={showAllPulses}
+                onViewAll={() => setShowAllPulses((v) => !v)}
+              />
+            </div>
           )}
         </div>
       </main>

@@ -53,7 +53,7 @@ Reconciliation checklist:
    **regression** and link it to the closed one, rather than describing it as a
    new discovery.
 
-## Known batches (as of 2026-07-07)
+## Known batches (as of 2026-07-20)
 
 | GOAL keys | Source | Notes |
 | --------- | ------ | ----- |
@@ -61,8 +61,9 @@ Reconciliation checklist:
 | GOAL-293, GOAL-294, GOAL-295 | Same sheet, rows 9–11 (+ WhatsApp) | Upload cross-context relationships / on-upload resonance / nested FieldContexts. |
 | GOAL-296, GOAL-297 | WhatsApp thread (not the sheet) | Assistant limits/caps bug; per-user token & cost metering. |
 | GOAL-298 … GOAL-303 | Same sheet, rows 12–17 | Second batch; `prototype1-feedback`. Upload entity attribution, non-member migration regression, cross-field search, LifeSensor type, doc-URL exposure, text-overflow. |
+| GOAL-313 … GOAL-318 | Same sheet (July 2026 tab), rows 18–22 | Third batch; `prototype1-feedback`. Collapsible chat panel, Person-details regression (linked GOAL-275), expandable "+N more" field-detail lists, upload location bug (linked GOAL-285/302) + spreadsheet bulk-upload feature (row 21 split into GOAL-316 bug / GOAL-317 story), author attribution (linked GOAL-298). |
 
-After this, sheet rows 2–17 are fully reconciled to Jira.
+After this, sheet rows 2–22 are fully reconciled to Jira.
 
 ## Jira mechanics
 

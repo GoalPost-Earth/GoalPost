@@ -317,6 +317,24 @@ describe('hitl — update_pulse copy carries doc-ingest enrichment (slice 4)', (
     // expected to mention "pulse" without inventing names.
     expect(summary.toLowerCase()).toContain('update')
   })
+
+  // GOAL-318: the ingest update path carries the document's author, so the
+  // approval copy appends the attribution clause — by NAME only, exactly
+  // like create_pulse (Rule 1).
+  it('appends "— attributed to <name>" when args carry attributedToName; never echoes the person id', () => {
+    const summary = describeWriteAction('update_pulse', {
+      pulseId: 'pulse_a87c5bf1-6ab3-42f6-bb61-14d5e884fda4',
+      newTitle: 'Increase event attendance',
+      pulseType: 'GoalPulse',
+      currentTitle: 'Grow event attendance',
+      contextTitle: 'Care Practices',
+      attributedToName: 'Sarah Chen',
+      attributedToPersonId: 'person_a87c5bf1-6ab3-42f6-bb61-14d5e884fda4',
+    })
+    expect(summary).toContain('— attributed to Sarah Chen')
+    expect(summary).not.toContain('person_')
+    expect(summary).not.toContain('a87c5bf1')
+  })
 })
 
 describe('hitl — create_connection write tool (assistant relationships)', () => {

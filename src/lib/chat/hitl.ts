@@ -11,6 +11,8 @@ import {
   type PulseContextLinkInput,
 } from '@/modules/agent/tools/pulse/pulse.service'
 import { createHash, randomUUID } from 'crypto'
+import { driver } from '@/lib/neo4j/driver'
+import { softDeleteFieldContext } from '@/lib/field-context/soft-delete-field-context'
 
 export type WriteToolName =
   | 'rename_space'
@@ -123,16 +125,26 @@ export function describeWriteAction(
       // Rule 1: never surface the raw spaceId — prefer the resolved name, fall
       // back to a generic phrase rather than an id.
       return `Create field context "${String(args.title || '')}" in ${String(args.spaceName || 'the selected space')}`
-    case 'delete_field_context':
-      return `Delete field context ${String(args.contextId || args.currentTitle || 'target context')}`
+    case 'delete_field_context': {
+      // Rule 1: never surface the raw contextId — prefer the human title,
+      // fall back to a generic phrase rather than an id.
+      const title = String(args.contextTitle || args.currentTitle || '').trim()
+      return title
+        ? `Delete field context "${title}" and its pulses`
+        : 'Delete the selected field context and its pulses'
+    }
     case 'update_pulse': {
       const title = String(args.currentTitle || args.newTitle || '').trim()
       const where = String(args.contextTitle || args.contextName || '').trim()
       const label = pulseTypeLabel(args.pulseType)
       const titleClause = title ? ` "${title}"` : ''
       const whereClause = where ? ` in ${where}` : ''
+      // Rule 1: attribution by name only, never an id (GOAL-318 — the ingest
+      // update path carries the document's author just like create_pulse).
+      const updateBy = String(args.attributedToName || '').trim()
+      const updateByClause = updateBy ? ` — attributed to ${updateBy}` : ''
       if (title || where || args.pulseType) {
-        return `Update ${label}${titleClause}${whereClause}`
+        return `Update ${label}${titleClause}${whereClause}${updateByClause}`
       }
       // Fallback for callers that don't carry the doc-ingest enrichment.
       return `Update pulse ${String(args.pulseId || 'target')}`
@@ -955,59 +967,121 @@ async function deleteFieldContextAuthorized(
     }
   }
 
-  if (deletePulses) {
-    const deleteQuery = `
-      MATCH (context:FieldContext {id: $contextId})
-      OPTIONAL MATCH (context)-[:HAS_PULSE]->(pulse:FieldPulse)
-      OPTIONAL MATCH (pulse)-[:HAS_CHUNK]->(chunk:ConversationChunk)
-      WITH context,
-           collect(DISTINCT pulse) AS pulses,
-           collect(DISTINCT chunk) AS chunks
-      FOREACH (c IN chunks | DETACH DELETE c)
-      FOREACH (p IN pulses | DETACH DELETE p)
-      WITH context, size(pulses) AS deletedPulseCount
-      DETACH DELETE context
-      RETURN deletedPulseCount
-    `
+  // Shared soft-delete orchestrator (GOAL-319) — the same path as the
+  // GraphQL deleteFieldContext mutation. One transaction: owner-or-ADMIN
+  // gate, deletedAt stamps on the context + its pulses, suggestion cleanup,
+  // Space edge re-pointed to HAS_DELETED_CONTEXT, activity Log. The 90-day
+  // purge cron hard-deletes later. Note the gate is stricter than
+  // resolveAuthorizedContextId's edit gate: per kb/02, MEMBERs can edit
+  // fields but only the owner or an ADMIN may delete one.
+  const outcome = await softDeleteFieldContext(
+    { driver },
+    { currentUserId, contextId }
+  )
 
-    const rows = await graph.query<{ deletedPulseCount: number }>(deleteQuery, {
-      contextId,
-    })
-
-    return {
-      success: true,
-      contextId,
-      deletedPulseCount: Number(rows?.[0]?.deletedPulseCount || 0),
-      message: `Deleted field context "${details[0].title}" and its pulses.`,
-    }
-  }
-
-  const deleteContextOnlyQuery = `
-    MATCH (context:FieldContext {id: $contextId})
-    WHERE NOT EXISTS {
-      MATCH (context)-[:HAS_PULSE]->(:FieldPulse)
-    }
-    DETACH DELETE context
-    RETURN 1 AS deleted
-  `
-
-  const rows = await graph.query<{ deleted: number }>(deleteContextOnlyQuery, {
-    contextId,
-  })
-
-  if (!rows || rows.length === 0) {
+  if (!outcome.ok) {
     return {
       success: false,
-      message: 'Could not delete field context.',
+      message:
+        outcome.reason === 'forbidden'
+          ? 'Only the space owner or an admin can delete a field context.'
+          : outcome.error,
     }
   }
 
+  const deletedPulseCount = outcome.deletedPulseCount
   return {
     success: true,
     contextId,
-    deletedPulseCount: 0,
-    message: `Deleted field context "${details[0].title}".`,
+    deletedPulseCount,
+    message:
+      deletedPulseCount > 0
+        ? `Deleted field context "${outcome.title}" and its ${
+            deletedPulseCount === 1 ? 'pulse' : `${deletedPulseCount} pulses`
+          }.`
+        : `Deleted field context "${outcome.title}".`,
   }
+}
+
+/**
+ * GOAL-318: conservative author re-attribution for the ingest update/enrich
+ * paths. A re-extract (or a second document matching an existing pulse) lands
+ * on update_pulse / the create_pulse enrich branch, where the original write
+ * may have defaulted INITIATED_BY to the uploader. Re-point the canonical
+ * author edge at the credited person ONLY when the pulse's current displayed
+ * author (initiatedBy[0], else createdBy[0] — resolvePulseAuthor's
+ * precedence) is the acting user or absent: correcting default uploader
+ * attribution is the goal; authorship a different person already holds is
+ * never stolen. Same-context HAS_PERSON gate as createPulseAuthorized,
+ * atomic with the edge write. Returns the credited author's display name,
+ * or null when nothing changed.
+ */
+async function reattributeIngestPulseAuthor(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  params: {
+    pulseId: string
+    contextId: string
+    attributedToPersonId?: unknown
+    attributedToName?: unknown
+  }
+): Promise<string | null> {
+  const authorId =
+    typeof params.attributedToPersonId === 'string'
+      ? params.attributedToPersonId.trim()
+      : ''
+  if (!authorId || authorId === currentUserId) return null
+  if (!params.pulseId || !params.contextId) return null
+
+  const rows = await graph.query<{ name: string | null }>(
+    `
+    MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(pulse:FieldPulse {id: $pulseId})
+    MATCH (context)-[:HAS_PERSON]->(author:Person {id: $authorId})
+    // Conservative gate: only when the current displayed author is the acting
+    // user or absent. INITIATED_BY wins the display (resolvePulseAuthor), so
+    // any INITIATED_BY to someone else blocks; with no INITIATED_BY at all,
+    // a CREATED_BY to someone else blocks instead.
+    WHERE NOT EXISTS {
+        // Untyped on purpose: any non-self INITIATED_BY target blocks, even a
+        // malformed non-Person node — "never steal" stays robust to bad data.
+        // The IS NULL arm keeps an id-less target blocking too (NULL <> x
+        // would otherwise evaluate to NULL and drop the row).
+        MATCH (pulse)-[:INITIATED_BY]->(cur)
+        WHERE cur.id IS NULL OR cur.id <> $currentUserId
+      }
+      AND (
+        EXISTS { (pulse)-[:INITIATED_BY]->(:Person {id: $currentUserId}) }
+        OR NOT EXISTS {
+          MATCH (pulse)-[:CREATED_BY]->(cb)
+          WHERE cb.id IS NULL OR cb.id <> $currentUserId
+        }
+      )
+    WITH pulse, author LIMIT 1
+    OPTIONAL MATCH (pulse)-[old:INITIATED_BY]->()
+    DELETE old
+    // Exactly one INITIATED_BY after the write — resolvePulseAuthor reads
+    // initiatedBy[0], so the edge must stay single (DISTINCT collapses the
+    // per-deleted-edge rows before CREATE).
+    WITH DISTINCT pulse, author
+    CREATE (pulse)-[:INITIATED_BY]->(author)
+    RETURN coalesce(author.name, trim(coalesce(author.firstName, '') + ' ' + coalesce(author.lastName, ''))) AS name
+    LIMIT 1
+    `,
+    {
+      contextId: params.contextId,
+      pulseId: params.pulseId,
+      authorId,
+      currentUserId,
+    }
+  )
+  if (!rows?.[0]) return null
+  return (
+    rows[0].name?.trim() ||
+    (typeof params.attributedToName === 'string'
+      ? params.attributedToName.trim()
+      : '') ||
+    'person'
+  )
 }
 
 async function createPulseAuthorized(
@@ -1069,12 +1143,31 @@ async function createPulseAuthorized(
   )
   if (existingPulseRows?.[0]) {
     const ep = existingPulseRows[0]
+    // GOAL-318: an ingest proposal that lands on an already-existing pulse
+    // still carries the document's author — correct default uploader
+    // attribution before composing the Log, so a re-upload attributes the
+    // pulse the same way a fresh create would have.
+    const reattributedTo = await reattributeIngestPulseAuthor(
+      graph,
+      currentUserId,
+      {
+        pulseId: ep.id,
+        contextId: resolvedContext.contextId,
+        attributedToPersonId: input.attributedToPersonId,
+        attributedToName: input.attributedToName,
+      }
+    )
     const enrichWhere = input.contextTitle?.trim() || ''
     const humanLabelExisting = pulseTypeLabel(pulseType)
     const enrichLogId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
-    const enrichDescription = enrichWhere
-      ? `Updated ${humanLabelExisting} "${ep.title ?? title}" in ${enrichWhere}`
-      : `Updated ${humanLabelExisting} "${ep.title ?? title}"`
+    const enrichAttribution = reattributedTo
+      ? ` — attributed to ${reattributedTo}`
+      : ''
+    const enrichDescription =
+      (enrichWhere
+        ? `Updated ${humanLabelExisting} "${ep.title ?? title}" in ${enrichWhere}`
+        : `Updated ${humanLabelExisting} "${ep.title ?? title}"`) +
+      enrichAttribution
     // Only a substantive body fills a gap — never the title-seeded placeholder.
     const newContent = input.content?.trim() || null
     await graph.query(
@@ -1140,9 +1233,14 @@ async function createPulseAuthorized(
       pulseType,
       contextId: resolvedContext.contextId,
       alreadyExisted: true,
-      message: `${humanLabelExisting} "${ep.title ?? title}" is already in ${
-        enrichWhere || 'this field'
-      } — I kept it and filled in any missing details rather than adding a duplicate.`,
+      // Human label for the credited author (Rule 3) — null when attribution
+      // was absent or the existing author (someone else) was left in place.
+      attributedTo: reattributedTo ?? null,
+      message:
+        `${humanLabelExisting} "${ep.title ?? title}" is already in ${
+          enrichWhere || 'this field'
+        } — I kept it and filled in any missing details rather than adding a duplicate.` +
+        (reattributedTo ? ` It is attributed to ${reattributedTo}.` : ''),
     }
   }
 
@@ -1690,6 +1788,12 @@ interface UpdatePersonAuthorizedInput {
   firstName?: string
   lastName?: string
   currentName?: string
+  /**
+   * GOAL-314: an optional role/bio phrase for this person carried in from a
+   * document. Filled in only when the existing node has no description (never
+   * overwrites a richer note).
+   */
+  description?: string
   contextId?: string
   contextTitle?: string
   documentId?: string
@@ -1754,6 +1858,9 @@ async function updatePersonAuthorized(
   const newFirstName = firstName || null
   const newLastName = lastName || null
   const hasNameChange = Boolean(newFirstName || newLastName)
+  // GOAL-314: fill-gaps-only — a description from this document is applied only
+  // when the node currently has none, so a richer existing note is never lost.
+  const newDescription = input.description?.trim() || null
 
   const documentFilename = documentId
     ? await lookupDocumentFilename(graph, documentId)
@@ -1786,6 +1893,12 @@ async function updatePersonAuthorized(
     FOREACH (_ IN CASE WHEN NOT $hasNameChange THEN [] ELSE [1] END |
       SET p.name = trim(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, ''))
     )
+    // Fill-gaps-only: set the description from this document only when the
+    // person has none, so a re-encountered contact gains detail without a
+    // terser re-mention clobbering a richer existing note.
+    FOREACH (_ IN CASE WHEN $newDescription IS NOT NULL AND (p.description IS NULL OR trim(p.description) = '') THEN [1] ELSE [] END |
+      SET p.description = $newDescription
+    )
     SET p.updatedAt = datetime()
     CREATE (log:Log {
       id: $logId,
@@ -1809,6 +1922,7 @@ async function updatePersonAuthorized(
       newFirstName,
       newLastName,
       hasNameChange,
+      newDescription,
       logId,
       description,
       metadata,
@@ -2771,6 +2885,43 @@ export async function executeAuthorizedWriteTool(
             .conversationThreadId!.trim()
         : null
     if (documentId) {
+      // GOAL-318: the ingest update path (a re-extract, or a second document
+      // matching an existing pulse via the roster) carries the document's
+      // author — correct default uploader attribution before writing the Log.
+      // No-op when attribution args are absent (the interactive chat path
+      // never sets them) or when a different person already holds authorship.
+      // The context is resolved through the same authorization path the
+      // create branch uses, so a caller cannot credit a person from a
+      // sibling context's roster it isn't allowed to edit.
+      let reattributedTo: string | null = null
+      const rawAttributedToPersonId = (input as Record<string, unknown>)
+        .attributedToPersonId
+      if (
+        typeof rawAttributedToPersonId === 'string' &&
+        rawAttributedToPersonId.trim()
+      ) {
+        const resolvedCtx = await resolveAuthorizedContextId(
+          graph,
+          currentUserId,
+          {
+            contextId: input.contextId,
+            currentTitle: input.contextTitle,
+          }
+        )
+        if (resolvedCtx.ok) {
+          reattributedTo = await reattributeIngestPulseAuthor(
+            graph,
+            currentUserId,
+            {
+              pulseId: resolved.pulseId,
+              contextId: resolvedCtx.contextId,
+              attributedToPersonId: rawAttributedToPersonId,
+              attributedToName: (input as Record<string, unknown>)
+                .attributedToName,
+            }
+          )
+        }
+      }
       const updatedTitle =
         updateResult.pulse?.title || input.currentTitle || 'pulse'
       const where =
@@ -2780,10 +2931,20 @@ export async function executeAuthorizedWriteTool(
       const filenameSuffix = documentFilename
         ? ` (from ${documentFilename})`
         : ''
+      const attributionSuffix = reattributedTo
+        ? ` — attributed to ${reattributedTo}`
+        : ''
       const description =
         (where
           ? `Updated ${humanLabel} "${updatedTitle}" in ${where}`
-          : `Updated ${humanLabel} "${updatedTitle}"`) + filenameSuffix
+          : `Updated ${humanLabel} "${updatedTitle}"`) +
+        filenameSuffix +
+        attributionSuffix
+      if (reattributedTo) {
+        // Human label for the credited author (Rule 3) — mirrored from the
+        // create path so the synthesized turn reports corrected attribution.
+        updateResult.attributedTo = reattributedTo
+      }
       const metadata = buildIngestLogMetadata(documentId, conversationThreadId)
       const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
       await graph.query(

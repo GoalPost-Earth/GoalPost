@@ -8,8 +8,9 @@
  * `GET /api/ingest/document/<id>/download`, which re-checks Space read access on
  * every hit and mints a fresh presigned GET server-side.
  *
- * Used by the ingest extractor to populate `ResourcePulse.location` (GOAL-283)
- * so an uploaded document's Resource always links back to the actual file.
+ * Used by the ingest extractor to populate pulse `location` — ResourcePulse
+ * since GOAL-283, GoalPulse/StoryPulse since GOAL-316 — so every pulse
+ * extracted from an uploaded document links back to the actual file.
  */
 
 import { resolveAppBaseUrl } from '@/lib/url/app-base-url'

@@ -133,17 +133,22 @@ export async function POST(req: Request) {
   const failedEntityCount = result.executedToolCalls.length - createdEntityCount
 
   // On-upload resonance discovery (GOAL-294). Trigger only when the upload
-  // actually created a pulse — discovery over a context with no new pulse is
-  // wasted work. Scheduled via `after()` so the (potentially minute-long)
-  // embed + LLM analysis runs AFTER the upload response is sent, without
-  // blocking the user and without the dropped-floating-promise risk of a bare
-  // fire-and-forget (the platform keeps the invocation alive up to
+  // actually created a pulse OR a person — discovery over a context with
+  // nothing new is wasted work. A new person triggers too (GOAL-318): an
+  // update-only run can still mint the document's author, and the discovery
+  // pass is what embeds that PersonPulse at upload time (Step 1b) instead of
+  // waiting for the nightly cron. Scheduled via `after()` so the (potentially
+  // minute-long) embed + LLM analysis runs AFTER the upload response is sent,
+  // without blocking the user and without the dropped-floating-promise risk
+  // of a bare fire-and-forget (the platform keeps the invocation alive up to
   // `maxDuration`). `runContextResonanceDiscovery` never throws, is
   // Space-scoped, and dedups so repeated uploads don't duplicate suggestions.
-  const createdAPulse = result.executedToolCalls.some(
-    (c) => c.tool === 'create_pulse' && c.result.success !== false
+  const createdAPulseOrPerson = result.executedToolCalls.some(
+    (c) =>
+      (c.tool === 'create_pulse' || c.tool === 'create_person') &&
+      c.result.success !== false
   )
-  if (createdAPulse) {
+  if (createdAPulseOrPerson) {
     after(async () => {
       await runContextResonanceDiscovery({
         contextId: fieldContextId,

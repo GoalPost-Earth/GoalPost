@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  createContext,
-  useContext,
-  useState,
-  ReactNode,
-  useEffect,
-} from 'react'
+import { createContext, useContext, useState, ReactNode } from 'react'
 
 interface PageContextType {
   pageTitle: string
@@ -16,28 +10,19 @@ interface PageContextType {
 const PageContext = createContext<PageContextType | undefined>(undefined)
 
 export function PageContextProvider({ children }: { children: ReactNode }) {
-  const [pageTitle, setPageTitle] = useState('GoalPost')
-  const [isClient, setIsClient] = useState(false)
-
-  // Mark when client-side hydration is complete
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // Initialize from localStorage on mount (only after hydration)
-  useEffect(() => {
-    if (isClient && typeof window !== 'undefined') {
-      const cachedTitle = localStorage.getItem('pageTitle')
-      if (cachedTitle) {
-        setPageTitle(cachedTitle)
-      }
-    }
-  }, [isClient])
+  // Lazy initializer reads the cached title on the client and falls back to
+  // 'GoalPost' during SSR. pageTitle is never rendered into SSR markup (it is
+  // only consumed via setPageTitle), so there is no hydration mismatch.
+  const [pageTitle, setPageTitle] = useState(() =>
+    typeof window === 'undefined'
+      ? 'GoalPost'
+      : localStorage.getItem('pageTitle') || 'GoalPost'
+  )
 
   // Persist title to localStorage whenever it changes (only on client)
   const updatePageTitle = (title: string) => {
     setPageTitle(title)
-    if (isClient && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       localStorage.setItem('pageTitle', title)
     }
   }

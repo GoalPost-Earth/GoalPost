@@ -120,6 +120,16 @@ async function initializeDatabase() {
       // exactly one recipient and carries its own server-side read flag.
       `CREATE CONSTRAINT notification_id IF NOT EXISTS
        FOR (n:Notification) REQUIRE n.id IS UNIQUE`,
+      // Activity-log audit trail (Log). The post-write re-fetches in
+      // activity-log-resolver.ts (MATCH (log:Log {id: $logId})-[:CREATED_BY]->…)
+      // key by Log.id; without this constraint each pays a growing
+      // NodeByLabelScan + Filter as the audit stream accumulates (a
+      // NodeUniqueIndexSeek once present). The constraint also makes
+      // create-log.ts's id-keyed CREATE race-safe against a double-write.
+      // (getContextLogs/getUserLogs reach Log by traversal, not by id.) Add the
+      // id uniqueness gate — matches every other event-style node. (GOAL-307)
+      `CREATE CONSTRAINT log_id_unique IF NOT EXISTS
+       FOR (n:Log) REQUIRE n.id IS UNIQUE`,
       // First-class organizations named in uploaded documents (GOAL-298).
       // The backing RANGE index also turns the assistant's Bloom node-anchor
       // lookup (MATCH (o:Organization {id}) in cypher-generator/execute.ts)
@@ -273,6 +283,11 @@ async function initializeDatabase() {
       // a per-row property check.
       `CREATE INDEX assistant_feedback_classification IF NOT EXISTS
        FOR (f:AssistantFeedback) ON (f.classification)`,
+      // Purge cron (GOAL-319) sweeps `WHERE c.deletedAt IS NOT NULL AND
+      // c.deletedAt < cutoff` daily; the index keeps that a seek instead of
+      // a full FieldContext label scan as contexts accumulate.
+      `CREATE INDEX context_deletedAt IF NOT EXISTS
+       FOR (c:FieldContext) ON (c.deletedAt)`,
       // Default dashboard view filters `WHERE coalesce(f.status, 'open') IN
       // ['open', 'in_progress']` — once the table has thousands of rows the
       // unindexed property check becomes the long pole. Index it.
