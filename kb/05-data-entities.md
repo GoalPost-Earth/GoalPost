@@ -87,6 +87,26 @@ The `Person` node is the single entity for all humans in the system. Adjacent la
 - `OWNS` → Space
 - `IS_MEMBER` → SpaceMembership
 - `CONNECTED_TO` ↔ Person (bidirectional, with edge metadata: `why`, `interests`). Written by the person-detail UI, the GraphQL `createPersonConnection` mutation, **and** the AI assistant: `create_connection` (direct/proactive) and `create_person` (which MERGEs a `CONNECTED_TO` from the current user to the new person whenever a `relationshipWhy` is supplied). See `kb/07-ai-assistant-ux.md` Rule 5.
+
+  **Write gate (GOAL-320) — who may create a `CONNECTED_TO` edge.** An endpoint is _writable_ by the caller when it is either (1) the caller themselves, or (2) a `:PersonPulse` (and not a `:User`) attached via `HAS_PERSON` to a `FieldContext` in a Space the caller owns or is an ADMIN/MEMBER of. **A non-self `:User` endpoint is never writable** — an edge onto a real account requires that account's own action. There is no pending/accepted edge state; the edge is created confirmed or not at all (so no `kb/04-state-machines.md` entry).
+
+  - `createPersonConnection` — BOTH endpoints must be writable.
+  - `updatePersonConnection` / `deletePersonConnection` — both endpoints writable, **or** the caller is one of the two endpoints. That second clause is how the subject of an unwanted edge amends or severs it.
+
+  Every _runtime_ write path is gated, but not all to the same strictness — `src/lib/graphql/resolvers/connection-resolver.ts` (the three mutations above) is currently the strictest, and is the reference implementation:
+
+  | Path | Gate |
+  | ---- | ---- |
+  | `connection-resolver.ts` (custom resolver — no `@authorization` applies) | full rule above, incl. `NOT :User` and the GUEST exclusion |
+  | `resolveEditablePerson` → `create_connection` (`src/lib/chat/hitl.ts`) | same reach rule, but **no** `NOT :User` label guard and **no** GUEST exclusion |
+  | `createPersonAuthorized` `relationshipWhy` (`hitl.ts`) | caller → a person it just created / matched in an editable context |
+  | `updatePersonPulse` (`person-pulse-resolver.ts`) | caller → a person behind `WHERE NOT p:User` + Space reach (no GUEST exclusion) |
+
+  Tightening the two gaps noted above is a follow-up. `scripts/migrate-reference-to-merged.ts` also writes edges, but it is an out-of-band operator script, not a runtime path.
+
+  Note `type ConnectedTo @relationshipProperties` in `schema.gql` is **orphaned on purpose** — it is attached to no `@relationship`, and `Person.connections` / `connectionEdges` are read-only `@cypher` fields. Wiring `CONNECTED_TO` to a real `@relationship` would auto-generate ungated nested `connect`/`disconnect` on `updatePeople` and bypass this whole gate. The unused `src/lib/migration-schema/*.gql` files still declare it that way; do not import them into `Neo4jGraphQL`.
+
+  **Why the gate matters:** `fromPersonId` is client-supplied, and the Person directory resolves any account's id from an email (`kb/02-user-roles.md`). Before GOAL-320 the mutations had no authorization at all, so any authenticated caller could forge an edge onto any user — and because `relatedPeople` matches `CONNECTED_TO` _undirected_, the forged edge also injected the forger into the victim's dashboard people list. Treat any `CONNECTED_TO` edge predating GOAL-320 as unverified (auditing/backfilling them is a separate data-quality task).
 - `CREATED_BY` ← FieldPulse, Log
 
 ---

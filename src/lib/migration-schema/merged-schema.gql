@@ -1,3 +1,15 @@
+# ⚠️ NOT A LIVE SCHEMA — historical migration artifact only.
+# Nothing imports this file (the served SDL is src/lib/graphql/schema/schema.gql,
+# loaded in src/lib/graphql/apollo.ts). Do NOT feed it to Neo4jGraphQL: it still
+# declares constructs deliberately removed from the live schema, and wiring it up
+# would silently re-open closed holes —
+#   • `connections: [Person!]! @relationship(type: "CONNECTED_TO", …)` would
+#     auto-generate ungated nested connect/disconnect on updatePeople, bypassing
+#     the GOAL-320 authorization gate in connection-resolver.ts entirely;
+#   • `sendMessageToChatbot` / `ChatbotResponse` were removed because the former
+#     executed LLM-generated Cypher on an authorization-bypassing driver, and the
+#     latter auto-generated ungated CRUD (createChatbotResponses, …).
+#
 # GoalPost GraphQL Schema - Unified Schema (Main + Reference Merged)
 # Designed for pulse-first, context-aware relational data modeling.
 #

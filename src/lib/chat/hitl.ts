@@ -1837,12 +1837,20 @@ async function updatePersonAuthorized(
   } else {
     const allowedRows = await graph.query<{ allowed: boolean }>(
       `
-      MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PERSON]->(p:Person {id: $personId})
-      OPTIONAL MATCH (owner:Person {id: $currentUserId})-[:OWNS]->(space)
-      OPTIONAL MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(member:Person {id: $currentUserId})
-      WITH (owner IS NOT NULL OR member IS NOT NULL) AS allowed
-      RETURN allowed
-      LIMIT 1
+      MATCH (p:Person {id: $personId})
+      // Mirrors the gate re-asserted in the write query below (and the one in
+      // canEditContext): owner, ADMIN or MEMBER — GUESTs are view-only per
+      // kb/02-user-roles.md. Wrapped in EXISTS rather than OPTIONAL MATCH +
+      // LIMIT 1, which took an arbitrary row and so could deny a caller whose
+      // access came through the second of two Spaces holding this person.
+      RETURN EXISTS {
+        MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PERSON]->(p)
+        WHERE (space)<-[:OWNS]-(:Person {id: $currentUserId})
+           OR EXISTS {
+                MATCH (space)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $currentUserId})
+                WHERE sm.role IN ['ADMIN', 'MEMBER']
+              }
+      } AS allowed
       `,
       { personId, currentUserId }
     )
@@ -1881,8 +1889,26 @@ async function updatePersonAuthorized(
     name: string | null
   }>(
     `
-    MATCH (p:Person {id: $personId})
     MATCH (u:Person {id: $currentUserId})
+    MATCH (p:Person {id: $personId})
+    // Authorization is re-asserted HERE, anchored to the person, because the
+    // pre-checks above are not sufficient on their own:
+    //   1. NOT p:User — a real account edits its own identity through the
+    //      self-gated updatePeople. Mirrors the guard in updatePersonPulse
+    //      (person-pulse-resolver.ts) and closes the same IDOR on this path.
+    //   2. The $contextId branch above authorizes a CONTEXT, not this person —
+    //      it never checked that $personId lives in that context, so any context
+    //      the caller could edit authorized an update to ANY Person by id. The
+    //      reach check below is person-anchored, so both branches are now sound.
+    WHERE NOT p:User
+      AND EXISTS {
+        MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PERSON]->(p)
+        WHERE (u)-[:OWNS]->(space)
+           OR EXISTS {
+                MATCH (space)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(u)
+                WHERE sm.role IN ['ADMIN', 'MEMBER']
+              }
+      }
     OPTIONAL MATCH (d:Document {id: $documentId})
     FOREACH (_ IN CASE WHEN $newFirstName IS NULL THEN [] ELSE [1] END |
       SET p.firstName = $newFirstName
@@ -1930,9 +1956,12 @@ async function updatePersonAuthorized(
   )
 
   if (!rows || rows.length === 0) {
+    // The person does not exist, is a real User account, or is not reachable
+    // from a Space the caller belongs to. Deliberately generic so the tool does
+    // not leak which case it was.
     return {
       success: false,
-      message: 'Failed to update the person.',
+      message: 'You can only edit people in field contexts in spaces you belong to.',
     }
   }
 
@@ -2389,8 +2418,14 @@ async function linkEntityToPulseAuthorized(
  * is allowed to connect. `from` defaults to the current user — the common case
  * is "connect me to <person>" with a relationship why. Both endpoints are
  * authorized via resolveEditablePerson. Writes a single activity Log attributed
- * to the user (the GraphQL connection resolver skips logging; the assistant
- * path must not — activity logging is mandatory on mutations).
+ * to the user (as does the GraphQL connection resolver since GOAL-320 — activity
+ * logging is mandatory on mutations, on both surfaces).
+ *
+ * NOTE (GOAL-320): the GraphQL `createPersonConnection` gate is now STRICTER than
+ * resolveEditablePerson — it also excludes `:User`-labelled targets outright and
+ * excludes GUEST-role members (`kb/02-user-roles.md`: GUEST is view-only). See
+ * the header of `src/lib/graphql/resolvers/connection-resolver.ts`; closing those
+ * two gaps here is a tracked follow-up.
  *
  * `why` / `interests` are coalesced, so re-connecting without re-stating the
  * metadata never wipes an existing edge's why.
