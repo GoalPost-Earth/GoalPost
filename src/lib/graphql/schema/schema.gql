@@ -2196,14 +2196,6 @@ type SearchResults
 # ============================================================================
 
 """
-Response from the chatbot containing the message and session ID.
-"""
-type ChatbotResponse {
-  message: String!
-  sessionId: String!
-}
-
-"""
 Response when adding a member to a space.
 """
 type AddSpaceMemberResponse {
@@ -2356,14 +2348,35 @@ input LogResonanceInput {
 }
 
 type Mutation {
-  """
-  Send a message to the chatbot and receive a response.
-  """
-  sendMessageToChatbot(message: String!, sessionId: String): ChatbotResponse
+  # REMOVED: sendMessageToChatbot / ChatbotResponse.
+  # It piped arbitrary user text into the legacy LangChain agent, whose
+  # graph-cypher-retrieval chain EXECUTED LLM-generated Cypher (see
+  # src/modules/agent/tools/cypher/cypher-retrieval.chain.ts) on a raw-credential
+  # Neo4j session — no read-only enforcement, no cypher-generator validation, no
+  # per-user scoping (the resolver discarded its context entirely), and it
+  # returned the raw driver error to the client. That bypassed every
+  # @authorization directive in this schema for any authenticated caller.
+  # It had no client callers; the live assistant is /api/chat/simulation.
+  # Do not reinstate it without routing through src/lib/cypher-generator
+  # (validate.ts write-keyword denylist + EXPLAIN check + executeRead).
 
   """
   Create or update a direct person-to-person connection.
   Persists a CONNECTED_TO relationship with optional why/interests metadata.
+
+  Authorization (GOAL-320, enforced server-side in connection-resolver.ts — NOT
+  via @authorization, since this is a custom resolver): BOTH endpoints must be
+  writable by the caller, where writable means the caller themselves OR a
+  :PersonPulse attached (HAS_PERSON) to a FieldContext in a Space the caller
+  owns or belongs to. A non-self :User endpoint is always rejected — an edge
+  onto a real account requires that account's own action, so CONNECTED_TO can
+  never be forged from a client-supplied id. Same rule the assistant enforces in
+  resolveEditablePerson (src/lib/chat/hitl.ts).
+
+  `fromPersonId` is authorized, not trusted, and stays in the signature because
+  it is legitimately not always the caller: the person-detail UI connects FROM
+  the person whose page is open, and the assistant can connect two other people
+  the user knows.
   """
   createPersonConnection(
     fromPersonId: ID!
@@ -2375,6 +2388,10 @@ type Mutation {
   """
   Update an existing person-to-person connection.
   Updates the why and interests metadata for a CONNECTED_TO relationship.
+
+  Authorization: the createPersonConnection endpoint gate, OR the caller is one
+  of the two endpoints — so you can always amend an edge asserted about you,
+  including one created before the GOAL-320 gate existed.
   """
   updatePersonConnection(
     fromPersonId: ID!
@@ -2386,6 +2403,9 @@ type Mutation {
   """
   Delete a person-to-person connection.
   Removes the CONNECTED_TO relationship between two people.
+
+  Authorization: same as updatePersonConnection. The caller-is-an-endpoint
+  clause is deliberate — it is how the subject of an unwanted edge severs it.
   """
   deletePersonConnection(
     fromPersonId: ID!

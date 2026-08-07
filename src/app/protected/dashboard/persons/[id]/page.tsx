@@ -31,6 +31,7 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { LinkifiedText } from '@/components/ui/linkified-text'
 import ReactSelect from 'react-select'
+import { toast } from 'sonner'
 import {
   EntityProvenance,
   type ProvenanceDocument,
@@ -199,7 +200,7 @@ export default function PersonProfilePage() {
 
   const handleCreateConnection = async () => {
     if (!person?.id || !selectedPersonId || !connectionWhy) {
-      alert('Please fill in all required fields')
+      toast.error('Please fill in all required fields')
       return
     }
 
@@ -215,6 +216,14 @@ export default function PersonProfilePage() {
 
       if (result.data?.createPersonConnection?.success) {
         await refetch()
+      } else {
+        // GOAL-320: the mutation is now authorized, so a connect can legitimately
+        // be refused (e.g. the picked candidate is another registered user).
+        // Surface the server's member-safe message instead of a dead click.
+        toast.error(
+          result.data?.createPersonConnection?.message ??
+            'Could not create the connection.'
+        )
       }
     } catch (err) {
       console.error('Error creating connection:', err)
@@ -252,6 +261,11 @@ export default function PersonProfilePage() {
 
       if (result.data?.updatePersonConnection?.success) {
         await refetch()
+      } else {
+        toast.error(
+          result.data?.updatePersonConnection?.message ??
+            'Could not update the connection.'
+        )
       }
     } catch (err) {
       console.error('Error updating connection:', err)
@@ -271,6 +285,11 @@ export default function PersonProfilePage() {
 
       if (result.data?.deletePersonConnection?.success) {
         await refetch()
+      } else {
+        toast.error(
+          result.data?.deletePersonConnection?.message ??
+            'Could not remove the connection.'
+        )
       }
     } catch (err) {
       console.error('Error deleting connection:', err)

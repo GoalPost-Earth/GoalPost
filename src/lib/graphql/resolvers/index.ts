@@ -1,5 +1,4 @@
 import { Person } from '@/gql/graphql'
-import { chatbotResolvers } from './chatbot-resolvers'
 import { relatedPeopleResolvers } from './related-people-resolver'
 import { searchResolvers } from './search-resolver'
 import { spaceMembershipResolvers } from './space-membership-resolver'
@@ -514,7 +513,7 @@ const resolvers = {
   Document: documentTypeResolvers,
 
   Mutation: {
-    ...chatbotResolvers,
+    // sendMessageToChatbot removed — see the note in schema.gql's Mutation type.
     ...connectionMutations,
     ...personPulseMutations,
     ...fieldContextPeopleMutations,
