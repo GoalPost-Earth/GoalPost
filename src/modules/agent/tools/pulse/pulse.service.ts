@@ -1,5 +1,9 @@
 import { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import { viewablePulsePredicate } from '@/lib/permissions/pulse-visibility'
+import {
+  ATTACHED_DOCUMENT_LOCATION,
+  toAssistantSafeLocation,
+} from '@/lib/ingest/document-download-url'
 
 export type PulseType =
   | 'GoalPulse'
@@ -20,6 +24,11 @@ export interface PulseRecord {
   resourceType?: string | null
   availability?: number | null
   why?: string | null
+  /**
+   * Model-facing location. A stored durable document locator is shaped to
+   * `ATTACHED_DOCUMENT_LOCATION` by `mapPulseRecord` (GOAL-322); every other
+   * location is the stored value verbatim.
+   */
   location?: string | null
   time?: string | null
   createdAt?: string | null
@@ -115,6 +124,17 @@ function normalizeLimit(limit?: number): number {
   return Math.max(1, Math.min(25, Math.floor(limit)))
 }
 
+/**
+ * Project a raw Cypher row into the `PulseRecord` every agent tool returns.
+ *
+ * This is the single funnel for EVERY model-facing pulse in this module —
+ * `searchPulses`, the person bridge, update candidates, and the record
+ * `updatePulse` hands back through the HITL result — which is why the GOAL-322
+ * location shaping belongs here rather than at each call site. The module lives
+ * under `modules/agent/tools/`: everything it returns is destined for an LLM,
+ * so there is no non-assistant consumer that needs the raw locator (the UI
+ * reads pulses through GraphQL, untouched by this).
+ */
 function mapPulseRecord(raw: Record<string, unknown>): PulseRecord {
   const contextTitles = (
     (raw.contextTitles as string[] | undefined) || []
@@ -140,7 +160,7 @@ function mapPulseRecord(raw: Record<string, unknown>): PulseRecord {
         ? null
         : Number(raw.availability),
     why: (raw.why as string | null) || null,
-    location: (raw.location as string | null) || null,
+    location: toAssistantSafeLocation((raw.location as string | null) || null),
     time: (raw.time as string | null) || null,
     createdAt: (raw.createdAt as string | null) || null,
     updatedAt: (raw.updatedAt as string | null) || null,
@@ -673,6 +693,21 @@ function isFiniteNumber(value: number | undefined): boolean {
   return typeof value === 'number' && Number.isFinite(value)
 }
 
+/**
+ * Drop a `newLocation` that is just the opaque phrase we showed the model.
+ *
+ * Since GOAL-322 a pulse whose location is a durable document locator READS
+ * back as `ATTACHED_DOCUMENT_LOCATION`. A model that carries the fields it read
+ * into an update would otherwise write that phrase over the real locator,
+ * destroying the link back to the uploaded file. The phrase is a display value,
+ * so it is never a legitimate thing to store — treating it as "no change" keeps
+ * shaping strictly one-way.
+ */
+function sanitizeNewLocation(newLocation?: string): string | null {
+  const trimmed = newLocation?.trim() || null
+  return trimmed === ATTACHED_DOCUMENT_LOCATION ? null : trimmed
+}
+
 export async function updatePulse(
   graph: Neo4jGraph,
   input: UpdatePulseInput
@@ -690,7 +725,7 @@ export async function updatePulse(
       ? input.newAvailability
       : null,
     newWhy: input.newWhy?.trim() || null,
-    newLocation: input.newLocation?.trim() || null,
+    newLocation: sanitizeNewLocation(input.newLocation),
     newTime: input.newTime?.trim() || null,
   }
 

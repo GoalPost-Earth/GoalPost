@@ -81,3 +81,35 @@ export function parseDocumentDownloadLocation(
 
   return { documentId, path: documentDownloadPath(documentId) }
 }
+
+/**
+ * Opaque, model-facing stand-in for a durable document-download locator
+ * (GOAL-322). The assistant speaks to humans: a raw
+ * `https://<host>/api/ingest/document/<id>/download` in chat prose leaks an
+ * internal artifact and a raw document id, which kb/07 Rule 1 forbids.
+ */
+export const ATTACHED_DOCUMENT_LOCATION = 'has an attached document'
+
+/**
+ * Shape a stored pulse `location` for anything that hands it to the assistant
+ * model (tool results, prompt blocks).
+ *
+ * A durable document locator becomes {@link ATTACHED_DOCUMENT_LOCATION} — the
+ * chat equivalent of the dashboard's opaque "Open document" action (GOAL-302),
+ * so the model can convey the fact without printing the URL. Every OTHER
+ * location — a physical place, an external source URL (GOAL-285), free text a
+ * member typed — passes through byte-for-byte: those ARE the human-readable
+ * value, and blanking them would lose real information.
+ *
+ * Shaping is display-only and lives at the model boundary. The stored property
+ * is never rewritten, so the UI keeps rendering its real affordance. (The one
+ * write-back risk — a model echoing this phrase into `update_pulse` — is
+ * blocked in `updatePulse`.)
+ */
+export function toAssistantSafeLocation<T extends string | null | undefined>(
+  location: T
+): T | typeof ATTACHED_DOCUMENT_LOCATION {
+  return parseDocumentDownloadLocation(location)
+    ? ATTACHED_DOCUMENT_LOCATION
+    : location
+}

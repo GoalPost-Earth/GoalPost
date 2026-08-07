@@ -47,6 +47,47 @@ describe('detectRuleViolations — centralised one-row-per-turn', () => {
       []
     )
   })
+
+  // GOAL-322 — a leaked document-download locator self-reports. Neither
+  // existing pattern catches it: `doc_` doesn't match the `document_` prefix we
+  // mint, and `document_<uuid>` gives the UUID pattern no word boundary to
+  // anchor on, so before this rule the leak produced NO signal at all.
+  it('flags a durable document-download URL', () => {
+    const signals = detectRuleViolations(
+      'You can grab it at https://app.goalpost.test/api/ingest/document/document_9f1c2d3e-4a5b-6c7d-8e9f-0a1b2c3d4e5f/download'
+    )
+
+    expect(signals).toHaveLength(1)
+    expect(signals[0].ruleViolated).toBe('rule_1_document_url_leak')
+  })
+
+  it('flags a bare document id even without the surrounding URL', () => {
+    const signals = detectRuleViolations(
+      'The source is document_9f1c2d3e-4a5b-6c7d-8e9f-0a1b2c3d4e5f.'
+    )
+
+    expect(signals).toHaveLength(1)
+    expect(signals[0].ruleViolated).toBe('rule_1_document_url_leak')
+  })
+
+  it('folds the document leak into the combined signal alongside other rules', () => {
+    const signals = detectRuleViolations(
+      'The ResourcePulse lives at /api/ingest/document/document_abc123/download'
+    )
+
+    expect(signals).toHaveLength(1)
+    expect(signals[0].ruleViolated).toBe(
+      'rule_1_document_url_leak+rule_1_graph_label_leak'
+    )
+  })
+
+  it('does not flag ordinary copy about a document', () => {
+    expect(
+      detectRuleViolations(
+        'That resource has an attached document you can open from its card.'
+      )
+    ).toEqual([])
+  })
 })
 
 describe('detectAutoSignals — tool errors stay per-tool, rule leaks centralise', () => {

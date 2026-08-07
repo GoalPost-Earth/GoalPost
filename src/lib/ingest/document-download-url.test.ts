@@ -1,7 +1,9 @@
 import {
+  ATTACHED_DOCUMENT_LOCATION,
   buildDocumentDownloadUrl,
   documentDownloadPath,
   parseDocumentDownloadLocation,
+  toAssistantSafeLocation,
 } from './document-download-url'
 
 describe('document-download-url', () => {
@@ -141,6 +143,44 @@ describe('document-download-url', () => {
     it('returns null for null / undefined', () => {
       expect(parseDocumentDownloadLocation(null)).toBeNull()
       expect(parseDocumentDownloadLocation(undefined)).toBeNull()
+    })
+  })
+
+  // GOAL-322 — the model must never see a document-download locator.
+  describe('toAssistantSafeLocation', () => {
+    it('replaces the absolute download URL with the opaque phrase', () => {
+      const stored = buildDocumentDownloadUrl('document_abc123')
+      expect(toAssistantSafeLocation(stored)).toBe(ATTACHED_DOCUMENT_LOCATION)
+      expect(ATTACHED_DOCUMENT_LOCATION).not.toContain('document_')
+    })
+
+    it('replaces the relative download path too', () => {
+      expect(
+        toAssistantSafeLocation('/api/ingest/document/document_abc123/download')
+      ).toBe(ATTACHED_DOCUMENT_LOCATION)
+    })
+
+    it('replaces a locator persisted under an older deploy domain', () => {
+      // Detection matches on pathname, so a domain change never re-exposes it.
+      expect(
+        toAssistantSafeLocation(
+          'https://old-domain.example/api/ingest/document/document_abc123/download'
+        )
+      ).toBe(ATTACHED_DOCUMENT_LOCATION)
+    })
+
+    it.each([
+      ['a physical place', 'Berlin, Germany'],
+      ['free text a member typed', 'The back room, Tuesdays'],
+      ['an external source URL', 'https://example.com/some-article'],
+      ['a look-alike but wrong path', '/api/ingest/document/doc_1/preview'],
+    ])('passes %s through unchanged', (_label, value) => {
+      expect(toAssistantSafeLocation(value)).toBe(value)
+    })
+
+    it('preserves an absent location as-is', () => {
+      expect(toAssistantSafeLocation(null)).toBeNull()
+      expect(toAssistantSafeLocation(undefined)).toBeUndefined()
     })
   })
 })

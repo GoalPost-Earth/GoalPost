@@ -207,6 +207,8 @@ export function detectToolErrors(parts: unknown): AutoSignal[] {
  *   - Raw entity ids: `me_…`, `ws_…`, `ctx_…`, `pulse_…`, `comm_…`,
  *     `res_…`, `log_…` — followed by ≥6 hex/alphanumeric chars.
  *   - Bare UUIDs anywhere in chat copy.
+ *   - Durable document-download locators (`/api/ingest/document/<id>/download`)
+ *     and bare `document_…` ids (GOAL-322).
  *   - The literal `__typename` string.
  *   - Internal graph labels appearing as case-sensitive standalone tokens
  *     (`GoalPulse`, `ResourcePulse`, `StoryPulse`, `FieldContext`,
@@ -228,6 +230,13 @@ const RAW_ID_PATTERN =
   /\b(me|ws|ctx|pulse|comm|res|log|feedback|thread|turn|doc)_[a-zA-Z0-9-]{6,}\b/
 const UUID_PATTERN =
   /\b[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}\b/i
+// GOAL-322. Two shapes, both of which the id/uuid patterns above MISS: the
+// `doc_` alternative doesn't match the `document_` prefix we actually mint, and
+// `\b[a-f0-9]{8}-` can't anchor inside `document_<uuid>` because `_` is a word
+// character (no boundary before the hex run). Without this, an assistant turn
+// that printed a download URL produced no auto-signal at all.
+const DOCUMENT_LOCATOR_PATTERN =
+  /\/api\/ingest\/document\/[^\s/]+\/download|\bdocument_[a-zA-Z0-9-]{6,}\b/
 const TYPENAME_PATTERN = /\b__typename\b/
 const GRAPH_LABEL_PATTERN =
   /\b(GoalPulse|ResourcePulse|StoryPulse|CarePulse|CoreValuePulse|FieldContext|FieldPulse|WeSpace|MeSpace|ResonanceLink|FieldResonance|SpaceMembership|ConversationThread|ConversationTurn|ConversationChunk|AssistantFeedback)\b/
@@ -243,6 +252,13 @@ export function detectRuleViolations(text: string): AutoSignal[] {
     // they overlap (`me_<uuid>` matches both) and we want one entry per
     // category, not duplicates.
     rules.push('rule_1_uuid_leak')
+  }
+
+  // Its own category rather than another `rule_1_raw_id_leak`: a leaked
+  // download URL points at a specific regression (tool-result location shaping)
+  // and triage should be able to see that at a glance.
+  if (DOCUMENT_LOCATOR_PATTERN.test(text)) {
+    rules.push('rule_1_document_url_leak')
   }
 
   if (TYPENAME_PATTERN.test(text)) rules.push('rule_1_typename_leak')

@@ -26,6 +26,7 @@ import {
   type FocalEntityType,
 } from '@/lib/focal-entity/types'
 import { generateAndRunForBloom } from '@/lib/cypher-generator'
+import { toAssistantSafeLocation } from '@/lib/ingest/document-download-url'
 import type { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 
 type ToolError = {
@@ -270,7 +271,19 @@ async function getFocalRecord(
         cypher,
         { id: focal.id }
       )
-      return rows?.[0]?.record ?? null
+      const record = rows?.[0]?.record ?? null
+      if (!record) return null
+      // GOAL-322: a pulse extracted from an uploaded document carries the
+      // durable download locator in `location` (GOAL-283/316). Handing that URL
+      // — and the raw document id inside it — to the model invites it straight
+      // into chat prose, which kb/07 Rule 1 forbids. Shape it into the opaque
+      // phrase here; real places and external source URLs pass through.
+      return {
+        ...record,
+        location: toAssistantSafeLocation(
+          (record.location as string | null) ?? null
+        ),
+      }
     }
   }
 }
