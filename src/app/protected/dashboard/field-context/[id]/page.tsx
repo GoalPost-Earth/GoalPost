@@ -85,6 +85,7 @@ import {
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 import {
+  emitImportArticlesModalClosed,
   onOpenAddPulseModal,
   onOpenImportArticlesModal,
 } from '@/lib/simulation/pulse-creation-events'
@@ -1679,7 +1680,13 @@ export default function FieldContextDetailsPage() {
         <ImportArticlesModal
           isOpen
           fieldContextId={contextId}
-          onClose={() => setIsImportArticlesModalOpen(false)}
+          onClose={() => {
+            setIsImportArticlesModalOpen(false)
+            // Lets the studio action bar — which suppressed Radix's focus
+            // restore so this dialog could take focus — put focus back on
+            // its trigger (GOAL-328). No-op when opened from this page.
+            emitImportArticlesModalClosed()
+          }}
           onImported={() => {
             // Imported pulses land in the Pulses section; new/matched authors
             // land in the People section.

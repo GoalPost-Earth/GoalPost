@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FC } from 'react'
+import { useCallback, useEffect, useRef, useState, type FC } from 'react'
 import { useApolloClient } from '@apollo/client/react'
 import { FileUp } from 'lucide-react'
 import { toast } from 'sonner'
@@ -20,7 +20,10 @@ import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_D
 import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { useFieldContextCanEditContent } from '@/hooks/use-field-context-permissions'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
-import { emitOpenImportArticlesModal } from '@/lib/simulation/pulse-creation-events'
+import {
+  emitOpenImportArticlesModal,
+  onImportArticlesModalClosed,
+} from '@/lib/simulation/pulse-creation-events'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 
 /**
@@ -58,6 +61,31 @@ export const FieldContextUploadAction: FC = () => {
     string | null
   >(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Both menu items open a modal that installs its own focus trap. Radix
+  // restores focus to this menu's trigger ~300ms after the item is chosen —
+  // i.e. *after* the dialog has already focused its first control — which
+  // dumps keyboard focus onto the button behind the overlay (GOAL-328).
+  // Suppress that restore, but only when an item was actually chosen:
+  // dismissing the menu with Escape or an outside click must still return
+  // focus to the trigger.
+  const restoreFocusOnCloseRef = useRef(true)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  // Because that restore is suppressed, this component owns putting focus
+  // back on the trigger once the dialog goes away — otherwise the dialog's
+  // trap has nothing live to restore to and focus lands on <body>. The rAF
+  // waits for the dialog's own cleanup to run first, so it can't be undone.
+  const refocusTrigger = useCallback(() => {
+    requestAnimationFrame(() => triggerRef.current?.focus())
+  }, [])
+
+  // The bulk import dialog is owned by the field-context page, so this is the
+  // only way to learn it closed. Must sit above the early returns below —
+  // hooks cannot be called conditionally.
+  useEffect(
+    () => onImportArticlesModalClosed(refocusTrigger),
+    [refocusTrigger]
+  )
 
   // Only treat the focal as a live FieldContext when it came from the
   // current route. A 'persisted' source means the user navigated away to
@@ -212,9 +240,17 @@ export const FieldContextUploadAction: FC = () => {
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu
+        onOpenChange={(open) => {
+          // Re-arm on every open rather than relying on `onCloseAutoFocus`
+          // having fired to reset it — that would make the guard depend on
+          // Radix internals to stay in sync.
+          if (open) restoreFocusOnCloseRef.current = true
+        }}
+      >
         <DropdownMenuTrigger asChild>
           <button
+            ref={triggerRef}
             type="button"
             disabled={!focalFieldContextId}
             className="cursor-pointer flex items-center gap-1.5 md:gap-2 pl-3 pr-2 md:pl-5 md:pr-3 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
@@ -237,9 +273,18 @@ export const FieldContextUploadAction: FC = () => {
           align="center"
           sideOffset={10}
           className="gp-glass w-56 rounded-xl border-gp-glass-border p-1.5"
+          onCloseAutoFocus={(event) => {
+            if (restoreFocusOnCloseRef.current) return
+            restoreFocusOnCloseRef.current = true
+            event.preventDefault()
+          }}
         >
           <DropdownMenuItem
-            onSelect={() => setPinnedFieldContextId(focalFieldContextId)}
+            onSelect={() => {
+              if (!focalFieldContextId) return
+              restoreFocusOnCloseRef.current = false
+              setPinnedFieldContextId(focalFieldContextId)
+            }}
             // `.gp-menu-item` owns the hover/focus highlight (per the design
             // skill), so neutralise the primitive's own `focus:bg-accent` /
             // `focus:text-accent-foreground` — otherwise the label lands on
@@ -252,10 +297,11 @@ export const FieldContextUploadAction: FC = () => {
             <span className="text-sm font-medium">Upload document</span>
           </DropdownMenuItem>
           <DropdownMenuItem
-            onSelect={() =>
-              focalFieldContextId &&
+            onSelect={() => {
+              if (!focalFieldContextId) return
+              restoreFocusOnCloseRef.current = false
               emitOpenImportArticlesModal(focalFieldContextId)
-            }
+            }}
             // `.gp-menu-item` owns the hover/focus highlight (per the design
             // skill), so neutralise the primitive's own `focus:bg-accent` /
             // `focus:text-accent-foreground` — otherwise the label lands on
@@ -273,7 +319,10 @@ export const FieldContextUploadAction: FC = () => {
       <UploadDocumentModal
         isOpen={pinnedFieldContextId !== null}
         isSubmitting={isSubmitting}
-        onClose={() => setPinnedFieldContextId(null)}
+        onClose={() => {
+          setPinnedFieldContextId(null)
+          refocusTrigger()
+        }}
         onSubmit={handleSubmit}
       />
     </>
