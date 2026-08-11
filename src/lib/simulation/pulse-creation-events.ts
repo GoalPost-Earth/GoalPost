@@ -18,6 +18,12 @@
  *     (rendered by /protected/dashboard/space/[id] — the canonical
  *     destination of every "open this space" interaction)
  *
+ * Import-articles subscribers:
+ *   - /protected/dashboard/field-context/[id]/page.tsx
+ *     (owns the dynamically-imported ImportArticlesModal, because the
+ *     post-import refetch wiring lives there; the dynamic import also keeps
+ *     SheetJS out of the bundle for members who never import)
+ *
  * Add-space-members subscribers:
  *   - components/dashboard/space-dashboard-view.tsx
  *     (opens the SpacePermissionsModal; for MeSpace, the first member
@@ -31,6 +37,7 @@
 const OPEN_ADD_PULSE_EVENT = 'gp:open-add-pulse-modal' as const
 const OPEN_ADD_FIELD_CONTEXT_EVENT = 'gp:open-add-field-context-modal' as const
 const OPEN_ADD_SPACE_MEMBERS_EVENT = 'gp:open-add-space-members-modal' as const
+const OPEN_IMPORT_ARTICLES_EVENT = 'gp:open-import-articles-modal' as const
 
 export interface OpenAddPulseModalDetail {
   /** FieldContext.id the caller expects the modal to attach to. */
@@ -45,6 +52,11 @@ export interface OpenAddFieldContextModalDetail {
 export interface OpenAddSpaceMembersModalDetail {
   /** MeSpace.id or WeSpace.id the caller expects the modal to attach to. */
   spaceId: string
+}
+
+export interface OpenImportArticlesModalDetail {
+  /** FieldContext.id the caller expects the import to attach to. */
+  fieldContextId: string
 }
 
 /** Emit a request to open the create-pulse modal for `fieldContextId`. */
@@ -97,6 +109,31 @@ export function onOpenAddFieldContextModal(
   window.addEventListener(OPEN_ADD_FIELD_CONTEXT_EVENT, wrapped)
   return () =>
     window.removeEventListener(OPEN_ADD_FIELD_CONTEXT_EVENT, wrapped)
+}
+
+/** Emit a request to open the bulk import-articles modal for `fieldContextId`. */
+export function emitOpenImportArticlesModal(fieldContextId: string): void {
+  if (typeof window === 'undefined') return
+  if (!fieldContextId) return
+  window.dispatchEvent(
+    new CustomEvent<OpenImportArticlesModalDetail>(OPEN_IMPORT_ARTICLES_EVENT, {
+      detail: { fieldContextId },
+    })
+  )
+}
+
+/** Subscribe to import-articles requests. Returns an unsubscribe function. */
+export function onOpenImportArticlesModal(
+  handler: (detail: OpenImportArticlesModalDetail) => void
+): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const wrapped = (event: Event) => {
+    const detail = (event as CustomEvent<OpenImportArticlesModalDetail>).detail
+    if (!detail || typeof detail.fieldContextId !== 'string') return
+    handler(detail)
+  }
+  window.addEventListener(OPEN_IMPORT_ARTICLES_EVENT, wrapped)
+  return () => window.removeEventListener(OPEN_IMPORT_ARTICLES_EVENT, wrapped)
 }
 
 /** Emit a request to open the add-members modal for `spaceId`. */

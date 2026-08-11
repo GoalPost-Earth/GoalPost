@@ -84,7 +84,11 @@ import {
 } from '@/components/fields/document-list'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
-import { onOpenAddPulseModal } from '@/lib/simulation/pulse-creation-events'
+import {
+  onOpenAddPulseModal,
+  onOpenImportArticlesModal,
+} from '@/lib/simulation/pulse-creation-events'
+import { deriveCanEditContent } from '@/hooks/use-field-context-permissions'
 import { useRouteFocalScope } from '@/lib/focal-entity/use-route-focal-scope'
 import { useResonanceDiscovery } from '@/hooks/useResonanceDiscovery'
 import { useResonanceSuggestions } from '@/hooks/useResonanceSuggestions'
@@ -183,6 +187,7 @@ export default function FieldContextDetailsPage() {
       setIsCreatePulseModalOpen(true)
     })
   }, [contextId])
+
 
   const { data, loading, error, refetch } = useQuery(
     GET_FIELD_CONTEXT_DETAILS,
@@ -406,26 +411,27 @@ export default function FieldContextDetailsPage() {
   // GUEST and non-members do not. The route boundary re-checks this server-side
   // (see `handleIngestDocument`), so this is purely a "don't show a control
   // the user cannot use" measure — never a security boundary on its own.
-  const canEditContent = useMemo(() => {
-    if (!peopleContext || !user?.id) return false
-    const ownerId =
-      peopleContext.meSpace?.[0]?.owner?.[0]?.id ||
-      peopleContext.weSpace?.[0]?.owner?.[0]?.id
-    if (ownerId && ownerId === user.id) return true
-    type FieldMembership = {
-      role?: 'ADMIN' | 'MEMBER' | 'GUEST' | null
-      member?: Array<{ id: string }>
-    }
-    const all: FieldMembership[] = [
-      ...((peopleContext.meSpace?.[0]?.members as FieldMembership[]) || []),
-      ...((peopleContext.weSpace?.[0]?.members as FieldMembership[]) || []),
-    ]
-    return all.some(
-      (m) =>
-        m.member?.[0]?.id === user.id &&
-        (m.role === 'ADMIN' || m.role === 'MEMBER')
-    )
-  }, [peopleContext, user?.id])
+  //
+  // The rule itself lives in `deriveCanEditContent` so the floating canvas
+  // action bar gates its Upload menu on exactly the same predicate (GOAL-327).
+  const canEditContent = useMemo(
+    () => deriveCanEditContent(peopleContext, user?.id),
+    [peopleContext, user?.id]
+  )
+
+  // Same bus as add-pulse, for the bulk spreadsheet import offered by the
+  // action bar's Upload menu (GOAL-327). The modal stays owned by this page
+  // because the post-import refetch wiring (`refetch` / `refetchFieldPeople`)
+  // lives here. Re-check `canEditContent` rather than trusting the event: the
+  // emitter already hides itself for GUESTs, but a window event is forgeable
+  // and this keeps the client gate consistent with the in-page trigger below.
+  useEffect(() => {
+    if (!contextId || !canEditContent) return
+    return onOpenImportArticlesModal((detail) => {
+      if (detail.fieldContextId !== contextId) return
+      setIsImportArticlesModalOpen(true)
+    })
+  }, [contextId, canEditContent])
   const pulses = [
     ...(data?.goalPulses || []),
     ...(data?.resourcePulses || []),
