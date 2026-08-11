@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 import {
   ARTICLE_TEMPLATE_COLUMNS,
@@ -28,6 +29,15 @@ import {
  * confirms) → per-row results. Parsing happens client-side; the confirm
  * step POSTs typed rows to /api/import/articles, which re-validates and
  * writes through the authorized tool path.
+ *
+ * Rendered through a portal to `document.body` (GOAL-327). The field-context
+ * page that owns this modal is mounted inside `CanvasHost`'s per-view
+ * visibility cascade, which flips the whole dashboard subtree to
+ * `visibility: hidden` while the Bloom Exploration view is showing. Without
+ * the portal, opening the import from the floating action bar — which sits
+ * *outside* that cascade and is therefore visible in both views — would mount
+ * the modal into the hidden subtree and show the user nothing. Same reasoning
+ * as `EntityInfoDrawer` being hoisted to the canvas-host level.
  */
 
 /** Client-side sanity cap on the sheet itself — rows are capped separately. */
@@ -179,8 +189,11 @@ export function ImportArticlesModal({
   }, [fieldContextId, onImported, validRows])
 
   if (!isOpen) return null
+  // `dynamic(..., { ssr: false })` means this only ever runs in the browser,
+  // but guard anyway so the component stays safe to mount eagerly.
+  if (typeof document === 'undefined') return null
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-lg sm:max-w-2xl w-full max-h-[85vh] p-4 sm:p-6 flex flex-col gap-4">
         <div className="flex items-center justify-between shrink-0">
@@ -391,6 +404,7 @@ export function ImportArticlesModal({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

@@ -9,21 +9,42 @@ import {
   UploadDocumentModal,
   type UploadDocumentSubmitInput,
 } from '@/components/ui/upload-document-modal'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { GET_DOCUMENTS_BY_FIELD_CONTEXT } from '@/app/graphql/queries/DOCUMENT_QUERIES'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
+import { useFieldContextCanEditContent } from '@/hooks/use-field-context-permissions'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
+import { emitOpenImportArticlesModal } from '@/lib/simulation/pulse-creation-events'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 
 /**
- * Studio-shell entry point for document upload (GOAL-235).
+ * Studio-shell entry point for getting source material into a FieldContext.
  *
- * Renders only when the focal entity is a FieldContext. The server gates
- * the actual upload on `canEditContent` (see `handleIngestDocument`), so
- * showing the button to a non-editor is acceptable — they get an inline
- * error in the modal rather than a hidden control.
+ * One compact "Upload" affordance offers both ingestion paths (GOAL-327):
+ *  - Upload a document — single file, presign → S3 PUT → process (GOAL-235)
+ *  - Import articles — bulk CSV/XLSX spreadsheet (GOAL-317)
  *
- * On success, fires `emitOpenAssistantThread` with the returned ingest
+ * The two are conceptually the same action ("get source material into this
+ * field"), so they share one trigger rather than competing for room in a
+ * space-constrained floating bar.
+ *
+ * Renders only when the focal entity is a route-sourced FieldContext *and*
+ * the user passes `canEditContent` (kb/02-user-roles.md). The client gate is
+ * discoverability hygiene only — the server remains the real boundary
+ * (`handleIngestDocument`, GraphQL `@authorization`).
+ *
+ * The bulk import modal itself is owned by the field-context page (that's
+ * where the post-import refetch wiring lives, and it loads the modal
+ * dynamically so SheetJS stays out of the dashboard bundle for members who
+ * never import); this component only emits the open request.
+ *
+ * On upload success, fires `emitOpenAssistantThread` with the returned ingest
  * thread id. `StudioShell` listens for this and switches the assistant
  * runtime to the new thread (opening the floating chat panel if needed).
  */
@@ -33,9 +54,9 @@ export const FieldContextUploadAction: FC = () => {
   // mid-flow can't redirect the upload to a different context (or unmount
   // the modal because the focal type is no longer FieldContext). null until
   // the user opens the modal.
-  const [pinnedFieldContextId, setPinnedFieldContextId] = useState<string | null>(
-    null
-  )
+  const [pinnedFieldContextId, setPinnedFieldContextId] = useState<
+    string | null
+  >(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Only treat the focal as a live FieldContext when it came from the
@@ -50,7 +71,14 @@ export const FieldContextUploadAction: FC = () => {
 
   const apolloClient = useApolloClient()
 
+  // Client-side mirror of the server's `canEditContent` check. Resolves from
+  // the Apollo cache on the field-context page, which already runs this query.
+  const canEditContent = useFieldContextCanEditContent(focalFieldContextId)
+
   if (!focalFieldContextId && !pinnedFieldContextId) return null
+  // Hide the control for GUESTs / non-members — but never yank it out from
+  // under an upload that is already in flight (pinned id survives that).
+  if (!canEditContent && !pinnedFieldContextId) return null
 
   const handleSubmit = async (input: UploadDocumentSubmitInput) => {
     if (!pinnedFieldContextId) {
@@ -78,7 +106,9 @@ export const FieldContextUploadAction: FC = () => {
       })
       if (!presignRes.ok) {
         const errorBody = await presignRes.json().catch(() => ({}))
-        throw new Error(errorBody.error ?? `Presign failed (${presignRes.status})`)
+        throw new Error(
+          errorBody.error ?? `Presign failed (${presignRes.status})`
+        )
       }
       const presign = (await presignRes.json()) as {
         documentId: string
@@ -131,7 +161,9 @@ export const FieldContextUploadAction: FC = () => {
       })
       if (!processRes.ok) {
         const errorBody = await processRes.json().catch(() => ({}))
-        throw new Error(errorBody.error ?? `Extraction failed (${processRes.status})`)
+        throw new Error(
+          errorBody.error ?? `Extraction failed (${processRes.status})`
+        )
       }
       const processResult = (await processRes.json()) as {
         threadId?: string
@@ -180,19 +212,63 @@ export const FieldContextUploadAction: FC = () => {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setPinnedFieldContextId(focalFieldContextId)}
-        disabled={!focalFieldContextId}
-        className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
-        aria-label="Upload document to FieldContext"
-        title="Upload document"
-      >
-        <FileUp className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
-        <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
-          Upload
-        </span>
-      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            disabled={!focalFieldContextId}
+            className="cursor-pointer flex items-center gap-1.5 md:gap-2 pl-3 pr-2 md:pl-5 md:pr-3 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
+            aria-label="Upload to this field context"
+            title="Upload a document or import articles"
+          >
+            <FileUp className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
+            <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+              Upload
+            </span>
+            <span className="material-symbols-outlined text-[18px] leading-none text-gp-ink-muted dark:text-gp-ink-soft">
+              expand_more
+            </span>
+          </button>
+        </DropdownMenuTrigger>
+
+        {/* Opens upward — the bar is pinned to the bottom of the canvas. */}
+        <DropdownMenuContent
+          side="top"
+          align="center"
+          sideOffset={10}
+          className="gp-glass w-56 rounded-xl border-gp-glass-border p-1.5"
+        >
+          <DropdownMenuItem
+            onSelect={() => setPinnedFieldContextId(focalFieldContextId)}
+            // `.gp-menu-item` owns the hover/focus highlight (per the design
+            // skill), so neutralise the primitive's own `focus:bg-accent` /
+            // `focus:text-accent-foreground` — otherwise the label lands on
+            // accent-foreground over gp-menu-item's primary tint.
+            className="gp-menu-item cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 focus:bg-transparent focus:text-gp-primary"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              upload_file
+            </span>
+            <span className="text-sm font-medium">Upload document</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() =>
+              focalFieldContextId &&
+              emitOpenImportArticlesModal(focalFieldContextId)
+            }
+            // `.gp-menu-item` owns the hover/focus highlight (per the design
+            // skill), so neutralise the primitive's own `focus:bg-accent` /
+            // `focus:text-accent-foreground` — otherwise the label lands on
+            // accent-foreground over gp-menu-item's primary tint.
+            className="gp-menu-item cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 focus:bg-transparent focus:text-gp-primary"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              newspaper
+            </span>
+            <span className="text-sm font-medium">Import articles</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <UploadDocumentModal
         isOpen={pinnedFieldContextId !== null}
