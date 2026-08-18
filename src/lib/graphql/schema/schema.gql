@@ -952,16 +952,49 @@ type FieldContext
     @relationship(type: "HAS_RESONANCE", direction: OUT)
   weaves: [PromiseWeave!]!
     @relationship(type: "HAS_WEAVE", direction: OUT)
+  # Resonances among the pulses of this context AND its sub-context subtree
+  # (GOAL-295): the field is the resonance boundary — sub-contexts organize,
+  # they do not partition resonance. The deletedAt filter keeps a soft-deleted
+  # sub-context's pulses out (cascade stamps descendants, but a child deleted
+  # on its own stays reachable through the HAS_SUBCONTEXT overlay).
   resonancesInContext: [ResonanceLink!]!
     @cypher(
       statement: """
-      MATCH (this)-[:HAS_PULSE]->(pulse:FieldPulse)
-      WITH this, collect(pulse) as contextPulses
-      MATCH (source:FieldPulse)<-[:SOURCE]-(resonance:ResonanceLink)-[:TARGET]->(target:FieldPulse)
-      WHERE source IN contextPulses AND target IN contextPulses
+      MATCH (this)-[:HAS_SUBCONTEXT*0..10]->(sc:FieldContext)
+      WHERE sc.deletedAt IS NULL
+      MATCH (sc)-[:HAS_PULSE]->(pulse:FieldPulse)
+      WITH collect(DISTINCT pulse) as contextPulses
+      UNWIND contextPulses AS source
+      MATCH (source)<-[:SOURCE]-(resonance:ResonanceLink)-[:TARGET]->(target:FieldPulse)
+      WHERE target IN contextPulses
       RETURN DISTINCT resonance
       """
       columnName: "resonance"
+    )
+  # ── Nested sub-contexts (GOAL-295) ─────────────────────────────────────
+  # HAS_SUBCONTEXT is a pure hierarchy overlay: every context (root or
+  # nested) ALSO keeps its own (Space)-[:HAS_CONTEXT] edge, which is what
+  # every read/auth/soft-delete/discovery surface anchors on. Writes go
+  # through the custom createSubFieldContext / moveFieldContext mutations
+  # only — the invariants (single parent, same Space, no cycles, depth cap)
+  # cannot be enforced by generated nested ops — hence nestedOperations: [].
+  parentContext: [FieldContext!]!
+    @relationship(type: "HAS_SUBCONTEXT", direction: IN, nestedOperations: [])
+  subContexts: [FieldContext!]!
+    @relationship(type: "HAS_SUBCONTEXT", direction: OUT, nestedOperations: [])
+  """
+  Ancestor chain ordered root → immediate parent. Empty for a top-level
+  context. Drives breadcrumb trails without per-level round-trips.
+  """
+  ancestorContexts: [FieldContext!]!
+    @cypher(
+      statement: """
+      MATCH path = (a:FieldContext)-[:HAS_SUBCONTEXT*1..10]->(this)
+      WITH a, length(path) AS depth
+      ORDER BY depth DESC
+      RETURN a
+      """
+      columnName: "a"
     )
   meSpace: [MeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
   weSpace: [WeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
@@ -1154,15 +1187,41 @@ type DeleteDocumentResponse {
   deleted: Boolean!
 }
 
-"""Response payload for `deleteFieldContext` (GOAL-319). The context and its
-pulses are soft deleted in one transaction — immediately hidden from every
-read surface — and hard-purged with all nested content by the daily purge
-cron once the 90-day retention window passes."""
+"""Response payload for `deleteFieldContext` (GOAL-319). The context, its
+sub-context subtree (GOAL-295), and their pulses are soft deleted in one
+transaction — immediately hidden from every read surface — and hard-purged
+with all nested content by the daily purge cron once the 90-day retention
+window passes."""
 type DeleteFieldContextResponse {
   contextId: ID!
   deleted: Boolean!
   """Number of pulses soft-deleted along with the context."""
   deletedPulseCount: Int!
+  """Number of nested sub-contexts soft-deleted along with the context (GOAL-295)."""
+  deletedSubContextCount: Int!
+}
+
+"""Response payload for `createSubFieldContext` (GOAL-295). Pure payload —
+the query/mutation exclusions stop the library from generating CRUD roots
+for it (an authenticated user could otherwise create junk nodes with this
+label; the older response types share that gap — swept under GOAL-330)."""
+type CreateSubFieldContextResponse
+  @query(read: false, aggregate: false)
+  @mutation(operations: []) {
+  contextId: ID!
+  title: String!
+  parentContextId: ID!
+}
+
+"""Response payload for `moveFieldContext` (GOAL-295). `newParentContextId`
+is null when the context was moved to the top level of its Space. Pure
+payload — CRUD roots excluded (see CreateSubFieldContextResponse)."""
+type MoveFieldContextResponse
+  @query(read: false, aggregate: false)
+  @mutation(operations: []) {
+  contextId: ID!
+  newParentContextId: ID
+  moved: Boolean!
 }
 
 # ============================================================================
@@ -2572,12 +2631,13 @@ type Mutation {
 
   """
   Delete a FieldContext and everything nested under it (GOAL-319). The
-  context and its pulses are SOFT deleted in a single transaction: stamped
-  with deletedAt and detached from their Space (the HAS_CONTEXT edge is
-  re-pointed to HAS_DELETED_CONTEXT), which hides the whole subtree from
-  every read surface at once. The daily purge cron hard-deletes the context
-  and all nested entities (pulses, chunks, resonance links, suggestions,
-  weaves, documents + blobs, orphaned organizations) after 90 days.
+  context, its sub-context subtree (GOAL-295), and their pulses are SOFT
+  deleted in a single transaction: stamped with deletedAt and detached from
+  their Space (each HAS_CONTEXT edge is re-pointed to HAS_DELETED_CONTEXT),
+  which hides the whole subtree from every read surface at once. The daily
+  purge cron hard-deletes the contexts and all nested entities (pulses,
+  chunks, resonance links, suggestions, weaves, documents + blobs, orphaned
+  organizations) after 90 days.
 
   Authorization (enforced server-side in the resolver, matching the
   kb/02-user-roles.md DELETE matrix): Space owner or ADMIN only. The
@@ -2585,6 +2645,40 @@ type Mutation {
   context node and orphaned all nested content.
   """
   deleteFieldContext(contextId: ID!): DeleteFieldContextResponse!
+
+  """
+  Create a sub-context nested under an existing FieldContext (GOAL-295).
+  The child is created in the SAME Space as the parent — it gets its own
+  HAS_CONTEXT edge, so every auth / soft-delete / discovery surface keeps
+  working unchanged — plus the HAS_SUBCONTEXT overlay edge from the parent.
+  Nesting is capped at depth 5 (a root context sits at depth 0).
+
+  Authorization (enforced server-side in the resolver): canEditContent on
+  the parent Space — owner, ADMIN, or MEMBER (kb/02-user-roles.md). Writes
+  an activity Log in the same transaction.
+  """
+  createSubFieldContext(
+    parentContextId: ID!
+    title: String!
+    emergentName: String
+  ): CreateSubFieldContextResponse!
+
+  """
+  Move a FieldContext under a new parent context, or to the top level of
+  its Space when newParentContextId is null (GOAL-295). The context keeps
+  its Space HAS_CONTEXT edge — only the HAS_SUBCONTEXT overlay changes.
+  The target parent must live in the same Space; moves that would create a
+  cycle (self / own descendant) or push the subtree past the depth cap (5)
+  are rejected.
+
+  Authorization (enforced server-side in the resolver): canEditContent on
+  the Space — owner, ADMIN, or MEMBER. Writes an activity Log in the same
+  transaction.
+  """
+  moveFieldContext(
+    contextId: ID!
+    newParentContextId: ID
+  ): MoveFieldContextResponse!
 }
 
 # ============================================================================

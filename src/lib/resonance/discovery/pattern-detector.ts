@@ -45,7 +45,10 @@ export interface DiscoveredResonance {
 }
 
 /**
- * Find semantically similar pulses WITHIN THE SAME CONTEXT using vector search
+ * Find semantically similar pulses WITHIN THE SAME CONTEXT SUBTREE using
+ * vector search. "Within a context" includes the context's nested
+ * sub-contexts (GOAL-295): the field is the resonance boundary —
+ * sub-contexts organize a growing field, they do not partition discovery.
  */
 async function findSimilarPulsesInContext(
   pulseId: string,
@@ -82,19 +85,24 @@ async function findSimilarPulsesInContext(
     similarity: number
   }>(
     `
-    CALL db.index.vector.queryNodes('pulseContentVectorIndex', $limit * 3, $embedding)
+    CALL db.index.vector.queryNodes('pulseContentVectorIndex', $limit * 5, $embedding)
     YIELD node, score
     WITH node, score
-    MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(node)
-    WHERE node.id <> $pulseId AND score >= $threshold
-    RETURN {id: node.id, content: node.content} as pulse, score as similarity
+    MATCH (context:FieldContext {id: $contextId})-[:HAS_SUBCONTEXT*0..10]->(sc:FieldContext)-[:HAS_PULSE]->(node)
+    WHERE sc.deletedAt IS NULL AND node.deletedAt IS NULL
+      AND node.id <> $pulseId AND score >= $threshold
+    RETURN DISTINCT {id: node.id, content: node.content} as pulse, score as similarity
     ORDER BY similarity DESC
     LIMIT $limit
   `,
     // LIMIT/SKIP reject Neo4j Floats, and the LangChain Neo4jGraph layer encodes
     // a plain JS number as a Float — so an un-wrapped `limit` throws at runtime
     // ("'10.0' is not a valid value"). Wrap in neo4j.int() (as execute.ts does).
-    // $limit * 3 (the queryNodes k arg) then stays integer arithmetic too.
+    // $limit * 5 (the queryNodes k arg) then stays integer arithmetic too —
+    // the over-fetch factor is 5 (was 3) because the subtree widens the
+    // candidate pool the post-filter has to survive (GOAL-295).
+    // The sc.deletedAt filter keeps a soft-deleted sub-context's pulses out;
+    // *0..10 comfortably covers MAX_SUBCONTEXT_DEPTH (5).
     { pulseId, contextId, threshold, limit: neo4j.int(limit), embedding }
   )
 
@@ -170,11 +178,21 @@ Be specific and evidence-based. Only create connections where the resonance is c
  * Create ResonanceSuggestion nodes in the database (not direct links)
  * Each suggestion represents one proposed semantic connection between two pulses
  * Users must accept/decline these suggestions before they become ResonanceLink nodes
+ *
+ * `scopeContextId` (GOAL-295) is the ROOT of the holding context's hierarchy —
+ * the field-wide resonance boundary the candidate search ran against. The
+ * containment guard checks both pulses against that root's whole subtree, so a
+ * pair spanning two sub-contexts of the same field still lands. Suggestions
+ * stay ANCHORED (`HAS_SUGGESTION`) on the direct holding `contextId`, which
+ * keeps the soft-delete cascade's per-subtree-member suggestion sweep correct.
+ * Callers without a hierarchy pass scopeContextId === contextId (unchanged
+ * behavior).
  */
 async function createResonanceSuggestionsInDatabase(
   contextId: string,
   spaceId: string,
-  pattern: z.infer<typeof ResonancePatternSchema>
+  pattern: z.infer<typeof ResonancePatternSchema>,
+  scopeContextId: string = contextId
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
@@ -217,14 +235,22 @@ async function createResonanceSuggestionsInDatabase(
     const suggestionResult = await graph.query<{ suggestionId: string }>(
       `
       MATCH (space:Space {id: $spaceId})
-      MATCH (context:FieldContext {id: $contextId})
+      MATCH (space)-[:HAS_CONTEXT]->(context:FieldContext {id: $contextId})
+      MATCH (scope:FieldContext {id: $scopeContextId})
       MATCH (source:FieldPulse {id: $sourcePulseId})
       MATCH (target:FieldPulse {id: $targetPulseId})
 
-      // Ensure source and target are in the same context
-      MATCH (context)-[:HAS_PULSE]->(source)
-      MATCH (context)-[:HAS_PULSE]->(target)
-      MATCH (space)-[:HAS_CONTEXT]->(context)
+      // Ensure source and target are both inside the resonance scope — the
+      // root field's live subtree (GOAL-295). EXISTS keeps the row count at
+      // exactly 1 so the CREATEs below never multiply.
+      WHERE EXISTS {
+          MATCH (scope)-[:HAS_SUBCONTEXT*0..10]->(x:FieldContext)-[:HAS_PULSE]->(source)
+          WHERE x.deletedAt IS NULL
+        }
+        AND EXISTS {
+          MATCH (scope)-[:HAS_SUBCONTEXT*0..10]->(x:FieldContext)-[:HAS_PULSE]->(target)
+          WHERE x.deletedAt IS NULL
+        }
 
       // Symmetric duplicate check — a ResonanceSuggestion or ResonanceLink that
       // already touches BOTH pulses (SOURCE/TARGET either way round) means this
@@ -256,6 +282,7 @@ async function createResonanceSuggestionsInDatabase(
       {
         spaceId,
         contextId,
+        scopeContextId,
         sourcePulseId: connection.sourcePulseId,
         targetPulseId: connection.targetPulseId,
         label: pattern.label,
@@ -297,31 +324,41 @@ export async function discoverResonancesForPulse(
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
-  // Get the pulse and its context
+  // Get the pulse, its holding context, and the ROOT of that context's
+  // hierarchy (GOAL-295): resonance scopes to the whole field, so a pulse in
+  // a nested sub-context searches the root's entire subtree. For a flat
+  // (top-level) context root = context and behavior is unchanged.
   const pulseResult = await graph.query<{
     pulse: { id: string; content: string; createdAt: string }
     contextId: string
+    scopeContextId: string
     spaceId: string
   }>(
     spaceId
       ? `
         MATCH (space:Space {id: $spaceId})-[:HAS_CONTEXT]->(context:FieldContext)-[:HAS_PULSE]->(p:FieldPulse {id: $pulseId})
+        OPTIONAL MATCH (root:FieldContext)-[:HAS_SUBCONTEXT*1..10]->(context)
+        WHERE NOT (:FieldContext)-[:HAS_SUBCONTEXT]->(root)
         RETURN {
           id: p.id,
           content: p.content,
           createdAt: toString(p.createdAt)
         } as pulse,
         context.id as contextId,
+        coalesce(root.id, context.id) as scopeContextId,
         space.id as spaceId
       `
       : `
         MATCH (context:FieldContext)-[:HAS_PULSE]->(p:FieldPulse {id: $pulseId})
+        OPTIONAL MATCH (root:FieldContext)-[:HAS_SUBCONTEXT*1..10]->(context)
+        WHERE NOT (:FieldContext)-[:HAS_SUBCONTEXT]->(root)
         RETURN {
           id: p.id,
           content: p.content,
           createdAt: toString(p.createdAt)
         } as pulse,
         context.id as contextId,
+        coalesce(root.id, context.id) as scopeContextId,
         null as spaceId
       `,
     spaceId ? { pulseId, spaceId } : { pulseId }
@@ -332,12 +369,17 @@ export async function discoverResonancesForPulse(
     return []
   }
 
-  const { pulse, contextId, spaceId: foundSpaceId } = pulseResult[0]
+  const {
+    pulse,
+    contextId,
+    scopeContextId,
+    spaceId: foundSpaceId,
+  } = pulseResult[0]
 
-  // Find similar pulses WITHIN THE SAME CONTEXT
+  // Find similar pulses WITHIN THE FIELD (root context subtree)
   const similarPulses = await findSimilarPulsesInContext(
     pulseId,
-    contextId,
+    scopeContextId,
     0.7,
     10
   )
@@ -366,11 +408,14 @@ export async function discoverResonancesForPulse(
     return []
   }
 
-  // Create resonance suggestions in database
+  // Create resonance suggestions in database — the containment guard runs
+  // against the same root-subtree scope the candidate search used, so a
+  // cross-sub-context pair is written, not silently dropped (GOAL-295).
   const suggestions = await createResonanceSuggestionsInDatabase(
     contextId,
     effectiveSpaceId,
-    pattern
+    pattern,
+    scopeContextId
   )
 
   return suggestions
@@ -397,17 +442,28 @@ export async function discoverResonancesForContext(
   // Get pulses in this context (bounded — the vector search + LLM analysis per
   // pulse is the expensive part; the cap keeps a single run inside the
   // serverless duration ceiling).
+  // GOAL-295: the context's scope includes its nested sub-contexts, so an
+  // upload landing in (or a sweep hitting) a parent also refreshes the
+  // pulses filed under its children. Soft-deleted sub-contexts are skipped.
+  // Dedup on the node (a pulse shared by two subtree contexts appears once)
+  // and order by the TEMPORAL createdAt before projecting — ordering the
+  // stringified form would sort trimmed/offset datetime renderings wrongly
+  // and change which pulses survive the LIMIT.
   const query = lastRunTimestamp
-    ? `MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(p:FieldPulse)
-       WHERE p.modifiedAt > datetime($lastRunTimestamp)
-          OR p.createdAt > datetime($lastRunTimestamp)
-       RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
+    ? `MATCH (context:FieldContext {id: $contextId})-[:HAS_SUBCONTEXT*0..10]->(sc:FieldContext)-[:HAS_PULSE]->(p:FieldPulse)
+       WHERE sc.deletedAt IS NULL
+         AND (p.modifiedAt > datetime($lastRunTimestamp)
+          OR p.createdAt > datetime($lastRunTimestamp))
+       WITH DISTINCT p
        ORDER BY p.createdAt DESC
-       LIMIT 50`
-    : `MATCH (context:FieldContext {id: $contextId})-[:HAS_PULSE]->(p:FieldPulse)
-       RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse
+       LIMIT 50
+       RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse`
+    : `MATCH (context:FieldContext {id: $contextId})-[:HAS_SUBCONTEXT*0..10]->(sc:FieldContext)-[:HAS_PULSE]->(p:FieldPulse)
+       WHERE sc.deletedAt IS NULL
+       WITH DISTINCT p
        ORDER BY p.createdAt DESC
-       LIMIT 30`
+       LIMIT 30
+       RETURN {id: p.id, content: p.content, createdAt: toString(p.createdAt)} as pulse`
 
   const pulsesResult = await graph.query<{
     pulse: { id: string; content: string; createdAt: string }
@@ -463,13 +519,17 @@ export async function discoverResonancesForSpace(
     return []
   }
 
-  // Get all contexts for this space
+  // Get all ROOT contexts for this space. Nested sub-contexts (GOAL-295)
+  // also carry a direct HAS_CONTEXT edge, but the per-context entry point
+  // already sweeps each root's whole subtree — enumerating children here
+  // would process every nested pulse twice per run.
   const contextsResult = await graph.query<{
     contextId: string
     contextTitle: string
   }>(
     `
     MATCH (space:Space {id: $spaceId})-[:HAS_CONTEXT]->(context:FieldContext)
+    WHERE NOT (:FieldContext)-[:HAS_SUBCONTEXT]->(context)
     RETURN context.id as contextId, context.title as contextTitle
   `,
     { spaceId }

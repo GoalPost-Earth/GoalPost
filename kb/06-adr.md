@@ -260,3 +260,52 @@
 - New write tools `create_organization` + `link_entity_to_pulse` in `lib/chat/hitl.ts`; the ingest orchestrator resolves each link's endpoints by name/title from entities created earlier in the same run.
 - The assistant's cypher-generator vocab (`schema-context.ts`) and the Bloom anchor/style map (`execute.ts`) learned `Organization` / `HAS_ORGANIZATION` / `MENTIONED_IN` — a new label/edge is invisible to the assistant until whitelisted (kb/07 Rule 9).
 - **Deferred:** organizations carry no embedding / vector index yet (resonance is pulse↔pulse today), so semantic org discovery is a follow-up. Person embeddings for extracted non-author people are covered by the existing `discover-resonances` backfill.
+
+## ADR-017: Nested FieldContexts Are a Pure Overlay; the Root Field Is the Resonance Scope (GOAL-295)
+
+**Decision:** FieldContexts can nest via a `HAS_SUBCONTEXT` self-relationship
+(`(parent)-[:HAS_SUBCONTEXT]->(child)`), capped at 5 levels. The hierarchy is
+a **pure overlay**: every context — nested or not — keeps its own direct
+`(Space)-[:HAS_CONTEXT]->` edge. And resonance discovery treats the **root
+field's whole subtree as one scope**: sub-contexts organize a growing field,
+they never partition its resonance.
+
+**Why:**
+
+- **`HAS_CONTEXT` is the universal visibility anchor.** 40+ call sites —
+  every `@authorization` filter, `viewablePulsePredicate`,
+  `accessible-contexts`, resonance sweeps, the bloom generator's fail-closed
+  Space anchoring, and the GOAL-319 soft-delete edge re-point — assume
+  `(Space)-[:HAS_CONTEXT]->(FieldContext)` is one hop. Keeping the edge on
+  children means none of them change: a sub-context is readable/writable
+  exactly like its parent by construction, and soft delete keeps hiding a
+  context by re-pointing that one edge.
+- **The field stays the resonance boundary.** The motivating case (several
+  hundred documents in one "AI adoption" field) needs *navigation* to split,
+  not *meaning*: a pulse filed under a sub-context must still resonate with
+  the rest of the field. So `findSimilarPulsesInContext` searches the scoped
+  context's subtree, per-pulse discovery climbs to the root context first,
+  and the space sweep enumerates only root contexts (children would be
+  double-processed otherwise). `resonancesInContext` likewise rolls up the
+  subtree.
+- **Invariants need a custom write path.** Single parent, same Space, no
+  cycles, depth cap — none are expressible through generated nested-connect
+  mutations, so the SDL declares `parentContext`/`subContexts` with
+  `nestedOperations: []` and all writes flow through `createSubFieldContext`
+  / `moveFieldContext` (`src/lib/field-context/sub-context.ts`), which gate
+  on `canEditContent` and write the activity Log atomically.
+
+**Consequences:**
+
+- Space-level listings now contain the whole hierarchy; surfaces that want
+  top-level fields must filter on "no incoming `HAS_SUBCONTEXT`" (the Space
+  dashboard does this client-side via `parentContext`).
+- Subtree traversals (`HAS_SUBCONTEXT*0..N`) must filter
+  `deletedAt IS NULL`: soft delete cascades downward (GOAL-319 parity), but
+  a child soft-deleted on its own remains reachable through the surviving
+  overlay edge.
+- `HAS_SUBCONTEXT` is whitelisted in the cypher-generator vocabulary
+  (kb/07 Rule 9); no new auth anchor is needed in `execute.ts` because every
+  context still anchors through `HAS_CONTEXT`.
+- Depth cap 5 keeps every variable-length traversal bounded (`*0..10` in
+  queries for headroom).

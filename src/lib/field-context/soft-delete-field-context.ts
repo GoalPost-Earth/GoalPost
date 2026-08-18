@@ -9,9 +9,11 @@ import type { Driver } from 'neo4j-driver'
  * Soft delete = one atomic write transaction that:
  *
  *   permission gate (owner or ADMIN) ──┐
- *   stamp deletedAt on context+pulses  │
- *   drop ResonanceSuggestions          ├─ single write transaction
- *   re-point HAS_CONTEXT →             │
+ *   collect the sub-context subtree    │
+ *     (HAS_SUBCONTEXT*, GOAL-295)      │
+ *   stamp deletedAt on contexts+pulses ├─ single write transaction
+ *   drop ResonanceSuggestions          │
+ *   re-point each HAS_CONTEXT →        │
  *     HAS_DELETED_CONTEXT              │
  *   activity Log                       ┘
  *
@@ -55,6 +57,8 @@ export interface SoftDeleteSuccess {
   contextId: string
   title: string
   deletedPulseCount: number
+  /** Nested sub-contexts soft-deleted along with the target (GOAL-295). */
+  deletedSubContextCount: number
 }
 
 export interface SoftDeleteFailure {
@@ -104,39 +108,57 @@ export async function softDeleteFieldContext(
         WHERE allowed
         WITH DISTINCT c
         MATCH (u:Person:User {id: $userId})
+        // GOAL-295: deletion cascades over the context's whole sub-context
+        // subtree (HAS_SUBCONTEXT overlay). Already-soft-deleted descendants
+        // were handled by their own delete and are skipped.
+        MATCH (c)-[:HAS_SUBCONTEXT*0..10]->(dc:FieldContext)
+        WHERE dc.deletedAt IS NULL
+        WITH c, u, collect(DISTINCT dc) AS ctxs
         // A pulse can be HAS_PULSE-attached to several contexts
-        // (linkPulseToContext). Only pulses whose sole LIVE holder is this
-        // context are stamped — a pulse shared with a live context stays
-        // fully live there. A co-holder that is itself soft-deleted does not
-        // block (the pulse is hidden either way and must join the purge).
-        OPTIONAL MATCH (c)-[:HAS_PULSE]->(pulse:FieldPulse)
+        // (linkPulseToContext). Only pulses whose every LIVE holder sits
+        // inside the deleted subtree are stamped — a pulse shared with a
+        // live context outside it stays fully live there. A co-holder that
+        // is itself soft-deleted does not block (the pulse is hidden either
+        // way and must join the purge).
+        UNWIND ctxs AS holder
+        OPTIONAL MATCH (holder)-[:HAS_PULSE]->(pulse:FieldPulse)
         WHERE NOT EXISTS {
           MATCH (other:FieldContext)-[:HAS_PULSE]->(pulse)
-          WHERE other <> c AND other.deletedAt IS NULL
+          WHERE NOT other IN ctxs AND other.deletedAt IS NULL
         }
-        WITH c, u, collect(DISTINCT pulse) AS pulses
-        // Suggestions anchored on the context itself…
-        OPTIONAL MATCH (c)-[:HAS_SUGGESTION]->(ctxSug:ResonanceSuggestion)
-        WITH c, u, pulses, collect(DISTINCT ctxSug) AS ctxSugs
-        // …plus any suggestion touching one of the context's pulses (the
+        WITH c, u, ctxs, collect(DISTINCT pulse) AS pulses
+        // Suggestions anchored on any subtree context…
+        UNWIND ctxs AS sugHolder
+        OPTIONAL MATCH (sugHolder)-[:HAS_SUGGESTION]->(ctxSug:ResonanceSuggestion)
+        WITH c, u, ctxs, pulses, collect(DISTINCT ctxSug) AS ctxSugs
+        // …plus any suggestion touching one of the stamped pulses (the
         // suggestion inbox is Space-anchored, so these would otherwise
         // survive the edge re-pointing and offer links to hidden pulses).
         UNWIND (CASE WHEN size(pulses) = 0 THEN [null] ELSE pulses END) AS p
         OPTIONAL MATCH (pulseSug:ResonanceSuggestion)-[:SOURCE|TARGET]->(p)
-        WITH c, u, pulses, ctxSugs, collect(DISTINCT pulseSug) AS pulseSugs
-        WITH c, u, pulses,
+        WITH c, u, ctxs, pulses, ctxSugs, collect(DISTINCT pulseSug) AS pulseSugs
+        WITH c, u, ctxs, pulses,
              ctxSugs + [s IN pulseSugs WHERE NOT s IN ctxSugs] AS sugs
-        SET c.deletedAt = datetime()
+        FOREACH (dc IN ctxs | SET dc.deletedAt = datetime())
         FOREACH (p IN pulses | SET p.deletedAt = datetime())
         FOREACH (s IN sugs | DETACH DELETE s)
-        WITH c, u, size(pulses) AS pulseCount, c.title AS title
-        MATCH (s:Space)-[rel:HAS_CONTEXT]->(c)
-        MERGE (s)-[:HAS_DELETED_CONTEXT]->(c)
+        WITH c, u, ctxs, size(pulses) AS pulseCount,
+             size(ctxs) - 1 AS subContextCount, c.title AS title
+        // Re-point every subtree member's Space edge so the whole branch
+        // disappears from every HAS_CONTEXT-anchored read at once.
+        UNWIND ctxs AS repoint
+        MATCH (s:Space)-[rel:HAS_CONTEXT]->(repoint)
+        MERGE (s)-[:HAS_DELETED_CONTEXT]->(repoint)
         DELETE rel
-        WITH DISTINCT c, u, pulseCount, title
+        WITH DISTINCT c, u, pulseCount, subContextCount, title
         CREATE (log:Log {
           id: $logId,
           description: 'Deleted field "' + coalesce(title, 'Untitled') + '"' +
+            CASE
+              WHEN subContextCount = 1 THEN ' with 1 sub-field'
+              WHEN subContextCount > 1 THEN ' with ' + toString(subContextCount) + ' sub-fields'
+              ELSE ''
+            END +
             CASE
               WHEN pulseCount = 1 THEN ' and 1 pulse'
               WHEN pulseCount > 1 THEN ' and ' + toString(pulseCount) + ' pulses'
@@ -146,7 +168,7 @@ export async function softDeleteFieldContext(
           createdAt: datetime()
         })
         CREATE (log)-[:CREATED_BY]->(u)
-        RETURN c.id AS contextId, title, pulseCount
+        RETURN c.id AS contextId, title, pulseCount, subContextCount
         LIMIT 1
         `,
         { contextId, userId, logId, metadata }
@@ -167,6 +189,7 @@ export async function softDeleteFieldContext(
       contextId: record.get('contextId') as string,
       title: (record.get('title') as string | null) ?? '',
       deletedPulseCount: Number(record.get('pulseCount') ?? 0),
+      deletedSubContextCount: Number(record.get('subContextCount') ?? 0),
     }
   } finally {
     await session.close()

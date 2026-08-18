@@ -380,6 +380,256 @@ describe('softDeleteFieldContext (GOAL-319)', () => {
   })
 })
 
+describe('softDeleteFieldContext — HAS_SUBCONTEXT cascade (GOAL-295)', () => {
+  // Soft delete cascades over the context's nested sub-context subtree: every
+  // live descendant reached via HAS_SUBCONTEXT* is stamped and has its own
+  // Space edge re-pointed in the same transaction (kb/04) — a parent can
+  // never be hidden while its children stay visible. The shared-pulse
+  // exclusive-holder guard treats the WHOLE deleted subtree as one holder
+  // set.
+
+  /** Overlay-link an already-seeded parent context to a child context. */
+  async function linkSub(parentId: string, childId: string): Promise<void> {
+    await runCypher(
+      `
+      MATCH (p:FieldContext {id: $parentId})
+      MATCH (c:FieldContext {id: $childId})
+      CREATE (p)-[:HAS_SUBCONTEXT]->(c)
+      `,
+      { parentId, childId }
+    )
+  }
+
+  async function ctxStamped(ctxId: string): Promise<boolean> {
+    const res = await runCypher(
+      `MATCH (c:FieldContext {id: $ctxId}) RETURN c.deletedAt IS NOT NULL AS stamped`,
+      { ctxId }
+    )
+    expect(res.records).toHaveLength(1)
+    return res.records[0].get('stamped') as boolean
+  }
+
+  async function cascadePulseStamped(pulseId: string): Promise<boolean> {
+    const res = await runCypher(
+      `MATCH (p:FieldPulse {id: $pulseId}) RETURN p.deletedAt IS NOT NULL AS stamped`,
+      { pulseId }
+    )
+    expect(res.records).toHaveLength(1)
+    return res.records[0].get('stamped') as boolean
+  }
+
+  it('deleting the parent stamps parent, child, and grandchild, re-points all three Space edges, and reports deletedSubContextCount = 2', async () => {
+    if (!neo4jAvailable) return
+    const parent = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_parent',
+      pulseCount: 1,
+    })
+    const child = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_child',
+      pulseCount: 1,
+    })
+    const grandchild = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_grandchild',
+    })
+    await linkSub(parent.ctxId, child.ctxId)
+    await linkSub(child.ctxId, grandchild.ctxId)
+
+    const result = await softDeleteFieldContext(
+      { driver },
+      { currentUserId: ids.meOwner, contextId: parent.ctxId }
+    )
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error('unreachable')
+    expect(result.contextId).toBe(parent.ctxId)
+    expect(result.deletedSubContextCount).toBe(2)
+    // The parent's own pulse AND the pulse held only by the child are both
+    // stamped — the child's exclusive pulse joins the cascade.
+    expect(result.deletedPulseCount).toBe(2)
+
+    for (const ctxId of [parent.ctxId, child.ctxId, grandchild.ctxId]) {
+      await expect(ctxStamped(ctxId)).resolves.toBe(true)
+      await expect(contextEdgeCounts(ctxId)).resolves.toEqual({
+        hasContext: 0,
+        hasDeleted: 1,
+      })
+    }
+    await expect(cascadePulseStamped(child.pulseIds[0])).resolves.toBe(true)
+
+    // One Log for the whole cascade, counting the sub-fields.
+    const logs = await runCypher(
+      `
+      MATCH (log:Log)-[:CREATED_BY]->(:Person {id: $userId})
+      WHERE log.metadata CONTAINS $ctxId
+      RETURN log.description AS description
+      `,
+      { userId: ids.meOwner, ctxId: parent.ctxId }
+    )
+    expect(logs.records).toHaveLength(1)
+    const description = String(logs.records[0].get('description'))
+    expect(description).toContain('with 2 sub-fields')
+    expect(description).toContain('and 2 pulses')
+  })
+
+  it('treats the deleted subtree as ONE holder set — spares a pulse shared with a live outside context, stamps one shared parent↔child', async () => {
+    if (!neo4jAvailable) return
+    const parent = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_share_p',
+    })
+    const child = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_share_c',
+      pulseCount: 1,
+    })
+    const outside = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_share_out',
+    })
+    await linkSub(parent.ctxId, child.ctxId)
+    const sharedOutsideId = `${runId}_pulse_casc_share_out`
+    const sharedInsideId = `${runId}_pulse_casc_share_in`
+    await runCypher(
+      `
+      MATCH (p:FieldContext {id: $parentId})
+      MATCH (c:FieldContext {id: $childId})
+      MATCH (o:FieldContext {id: $outsideId})
+      // Shared child ↔ live context OUTSIDE the subtree: must survive.
+      CREATE (po:FieldPulse:GoalPulse {id: $sharedOutsideId, title: 'Shared outside', content: 'out', createdAt: datetime()})
+      CREATE (c)-[:HAS_PULSE]->(po)
+      CREATE (o)-[:HAS_PULSE]->(po)
+      // Shared parent ↔ child, both INSIDE the subtree: must be stamped once.
+      CREATE (pi:FieldPulse:StoryPulse {id: $sharedInsideId, title: 'Shared inside', content: 'in', createdAt: datetime()})
+      CREATE (p)-[:HAS_PULSE]->(pi)
+      CREATE (c)-[:HAS_PULSE]->(pi)
+      `,
+      {
+        parentId: parent.ctxId,
+        childId: child.ctxId,
+        outsideId: outside.ctxId,
+        sharedOutsideId,
+        sharedInsideId,
+      }
+    )
+
+    const result = await softDeleteFieldContext(
+      { driver },
+      { currentUserId: ids.meOwner, contextId: parent.ctxId }
+    )
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error('unreachable')
+    expect(result.deletedSubContextCount).toBe(1)
+    // Child's exclusive pulse + the parent↔child shared pulse (counted ONCE);
+    // the pulse shared with the live outside context is excluded.
+    expect(result.deletedPulseCount).toBe(2)
+
+    await expect(cascadePulseStamped(sharedInsideId)).resolves.toBe(true)
+    await expect(cascadePulseStamped(child.pulseIds[0])).resolves.toBe(true)
+    await expect(cascadePulseStamped(sharedOutsideId)).resolves.toBe(false)
+    // The spared pulse stays attached to its live holder.
+    const attached = await runCypher(
+      `MATCH (:FieldContext {id: $ctxId})-[r:HAS_PULSE]->(:FieldPulse {id: $pulseId}) RETURN count(r) AS c`,
+      { ctxId: outside.ctxId, pulseId: sharedOutsideId }
+    )
+    expect(attached.records[0].get('c').toNumber()).toBe(1)
+  })
+
+  it('deleting only the child leaves its parent live — and the overlay edge survives until purge', async () => {
+    if (!neo4jAvailable) return
+    const parent = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_childonly_p',
+      pulseCount: 1,
+    })
+    const child = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_childonly_c',
+    })
+    await linkSub(parent.ctxId, child.ctxId)
+
+    const result = await softDeleteFieldContext(
+      { driver },
+      { currentUserId: ids.meOwner, contextId: child.ctxId }
+    )
+
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw new Error('unreachable')
+    expect(result.deletedSubContextCount).toBe(0)
+
+    // Child is hidden…
+    await expect(ctxStamped(child.ctxId)).resolves.toBe(true)
+    await expect(contextEdgeCounts(child.ctxId)).resolves.toEqual({
+      hasContext: 0,
+      hasDeleted: 1,
+    })
+    // …the parent (and its pulse) stay fully live…
+    await expect(ctxStamped(parent.ctxId)).resolves.toBe(false)
+    await expect(contextEdgeCounts(parent.ctxId)).resolves.toEqual({
+      hasContext: 1,
+      hasDeleted: 0,
+    })
+    await expect(cascadePulseStamped(parent.pulseIds[0])).resolves.toBe(false)
+    // …and the HAS_SUBCONTEXT overlay edge survives soft delete (kb/04 —
+    // it drops only at purge via DETACH DELETE).
+    const overlay = await runCypher(
+      `MATCH (:FieldContext {id: $parentId})-[r:HAS_SUBCONTEXT]->(:FieldContext {id: $childId}) RETURN count(r) AS c`,
+      { parentId: parent.ctxId, childId: child.ctxId }
+    )
+    expect(overlay.records[0].get('c').toNumber()).toBe(1)
+  })
+
+  it('skips descendants that are already soft-deleted — no double count', async () => {
+    if (!neo4jAvailable) return
+    const parent = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_skip_p',
+    })
+    const child = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_skip_c',
+    })
+    const grandchild = await seedContext({
+      spaceId: ids.meSpace,
+      key: 'casc_skip_g',
+    })
+    await linkSub(parent.ctxId, child.ctxId)
+    await linkSub(child.ctxId, grandchild.ctxId)
+
+    // First delete the child — its own cascade takes the grandchild with it.
+    const first = await softDeleteFieldContext(
+      { driver },
+      { currentUserId: ids.meOwner, contextId: child.ctxId }
+    )
+    expect(first.ok).toBe(true)
+    if (!first.ok) throw new Error('unreachable')
+    expect(first.deletedSubContextCount).toBe(1)
+
+    // Deleting the parent now finds no LIVE descendants: count 0, and the
+    // already-deleted pair is not re-processed.
+    const second = await softDeleteFieldContext(
+      { driver },
+      { currentUserId: ids.meOwner, contextId: parent.ctxId }
+    )
+    expect(second.ok).toBe(true)
+    if (!second.ok) throw new Error('unreachable')
+    expect(second.deletedSubContextCount).toBe(0)
+    expect(second.deletedPulseCount).toBe(0)
+
+    for (const ctxId of [parent.ctxId, child.ctxId, grandchild.ctxId]) {
+      await expect(ctxStamped(ctxId)).resolves.toBe(true)
+      // No duplicate HAS_DELETED_CONTEXT edges from re-processing.
+      await expect(contextEdgeCounts(ctxId)).resolves.toEqual({
+        hasContext: 0,
+        hasDeleted: 1,
+      })
+    }
+  })
+})
+
 describe('purgeDeletedFieldContexts (GOAL-319)', () => {
   it('purges the full cascade under an expired soft-deleted context — and deletes its Document blob', async () => {
     if (!neo4jAvailable) return

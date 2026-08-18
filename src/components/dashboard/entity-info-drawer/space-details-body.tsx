@@ -84,8 +84,14 @@ export const SpaceDetailsBody: FC<{ spaceId: string; label?: string }> = ({
   const isOwner = !!user?.id && owner?.id === user.id
 
   const members = ('members' in space ? space.members : undefined) ?? []
-  const contexts = ('contexts' in space ? space.contexts : undefined) ?? []
-  const totalPulses = contexts.reduce(
+  const allContexts = ('contexts' in space ? space.contexts : undefined) ?? []
+  // GOAL-295: nested sub-fields also carry a direct Space edge; the drawer
+  // lists only TOP-LEVEL fields (children are reached inside their parent),
+  // while the pulse total still spans the whole hierarchy.
+  const contexts = allContexts.filter(
+    (ctx) => (ctx?.parentContext?.length ?? 0) === 0
+  )
+  const totalPulses = allContexts.reduce(
     (acc, ctx) => acc + (ctx?.pulses?.length ?? 0),
     0
   )

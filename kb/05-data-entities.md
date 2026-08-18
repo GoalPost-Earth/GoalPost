@@ -15,6 +15,7 @@ All entities in GoalPost — their fields, relationships, and storage details. D
 Person ──OWNS──▶ Space (MeSpace / WeSpace)
 Space ──HAS_MEMBER──▶ SpaceMembership ──IS_MEMBER──▶ Person
 Space ──HAS_CONTEXT──▶ FieldContext
+FieldContext ──HAS_SUBCONTEXT──▶ FieldContext   (GOAL-295; nested sub-context — pure hierarchy overlay, the child ALSO keeps its own Space HAS_CONTEXT edge)
 FieldContext ──HAS_PULSE──▶ FieldPulse (GoalPulse / ResourcePulse / StoryPulse / CarePulse / CoreValuePulse)
 FieldContext ──HAS_RESONANCE──▶ ResonanceLink
 ResonanceLink ──SOURCE──▶ FieldPulse
@@ -176,7 +177,21 @@ Same fields as MeSpace.
 
 **Relationships:**
 
-- `HAS_CONTEXT` ← Space (MeSpace or WeSpace) — live contexts only
+- `HAS_CONTEXT` ← Space (MeSpace or WeSpace) — live contexts only. **Every**
+  context carries this edge, including nested sub-contexts (GOAL-295): the
+  hierarchy is an overlay, never a replacement for the Space anchor that all
+  auth / read / soft-delete / discovery surfaces traverse.
+- `HAS_SUBCONTEXT` → FieldContext — nested sub-context (GOAL-295). Invariants
+  (enforced only by the custom `createSubFieldContext` / `moveFieldContext`
+  mutations via `src/lib/field-context/sub-context.ts` — the SDL declares
+  `parentContext`/`subContexts` with `nestedOperations: []` so generated
+  mutations cannot write the edge): at most ONE parent per context; parent and
+  child in the SAME Space; no cycles; depth capped at `MAX_SUBCONTEXT_DEPTH`
+  (5, root = depth 0). Resonance discovery treats the ROOT field's subtree as
+  one scope — sub-contexts organize, they do not partition resonance
+  (ADR-017). Subtree traversals must filter `deletedAt IS NULL` (a child can
+  be soft-deleted on its own while the parent lives, and the overlay edge
+  survives soft delete).
 - `HAS_DELETED_CONTEXT` ← Space — a soft-deleted context (GOAL-319). Replaces
   `HAS_CONTEXT` in the delete transaction. Because every read surface (GraphQL
   `@authorization` filters, `viewablePulsePredicate`, resonance discovery, the
@@ -199,10 +214,12 @@ Same fields as MeSpace.
 SOFT delete — one transaction (shared orchestrator
 `src/lib/field-context/soft-delete-field-context.ts`, used by both the
 custom GraphQL `deleteFieldContext` mutation and the assistant's
-`delete_field_context` HITL tool) that stamps `deletedAt` on the context and
-its pulses, hard-deletes ResonanceSuggestions touching them (the suggestion
-inbox is Space-anchored and regenerable), re-points `HAS_CONTEXT` →
-`HAS_DELETED_CONTEXT`, and writes the activity Log. **Shared pulses are
+`delete_field_context` HITL tool) that collects the context's whole
+sub-context subtree (`HAS_SUBCONTEXT*`, GOAL-295), stamps `deletedAt` on
+every subtree context and their pulses, hard-deletes ResonanceSuggestions
+touching them (the suggestion inbox is Space-anchored and regenerable),
+re-points each subtree member's `HAS_CONTEXT` → `HAS_DELETED_CONTEXT`, and
+writes the activity Log. **Shared pulses are
 protected:** a pulse `HAS_PULSE`-attached to another LIVE context is neither
 stamped nor purged — it stays fully live there and is hard-deleted only with
 its LAST holding context (the same exclusive-holder rule as Organizations). Requires Space owner or

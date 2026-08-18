@@ -39,6 +39,12 @@ export const GET_SPACE_DETAILS = graphql(`
           title
           emergentName
           createdAt
+          parentContext {
+            id
+          }
+          subContexts {
+            id
+          }
           pulses {
             __typename
             id
@@ -79,6 +85,12 @@ export const GET_SPACE_DETAILS = graphql(`
           title
           emergentName
           createdAt
+          parentContext {
+            id
+          }
+          subContexts {
+            id
+          }
           pulses {
             __typename
             id
