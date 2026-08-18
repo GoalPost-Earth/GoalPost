@@ -133,10 +133,11 @@ export const documentMutations = {
       })
     }
 
-    // Orchestrator does gate + Log + DETACH DELETE in a single
-    // transaction, then a best-effort blob cleanup. A missing document and
-    // a forbidden access return the same `forbidden` failure to avoid
-    // leaking document existence to non-members.
+    // Orchestrator does gate + Log + DETACH DELETE + dangling-locator
+    // clearing (GOAL-321) in a single transaction, then a best-effort blob
+    // cleanup. A missing document and a forbidden access return the same
+    // `forbidden` failure to avoid leaking document existence to
+    // non-members.
     const result = await handleDeleteDocument(
       { driver, blobStore: resolveBlobStore() },
       { currentUserId: userId, documentId }

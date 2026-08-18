@@ -242,7 +242,7 @@
 - Blob storage is now a first-class dependency in an otherwise Neo4j-only stack: new env vars (`AWS_*`, `INGEST_BLOB_BACKEND`), new failure modes, user-driven cleanup.
 - `Document` has an `@authorization` directive that inherits from the parent Space — same pattern as `FieldContext`.
 - `EXTRACTED_FROM` is load-bearing: removing or renaming it is a graph migration.
-- Documents are **never auto-deleted**, even on full-rejection of extracted entities. Cleanup is user-driven via `deleteDocument`; the Document node and its blob drop together, but previously approved Persons and FieldPulses survive (their `EXTRACTED_FROM` edges drop with the Document).
+- Documents are **never auto-deleted**, even on full-rejection of extracted entities. Cleanup is user-driven via `deleteDocument`; the Document node and its blob drop together, but previously approved Persons and FieldPulses survive (their `EXTRACTED_FROM` edges drop with the Document). Because surviving pulses carry the document's durable download locator in `location` (GOAL-283/316), the delete transaction also nulls exactly those `location` values that parse to the deleted document's id and logs the clearing (GOAL-321); the download route sends browser navigations for an unresolvable document to `/document-unavailable` instead of a raw JSON 404.
 
 ## ADR-016: Extracted Organizations Are First-Class; Related People/Orgs Link via MENTIONED_IN (GOAL-298)
 

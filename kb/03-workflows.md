@@ -219,7 +219,15 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    ingest thread, refreshes the summary + concepts, and auto-executes
    the new proposals. Delete removes the blob and Document node;
    extracted entities survive (their `EXTRACTED_FROM` edges drop with
-   the Document).
+   the Document). In the same transaction the delete also nulls
+   `location` on surviving pulses whose stored value parses (via
+   `parseDocumentDownloadLocation`) to the deleted document's durable
+   download locator, and writes an attributed `:Log` for the clearing
+   (GOAL-321) — extracted or manually set locations that aren't this
+   document's locator are never touched. A stale locator that survives
+   elsewhere (browser history, shared links) resolves to a friendly
+   `/document-unavailable` page for browser navigations; API callers
+   keep the JSON 404.
 9. Extracted pulses flow through the existing post-creation embedding and
    enrichment jobs (WF-05) and become eligible for daily resonance
    discovery (WF-06) without any ingest-specific pipeline.
