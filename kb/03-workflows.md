@@ -138,6 +138,9 @@ WF-09: Data Import                       (User imports CSV/XLSX data into the sy
 
 1. Owner creates a WeSpace (see WF-02).
 2. Owner invites members — each gets a `SpaceMembership` with a role (ADMIN / MEMBER / GUEST).
+   - **Existing User:** gets a token-free "you've been added" email deep-linking into the space.
+   - **Not yet registered (GOAL-329):** a placeholder `Person` (no `:User` label) is created/resolved by email, the `SpaceMembership` is created immediately, and a **single-use invite link (7-day expiry)** is emailed. The raw token only exists in the email; only its sha256 hash is stored on the Person. Accepting the link (`/auth/accept-invite`) collects name + password, promotes the Person to `:User`, creates their MeSpace, and signs them in to the invited space.
+   - **Re-adding a pending invitee re-mints + re-sends the link** — this is the recovery path for expired, overwritten, or lost invite links. The pending membership's role is never changed by a re-invite. Emailed links are built via `resolveAppBaseUrl` (never a raw `NEXT_PUBLIC_BASE_URL`), so they always point at the deployment whose DB minted the token.
 3. Members can browse the space's FieldContexts and pulses (based on role permissions).
 4. ADMIN and MEMBER roles can create pulses within shared FieldContexts.
 5. Resonances form across contributions from different members.
