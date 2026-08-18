@@ -14,6 +14,13 @@ Live → Soft-deleted → (purged after 90 days)
 | Soft-deleted | `deletedAt` set on the context AND its pulses; Space edge re-pointed to `HAS_DELETED_CONTEXT` | `deleteFieldContext` mutation / assistant `delete_field_context` (owner or ADMIN only) |
 | Purged       | Node and all nested entities removed from the graph                                          | Daily `/api/cron/purge-deleted-contexts` once `deletedAt` > 90 days old  |
 
+Deleting a context CASCADES over its nested sub-context subtree (GOAL-295):
+every live descendant reached via `HAS_SUBCONTEXT*` is soft-deleted in the
+same transaction (own `deletedAt` stamp + own Space-edge re-point), so a
+parent can never be hidden while its children stay visible. A sub-context
+deleted on its own leaves its ancestors untouched; the `HAS_SUBCONTEXT`
+overlay edge survives soft delete and drops at purge (`DETACH DELETE`).
+
 Soft-deleted content is invisible to every read surface (all access flows
 through `HAS_CONTEXT`). There is no user-facing restore; within the 90-day
 window an operator can manually reverse the stamp + edge. The transition is

@@ -127,11 +127,12 @@ export function describeWriteAction(
       return `Create field context "${String(args.title || '')}" in ${String(args.spaceName || 'the selected space')}`
     case 'delete_field_context': {
       // Rule 1: never surface the raw contextId — prefer the human title,
-      // fall back to a generic phrase rather than an id.
+      // fall back to a generic phrase rather than an id. Deletion cascades
+      // over nested sub-fields (GOAL-295), so the approval copy says so.
       const title = String(args.contextTitle || args.currentTitle || '').trim()
       return title
-        ? `Delete field context "${title}" and its pulses`
-        : 'Delete the selected field context and its pulses'
+        ? `Delete field context "${title}" and its sub-fields and pulses`
+        : 'Delete the selected field context and its sub-fields and pulses'
     }
     case 'update_pulse': {
       const title = String(args.currentTitle || args.newTitle || '').trim()
@@ -937,17 +938,26 @@ async function deleteFieldContextAuthorized(
   if (!resolved.ok) return resolved.result
 
   const contextId = resolved.contextId
+  // GOAL-295: deletion cascades over the sub-field subtree, so the consent
+  // gate must count pulses across the WHOLE live subtree — a parent with 0
+  // direct pulses can still take 40 sub-field pulses down with it.
   const detailsQuery = `
     MATCH (context:FieldContext {id: $contextId})
-    OPTIONAL MATCH (context)-[:HAS_PULSE]->(pulse:FieldPulse)
-    RETURN context.title AS title, count(DISTINCT pulse) AS pulseCount
+    OPTIONAL MATCH (context)-[:HAS_SUBCONTEXT*0..10]->(sc:FieldContext)-[:HAS_PULSE]->(pulse:FieldPulse)
+    WHERE sc.deletedAt IS NULL
+    WITH context, count(DISTINCT pulse) AS pulseCount
+    OPTIONAL MATCH (context)-[:HAS_SUBCONTEXT*1..10]->(child:FieldContext)
+    WHERE child.deletedAt IS NULL
+    RETURN context.title AS title, pulseCount,
+           count(DISTINCT child) AS subContextCount
     LIMIT 1
   `
 
-  const details = await graph.query<{ title: string; pulseCount: number }>(
-    detailsQuery,
-    { contextId }
-  )
+  const details = await graph.query<{
+    title: string
+    pulseCount: number
+    subContextCount: number
+  }>(detailsQuery, { contextId })
 
   if (!details || details.length === 0) {
     return {
@@ -957,13 +967,22 @@ async function deleteFieldContextAuthorized(
   }
 
   const pulseCount = Number(details[0].pulseCount || 0)
+  const subContextCount = Number(details[0].subContextCount || 0)
   const deletePulses = Boolean(input.deletePulses)
 
   if (pulseCount > 0 && !deletePulses) {
+    const subFieldClause =
+      subContextCount > 0
+        ? ` across it and its ${
+            subContextCount === 1
+              ? 'sub-field'
+              : `${subContextCount} sub-fields`
+          } (deleting the field deletes its sub-fields too)`
+        : ''
     return {
       success: false,
       requiresClarification: true,
-      message: `This field context has ${pulseCount} pulse${pulseCount === 1 ? '' : 's'}. Confirm deletePulses=true if you want to delete the context and its pulses.`,
+      message: `This field context has ${pulseCount} pulse${pulseCount === 1 ? '' : 's'}${subFieldClause}. Confirm deletePulses=true if you want to delete the context and its pulses.`,
     }
   }
 
@@ -990,15 +1009,27 @@ async function deleteFieldContextAuthorized(
   }
 
   const deletedPulseCount = outcome.deletedPulseCount
+  const deletedSubContextCount = outcome.deletedSubContextCount
+  const deletedParts = [
+    deletedSubContextCount > 0
+      ? deletedSubContextCount === 1
+        ? 'its sub-field'
+        : `its ${deletedSubContextCount} sub-fields`
+      : null,
+    deletedPulseCount > 0
+      ? deletedPulseCount === 1
+        ? 'its pulse'
+        : `its ${deletedPulseCount} pulses`
+      : null,
+  ].filter(Boolean)
   return {
     success: true,
     contextId,
     deletedPulseCount,
+    deletedSubContextCount,
     message:
-      deletedPulseCount > 0
-        ? `Deleted field context "${outcome.title}" and its ${
-            deletedPulseCount === 1 ? 'pulse' : `${deletedPulseCount} pulses`
-          }.`
+      deletedParts.length > 0
+        ? `Deleted field context "${outcome.title}" and ${deletedParts.join(' and ')}.`
         : `Deleted field context "${outcome.title}".`,
   }
 }

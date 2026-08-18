@@ -62,6 +62,11 @@ export const ALLOWED_RELATIONSHIPS = [
   'HAS_MEMBER',
   'IS_MEMBER',
   'HAS_CONTEXT',
+  // Nested sub-contexts (GOAL-295): (parent:FieldContext)-[:HAS_SUBCONTEXT]->
+  // (child:FieldContext). A pure hierarchy overlay — every context, nested or
+  // not, ALSO keeps its own (Space)-[:HAS_CONTEXT] edge, so the post-execute
+  // Space anchor in execute.ts keeps working for children unchanged.
+  'HAS_SUBCONTEXT',
   'HAS_PULSE',
   // A FieldContext surfaces the people in its relational world via HAS_PERSON
   // → (:Person). The target is USUALLY a non-member (:Person:PersonPulse) but
@@ -177,7 +182,12 @@ Organization { id, name, description, createdAt }
   - An organization / group / company / cooperative / institution named in an uploaded document (e.g. "Artisan Cooperative"). Its own type — NOT a Person and NOT a pulse. Nodes carry ["Organization","LifeSensor","RelationalEntity"]; match the \`:Organization\` label. Attached to a FieldContext via HAS_ORGANIZATION and linked to the pulses it relates to via MENTIONED_IN. When the user names an organization (or asks to show one), MATCH \`:Organization\` — these nodes are invisible to any query that omits the label.
 
 FieldContext { id, title, emergentName, createdAt }
-  - Belongs to exactly one Space.
+  - Belongs to exactly one Space (every context — nested or not — has its own
+    direct HAS_CONTEXT edge from that Space).
+  - Contexts can be NESTED (GOAL-295): a parent field holds sub-fields via
+    (parent)-[:HAS_SUBCONTEXT]->(child), up to 5 levels deep. When the user
+    asks about "sub-fields" / "sub-contexts" / what's "inside" or "under" a
+    field, traverse HAS_SUBCONTEXT.
 
 FieldPulse { id, title, content, status, intensity, horizon, why, location, time, createdAt }
   - Always co-labeled with one specific pulse subtype:
@@ -216,6 +226,7 @@ Document { id, filename, mimeType, summary, concepts, uploadedAt }
 (Space)-[:HAS_MEMBER]->(SpaceMembership)
 (SpaceMembership)-[:IS_MEMBER]->(Person)
 (Space)-[:HAS_CONTEXT]->(FieldContext)
+(FieldContext)-[:HAS_SUBCONTEXT]->(FieldContext)   // nested sub-field (GOAL-295). Hierarchy overlay only — the child ALSO has its own HAS_CONTEXT edge from the same Space.
 (FieldContext)-[:HAS_PULSE]->(FieldPulse)
 (FieldContext)-[:HAS_PERSON]->(Person)   // people attached to a field's relational world — usually a non-member (:Person:PersonPulse), but occasionally the :Person:User uploader who self-linked. Match base :Person and filter membership by the :User label.
 (FieldContext)-[:HAS_ORGANIZATION]->(Organization)   // organizations attached to a field's relational world (GOAL-298). Parallels HAS_PERSON.
