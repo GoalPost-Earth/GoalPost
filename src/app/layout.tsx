@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import type { Metadata, Viewport } from 'next'
+import { headers } from 'next/headers'
 import { Inter } from 'next/font/google'
 import { MaintenanceScreen } from '@/components/screens'
 import { Toaster } from '@/components/ui/sonner'
@@ -82,11 +83,16 @@ const ContentWrapper = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Set by middleware.ts on the request. Both theme bootstrappers below run
+  // before hydration, so under `script-src 'strict-dynamic'` they execute only
+  // when they carry this nonce.
+  const nonce = (await headers()).get('x-nonce') ?? undefined
+
   const themeInitScript = `(() => {
     try {
       const key = 'goalpost-theme-color';
@@ -117,6 +123,7 @@ export default function RootLayout({
         />
         <script
           id="gp-theme-init"
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: themeInitScript }}
         />
       </head>
@@ -126,6 +133,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          nonce={nonce}
         >
           <ContentWrapper>{children}</ContentWrapper>
           <Toaster />
