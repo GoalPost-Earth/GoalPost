@@ -6,6 +6,7 @@ import { createYoga } from 'graphql-yoga'
 import { verifyJWT } from '@/app/api/auth/utils'
 import logger from '@/lib/logger'
 import { clientIp } from '@/lib/auth/rate-limit'
+import { createQueryLimitPlugins } from '@/lib/graphql/query-limits'
 
 export async function initializeApolloServer() {
   logger.info('🚀 Initializing Apollo Server...')
@@ -50,6 +51,10 @@ export async function initializeApolloServer() {
 
   const yogaServer = createYoga({
     schema,
+    // Cost / depth / alias / token ceilings, applied before execution starts.
+    // A DoS control, not an authorization one — see query-limits.ts for the
+    // measured headroom behind each number.
+    plugins: createQueryLimitPlugins(),
     // Build responses with the runtime-native Response class. Yoga's default
     // (@whatwg-node/fetch) falls back to a ponyfilled Response when its
     // Next.js detection fails — which it does inside Vercel's function
