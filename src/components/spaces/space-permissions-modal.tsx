@@ -27,6 +27,8 @@ import {
 } from '@/components/ui/select'
 import { OfferingModal } from '@/components/ui/offering-modal'
 import { cn } from '@/lib/utils'
+import { toast } from 'sonner'
+import { INVITE_RESENT_MESSAGE } from '@/constants'
 
 interface PersonSelectOption {
   value: string
@@ -221,6 +223,17 @@ export function SpacePermissionsModal({
 
         if (payload?.success) {
           addedCount += 1
+
+          if (payload.message === INVITE_RESENT_MESSAGE) {
+            // GOAL-329 re-invite: nothing was added — the pending invitee
+            // got a fresh link. Skip the 'added' activity entry (the server
+            // logs the resend itself) and tell the admin what happened,
+            // since the modal otherwise shows no success feedback.
+            toast.success(
+              `${person.label || person.email || 'This person'} already had a pending invite — a fresh link was emailed.`
+            )
+            continue
+          }
 
           // Activity-feed entry. For an email invite the member id/name come
           // back on the membership payload (the placeholder Person we just

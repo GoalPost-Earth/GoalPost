@@ -22,6 +22,7 @@ import { useFieldContextCanEditContent } from '@/hooks/use-field-context-permiss
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { emitOpenImportArticlesModal } from '@/lib/simulation/pulse-creation-events'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
+import { watchDocumentIngest } from '@/lib/ingest/watch-document-ingest'
 
 /**
  * Studio-shell entry point for getting source material into a FieldContext.
@@ -37,7 +38,7 @@ import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
  * Renders only when the focal entity is a route-sourced FieldContext *and*
  * the user passes `canEditContent` (kb/02-user-roles.md). The client gate is
  * discoverability hygiene only — the server remains the real boundary
- * (`handleIngestDocument`, GraphQL `@authorization`).
+ * (`enqueueDocumentIngest`, GraphQL `@authorization`).
  *
  * The bulk import modal itself is owned by the field-context page (that's
  * where the post-import refetch wiring lives, and it loads the modal
@@ -58,6 +59,11 @@ export const FieldContextUploadAction: FC = () => {
     string | null
   >(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Bumped on every open so the modal remounts with clean state. It keeps its
+  // file/hint in local state and only clears them via its own close handler —
+  // which the queued-upload path deliberately bypasses (it releases the modal
+  // directly), so without this the next open would show the previous file.
+  const [uploadSessionKey, setUploadSessionKey] = useState(0)
 
   // Only treat the focal as a live FieldContext when it came from the
   // current route. A 'persisted' source means the user navigated away to
@@ -85,7 +91,15 @@ export const FieldContextUploadAction: FC = () => {
       toast.error('Upload context lost — please reopen the upload dialog.')
       throw new Error('No pinned FieldContext')
     }
+    // Capture it: the modal is released as soon as the upload is queued, which
+    // clears the pinned id while the ingest watch below is still running.
+    const pinnedContextId = pinnedFieldContextId
     setIsSubmitting(true)
+    // Declared outside the try so the catch can settle the same toast. Left
+    // inside, a throw after the watch started (a refetch rejecting on a network
+    // blip) would leave its spinner on screen forever beside a second, separate
+    // error toast.
+    let watchToastId: string | number | undefined
     try {
       // Fresh bearer token — cookies alone are not enough; the server route
       // honours Authorization first and a stale cookie will 401 where a
@@ -98,7 +112,7 @@ export const FieldContextUploadAction: FC = () => {
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
-          fieldContextId: pinnedFieldContextId,
+          fieldContextId: pinnedContextId,
           filename: input.filename,
           mimeType: input.mimeType,
           sizeBytes: input.file.size,
@@ -143,16 +157,19 @@ export const FieldContextUploadAction: FC = () => {
         throw new Error(`Upload to storage failed (${putRes.status}).`)
       }
 
-      // Step 3: tell the server the file is in place; it anchors the
-      // Document node and kicks off extraction.
+      // Step 3: tell the server the file is in place. It anchors the Document
+      // as PENDING and answers 202 — extraction itself runs in the background
+      // worker (GOAL-292), so this returns in milliseconds instead of holding
+      // the request open through two LLM calls.
       const processRes = await fetch('/api/ingest/document/process', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...authHeaders },
         body: JSON.stringify({
-          documentId: presign.documentId,
+          // No documentId: the server derives it from the server-minted
+          // blobKey, which is what makes a retry idempotent.
           blobKey: presign.blobKey,
-          fieldContextId: pinnedFieldContextId,
+          fieldContextId: pinnedContextId,
           filename: input.filename,
           mimeType: input.mimeType,
           sizeBytes: input.file.size,
@@ -166,44 +183,89 @@ export const FieldContextUploadAction: FC = () => {
         )
       }
       const processResult = (await processRes.json()) as {
-        threadId?: string
-        createdEntityCount?: number
-        failedEntityCount?: number
+        documentId?: string
+        status?: string
       }
 
-      if (processResult.threadId) {
-        emitOpenAssistantThread(processResult.threadId)
+      // The upload itself is done — the file is stored and queued. Release the
+      // modal now rather than holding the member on a spinner for the length of
+      // an LLM extraction they don't need to watch.
+      //
+      // `isSubmitting` must drop here too, not in the `finally`: the watch below
+      // runs for up to eight minutes, and the modal disables Cancel, disables
+      // Upload, and early-returns from its close handler while submitting. Left
+      // set, reopening the dialog to upload a second file would trap the member
+      // with no exit but a page reload — the opposite of what moving ingestion
+      // off the request path is for.
+      setPinnedFieldContextId(null)
+      setIsSubmitting(false)
+      // Show the document (as "Queued") on the page straight away.
+      await apolloClient.refetchQueries({
+        include: [GET_DOCUMENTS_BY_FIELD_CONTEXT],
+      })
+
+      if (!processResult.documentId) {
+        // Queued, but we can't follow it. The list still tracks it.
+        toast.success('Document uploaded. Extraction will start shortly.')
+        return
       }
 
-      // Refetch the documents + the field's pulse + people views so the
-      // dashboard surfaces newly-created entities without a route change.
-      await Promise.all([
-        apolloClient.refetchQueries({
-          include: [
-            GET_DOCUMENTS_BY_FIELD_CONTEXT,
-            GET_FIELD_CONTEXT_DETAILS,
-            GET_FIELD_CONTEXT_PEOPLE,
-          ],
-        }),
-      ])
+      // Follow the document to a terminal status, keeping one toast updated in
+      // place so the member gets a single evolving line instead of a stack.
+      watchToastId = toast.loading(
+        'Document uploaded. Reading it and extracting entities…'
+      )
+      const outcome = await watchDocumentIngest(apolloClient, {
+        documentId: processResult.documentId,
+        fieldContextId: pinnedContextId,
+      })
 
-      const created = processResult.createdEntityCount ?? 0
-      const failed = processResult.failedEntityCount ?? 0
+      if (outcome.state === 'failed') {
+        toast.error(
+          outcome.message ??
+            'We could not read this document. Try re-extracting it from the document list.',
+          { id: watchToastId }
+        )
+        return
+      }
+      if (outcome.state === 'pending') {
+        // Not a failure — still queued or running. The status chip on the
+        // document list keeps tracking it from here.
+        toast.info(
+          'Still extracting — this document is taking a while. The document list will update when it finishes.',
+          { id: watchToastId }
+        )
+        return
+      }
+
+      // Refetch the field's pulse + people views so newly-extracted entities
+      // appear without a route change. (Documents were refetched by the watch.)
+      await apolloClient.refetchQueries({
+        include: [GET_FIELD_CONTEXT_DETAILS, GET_FIELD_CONTEXT_PEOPLE],
+      })
+      if (outcome.threadId) emitOpenAssistantThread(outcome.threadId)
+
+      const created = outcome.createdEntityCount
+      const failed = outcome.failedEntityCount
       if (created === 0 && failed === 0) {
-        toast.success('Document uploaded. No entities were extracted.')
+        toast.success('Document processed. No entities were extracted.', {
+          id: watchToastId,
+        })
       } else if (failed === 0) {
         toast.success(
-          `Document uploaded. Created ${created} ${created === 1 ? 'entity' : 'entities'} from it.`
+          `Document processed. Created ${created} ${created === 1 ? 'entity' : 'entities'} from it.`,
+          { id: watchToastId }
         )
       } else {
         toast.success(
-          `Document uploaded. Created ${created} of ${created + failed} proposed entities; see the ingest thread for failures.`
+          `Document processed. Created ${created} of ${created + failed} proposed entities; see the ingest thread for failures.`,
+          { id: watchToastId }
         )
       }
-      setPinnedFieldContextId(null)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Upload failed'
-      toast.error(message)
+      // Replace the watch toast when one is showing, rather than stacking.
+      toast.error(message, watchToastId ? { id: watchToastId } : undefined)
       throw error
     } finally {
       setIsSubmitting(false)
@@ -239,7 +301,10 @@ export const FieldContextUploadAction: FC = () => {
           className="gp-glass w-56 rounded-xl border-gp-glass-border p-1.5"
         >
           <DropdownMenuItem
-            onSelect={() => setPinnedFieldContextId(focalFieldContextId)}
+            onSelect={() => {
+              setUploadSessionKey((key) => key + 1)
+              setPinnedFieldContextId(focalFieldContextId)
+            }}
             // `.gp-menu-item` owns the hover/focus highlight (per the design
             // skill), so neutralise the primitive's own `focus:bg-accent` /
             // `focus:text-accent-foreground` — otherwise the label lands on
@@ -271,6 +336,7 @@ export const FieldContextUploadAction: FC = () => {
       </DropdownMenu>
 
       <UploadDocumentModal
+        key={uploadSessionKey}
         isOpen={pinnedFieldContextId !== null}
         isSubmitting={isSubmitting}
         onClose={() => setPinnedFieldContextId(null)}

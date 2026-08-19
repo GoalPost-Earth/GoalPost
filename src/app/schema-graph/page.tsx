@@ -95,6 +95,14 @@ export default function SchemaGraphVisualization() {
     { id: 'r9', from: 'MeSpace', to: 'FieldContext', caption: 'HAS_CONTEXT' },
     { id: 'r10', from: 'WeSpace', to: 'FieldContext', caption: 'HAS_CONTEXT' },
 
+    // HAS_SUBCONTEXT — nested sub-contexts (GOAL-295), self-edge
+    {
+      id: 'r-subctx',
+      from: 'FieldContext',
+      to: 'FieldContext',
+      caption: 'HAS_SUBCONTEXT',
+    },
+
     // HAS_PULSE
     { id: 'r11', from: 'FieldContext', to: 'GoalPulse', caption: 'HAS_PULSE' },
     {

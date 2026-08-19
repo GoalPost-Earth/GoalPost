@@ -85,6 +85,13 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         : null
   const contexts =
     (space && 'contexts' in space ? space.contexts : undefined) ?? []
+  // GOAL-295: nested sub-fields also carry a direct Space edge, so the raw
+  // list contains the whole hierarchy. The Space page shows only the
+  // top-level fields — children are reached by drilling into their parent
+  // (Sub-fields section on the field detail page).
+  const rootContexts = contexts.filter(
+    (ctx) => (ctx?.parentContext?.length ?? 0) === 0
+  )
 
   // Publish the Space + every Field Context card the user can see into
   // VisibleEntitiesProvider. The chat assistant reads this snapshot via
@@ -101,7 +108,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   // republish, briefly showing the assistant an empty canvas.
   const activeSpaceId = space?.id ?? null
   const activeSpaceName = space?.name ?? null
-  const contextsKey = contexts
+  const contextsKey = rootContexts
     .map((ctx) => `${ctx?.id ?? ''}::${ctx?.title ?? ''}`)
     .join('|')
   useEffect(() => {
@@ -116,7 +123,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         type: spaceTypeLabel,
         source: 'dashboard',
       },
-      ...contexts
+      ...rootContexts
         .filter((ctx): ctx is NonNullable<typeof ctx> => Boolean(ctx?.id))
         .map((ctx) => ({
           id: ctx.id,
@@ -230,7 +237,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         __typename: mp?.__typename || 'Person',
         id: mp?.id || '',
         name: fullName,
-        email: mp?.email ?? undefined,
+        email: mp?.privateProfile?.email ?? undefined,
       },
     }
   })
@@ -409,7 +416,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
 
             {/* At-a-glance counters */}
             <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl w-full">
-              <Stat icon={<Layers className="w-3.5 h-3.5" />} label="Fields" value={contexts.length} />
+              <Stat icon={<Layers className="w-3.5 h-3.5" />} label="Fields" value={rootContexts.length} />
               <Stat icon={<Sparkles className="w-3.5 h-3.5" />} label="Pulses" value={totalPulses} />
               <Stat
                 icon={<Users className="w-3.5 h-3.5" />}
@@ -446,14 +453,14 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
               </button>
             </div>
 
-            {contexts.length === 0 ? (
+            {rootContexts.length === 0 ? (
               <EmptyFields
                 isOwner={isOwner}
                 onCreate={() => setShowCreateFieldModal(true)}
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {contexts.map((ctx) => (
+                {rootContexts.map((ctx) => (
                   <FieldContextCard
                     key={ctx.id}
                     context={ctx}

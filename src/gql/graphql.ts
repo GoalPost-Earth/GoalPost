@@ -367,6 +367,11 @@ export type CarePulseContextAggregateInput = {
 
 export type CarePulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -408,6 +413,26 @@ export type CarePulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -436,6 +461,8 @@ export type CarePulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<CarePulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CarePulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type CarePulseCreateInput = {
@@ -464,6 +491,11 @@ export type CarePulseCreatedByAggregateInput = {
 
 export type CarePulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -520,21 +552,6 @@ export type CarePulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -550,61 +567,26 @@ export type CarePulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -715,6 +697,8 @@ export type CarePulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<CarePulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CarePulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type CarePulseDeleteInput = {
@@ -763,6 +747,11 @@ export type CarePulseExtractedFromAggregateInput = {
 
 export type CarePulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -794,6 +783,26 @@ export type CarePulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -902,6 +911,8 @@ export type CarePulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<CarePulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CarePulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type CarePulseFieldContextContextAggregationSelection = {
@@ -933,6 +944,11 @@ export type CarePulseInitiatedByAggregateInput = {
 
 export type CarePulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -989,21 +1005,6 @@ export type CarePulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1019,61 +1020,26 @@ export type CarePulseInitiatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1184,6 +1150,8 @@ export type CarePulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<CarePulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CarePulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type CarePulsePersonCreatedByAggregationSelection = {
@@ -1200,10 +1168,6 @@ export type CarePulsePersonCreatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -1227,10 +1191,6 @@ export type CarePulsePersonInitiatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -1642,6 +1602,11 @@ export type CoreValuePulseContextAggregateInput = {
 
 export type CoreValuePulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -1683,6 +1648,26 @@ export type CoreValuePulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1711,6 +1696,8 @@ export type CoreValuePulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<CoreValuePulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CoreValuePulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type CoreValuePulseCreateInput = {
@@ -1738,6 +1725,11 @@ export type CoreValuePulseCreatedByAggregateInput = {
 
 export type CoreValuePulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -1794,21 +1786,6 @@ export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1824,61 +1801,26 @@ export type CoreValuePulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1989,6 +1931,8 @@ export type CoreValuePulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<CoreValuePulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CoreValuePulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type CoreValuePulseDeleteInput = {
@@ -2037,6 +1981,11 @@ export type CoreValuePulseExtractedFromAggregateInput = {
 
 export type CoreValuePulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -2068,6 +2017,26 @@ export type CoreValuePulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2176,6 +2145,8 @@ export type CoreValuePulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<CoreValuePulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CoreValuePulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type CoreValuePulseFieldContextContextAggregationSelection = {
@@ -2207,6 +2178,11 @@ export type CoreValuePulseInitiatedByAggregateInput = {
 
 export type CoreValuePulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -2263,21 +2239,6 @@ export type CoreValuePulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2293,61 +2254,26 @@ export type CoreValuePulseInitiatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2458,6 +2384,8 @@ export type CoreValuePulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<CoreValuePulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "CoreValuePulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type CoreValuePulsePersonCreatedByAggregationSelection = {
@@ -2474,10 +2402,6 @@ export type CoreValuePulsePersonCreatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -2501,10 +2425,6 @@ export type CoreValuePulsePersonInitiatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -2943,6 +2863,19 @@ export type CreateStoryPulsesMutationResponse = {
   storyPulses: Array<StoryPulse>
 }
 
+/**
+ * Response payload for `createSubFieldContext` (GOAL-295). Pure payload —
+ * the query/mutation exclusions stop the library from generating CRUD roots
+ * for it (an authenticated user could otherwise create junk nodes with this
+ * label; the older response types share that gap — swept under GOAL-330).
+ */
+export type CreateSubFieldContextResponse = {
+  __typename?: 'CreateSubFieldContextResponse'
+  contextId: Scalars['ID']['output']
+  parentContextId: Scalars['ID']['output']
+  title: Scalars['String']['output']
+}
+
 export type CreateSubmitAssistantFeedbackResponsesMutationResponse = {
   __typename?: 'CreateSubmitAssistantFeedbackResponsesMutationResponse'
   info: CreateInfo
@@ -3058,10 +2991,11 @@ export type DeleteDocumentResponsesConnection = {
 }
 
 /**
- * Response payload for `deleteFieldContext` (GOAL-319). The context and its
- * pulses are soft deleted in one transaction — immediately hidden from every
- * read surface — and hard-purged with all nested content by the daily purge
- * cron once the 90-day retention window passes.
+ * Response payload for `deleteFieldContext` (GOAL-319). The context, its
+ * sub-context subtree (GOAL-295), and their pulses are soft deleted in one
+ * transaction — immediately hidden from every read surface — and hard-purged
+ * with all nested content by the daily purge cron once the 90-day retention
+ * window passes.
  */
 export type DeleteFieldContextResponse = {
   __typename?: 'DeleteFieldContextResponse'
@@ -3069,6 +3003,8 @@ export type DeleteFieldContextResponse = {
   deleted: Scalars['Boolean']['output']
   /** Number of pulses soft-deleted along with the context. */
   deletedPulseCount: Scalars['Int']['output']
+  /** Number of nested sub-contexts soft-deleted along with the context (GOAL-295). */
+  deletedSubContextCount: Scalars['Int']['output']
 }
 
 export type DeleteFieldContextResponseAggregate = {
@@ -3082,6 +3018,7 @@ export type DeleteFieldContextResponseAggregateNode = {
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   contextId: IdAggregateSelection
   deletedPulseCount: IntAggregateSelection
+  deletedSubContextCount: IntAggregateSelection
 }
 
 export type DeleteFieldContextResponseAggregateSelection = {
@@ -3090,12 +3027,14 @@ export type DeleteFieldContextResponseAggregateSelection = {
   contextId: IdAggregateSelection
   count: Scalars['Int']['output']
   deletedPulseCount: IntAggregateSelection
+  deletedSubContextCount: IntAggregateSelection
 }
 
 export type DeleteFieldContextResponseCreateInput = {
   contextId: Scalars['ID']['input']
   deleted: Scalars['Boolean']['input']
   deletedPulseCount: Scalars['Int']['input']
+  deletedSubContextCount: Scalars['Int']['input']
 }
 
 export type DeleteFieldContextResponseEdge = {
@@ -3109,6 +3048,7 @@ export type DeleteFieldContextResponseSort = {
   contextId?: InputMaybe<SortDirection>
   deleted?: InputMaybe<SortDirection>
   deletedPulseCount?: InputMaybe<SortDirection>
+  deletedSubContextCount?: InputMaybe<SortDirection>
 }
 
 export type DeleteFieldContextResponseUpdateInput = {
@@ -3116,6 +3056,9 @@ export type DeleteFieldContextResponseUpdateInput = {
   deletedPulseCount_DECREMENT?: InputMaybe<Scalars['Int']['input']>
   deletedPulseCount_INCREMENT?: InputMaybe<Scalars['Int']['input']>
   deletedPulseCount_SET?: InputMaybe<Scalars['Int']['input']>
+  deletedSubContextCount_DECREMENT?: InputMaybe<Scalars['Int']['input']>
+  deletedSubContextCount_INCREMENT?: InputMaybe<Scalars['Int']['input']>
+  deletedSubContextCount_SET?: InputMaybe<Scalars['Int']['input']>
   deleted_SET?: InputMaybe<Scalars['Boolean']['input']>
 }
 
@@ -3134,6 +3077,12 @@ export type DeleteFieldContextResponseWhere = {
   deletedPulseCount_IN?: InputMaybe<Array<Scalars['Int']['input']>>
   deletedPulseCount_LT?: InputMaybe<Scalars['Int']['input']>
   deletedPulseCount_LTE?: InputMaybe<Scalars['Int']['input']>
+  deletedSubContextCount_EQ?: InputMaybe<Scalars['Int']['input']>
+  deletedSubContextCount_GT?: InputMaybe<Scalars['Int']['input']>
+  deletedSubContextCount_GTE?: InputMaybe<Scalars['Int']['input']>
+  deletedSubContextCount_IN?: InputMaybe<Array<Scalars['Int']['input']>>
+  deletedSubContextCount_LT?: InputMaybe<Scalars['Int']['input']>
+  deletedSubContextCount_LTE?: InputMaybe<Scalars['Int']['input']>
   deleted_EQ?: InputMaybe<Scalars['Boolean']['input']>
 }
 
@@ -3601,6 +3550,11 @@ export type DocumentExtractedPeopleAggregateInput = {
 
 export type DocumentExtractedPeopleConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -3686,21 +3640,6 @@ export type DocumentExtractedPeopleNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3716,61 +3655,26 @@ export type DocumentExtractedPeopleNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -3887,6 +3791,8 @@ export type DocumentExtractedPeopleUpdateFieldInput = {
   delete?: InputMaybe<Array<DocumentExtractedPeopleDeleteFieldInput>>
   disconnect?: InputMaybe<Array<DocumentExtractedPeopleDisconnectFieldInput>>
   update?: InputMaybe<DocumentExtractedPeopleUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "DocumentExtractedPeopleUpdateConnectionInput" instead */
+  where?: InputMaybe<DocumentExtractedPeopleConnectionWhere>
 }
 
 export type DocumentExtractedPulsesAggregateInput = {
@@ -3973,6 +3879,26 @@ export type DocumentExtractedPulsesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4027,6 +3953,8 @@ export type DocumentExtractedPulsesUpdateFieldInput = {
   delete?: InputMaybe<Array<DocumentExtractedPulsesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<DocumentExtractedPulsesDisconnectFieldInput>>
   update?: InputMaybe<DocumentExtractedPulsesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "DocumentExtractedPulsesUpdateConnectionInput" instead */
+  where?: InputMaybe<DocumentExtractedPulsesConnectionWhere>
 }
 
 export type DocumentFieldContextAggregateInput = {
@@ -4043,6 +3971,11 @@ export type DocumentFieldContextAggregateInput = {
 
 export type DocumentFieldContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -4134,6 +4067,26 @@ export type DocumentFieldContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4168,6 +4121,8 @@ export type DocumentFieldContextUpdateFieldInput = {
   delete?: InputMaybe<Array<DocumentFieldContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<DocumentFieldContextDisconnectFieldInput>>
   update?: InputMaybe<DocumentFieldContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "DocumentFieldContextUpdateConnectionInput" instead */
+  where?: InputMaybe<DocumentFieldContextConnectionWhere>
 }
 
 export type DocumentFieldPulseExtractedPulsesAggregateSelection = {
@@ -4302,10 +4257,6 @@ export type DocumentPersonExtractedPeopleNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -4335,10 +4286,6 @@ export type DocumentPersonUploadedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -4399,6 +4346,11 @@ export type DocumentUploadedByAggregateInput = {
 
 export type DocumentUploadedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -4484,21 +4436,6 @@ export type DocumentUploadedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4514,61 +4451,26 @@ export type DocumentUploadedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -4685,6 +4587,8 @@ export type DocumentUploadedByUpdateFieldInput = {
   delete?: InputMaybe<Array<DocumentUploadedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<DocumentUploadedByDisconnectFieldInput>>
   update?: InputMaybe<DocumentUploadedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "DocumentUploadedByUpdateConnectionInput" instead */
+  where?: InputMaybe<DocumentUploadedByConnectionWhere>
 }
 
 export type DocumentWhere = {
@@ -4833,6 +4737,11 @@ export type DocumentsConnection = {
  */
 export type FieldContext = {
   __typename?: 'FieldContext'
+  /**
+   * Ancestor chain ordered root → immediate parent. Empty for a top-level
+   * context. Drives breadcrumb trails without per-level round-trips.
+   */
+  ancestorContexts: Array<FieldContext>
   createdAt: Scalars['DateTime']['output']
   createdBy: Array<Person>
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
@@ -4853,6 +4762,10 @@ export type FieldContext = {
   organizationsAggregate?: Maybe<FieldContextOrganizationOrganizationsAggregationSelection>
   organizationsConnection: FieldContextOrganizationsConnection
   owner: Array<Person>
+  parentContext: Array<FieldContext>
+  /** @deprecated Please use field "aggregate" inside "parentContextConnection" instead */
+  parentContextAggregate?: Maybe<FieldContextFieldContextParentContextAggregationSelection>
+  parentContextConnection: FieldContextParentContextConnection
   people: Array<Person>
   /** @deprecated Please use field "aggregate" inside "peopleConnection" instead */
   peopleAggregate?: Maybe<FieldContextPersonPeopleAggregationSelection>
@@ -4867,6 +4780,10 @@ export type FieldContext = {
   resonancesConnection: FieldContextResonancesConnection
   resonancesInContext: Array<ResonanceLink>
   space: Array<Space>
+  subContexts: Array<FieldContext>
+  /** @deprecated Please use field "aggregate" inside "subContextsConnection" instead */
+  subContextsAggregate?: Maybe<FieldContextFieldContextSubContextsAggregationSelection>
+  subContextsConnection: FieldContextSubContextsConnection
   title: Scalars['String']['output']
   weSpace: Array<WeSpace>
   /** @deprecated Please use field "aggregate" inside "weSpaceConnection" instead */
@@ -5106,6 +5023,60 @@ export type FieldContextOrganizationsConnectionArgs = {
  * - All pulses from direct relationships are migrated INTO these contexts
  * - ResonanceLinks represent relationships between pulses within the same context
  */
+export type FieldContextParentContextArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextParentContextAggregateArgs = {
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextParentContextConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextParentContextConnectionSort>>
+  where?: InputMaybe<FieldContextParentContextConnectionWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
 export type FieldContextPeopleArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>
   offset?: InputMaybe<Scalars['Int']['input']>
@@ -5254,6 +5225,60 @@ export type FieldContextResonancesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<FieldContextResonancesConnectionSort>>
   where?: InputMaybe<FieldContextResonancesConnectionWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextSubContextsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>
+  offset?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSort>>
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextSubContextsAggregateArgs = {
+  where?: InputMaybe<FieldContextWhere>
+}
+
+/**
+ * A thematic or temporal container inside a Space.
+ * Groups related pulses together.
+ * Label: ["FieldContext"]
+ *
+ * MIGRATION PATTERN:
+ * - Each MeSpace gets at least one auto-created FieldContext for user's legacy pulses
+ * - Default naming: "{User's name} Goals", "{User's name} Resources", etc.
+ * - Each WeSpace (former Community) gets a FieldContext named "{Community name} Field"
+ * - All pulses from direct relationships are migrated INTO these contexts
+ * - ResonanceLinks represent relationships between pulses within the same context
+ */
+export type FieldContextSubContextsConnectionArgs = {
+  after?: InputMaybe<Scalars['String']['input']>
+  first?: InputMaybe<Scalars['Int']['input']>
+  sort?: InputMaybe<Array<FieldContextSubContextsConnectionSort>>
+  where?: InputMaybe<FieldContextSubContextsConnectionWhere>
 }
 
 /**
@@ -5430,6 +5455,11 @@ export type FieldContextCreatedByAggregateInput = {
 
 export type FieldContextCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -5515,21 +5545,6 @@ export type FieldContextCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5545,61 +5560,26 @@ export type FieldContextCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5716,6 +5696,8 @@ export type FieldContextCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextCreatedByDisconnectFieldInput>>
   update?: InputMaybe<FieldContextCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextCreatedByConnectionWhere>
 }
 
 export type FieldContextDeleteInput = {
@@ -5781,6 +5763,11 @@ export type FieldContextDocumentsAggregateInput = {
 
 export type FieldContextDocumentsConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -5841,6 +5828,26 @@ export type FieldContextDocumentsNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5955,12 +5962,56 @@ export type FieldContextDocumentsUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextDocumentsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextDocumentsDisconnectFieldInput>>
   update?: InputMaybe<FieldContextDocumentsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextDocumentsUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextDocumentsConnectionWhere>
 }
 
 export type FieldContextEdge = {
   __typename?: 'FieldContextEdge'
   cursor: Scalars['String']['output']
   node: FieldContext
+}
+
+export type FieldContextFieldContextParentContextAggregateSelection = {
+  __typename?: 'FieldContextFieldContextParentContextAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldContextFieldContextParentContextNodeAggregateSelection>
+}
+
+export type FieldContextFieldContextParentContextAggregationSelection = {
+  __typename?: 'FieldContextFieldContextParentContextAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldContextFieldContextParentContextNodeAggregateSelection>
+}
+
+export type FieldContextFieldContextParentContextNodeAggregateSelection = {
+  __typename?: 'FieldContextFieldContextParentContextNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  emergentName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
+}
+
+export type FieldContextFieldContextSubContextsAggregateSelection = {
+  __typename?: 'FieldContextFieldContextSubContextsAggregateSelection'
+  count: CountConnection
+  node?: Maybe<FieldContextFieldContextSubContextsNodeAggregateSelection>
+}
+
+export type FieldContextFieldContextSubContextsAggregationSelection = {
+  __typename?: 'FieldContextFieldContextSubContextsAggregationSelection'
+  count: Scalars['Int']['output']
+  node?: Maybe<FieldContextFieldContextSubContextsNodeAggregateSelection>
+}
+
+export type FieldContextFieldContextSubContextsNodeAggregateSelection = {
+  __typename?: 'FieldContextFieldContextSubContextsNodeAggregateSelection'
+  createdAt: DateTimeAggregateSelection
+  emergentName: StringAggregateSelection
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id: IdAggregateSelection
+  title: StringAggregateSelection
 }
 
 export type FieldContextFieldPulsePulsesAggregateSelection = {
@@ -5999,6 +6050,11 @@ export type FieldContextMeSpaceAggregateInput = {
 
 export type FieldContextMeSpaceConnectFieldInput = {
   connect?: InputMaybe<Array<MeSpaceConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<MeSpaceConnectWhere>
 }
 
@@ -6111,6 +6167,26 @@ export type FieldContextMeSpaceNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6220,6 +6296,8 @@ export type FieldContextMeSpaceUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextMeSpaceDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextMeSpaceDisconnectFieldInput>>
   update?: InputMaybe<FieldContextMeSpaceUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextMeSpaceUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextMeSpaceConnectionWhere>
 }
 
 export type FieldContextOrganizationOrganizationsAggregateSelection = {
@@ -6309,6 +6387,26 @@ export type FieldContextOrganizationsNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6344,6 +6442,111 @@ export type FieldContextOrganizationsRelationship = {
 
 export type FieldContextOrganizationsUpdateFieldInput = {
   disconnect?: InputMaybe<Array<FieldContextOrganizationsDisconnectFieldInput>>
+  /** @deprecated Please use field "where" inside "FieldContextOrganizationsUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextOrganizationsConnectionWhere>
+}
+
+export type FieldContextParentContextAggregateInput = {
+  AND?: InputMaybe<Array<FieldContextParentContextAggregateInput>>
+  NOT?: InputMaybe<FieldContextParentContextAggregateInput>
+  OR?: InputMaybe<Array<FieldContextParentContextAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldContextParentContextNodeAggregationWhereInput>
+}
+
+export type FieldContextParentContextConnection = {
+  __typename?: 'FieldContextParentContextConnection'
+  aggregate: FieldContextFieldContextParentContextAggregateSelection
+  edges: Array<FieldContextParentContextRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldContextParentContextConnectionSort = {
+  node?: InputMaybe<FieldContextSort>
+}
+
+export type FieldContextParentContextConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextParentContextConnectionWhere>>
+  NOT?: InputMaybe<FieldContextParentContextConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextParentContextConnectionWhere>>
+  node?: InputMaybe<FieldContextWhere>
+}
+
+export type FieldContextParentContextNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldContextParentContextNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldContextParentContextNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldContextParentContextNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldContextParentContextRelationship = {
+  __typename?: 'FieldContextParentContextRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldContext
 }
 
 export type FieldContextPeopleAggregateInput = {
@@ -6426,21 +6629,6 @@ export type FieldContextPeopleNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6456,61 +6644,26 @@ export type FieldContextPeopleNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6618,6 +6771,8 @@ export type FieldContextPeopleRelationship = {
 
 export type FieldContextPeopleUpdateFieldInput = {
   disconnect?: InputMaybe<Array<FieldContextPeopleDisconnectFieldInput>>
+  /** @deprecated Please use field "where" inside "FieldContextPeopleUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextPeopleConnectionWhere>
 }
 
 export type FieldContextPersonCreatedByAggregateSelection = {
@@ -6640,10 +6795,6 @@ export type FieldContextPersonCreatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -6673,10 +6824,6 @@ export type FieldContextPersonPeopleNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -6791,6 +6938,26 @@ export type FieldContextPulsesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6845,6 +7012,8 @@ export type FieldContextPulsesUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextPulsesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextPulsesDisconnectFieldInput>>
   update?: InputMaybe<FieldContextPulsesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextPulsesUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextPulsesConnectionWhere>
 }
 
 export type FieldContextResonanceLinkResonancesAggregateSelection = {
@@ -6885,6 +7054,11 @@ export type FieldContextResonancesAggregateInput = {
 
 export type FieldContextResonancesConnectFieldInput = {
   connect?: InputMaybe<Array<ResonanceLinkConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<ResonanceLinkConnectWhere>
 }
 
@@ -6990,6 +7164,26 @@ export type FieldContextResonancesNodeAggregationWhereInput = {
   evidence_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   evidence_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   evidence_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   label_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   label_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   label_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7039,6 +7233,8 @@ export type FieldContextResonancesUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextResonancesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextResonancesDisconnectFieldInput>>
   update?: InputMaybe<FieldContextResonancesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextResonancesUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextResonancesConnectionWhere>
 }
 
 /** Fields to sort FieldContexts by. The order in which sorts are applied is not guaranteed when specifying many fields in one FieldContextSort object. */
@@ -7047,6 +7243,109 @@ export type FieldContextSort = {
   emergentName?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
   title?: InputMaybe<SortDirection>
+}
+
+export type FieldContextSubContextsAggregateInput = {
+  AND?: InputMaybe<Array<FieldContextSubContextsAggregateInput>>
+  NOT?: InputMaybe<FieldContextSubContextsAggregateInput>
+  OR?: InputMaybe<Array<FieldContextSubContextsAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<FieldContextSubContextsNodeAggregationWhereInput>
+}
+
+export type FieldContextSubContextsConnection = {
+  __typename?: 'FieldContextSubContextsConnection'
+  aggregate: FieldContextFieldContextSubContextsAggregateSelection
+  edges: Array<FieldContextSubContextsRelationship>
+  pageInfo: PageInfo
+  totalCount: Scalars['Int']['output']
+}
+
+export type FieldContextSubContextsConnectionSort = {
+  node?: InputMaybe<FieldContextSort>
+}
+
+export type FieldContextSubContextsConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextSubContextsConnectionWhere>>
+  NOT?: InputMaybe<FieldContextSubContextsConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextSubContextsConnectionWhere>>
+  node?: InputMaybe<FieldContextWhere>
+}
+
+export type FieldContextSubContextsNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<FieldContextSubContextsNodeAggregationWhereInput>>
+  NOT?: InputMaybe<FieldContextSubContextsNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<FieldContextSubContextsNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type FieldContextSubContextsRelationship = {
+  __typename?: 'FieldContextSubContextsRelationship'
+  cursor: Scalars['String']['output']
+  node: FieldContext
 }
 
 export type FieldContextUpdateInput = {
@@ -7078,6 +7377,11 @@ export type FieldContextWeSpaceAggregateInput = {
 
 export type FieldContextWeSpaceConnectFieldInput = {
   connect?: InputMaybe<Array<WeSpaceConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<WeSpaceConnectWhere>
 }
 
@@ -7163,6 +7467,26 @@ export type FieldContextWeSpaceNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7272,6 +7596,8 @@ export type FieldContextWeSpaceUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextWeSpaceDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextWeSpaceDisconnectFieldInput>>
   update?: InputMaybe<FieldContextWeSpaceUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextWeSpaceUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextWeSpaceConnectionWhere>
 }
 
 export type FieldContextWeSpaceWeSpaceAggregateSelection = {
@@ -7315,6 +7641,11 @@ export type FieldContextWeavesAggregateInput = {
 
 export type FieldContextWeavesConnectFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PromiseWeaveConnectWhere>
 }
 
@@ -7370,6 +7701,26 @@ export type FieldContextWeavesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7419,12 +7770,19 @@ export type FieldContextWeavesUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldContextWeavesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldContextWeavesDisconnectFieldInput>>
   update?: InputMaybe<FieldContextWeavesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldContextWeavesUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldContextWeavesConnectionWhere>
 }
 
 export type FieldContextWhere = {
   AND?: InputMaybe<Array<FieldContextWhere>>
   NOT?: InputMaybe<FieldContextWhere>
   OR?: InputMaybe<Array<FieldContextWhere>>
+  ancestorContexts?: InputMaybe<FieldContextWhere>
+  ancestorContexts_ALL?: InputMaybe<FieldContextWhere>
+  ancestorContexts_NONE?: InputMaybe<FieldContextWhere>
+  ancestorContexts_SINGLE?: InputMaybe<FieldContextWhere>
+  ancestorContexts_SOME?: InputMaybe<FieldContextWhere>
   createdAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -7514,6 +7872,23 @@ export type FieldContextWhere = {
   owner_NONE?: InputMaybe<PersonWhere>
   owner_SINGLE?: InputMaybe<PersonWhere>
   owner_SOME?: InputMaybe<PersonWhere>
+  parentContextAggregate?: InputMaybe<FieldContextParentContextAggregateInput>
+  /** Return FieldContexts where all of the related FieldContextParentContextConnections match this filter */
+  parentContextConnection_ALL?: InputMaybe<FieldContextParentContextConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextParentContextConnections match this filter */
+  parentContextConnection_NONE?: InputMaybe<FieldContextParentContextConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextParentContextConnections match this filter */
+  parentContextConnection_SINGLE?: InputMaybe<FieldContextParentContextConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextParentContextConnections match this filter */
+  parentContextConnection_SOME?: InputMaybe<FieldContextParentContextConnectionWhere>
+  /** Return FieldContexts where all of the related FieldContexts match this filter */
+  parentContext_ALL?: InputMaybe<FieldContextWhere>
+  /** Return FieldContexts where none of the related FieldContexts match this filter */
+  parentContext_NONE?: InputMaybe<FieldContextWhere>
+  /** Return FieldContexts where one of the related FieldContexts match this filter */
+  parentContext_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return FieldContexts where some of the related FieldContexts match this filter */
+  parentContext_SOME?: InputMaybe<FieldContextWhere>
   peopleAggregate?: InputMaybe<FieldContextPeopleAggregateInput>
   /** Return FieldContexts where all of the related FieldContextPeopleConnections match this filter */
   peopleConnection_ALL?: InputMaybe<FieldContextPeopleConnectionWhere>
@@ -7570,6 +7945,23 @@ export type FieldContextWhere = {
   resonances_SINGLE?: InputMaybe<ResonanceLinkWhere>
   /** Return FieldContexts where some of the related ResonanceLinks match this filter */
   resonances_SOME?: InputMaybe<ResonanceLinkWhere>
+  subContextsAggregate?: InputMaybe<FieldContextSubContextsAggregateInput>
+  /** Return FieldContexts where all of the related FieldContextSubContextsConnections match this filter */
+  subContextsConnection_ALL?: InputMaybe<FieldContextSubContextsConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextSubContextsConnections match this filter */
+  subContextsConnection_NONE?: InputMaybe<FieldContextSubContextsConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextSubContextsConnections match this filter */
+  subContextsConnection_SINGLE?: InputMaybe<FieldContextSubContextsConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextSubContextsConnections match this filter */
+  subContextsConnection_SOME?: InputMaybe<FieldContextSubContextsConnectionWhere>
+  /** Return FieldContexts where all of the related FieldContexts match this filter */
+  subContexts_ALL?: InputMaybe<FieldContextWhere>
+  /** Return FieldContexts where none of the related FieldContexts match this filter */
+  subContexts_NONE?: InputMaybe<FieldContextWhere>
+  /** Return FieldContexts where one of the related FieldContexts match this filter */
+  subContexts_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return FieldContexts where some of the related FieldContexts match this filter */
+  subContexts_SOME?: InputMaybe<FieldContextWhere>
   title_CONTAINS?: InputMaybe<Scalars['String']['input']>
   title_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   title_EQ?: InputMaybe<Scalars['String']['input']>
@@ -7758,6 +8150,11 @@ export type FieldPulseContextAggregateInput = {
 
 export type FieldPulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -7822,6 +8219,26 @@ export type FieldPulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7856,6 +8273,8 @@ export type FieldPulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<FieldPulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldPulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type FieldPulseCreateInput = {
@@ -7880,6 +8299,11 @@ export type FieldPulseCreatedByAggregateInput = {
 
 export type FieldPulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -7959,21 +8383,6 @@ export type FieldPulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7989,61 +8398,26 @@ export type FieldPulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8160,6 +8534,8 @@ export type FieldPulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<FieldPulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldPulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type FieldPulseDeleteInput = {
@@ -8196,6 +8572,11 @@ export type FieldPulseExtractedFromAggregateInput = {
 
 export type FieldPulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -8250,6 +8631,26 @@ export type FieldPulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8364,6 +8765,8 @@ export type FieldPulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<FieldPulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldPulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export enum FieldPulseImplementation {
@@ -8388,6 +8791,11 @@ export type FieldPulseInitiatedByAggregateInput = {
 
 export type FieldPulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -8467,21 +8875,6 @@ export type FieldPulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8497,61 +8890,26 @@ export type FieldPulseInitiatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8668,6 +9026,8 @@ export type FieldPulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<FieldPulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "FieldPulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 /** Fields to sort FieldPulses by. The order in which sorts are applied is not guaranteed when specifying many fields in one FieldPulseSort object. */
@@ -8795,6 +9155,8 @@ export type FieldPulseWhere = {
   title_IN?: InputMaybe<Array<Scalars['String']['input']>>
   title_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   typename?: InputMaybe<Array<FieldPulseImplementation>>
+  /** @deprecated The typename_IN filter is deprecated, please use the typename filter instead */
+  typename_IN?: InputMaybe<Array<FieldPulseImplementation>>
 }
 
 export type FieldPulsesConnection = {
@@ -9056,6 +9418,11 @@ export type GoalPulseContextAggregateInput = {
 
 export type GoalPulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -9097,6 +9464,26 @@ export type GoalPulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9125,6 +9512,8 @@ export type GoalPulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<GoalPulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "GoalPulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type GoalPulseCreateInput = {
@@ -9161,6 +9550,11 @@ export type GoalPulseCreatedByAggregateInput = {
 
 export type GoalPulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -9217,21 +9611,6 @@ export type GoalPulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9247,61 +9626,26 @@ export type GoalPulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9412,6 +9756,8 @@ export type GoalPulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<GoalPulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "GoalPulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type GoalPulseDeleteInput = {
@@ -9467,6 +9813,11 @@ export type GoalPulseExtractedFromAggregateInput = {
 
 export type GoalPulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -9498,6 +9849,26 @@ export type GoalPulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9606,6 +9977,8 @@ export type GoalPulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<GoalPulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "GoalPulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type GoalPulseFieldContextContextAggregationSelection = {
@@ -9637,6 +10010,11 @@ export type GoalPulseInitiatedByAggregateInput = {
 
 export type GoalPulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -9693,21 +10071,6 @@ export type GoalPulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9723,61 +10086,26 @@ export type GoalPulseInitiatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9888,6 +10216,8 @@ export type GoalPulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<GoalPulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "GoalPulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type GoalPulsePersonCreatedByAggregationSelection = {
@@ -9904,10 +10234,6 @@ export type GoalPulsePersonCreatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -9931,10 +10257,6 @@ export type GoalPulsePersonInitiatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -10521,6 +10843,11 @@ export type LogCreatedByAggregateInput = {
 
 export type LogCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -10606,21 +10933,6 @@ export type LogCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -10636,61 +10948,26 @@ export type LogCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -10807,6 +11084,8 @@ export type LogCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<LogCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogCreatedByDisconnectFieldInput>>
   update?: InputMaybe<LogCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "LogCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<LogCreatedByConnectionWhere>
 }
 
 export type LogDeleteInput = {
@@ -10897,6 +11176,11 @@ export type LogGoalsAggregateInput = {
 
 export type LogGoalsConnectFieldInput = {
   connect?: InputMaybe<Array<GoalPulseConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<GoalPulseConnectWhere>
 }
 
@@ -10982,6 +11266,26 @@ export type LogGoalsNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11126,6 +11430,8 @@ export type LogGoalsUpdateFieldInput = {
   delete?: InputMaybe<Array<LogGoalsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogGoalsDisconnectFieldInput>>
   update?: InputMaybe<LogGoalsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "LogGoalsUpdateConnectionInput" instead */
+  where?: InputMaybe<LogGoalsConnectionWhere>
 }
 
 /** Input for logging member-related activities. */
@@ -11160,10 +11466,6 @@ export type LogPersonCreatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -11267,6 +11569,26 @@ export type LogPulsesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11321,6 +11643,8 @@ export type LogPulsesUpdateFieldInput = {
   delete?: InputMaybe<Array<LogPulsesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogPulsesDisconnectFieldInput>>
   update?: InputMaybe<LogPulsesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "LogPulsesUpdateConnectionInput" instead */
+  where?: InputMaybe<LogPulsesConnectionWhere>
 }
 
 /** Input for logging resonance-related activities. */
@@ -11378,6 +11702,11 @@ export type LogResourcesAggregateInput = {
 
 export type LogResourcesConnectFieldInput = {
   connect?: InputMaybe<Array<ResourcePulseConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<ResourcePulseConnectWhere>
 }
 
@@ -11468,6 +11797,26 @@ export type LogResourcesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11597,6 +11946,8 @@ export type LogResourcesUpdateFieldInput = {
   delete?: InputMaybe<Array<LogResourcesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<LogResourcesDisconnectFieldInput>>
   update?: InputMaybe<LogResourcesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "LogResourcesUpdateConnectionInput" instead */
+  where?: InputMaybe<LogResourcesConnectionWhere>
 }
 
 /** Fields to sort Logs by. The order in which sorts are applied is not guaranteed when specifying many fields in one LogSort object. */
@@ -12013,6 +12364,11 @@ export type MeSpaceContextsAggregateInput = {
 
 export type MeSpaceContextsConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -12054,6 +12410,26 @@ export type MeSpaceContextsNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12080,6 +12456,8 @@ export type MeSpaceContextsUpdateFieldInput = {
   connect?: InputMaybe<Array<MeSpaceContextsConnectFieldInput>>
   create?: InputMaybe<Array<MeSpaceContextsCreateFieldInput>>
   update?: InputMaybe<MeSpaceContextsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "MeSpaceContextsUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 export type MeSpaceCreateInput = {
@@ -12143,6 +12521,11 @@ export type MeSpaceMembersAggregateInput = {
 
 export type MeSpaceMembersConnectFieldInput = {
   connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
@@ -12169,6 +12552,26 @@ export type MeSpaceMembersNodeAggregationWhereInput = {
   addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
 }
 
 export type MeSpaceMembersUpdateConnectionInput = {
@@ -12182,6 +12585,8 @@ export type MeSpaceMembersUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   update?: InputMaybe<MeSpaceMembersUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "MeSpaceMembersUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 export type MeSpaceOwnerAggregateInput = {
@@ -12198,6 +12603,11 @@ export type MeSpaceOwnerAggregateInput = {
 
 export type MeSpaceOwnerConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -12254,21 +12664,6 @@ export type MeSpaceOwnerNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12284,61 +12679,26 @@ export type MeSpaceOwnerNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -12449,6 +12809,8 @@ export type MeSpaceOwnerUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
   update?: InputMaybe<MeSpaceOwnerUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "MeSpaceOwnerUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
 export type MeSpacePersonOwnerAggregationSelection = {
@@ -12465,10 +12827,6 @@ export type MeSpacePersonOwnerNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -12640,6 +12998,18 @@ export type MeSpacesConnection = {
   totalCount: Scalars['Int']['output']
 }
 
+/**
+ * Response payload for `moveFieldContext` (GOAL-295). `newParentContextId`
+ * is null when the context was moved to the top level of its Space. Pure
+ * payload — CRUD roots excluded (see CreateSubFieldContextResponse).
+ */
+export type MoveFieldContextResponse = {
+  __typename?: 'MoveFieldContextResponse'
+  contextId: Scalars['ID']['output']
+  moved: Scalars['Boolean']['output']
+  newParentContextId?: Maybe<Scalars['ID']['output']>
+}
+
 export type Mutation = {
   __typename?: 'Mutation'
   /**
@@ -12692,6 +13062,18 @@ export type Mutation = {
   createResourcePulses: CreateResourcePulsesMutationResponse
   createSpaceMemberships: CreateSpaceMembershipsMutationResponse
   createStoryPulses: CreateStoryPulsesMutationResponse
+  /**
+   * Create a sub-context nested under an existing FieldContext (GOAL-295).
+   * The child is created in the SAME Space as the parent — it gets its own
+   * HAS_CONTEXT edge, so every auth / soft-delete / discovery surface keeps
+   * working unchanged — plus the HAS_SUBCONTEXT overlay edge from the parent.
+   * Nesting is capped at depth 5 (a root context sits at depth 0).
+   *
+   * Authorization (enforced server-side in the resolver): canEditContent on
+   * the parent Space — owner, ADMIN, or MEMBER (kb/02-user-roles.md). Writes
+   * an activity Log in the same transaction.
+   */
+  createSubFieldContext: CreateSubFieldContextResponse
   createSubmitAssistantFeedbackResponses: CreateSubmitAssistantFeedbackResponsesMutationResponse
   createUpdatePersonConnectionResponses: CreateUpdatePersonConnectionResponsesMutationResponse
   createUpdatePersonPulseResponses: CreateUpdatePersonPulseResponsesMutationResponse
@@ -12722,12 +13104,13 @@ export type Mutation = {
   deleteDocuments: DeleteInfo
   /**
    * Delete a FieldContext and everything nested under it (GOAL-319). The
-   * context and its pulses are SOFT deleted in a single transaction: stamped
-   * with deletedAt and detached from their Space (the HAS_CONTEXT edge is
-   * re-pointed to HAS_DELETED_CONTEXT), which hides the whole subtree from
-   * every read surface at once. The daily purge cron hard-deletes the context
-   * and all nested entities (pulses, chunks, resonance links, suggestions,
-   * weaves, documents + blobs, orphaned organizations) after 90 days.
+   * context, its sub-context subtree (GOAL-295), and their pulses are SOFT
+   * deleted in a single transaction: stamped with deletedAt and detached from
+   * their Space (each HAS_CONTEXT edge is re-pointed to HAS_DELETED_CONTEXT),
+   * which hides the whole subtree from every read surface at once. The daily
+   * purge cron hard-deletes the contexts and all nested entities (pulses,
+   * chunks, resonance links, suggestions, weaves, documents + blobs, orphaned
+   * organizations) after 90 days.
    *
    * Authorization (enforced server-side in the resolver, matching the
    * kb/02-user-roles.md DELETE matrix): Space owner or ADMIN only. The
@@ -12826,6 +13209,19 @@ export type Mutation = {
    * count.
    */
   markNotificationRead: MarkNotificationResponse
+  /**
+   * Move a FieldContext under a new parent context, or to the top level of
+   * its Space when newParentContextId is null (GOAL-295). The context keeps
+   * its Space HAS_CONTEXT edge — only the HAS_SUBCONTEXT overlay changes.
+   * The target parent must live in the same Space; moves that would create a
+   * cycle (self / own descendant) or push the subtree past the depth cap (5)
+   * are rejected.
+   *
+   * Authorization (enforced server-side in the resolver): canEditContent on
+   * the Space — owner, ADMIN, or MEMBER. Writes an activity Log in the same
+   * transaction.
+   */
+  moveFieldContext: MoveFieldContextResponse
   /**
    * Re-run the extraction model against an existing Document (slice 6 of
    * GOAL-235). The original blob is reused; no new blob is written, no new
@@ -13043,6 +13439,12 @@ export type MutationCreateStoryPulsesArgs = {
   input: Array<StoryPulseCreateInput>
 }
 
+export type MutationCreateSubFieldContextArgs = {
+  emergentName?: InputMaybe<Scalars['String']['input']>
+  parentContextId: Scalars['ID']['input']
+  title: Scalars['String']['input']
+}
+
 export type MutationCreateSubmitAssistantFeedbackResponsesArgs = {
   input: Array<SubmitAssistantFeedbackResponseCreateInput>
 }
@@ -13249,6 +13651,11 @@ export type MutationLogSpaceActivityArgs = {
 
 export type MutationMarkNotificationReadArgs = {
   id: Scalars['ID']['input']
+}
+
+export type MutationMoveFieldContextArgs = {
+  contextId: Scalars['ID']['input']
+  newParentContextId?: InputMaybe<Scalars['ID']['input']>
 }
 
 export type MutationReExtractDocumentArgs = {
@@ -13680,21 +14087,6 @@ export type NotificationActorNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13710,61 +14102,26 @@ export type NotificationActorNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -13927,10 +14284,6 @@ export type NotificationPersonActorNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -13960,10 +14313,6 @@ export type NotificationPersonRecipientNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -14048,21 +14397,6 @@ export type NotificationRecipientNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14078,61 +14412,26 @@ export type NotificationRecipientNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14648,6 +14947,26 @@ export type OrganizationContextsNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14765,6 +15084,26 @@ export type OrganizationExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -14976,6 +15315,26 @@ export type OrganizationMentionedInNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15148,9 +15507,6 @@ export type Person = PersonInterface & {
   __typename?: 'Person'
   authId?: Maybe<Scalars['String']['output']>
   avatar?: Maybe<Scalars['String']['output']>
-  careManual?: Maybe<Scalars['String']['output']>
-  connectionEdges: Array<PersonConnectionEdge>
-  connections: Array<Person>
   contexts: Array<FieldContext>
   /** @deprecated Please use field "aggregate" inside "contextsConnection" instead */
   contextsAggregate?: Maybe<PersonFieldContextContextsAggregationSelection>
@@ -15160,8 +15516,6 @@ export type Person = PersonInterface & {
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<PersonPersonCreatedByAggregationSelection>
   createdByConnection: PersonCreatedByConnection
-  description?: Maybe<Scalars['String']['output']>
-  email?: Maybe<Scalars['String']['output']>
   /**
    * Documents this person was extracted from (doc-ingestion provenance — see GOAL-242 + ADR-0002).
    * Empty for manually-created Person nodes. Each Document is auth-filtered via its own
@@ -15172,10 +15526,7 @@ export type Person = PersonInterface & {
   /** @deprecated Please use field "aggregate" inside "extractedFromConnection" instead */
   extractedFromAggregate?: Maybe<PersonDocumentExtractedFromAggregationSelection>
   extractedFromConnection: PersonExtractedFromConnection
-  favorites?: Maybe<Scalars['String']['output']>
-  fieldsOfCare?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
-  gender?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
   /**
    * Pulses this person authored — the reverse of `FieldPulse.initiatedBy`, the
@@ -15193,14 +15544,12 @@ export type Person = PersonInterface & {
   /** @deprecated Please use field "aggregate" inside "initiatedPulsesConnection" instead */
   initiatedPulsesAggregate?: Maybe<PersonFieldPulseInitiatedPulsesAggregationSelection>
   initiatedPulsesConnection: PersonInitiatedPulsesConnection
-  interests?: Maybe<Scalars['String']['output']>
   isUser?: Maybe<Scalars['Boolean']['output']>
   lastFocalAt?: Maybe<Scalars['DateTime']['output']>
   lastFocalId?: Maybe<Scalars['String']['output']>
   lastFocalLabel?: Maybe<Scalars['String']['output']>
   lastFocalType?: Maybe<Scalars['String']['output']>
   lastName: Scalars['String']['output']
-  location?: Maybe<Scalars['String']['output']>
   memberOf: Array<SpaceMembership>
   /** @deprecated Please use field "aggregate" inside "memberOfConnection" instead */
   memberOfAggregate?: Maybe<PersonSpaceMembershipMemberOfAggregationSelection>
@@ -15225,15 +15574,19 @@ export type Person = PersonInterface & {
   /** @deprecated Please use field "aggregate" inside "ownsSpacesConnection" instead */
   ownsSpacesAggregate?: Maybe<PersonSpaceOwnsSpacesAggregationSelection>
   ownsSpacesConnection: PersonOwnsSpacesConnection
-  passions?: Maybe<Scalars['String']['output']>
-  phone?: Maybe<Scalars['String']['output']>
   photo?: Maybe<Scalars['String']['output']>
-  pronouns?: Maybe<Scalars['String']['output']>
+  /**
+   * The gated read view of this person — the single place every PII scalar and
+   * the person-to-person connection graph is readable from. Null when the caller
+   * is not authorized (see `PersonPrivateProfile`), which is how the GOAL-275
+   * policy fails closed. Resolves to the same `:Person` node, so it costs one
+   * projection subquery on the rows the query already matched.
+   */
+  privateProfile?: Maybe<PersonPrivateProfile>
   refreshTokenExp?: Maybe<Scalars['DateTime']['output']>
   refreshTokenRevoked?: Maybe<Scalars['Boolean']['output']>
   signupDate?: Maybe<Scalars['DateTime']['output']>
   status?: Maybe<Scalars['String']['output']>
-  traits?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
 }
 
@@ -15524,10 +15877,6 @@ export type PersonAggregateNode = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -15546,10 +15895,6 @@ export type PersonAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -15721,6 +16066,26 @@ export type PersonContextsNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15746,6 +16111,8 @@ export type PersonContextsRelationship = {
 
 export type PersonContextsUpdateFieldInput = {
   disconnect?: InputMaybe<Array<PersonContextsDisconnectFieldInput>>
+  /** @deprecated Please use field "where" inside "PersonContextsUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonContextsConnectionWhere>
 }
 
 export type PersonCreateInput = {
@@ -15798,6 +16165,11 @@ export type PersonCreatedByAggregateInput = {
 
 export type PersonCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -15883,21 +16255,6 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15913,61 +16270,26 @@ export type PersonCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16084,6 +16406,8 @@ export type PersonCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonCreatedByDisconnectFieldInput>>
   update?: InputMaybe<PersonCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PersonCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonCreatedByConnectionWhere>
 }
 
 export type PersonDeleteInput = {
@@ -16148,6 +16472,11 @@ export type PersonExtractedFromAggregateInput = {
 
 export type PersonExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -16208,6 +16537,26 @@ export type PersonExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16322,6 +16671,8 @@ export type PersonExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<PersonExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PersonExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonExtractedFromConnectionWhere>
 }
 
 export type PersonFieldContextContextsAggregateSelection = {
@@ -16454,6 +16805,26 @@ export type PersonInitiatedPulsesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16499,19 +16870,17 @@ export type PersonInitiatedPulsesRelationship = {
 
 export type PersonInitiatedPulsesUpdateFieldInput = {
   disconnect?: InputMaybe<Array<PersonInitiatedPulsesDisconnectFieldInput>>
+  /** @deprecated Please use field "where" inside "PersonInitiatedPulsesUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonInitiatedPulsesConnectionWhere>
 }
 
 export type PersonInterface = {
   createdAt: Scalars['DateTime']['output']
-  email?: Maybe<Scalars['String']['output']>
   firstName: Scalars['String']['output']
   id: Scalars['ID']['output']
   lastName: Scalars['String']['output']
-  location?: Maybe<Scalars['String']['output']>
   name: Scalars['String']['output']
-  phone?: Maybe<Scalars['String']['output']>
   photo?: Maybe<Scalars['String']['output']>
-  pronouns?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
 }
 
@@ -16529,6 +16898,11 @@ export type PersonMemberOfAggregateInput = {
 
 export type PersonMemberOfConnectFieldInput = {
   connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
@@ -16584,6 +16958,26 @@ export type PersonMemberOfNodeAggregationWhereInput = {
   addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
 }
 
 export type PersonMemberOfRelationship = {
@@ -16603,6 +16997,8 @@ export type PersonMemberOfUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonMemberOfDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonMemberOfDisconnectFieldInput>>
   update?: InputMaybe<PersonMemberOfUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PersonMemberOfUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonMemberOfConnectionWhere>
 }
 
 export type PersonMentionedInAggregateInput = {
@@ -16670,6 +17066,26 @@ export type PersonMentionedInNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16715,6 +17131,8 @@ export type PersonMentionedInRelationship = {
 
 export type PersonMentionedInUpdateFieldInput = {
   disconnect?: InputMaybe<Array<PersonMentionedInDisconnectFieldInput>>
+  /** @deprecated Please use field "where" inside "PersonMentionedInUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonMentionedInConnectionWhere>
 }
 
 export type PersonOwnsSpacesAggregateInput = {
@@ -16816,6 +17234,26 @@ export type PersonOwnsSpacesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16925,6 +17363,8 @@ export type PersonOwnsSpacesUpdateFieldInput = {
   delete?: InputMaybe<Array<PersonOwnsSpacesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PersonOwnsSpacesDisconnectFieldInput>>
   update?: InputMaybe<PersonOwnsSpacesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PersonOwnsSpacesUpdateConnectionInput" instead */
+  where?: InputMaybe<PersonOwnsSpacesConnectionWhere>
 }
 
 export type PersonPersonCreatedByAggregateSelection = {
@@ -16947,10 +17387,6 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -16958,6 +17394,705 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
   signupDate: DateTimeAggregateSelection
   status: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+}
+
+/**
+ * The GOAL-275 gated read view of a `:Person` — every PII scalar plus the
+ * person-to-person connection graph, behind ONE type-level `@authorization`
+ * filter. Reached only through `Person.privateProfile`; it has no root query and
+ * no mutations of its own.
+ *
+ * WHY THIS TYPE EXISTS (do not fold these fields back onto `Person`):
+ * `@neo4j/graphql` v6 expands a FIELD-level `@authorization` filter once per
+ * gated field in the selection set, with no deduplication, and Neo4j's planning
+ * cost is super-linear in the resulting predicate count. Measured on a
+ * 1,000-person fixture against dev Aura, selecting N gated fields from `Person`
+ * when each carried its own copy of the rule below:
+ *
+ *   | gated fields | EXISTS | cold plan |
+ *   |      1       |   29   |   1.1 s   |
+ *   |      4       |  116   |   2.8 s   |
+ *   |      8       |  232   |  12.1 s   |
+ *   |     12       |  348   |  31.4 s   |
+ *
+ * GET_LOGGED_IN_USER — which fires on every protected page — sat at the bottom
+ * of that table and blew the 60 s `maxDuration` on `/api/graphql`
+ * (src/app/api/graphql/route.ts), which is what surfaced as the profile page
+ * hanging forever. A TYPE-level filter is emitted exactly ONCE regardless of how
+ * many fields are selected, so the cost is now flat in field count: this schema
+ * now emits 29 EXISTS whether the caller selects one gated field or all twelve
+ * (`person-pii-gate-plan-size.test.ts` asserts that equality). End to end on the
+ * same fixture, GET_PERSON_PROFILE went from 20,442 ms cold / 168 dbHits /
+ * 38,761 characters of Cypher to 1,553 ms / 33 dbHits / 7,510 characters.
+ *
+ * Rejected alternative, for the record: keeping the fields on `Person` and
+ * pointing their filters at a single `@cypher` Boolean gate. That does cut
+ * planning, but `@neo4j/graphql` emits a cypher-field filter as
+ * `MATCH (this:Person) CALL { … } WITH * WHERE this.id = $param`, and Neo4j will
+ * NOT push a predicate below a `CALL` subquery (measured: 3 dbHits with the
+ * predicate before the CALL, 3,021 after). The gate therefore ran for every
+ * Person in the database on a single-row lookup — 168 dbHits became 146,453,
+ * scaling with database size. A type-level filter stays declarative and inlines
+ * into the `WHERE`, so the index seek survives.
+ *
+ * AUTHORIZATION — the policy is byte-for-byte the rule that used to be
+ * duplicated on 14 fields, and is documented in full on `Person` above. A read is
+ * authorized when the caller is the person, created them, shares a Space with
+ * them, or can view a FieldContext holding them.
+ *
+ * Two consequences of the `contexts_SOME` branch worth stating, both unchanged
+ * from the original rule and both covered by
+ * `person-pii-read-auth.integration.test.ts`:
+ *   • A nested sub-context (`HAS_SUBCONTEXT`, GOAL-295) DOES unlock PII, because
+ *     every context — nested or not — also hangs off its Space by its own
+ *     `HAS_CONTEXT` edge, which is what `meSpace_SOME` / `weSpace_SOME` traverse.
+ *   • A soft-deleted context does NOT, because GOAL-319 re-points that edge to
+ *     `HAS_DELETED_CONTEXT`. Deleting a field therefore withdraws the PII reach
+ *     it granted.
+ *
+ * `@query(read: false, aggregate: false)` — no `personPrivateProfiles` root and
+ * no aggregate root. Without it this type would be a second, parallel read path
+ * over the same `:Person` nodes, exactly the leak that the `PersonInterface` and
+ * `LifeSensor` lockdowns close.
+ * `@mutation(operations: [])` — no create/update/delete. Writes keep going
+ * through `Person` (self-gated `updatePeople`) and the authorized
+ * `updatePersonPulse` resolver.
+ * `@subscription(events: [])` — matches the `SearchResults` / `PersonSearchResult`
+ * lockdown. Subscriptions are not enabled in `apollo-server.ts` today, so this is
+ * latent, but a gated type should not be the one that forgets it.
+ */
+export type PersonPrivateProfile = {
+  __typename?: 'PersonPrivateProfile'
+  careManual?: Maybe<Scalars['String']['output']>
+  /**
+   * The CONNECTED_TO edge properties (`why` / `interests`) flattened alongside the
+   * far endpoint's id — the relational narrative, gated with the rest of the PII.
+   */
+  connectionEdges: Array<PersonConnectionEdge>
+  /**
+   * Person-to-person connections. Legacy — should migrate to ResonanceLinks.
+   * Each endpoint is itself a `Person`, so the endpoint's own PII stays behind
+   * its own `privateProfile` gate and is not widened by appearing here.
+   *
+   * `@filterable(byValue: false)` removes the generated `connections_SOME`
+   * predicate. That predicate is what would actually expose the CONNECTED_TO
+   * graph for cross-Space enumeration — the leak the `Person` docstring above
+   * describes.
+   */
+  connections: Array<Person>
+  description?: Maybe<Scalars['String']['output']>
+  email?: Maybe<Scalars['String']['output']>
+  favorites?: Maybe<Scalars['String']['output']>
+  fieldsOfCare?: Maybe<Scalars['String']['output']>
+  gender?: Maybe<Scalars['String']['output']>
+  /**
+   * Same value as `Person.id`. Kept so the filter above can express the
+   * "caller is the person" branch, and so Apollo can normalize the object.
+   */
+  id: Scalars['ID']['output']
+  interests?: Maybe<Scalars['String']['output']>
+  location?: Maybe<Scalars['String']['output']>
+  passions?: Maybe<Scalars['String']['output']>
+  phone?: Maybe<Scalars['String']['output']>
+  pronouns?: Maybe<Scalars['String']['output']>
+  traits?: Maybe<Scalars['String']['output']>
+}
+
+export type PersonPrivateProfileContextsAggregateInput = {
+  AND?: InputMaybe<Array<PersonPrivateProfileContextsAggregateInput>>
+  NOT?: InputMaybe<PersonPrivateProfileContextsAggregateInput>
+  OR?: InputMaybe<Array<PersonPrivateProfileContextsAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<PersonPrivateProfileContextsNodeAggregationWhereInput>
+}
+
+export type PersonPrivateProfileContextsConnectionWhere = {
+  AND?: InputMaybe<Array<PersonPrivateProfileContextsConnectionWhere>>
+  NOT?: InputMaybe<PersonPrivateProfileContextsConnectionWhere>
+  OR?: InputMaybe<Array<PersonPrivateProfileContextsConnectionWhere>>
+  node?: InputMaybe<FieldContextWhere>
+}
+
+export type PersonPrivateProfileContextsNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<PersonPrivateProfileContextsNodeAggregationWhereInput>>
+  NOT?: InputMaybe<PersonPrivateProfileContextsNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<PersonPrivateProfileContextsNodeAggregationWhereInput>>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  emergentName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  emergentName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  emergentName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  title_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  title_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  title_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type PersonPrivateProfileCreatedByAggregateInput = {
+  AND?: InputMaybe<Array<PersonPrivateProfileCreatedByAggregateInput>>
+  NOT?: InputMaybe<PersonPrivateProfileCreatedByAggregateInput>
+  OR?: InputMaybe<Array<PersonPrivateProfileCreatedByAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<PersonPrivateProfileCreatedByNodeAggregationWhereInput>
+}
+
+export type PersonPrivateProfileCreatedByConnectionWhere = {
+  AND?: InputMaybe<Array<PersonPrivateProfileCreatedByConnectionWhere>>
+  NOT?: InputMaybe<PersonPrivateProfileCreatedByConnectionWhere>
+  OR?: InputMaybe<Array<PersonPrivateProfileCreatedByConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type PersonPrivateProfileCreatedByNodeAggregationWhereInput = {
+  AND?: InputMaybe<
+    Array<PersonPrivateProfileCreatedByNodeAggregationWhereInput>
+  >
+  NOT?: InputMaybe<PersonPrivateProfileCreatedByNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<PersonPrivateProfileCreatedByNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  photo_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type PersonPrivateProfileMemberOfAggregateInput = {
+  AND?: InputMaybe<Array<PersonPrivateProfileMemberOfAggregateInput>>
+  NOT?: InputMaybe<PersonPrivateProfileMemberOfAggregateInput>
+  OR?: InputMaybe<Array<PersonPrivateProfileMemberOfAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<PersonPrivateProfileMemberOfNodeAggregationWhereInput>
+}
+
+export type PersonPrivateProfileMemberOfConnectionWhere = {
+  AND?: InputMaybe<Array<PersonPrivateProfileMemberOfConnectionWhere>>
+  NOT?: InputMaybe<PersonPrivateProfileMemberOfConnectionWhere>
+  OR?: InputMaybe<Array<PersonPrivateProfileMemberOfConnectionWhere>>
+  node?: InputMaybe<SpaceMembershipWhere>
+}
+
+export type PersonPrivateProfileMemberOfNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<PersonPrivateProfileMemberOfNodeAggregationWhereInput>>
+  NOT?: InputMaybe<PersonPrivateProfileMemberOfNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<PersonPrivateProfileMemberOfNodeAggregationWhereInput>>
+  addedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+}
+
+export type PersonPrivateProfileOwnsSpacesAggregateInput = {
+  AND?: InputMaybe<Array<PersonPrivateProfileOwnsSpacesAggregateInput>>
+  NOT?: InputMaybe<PersonPrivateProfileOwnsSpacesAggregateInput>
+  OR?: InputMaybe<Array<PersonPrivateProfileOwnsSpacesAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<PersonPrivateProfileOwnsSpacesNodeAggregationWhereInput>
+}
+
+export type PersonPrivateProfileOwnsSpacesConnectionWhere = {
+  AND?: InputMaybe<Array<PersonPrivateProfileOwnsSpacesConnectionWhere>>
+  NOT?: InputMaybe<PersonPrivateProfileOwnsSpacesConnectionWhere>
+  OR?: InputMaybe<Array<PersonPrivateProfileOwnsSpacesConnectionWhere>>
+  node?: InputMaybe<SpaceWhere>
+}
+
+export type PersonPrivateProfileOwnsSpacesNodeAggregationWhereInput = {
+  AND?: InputMaybe<
+    Array<PersonPrivateProfileOwnsSpacesNodeAggregationWhereInput>
+  >
+  NOT?: InputMaybe<PersonPrivateProfileOwnsSpacesNodeAggregationWhereInput>
+  OR?: InputMaybe<
+    Array<PersonPrivateProfileOwnsSpacesNodeAggregationWhereInput>
+  >
+  activities_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  activities_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  activities_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  activities_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  activities_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  activities_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  activities_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  activities_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  activities_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  activities_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  activities_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  activities_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  activities_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  activities_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  activities_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  location_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  location_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  location_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  name_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  name_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  name_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  resultsAchieved_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  resultsAchieved_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  resultsAchieved_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  resultsAchieved_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  resultsAchieved_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  resultsAchieved_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  time_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  time_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  time_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  time_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  time_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  why_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  why_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  why_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  why_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+}
+
+export type PersonPrivateProfileWhere = {
+  AND?: InputMaybe<Array<PersonPrivateProfileWhere>>
+  NOT?: InputMaybe<PersonPrivateProfileWhere>
+  OR?: InputMaybe<Array<PersonPrivateProfileWhere>>
+  contextsAggregate?: InputMaybe<PersonPrivateProfileContextsAggregateInput>
+  /** Return PersonPrivateProfiles where all of the related PersonPrivateProfileContextsConnections match this filter */
+  contextsConnection_ALL?: InputMaybe<PersonPrivateProfileContextsConnectionWhere>
+  /** Return PersonPrivateProfiles where none of the related PersonPrivateProfileContextsConnections match this filter */
+  contextsConnection_NONE?: InputMaybe<PersonPrivateProfileContextsConnectionWhere>
+  /** Return PersonPrivateProfiles where one of the related PersonPrivateProfileContextsConnections match this filter */
+  contextsConnection_SINGLE?: InputMaybe<PersonPrivateProfileContextsConnectionWhere>
+  /** Return PersonPrivateProfiles where some of the related PersonPrivateProfileContextsConnections match this filter */
+  contextsConnection_SOME?: InputMaybe<PersonPrivateProfileContextsConnectionWhere>
+  /** Return PersonPrivateProfiles where all of the related FieldContexts match this filter */
+  contexts_ALL?: InputMaybe<FieldContextWhere>
+  /** Return PersonPrivateProfiles where none of the related FieldContexts match this filter */
+  contexts_NONE?: InputMaybe<FieldContextWhere>
+  /** Return PersonPrivateProfiles where one of the related FieldContexts match this filter */
+  contexts_SINGLE?: InputMaybe<FieldContextWhere>
+  /** Return PersonPrivateProfiles where some of the related FieldContexts match this filter */
+  contexts_SOME?: InputMaybe<FieldContextWhere>
+  createdByAggregate?: InputMaybe<PersonPrivateProfileCreatedByAggregateInput>
+  /** Return PersonPrivateProfiles where all of the related PersonPrivateProfileCreatedByConnections match this filter */
+  createdByConnection_ALL?: InputMaybe<PersonPrivateProfileCreatedByConnectionWhere>
+  /** Return PersonPrivateProfiles where none of the related PersonPrivateProfileCreatedByConnections match this filter */
+  createdByConnection_NONE?: InputMaybe<PersonPrivateProfileCreatedByConnectionWhere>
+  /** Return PersonPrivateProfiles where one of the related PersonPrivateProfileCreatedByConnections match this filter */
+  createdByConnection_SINGLE?: InputMaybe<PersonPrivateProfileCreatedByConnectionWhere>
+  /** Return PersonPrivateProfiles where some of the related PersonPrivateProfileCreatedByConnections match this filter */
+  createdByConnection_SOME?: InputMaybe<PersonPrivateProfileCreatedByConnectionWhere>
+  /** Return PersonPrivateProfiles where all of the related People match this filter */
+  createdBy_ALL?: InputMaybe<PersonWhere>
+  /** Return PersonPrivateProfiles where none of the related People match this filter */
+  createdBy_NONE?: InputMaybe<PersonWhere>
+  /** Return PersonPrivateProfiles where one of the related People match this filter */
+  createdBy_SINGLE?: InputMaybe<PersonWhere>
+  /** Return PersonPrivateProfiles where some of the related People match this filter */
+  createdBy_SOME?: InputMaybe<PersonWhere>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  memberOfAggregate?: InputMaybe<PersonPrivateProfileMemberOfAggregateInput>
+  /** Return PersonPrivateProfiles where all of the related PersonPrivateProfileMemberOfConnections match this filter */
+  memberOfConnection_ALL?: InputMaybe<PersonPrivateProfileMemberOfConnectionWhere>
+  /** Return PersonPrivateProfiles where none of the related PersonPrivateProfileMemberOfConnections match this filter */
+  memberOfConnection_NONE?: InputMaybe<PersonPrivateProfileMemberOfConnectionWhere>
+  /** Return PersonPrivateProfiles where one of the related PersonPrivateProfileMemberOfConnections match this filter */
+  memberOfConnection_SINGLE?: InputMaybe<PersonPrivateProfileMemberOfConnectionWhere>
+  /** Return PersonPrivateProfiles where some of the related PersonPrivateProfileMemberOfConnections match this filter */
+  memberOfConnection_SOME?: InputMaybe<PersonPrivateProfileMemberOfConnectionWhere>
+  /** Return PersonPrivateProfiles where all of the related SpaceMemberships match this filter */
+  memberOf_ALL?: InputMaybe<SpaceMembershipWhere>
+  /** Return PersonPrivateProfiles where none of the related SpaceMemberships match this filter */
+  memberOf_NONE?: InputMaybe<SpaceMembershipWhere>
+  /** Return PersonPrivateProfiles where one of the related SpaceMemberships match this filter */
+  memberOf_SINGLE?: InputMaybe<SpaceMembershipWhere>
+  /** Return PersonPrivateProfiles where some of the related SpaceMemberships match this filter */
+  memberOf_SOME?: InputMaybe<SpaceMembershipWhere>
+  ownsSpacesAggregate?: InputMaybe<PersonPrivateProfileOwnsSpacesAggregateInput>
+  /** Return PersonPrivateProfiles where all of the related PersonPrivateProfileOwnsSpacesConnections match this filter */
+  ownsSpacesConnection_ALL?: InputMaybe<PersonPrivateProfileOwnsSpacesConnectionWhere>
+  /** Return PersonPrivateProfiles where none of the related PersonPrivateProfileOwnsSpacesConnections match this filter */
+  ownsSpacesConnection_NONE?: InputMaybe<PersonPrivateProfileOwnsSpacesConnectionWhere>
+  /** Return PersonPrivateProfiles where one of the related PersonPrivateProfileOwnsSpacesConnections match this filter */
+  ownsSpacesConnection_SINGLE?: InputMaybe<PersonPrivateProfileOwnsSpacesConnectionWhere>
+  /** Return PersonPrivateProfiles where some of the related PersonPrivateProfileOwnsSpacesConnections match this filter */
+  ownsSpacesConnection_SOME?: InputMaybe<PersonPrivateProfileOwnsSpacesConnectionWhere>
+  /** Return PersonPrivateProfiles where all of the related Spaces match this filter */
+  ownsSpaces_ALL?: InputMaybe<SpaceWhere>
+  /** Return PersonPrivateProfiles where none of the related Spaces match this filter */
+  ownsSpaces_NONE?: InputMaybe<SpaceWhere>
+  /** Return PersonPrivateProfiles where one of the related Spaces match this filter */
+  ownsSpaces_SINGLE?: InputMaybe<SpaceWhere>
+  /** Return PersonPrivateProfiles where some of the related Spaces match this filter */
+  ownsSpaces_SOME?: InputMaybe<SpaceWhere>
 }
 
 /**
@@ -16980,35 +18115,19 @@ export type PersonSearchResult = {
 export type PersonSort = {
   authId?: InputMaybe<SortDirection>
   avatar?: InputMaybe<SortDirection>
-  careManual?: InputMaybe<SortDirection>
   createdAt?: InputMaybe<SortDirection>
-  description?: InputMaybe<SortDirection>
-  email?: InputMaybe<SortDirection>
-  favorites?: InputMaybe<SortDirection>
-  fieldsOfCare?: InputMaybe<SortDirection>
   firstName?: InputMaybe<SortDirection>
-  gender?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
-  interests?: InputMaybe<SortDirection>
   isUser?: InputMaybe<SortDirection>
-  lastFocalAt?: InputMaybe<SortDirection>
-  lastFocalId?: InputMaybe<SortDirection>
-  lastFocalLabel?: InputMaybe<SortDirection>
-  lastFocalType?: InputMaybe<SortDirection>
   lastName?: InputMaybe<SortDirection>
-  location?: InputMaybe<SortDirection>
   onboardingCurrentStepIndex?: InputMaybe<SortDirection>
   onboardingIsCompleted?: InputMaybe<SortDirection>
   onboardingSkipped?: InputMaybe<SortDirection>
-  passions?: InputMaybe<SortDirection>
-  phone?: InputMaybe<SortDirection>
   photo?: InputMaybe<SortDirection>
-  pronouns?: InputMaybe<SortDirection>
   refreshTokenExp?: InputMaybe<SortDirection>
   refreshTokenRevoked?: InputMaybe<SortDirection>
   signupDate?: InputMaybe<SortDirection>
   status?: InputMaybe<SortDirection>
-  traits?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
 }
 
@@ -17115,16 +18234,6 @@ export type PersonWhere = {
   avatar_EQ?: InputMaybe<Scalars['String']['input']>
   avatar_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   avatar_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  connectionEdges?: InputMaybe<PersonConnectionEdgeWhere>
-  connectionEdges_ALL?: InputMaybe<PersonConnectionEdgeWhere>
-  connectionEdges_NONE?: InputMaybe<PersonConnectionEdgeWhere>
-  connectionEdges_SINGLE?: InputMaybe<PersonConnectionEdgeWhere>
-  connectionEdges_SOME?: InputMaybe<PersonConnectionEdgeWhere>
-  connections?: InputMaybe<PersonWhere>
-  connections_ALL?: InputMaybe<PersonWhere>
-  connections_NONE?: InputMaybe<PersonWhere>
-  connections_SINGLE?: InputMaybe<PersonWhere>
-  connections_SOME?: InputMaybe<PersonWhere>
   contextsAggregate?: InputMaybe<PersonContextsAggregateInput>
   /** Return People where all of the related PersonContextsConnections match this filter */
   contextsConnection_ALL?: InputMaybe<PersonContextsConnectionWhere>
@@ -17165,11 +18274,6 @@ export type PersonWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return People where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
-  email_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  email_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  email_EQ?: InputMaybe<Scalars['String']['input']>
-  email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   extractedFromAggregate?: InputMaybe<PersonExtractedFromAggregateInput>
   /** Return People where all of the related PersonExtractedFromConnections match this filter */
   extractedFromConnection_ALL?: InputMaybe<PersonExtractedFromConnectionWhere>
@@ -17215,27 +18319,6 @@ export type PersonWhere = {
   /** Return People where some of the related FieldPulses match this filter */
   initiatedPulses_SOME?: InputMaybe<FieldPulseWhere>
   isUser_EQ?: InputMaybe<Scalars['Boolean']['input']>
-  lastFocalAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
-  lastFocalAt_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  lastFocalId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  lastFocalId_EQ?: InputMaybe<Scalars['String']['input']>
-  lastFocalId_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  lastFocalId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  lastFocalLabel_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  lastFocalLabel_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  lastFocalLabel_EQ?: InputMaybe<Scalars['String']['input']>
-  lastFocalLabel_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  lastFocalLabel_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  lastFocalType_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  lastFocalType_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  lastFocalType_EQ?: InputMaybe<Scalars['String']['input']>
-  lastFocalType_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  lastFocalType_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   lastName_CONTAINS?: InputMaybe<Scalars['String']['input']>
   lastName_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   lastName_EQ?: InputMaybe<Scalars['String']['input']>
@@ -17309,6 +18392,7 @@ export type PersonWhere = {
   photo_EQ?: InputMaybe<Scalars['String']['input']>
   photo_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   photo_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  privateProfile?: InputMaybe<PersonPrivateProfileWhere>
   refreshTokenExp_EQ?: InputMaybe<Scalars['DateTime']['input']>
   refreshTokenExp_GT?: InputMaybe<Scalars['DateTime']['input']>
   refreshTokenExp_GTE?: InputMaybe<Scalars['DateTime']['input']>
@@ -17730,6 +18814,11 @@ export type PromiseWeaveContextAggregateInput = {
 
 export type PromiseWeaveContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -17800,6 +18889,26 @@ export type PromiseWeaveContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -17834,6 +18943,8 @@ export type PromiseWeaveContextUpdateFieldInput = {
   delete?: InputMaybe<Array<PromiseWeaveContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveContextDisconnectFieldInput>>
   update?: InputMaybe<PromiseWeaveContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PromiseWeaveContextUpdateConnectionInput" instead */
+  where?: InputMaybe<PromiseWeaveContextConnectionWhere>
 }
 
 export type PromiseWeaveCreateInput = {
@@ -17860,6 +18971,11 @@ export type PromiseWeaveCreatedByAggregateInput = {
 
 export type PromiseWeaveCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -17945,21 +19061,6 @@ export type PromiseWeaveCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -17975,61 +19076,26 @@ export type PromiseWeaveCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -18146,6 +19212,8 @@ export type PromiseWeaveCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<PromiseWeaveCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveCreatedByDisconnectFieldInput>>
   update?: InputMaybe<PromiseWeaveCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PromiseWeaveCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<PromiseWeaveCreatedByConnectionWhere>
 }
 
 export type PromiseWeaveDeleteInput = {
@@ -18231,10 +19299,6 @@ export type PromiseWeavePersonCreatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -18264,10 +19328,6 @@ export type PromiseWeavePersonWovenForNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -18379,6 +19439,26 @@ export type PromiseWeaveWeavesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -18433,6 +19513,8 @@ export type PromiseWeaveWeavesUpdateFieldInput = {
   delete?: InputMaybe<Array<PromiseWeaveWeavesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveWeavesDisconnectFieldInput>>
   update?: InputMaybe<PromiseWeaveWeavesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PromiseWeaveWeavesUpdateConnectionInput" instead */
+  where?: InputMaybe<PromiseWeaveWeavesConnectionWhere>
 }
 
 export type PromiseWeaveWhere = {
@@ -18544,6 +19626,11 @@ export type PromiseWeaveWovenForAggregateInput = {
 
 export type PromiseWeaveWovenForConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -18629,21 +19716,6 @@ export type PromiseWeaveWovenForNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -18659,61 +19731,26 @@ export type PromiseWeaveWovenForNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -18830,6 +19867,8 @@ export type PromiseWeaveWovenForUpdateFieldInput = {
   delete?: InputMaybe<Array<PromiseWeaveWovenForDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveWovenForDisconnectFieldInput>>
   update?: InputMaybe<PromiseWeaveWovenForUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "PromiseWeaveWovenForUpdateConnectionInput" instead */
+  where?: InputMaybe<PromiseWeaveWovenForConnectionWhere>
 }
 
 export type PromiseWeavesConnection = {
@@ -20225,6 +21264,11 @@ export type ResonanceLinkContextAggregateInput = {
 
 export type ResonanceLinkContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -20295,6 +21339,26 @@ export type ResonanceLinkContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -20329,6 +21393,8 @@ export type ResonanceLinkContextUpdateFieldInput = {
   delete?: InputMaybe<Array<ResonanceLinkContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResonanceLinkContextDisconnectFieldInput>>
   update?: InputMaybe<ResonanceLinkContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResonanceLinkContextUpdateConnectionInput" instead */
+  where?: InputMaybe<ResonanceLinkContextConnectionWhere>
 }
 
 export type ResonanceLinkCreateInput = {
@@ -20521,6 +21587,26 @@ export type ResonanceLinkSourceNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -20575,6 +21661,8 @@ export type ResonanceLinkSourceUpdateFieldInput = {
   delete?: InputMaybe<Array<ResonanceLinkSourceDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResonanceLinkSourceDisconnectFieldInput>>
   update?: InputMaybe<ResonanceLinkSourceUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResonanceLinkSourceUpdateConnectionInput" instead */
+  where?: InputMaybe<ResonanceLinkSourceConnectionWhere>
 }
 
 export type ResonanceLinkTargetAggregateInput = {
@@ -20661,6 +21749,26 @@ export type ResonanceLinkTargetNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   intensity_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
   intensity_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -20715,6 +21823,8 @@ export type ResonanceLinkTargetUpdateFieldInput = {
   delete?: InputMaybe<Array<ResonanceLinkTargetDeleteFieldInput>>
   disconnect?: InputMaybe<Array<ResonanceLinkTargetDisconnectFieldInput>>
   update?: InputMaybe<ResonanceLinkTargetUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResonanceLinkTargetUpdateConnectionInput" instead */
+  where?: InputMaybe<ResonanceLinkTargetConnectionWhere>
 }
 
 export type ResonanceLinkUpdateInput = {
@@ -21067,6 +22177,11 @@ export type ResourcePulseContextAggregateInput = {
 
 export type ResourcePulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -21108,6 +22223,26 @@ export type ResourcePulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -21136,6 +22271,8 @@ export type ResourcePulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<ResourcePulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResourcePulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type ResourcePulseCreateInput = {
@@ -21169,6 +22306,11 @@ export type ResourcePulseCreatedByAggregateInput = {
 
 export type ResourcePulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -21225,21 +22367,6 @@ export type ResourcePulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -21255,61 +22382,26 @@ export type ResourcePulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -21420,6 +22512,8 @@ export type ResourcePulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<ResourcePulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResourcePulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type ResourcePulseDeleteInput = {
@@ -21475,6 +22569,11 @@ export type ResourcePulseExtractedFromAggregateInput = {
 
 export type ResourcePulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -21506,6 +22605,26 @@ export type ResourcePulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -21614,6 +22733,8 @@ export type ResourcePulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<ResourcePulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResourcePulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type ResourcePulseFieldContextContextAggregationSelection = {
@@ -21645,6 +22766,11 @@ export type ResourcePulseInitiatedByAggregateInput = {
 
 export type ResourcePulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -21701,21 +22827,6 @@ export type ResourcePulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -21731,61 +22842,26 @@ export type ResourcePulseInitiatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -21896,6 +22972,8 @@ export type ResourcePulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<ResourcePulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "ResourcePulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type ResourcePulsePersonCreatedByAggregationSelection = {
@@ -21912,10 +22990,6 @@ export type ResourcePulsePersonCreatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -21939,10 +23013,6 @@ export type ResourcePulsePersonInitiatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -22280,6 +23350,11 @@ export type SpaceContextsAggregateInput = {
 
 export type SpaceContextsConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -22344,6 +23419,26 @@ export type SpaceContextsNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -22378,6 +23473,8 @@ export type SpaceContextsUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceContextsDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceContextsDisconnectFieldInput>>
   update?: InputMaybe<SpaceContextsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceContextsUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 export type SpaceCreateInput = {
@@ -22422,6 +23519,11 @@ export type SpaceMembersAggregateInput = {
 
 export type SpaceMembersConnectFieldInput = {
   connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
@@ -22471,6 +23573,26 @@ export type SpaceMembersNodeAggregationWhereInput = {
   addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
 }
 
 export type SpaceMembersRelationship = {
@@ -22490,6 +23612,8 @@ export type SpaceMembersUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   update?: InputMaybe<SpaceMembersUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceMembersUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 /**
@@ -22645,6 +23769,11 @@ export type SpaceMembershipMemberAggregateInput = {
 
 export type SpaceMembershipMemberConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -22730,21 +23859,6 @@ export type SpaceMembershipMemberNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -22760,61 +23874,26 @@ export type SpaceMembershipMemberNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -22931,6 +24010,8 @@ export type SpaceMembershipMemberUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembershipMemberDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembershipMemberDisconnectFieldInput>>
   update?: InputMaybe<SpaceMembershipMemberUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceMembershipMemberUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembershipMemberConnectionWhere>
 }
 
 export type SpaceMembershipPersonMemberAggregateSelection = {
@@ -22953,10 +24034,6 @@ export type SpaceMembershipPersonMemberNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -23072,6 +24149,26 @@ export type SpaceMembershipSpaceNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -23208,6 +24305,8 @@ export type SpaceMembershipSpaceUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembershipSpaceDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembershipSpaceDisconnectFieldInput>>
   update?: InputMaybe<SpaceMembershipSpaceUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceMembershipSpaceUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembershipSpaceConnectionWhere>
 }
 
 export type SpaceMembershipUpdateInput = {
@@ -23292,6 +24391,11 @@ export type SpaceOwnerAggregateInput = {
 
 export type SpaceOwnerConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -23371,21 +24475,6 @@ export type SpaceOwnerNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -23401,61 +24490,26 @@ export type SpaceOwnerNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -23572,6 +24626,8 @@ export type SpaceOwnerUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
   update?: InputMaybe<SpaceOwnerUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "SpaceOwnerUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
 export enum SpaceRole {
@@ -23719,6 +24775,8 @@ export type SpaceWhere = {
   time_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
   time_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   typename?: InputMaybe<Array<SpaceImplementation>>
+  /** @deprecated The typename_IN filter is deprecated, please use the typename filter instead */
+  typename_IN?: InputMaybe<Array<SpaceImplementation>>
   visibility_EQ?: InputMaybe<SpaceVisibility>
   visibility_IN?: InputMaybe<Array<SpaceVisibility>>
   why_CONTAINS?: InputMaybe<Scalars['String']['input']>
@@ -24000,6 +25058,11 @@ export type StoryPulseContextAggregateInput = {
 
 export type StoryPulseContextConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -24041,6 +25104,26 @@ export type StoryPulseContextNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -24069,6 +25152,8 @@ export type StoryPulseContextUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseContextDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseContextDisconnectFieldInput>>
   update?: InputMaybe<StoryPulseContextUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "StoryPulseContextUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseContextConnectionWhere>
 }
 
 export type StoryPulseCreateInput = {
@@ -24112,6 +25197,11 @@ export type StoryPulseCreatedByAggregateInput = {
 
 export type StoryPulseCreatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -24168,21 +25258,6 @@ export type StoryPulseCreatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -24198,61 +25273,26 @@ export type StoryPulseCreatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -24363,6 +25403,8 @@ export type StoryPulseCreatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseCreatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseCreatedByDisconnectFieldInput>>
   update?: InputMaybe<StoryPulseCreatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "StoryPulseCreatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseCreatedByConnectionWhere>
 }
 
 export type StoryPulseDeleteInput = {
@@ -24411,6 +25453,11 @@ export type StoryPulseExtractedFromAggregateInput = {
 
 export type StoryPulseExtractedFromConnectFieldInput = {
   connect?: InputMaybe<Array<DocumentConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<DocumentConnectWhere>
 }
 
@@ -24442,6 +25489,26 @@ export type StoryPulseExtractedFromNodeAggregationWhereInput = {
   filename_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   filename_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -24550,6 +25617,8 @@ export type StoryPulseExtractedFromUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseExtractedFromDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseExtractedFromDisconnectFieldInput>>
   update?: InputMaybe<StoryPulseExtractedFromUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "StoryPulseExtractedFromUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseExtractedFromConnectionWhere>
 }
 
 export type StoryPulseFieldContextContextAggregationSelection = {
@@ -24581,6 +25650,11 @@ export type StoryPulseInitiatedByAggregateInput = {
 
 export type StoryPulseInitiatedByConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -24637,21 +25711,6 @@ export type StoryPulseInitiatedByNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -24667,61 +25726,26 @@ export type StoryPulseInitiatedByNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -24832,6 +25856,8 @@ export type StoryPulseInitiatedByUpdateFieldInput = {
   delete?: InputMaybe<Array<FieldPulseInitiatedByDeleteFieldInput>>
   disconnect?: InputMaybe<Array<FieldPulseInitiatedByDisconnectFieldInput>>
   update?: InputMaybe<StoryPulseInitiatedByUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "StoryPulseInitiatedByUpdateConnectionInput" instead */
+  where?: InputMaybe<FieldPulseInitiatedByConnectionWhere>
 }
 
 export type StoryPulsePersonCreatedByAggregationSelection = {
@@ -24848,10 +25874,6 @@ export type StoryPulsePersonCreatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -24875,10 +25897,6 @@ export type StoryPulsePersonInitiatedByNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -25899,6 +26917,26 @@ export type UserOwnsSpacesNodeAggregationWhereInput = {
   description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   location_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   location_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -26008,6 +27046,8 @@ export type UserOwnsSpacesUpdateFieldInput = {
   delete?: InputMaybe<Array<UserOwnsSpacesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<UserOwnsSpacesDisconnectFieldInput>>
   update?: InputMaybe<UserOwnsSpacesUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "UserOwnsSpacesUpdateConnectionInput" instead */
+  where?: InputMaybe<UserOwnsSpacesConnectionWhere>
 }
 
 export type UserSpaceOwnsSpacesAggregateSelection = {
@@ -26089,11 +27129,6 @@ export type UserWhere = {
   createdAt_IN?: InputMaybe<Array<Scalars['DateTime']['input']>>
   createdAt_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  email_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  email_EQ?: InputMaybe<Scalars['String']['input']>
-  email_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  email_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_CONTAINS?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   fieldsOfCare_EQ?: InputMaybe<Scalars['String']['input']>
@@ -26411,6 +27446,11 @@ export type WeSpaceContextsAggregateInput = {
 
 export type WeSpaceContextsConnectFieldInput = {
   connect?: InputMaybe<Array<FieldContextConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<FieldContextConnectWhere>
 }
 
@@ -26452,6 +27492,26 @@ export type WeSpaceContextsNodeAggregationWhereInput = {
   emergentName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   emergentName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   title_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   title_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -26478,6 +27538,8 @@ export type WeSpaceContextsUpdateFieldInput = {
   connect?: InputMaybe<Array<WeSpaceContextsConnectFieldInput>>
   create?: InputMaybe<Array<WeSpaceContextsCreateFieldInput>>
   update?: InputMaybe<WeSpaceContextsUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "WeSpaceContextsUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceContextsConnectionWhere>
 }
 
 export type WeSpaceCreateInput = {
@@ -26541,6 +27603,11 @@ export type WeSpaceMembersAggregateInput = {
 
 export type WeSpaceMembersConnectFieldInput = {
   connect?: InputMaybe<Array<SpaceMembershipConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<SpaceMembershipConnectWhere>
 }
 
@@ -26567,6 +27634,26 @@ export type WeSpaceMembersNodeAggregationWhereInput = {
   addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
 }
 
 export type WeSpaceMembersUpdateConnectionInput = {
@@ -26580,6 +27667,8 @@ export type WeSpaceMembersUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceMembersDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceMembersDisconnectFieldInput>>
   update?: InputMaybe<WeSpaceMembersUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "WeSpaceMembersUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceMembersConnectionWhere>
 }
 
 export type WeSpaceOwnerAggregateInput = {
@@ -26596,6 +27685,11 @@ export type WeSpaceOwnerAggregateInput = {
 
 export type WeSpaceOwnerConnectFieldInput = {
   connect?: InputMaybe<Array<PersonConnectInput>>
+  /**
+   * Whether or not to overwrite any matching relationship with the new properties.
+   * @deprecated The overwrite argument is deprecated and will be removed
+   */
+  overwrite?: Scalars['Boolean']['input']
   where?: InputMaybe<PersonConnectWhere>
 }
 
@@ -26652,21 +27746,6 @@ export type WeSpaceOwnerNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  email_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  email_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  email_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  email_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -26682,61 +27761,26 @@ export type WeSpaceOwnerNodeAggregationWhereInput = {
   firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
   firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
-  lastFocalId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalLabel_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalLabel_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
-  lastFocalType_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
-  lastFocalType_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MAX_LTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_EQUAL?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_GTE?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
+  /** @deprecated aggregation of ID fields are deprecated and will be removed */
+  id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
   lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -26847,6 +27891,8 @@ export type WeSpaceOwnerUpdateFieldInput = {
   delete?: InputMaybe<Array<SpaceOwnerDeleteFieldInput>>
   disconnect?: InputMaybe<Array<SpaceOwnerDisconnectFieldInput>>
   update?: InputMaybe<WeSpaceOwnerUpdateConnectionInput>
+  /** @deprecated Please use field "where" inside "WeSpaceOwnerUpdateConnectionInput" instead */
+  where?: InputMaybe<SpaceOwnerConnectionWhere>
 }
 
 export type WeSpacePersonOwnerAggregationSelection = {
@@ -26863,10 +27909,6 @@ export type WeSpacePersonOwnerNodeAggregateSelection = {
   firstName: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
-  lastFocalAt: DateTimeAggregateSelection
-  lastFocalId: StringAggregateSelection
-  lastFocalLabel: StringAggregateSelection
-  lastFocalType: StringAggregateSelection
   lastName: StringAggregateSelection
   onboardingCurrentStepIndex: IntAggregateSelection
   photo: StringAggregateSelection
@@ -27233,6 +28275,38 @@ export type DeleteFieldContextMutation = {
     contextId: string
     deleted: boolean
     deletedPulseCount: number
+    deletedSubContextCount: number
+  }
+}
+
+export type CreateSubFieldContextMutationVariables = Exact<{
+  parentContextId: Scalars['ID']['input']
+  title: Scalars['String']['input']
+  emergentName?: InputMaybe<Scalars['String']['input']>
+}>
+
+export type CreateSubFieldContextMutation = {
+  __typename?: 'Mutation'
+  createSubFieldContext: {
+    __typename?: 'CreateSubFieldContextResponse'
+    contextId: string
+    title: string
+    parentContextId: string
+  }
+}
+
+export type MoveFieldContextMutationVariables = Exact<{
+  contextId: Scalars['ID']['input']
+  newParentContextId?: InputMaybe<Scalars['ID']['input']>
+}>
+
+export type MoveFieldContextMutation = {
+  __typename?: 'Mutation'
+  moveFieldContext: {
+    __typename?: 'MoveFieldContextResponse'
+    contextId: string
+    newParentContextId?: string | null
+    moved: boolean
   }
 }
 
@@ -27375,7 +28449,11 @@ export type CreatePeopleMutation = {
       __typename?: 'Person'
       id: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
       ownsSpaces: Array<
         | {
             __typename?: 'MeSpace'
@@ -27407,16 +28485,20 @@ export type UpdatePersonMutation = {
       __typename?: 'Person'
       id: string
       name: string
-      email?: string | null
       firstName: string
       lastName: string
-      phone?: string | null
-      pronouns?: string | null
-      traits?: string | null
       photo?: string | null
-      location?: string | null
-      passions?: string | null
-      fieldsOfCare?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+        phone?: string | null
+        pronouns?: string | null
+        traits?: string | null
+        location?: string | null
+        passions?: string | null
+        fieldsOfCare?: string | null
+      } | null
       ownsSpaces: Array<
         | {
             __typename?: 'MeSpace'
@@ -27457,7 +28539,6 @@ export type UpdatePersonPulseMutation = {
       firstName: string
       lastName: string
       name: string
-      description?: string | null
     } | null
   }
 }
@@ -28222,7 +29303,11 @@ export type AddSpaceMemberMutation = {
         firstName: string
         lastName: string
         name: string
-        email?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
     } | null
   }
@@ -28251,7 +29336,11 @@ export type InviteToSpaceByEmailMutation = {
         firstName: string
         lastName: string
         name: string
-        email?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
     } | null
   }
@@ -28440,7 +29529,7 @@ export type GetContextLogsQuery = {
 }
 
 export type GetLoggedInUserQueryVariables = Exact<{
-  email: Scalars['String']['input']
+  id: Scalars['ID']['input']
 }>
 
 export type GetLoggedInUserQuery = {
@@ -28451,21 +29540,39 @@ export type GetLoggedInUserQuery = {
     name: string
     firstName: string
     lastName: string
-    email?: string | null
-    phone?: string | null
-    pronouns?: string | null
-    location?: string | null
-    passions?: string | null
-    traits?: string | null
     photo?: string | null
-    fieldsOfCare?: string | null
-    interests?: string | null
-    careManual?: string | null
-    favorites?: string | null
     onboardingCurrentStepIndex?: number | null
     onboardingCompletedSteps?: Array<string> | null
     onboardingIsCompleted?: boolean | null
     onboardingSkipped?: boolean | null
+    privateProfile?: {
+      __typename?: 'PersonPrivateProfile'
+      id: string
+      email?: string | null
+      phone?: string | null
+      pronouns?: string | null
+      location?: string | null
+      passions?: string | null
+      traits?: string | null
+      fieldsOfCare?: string | null
+      interests?: string | null
+      careManual?: string | null
+      favorites?: string | null
+      connections: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+        photo?: string | null
+      }>
+      connectionEdges: Array<{
+        __typename?: 'PersonConnectionEdge'
+        connectedPersonId: string
+        why?: string | null
+        interests?: string | null
+      }>
+    } | null
     ownsSpaces: Array<
       | {
           __typename: 'MeSpace'
@@ -28502,20 +29609,6 @@ export type GetLoggedInUserQuery = {
             createdAt: any
           }
       >
-    }>
-    connections: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      photo?: string | null
-    }>
-    connectionEdges: Array<{
-      __typename?: 'PersonConnectionEdge'
-      connectedPersonId: string
-      why?: string | null
-      interests?: string | null
     }>
   }>
 }
@@ -28690,6 +29783,31 @@ export type GetFieldContextDetailsQuery = {
     title: string
     emergentName?: string | null
     createdAt: any
+    parentContext: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+    }>
+    ancestorContexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+    }>
+    subContexts: Array<{
+      __typename?: 'FieldContext'
+      id: string
+      title: string
+      emergentName?: string | null
+      createdAt: any
+      pulses: Array<
+        | { __typename?: 'CarePulse'; id: string }
+        | { __typename?: 'CoreValuePulse'; id: string }
+        | { __typename?: 'GoalPulse'; id: string }
+        | { __typename?: 'ResourcePulse'; id: string }
+        | { __typename?: 'StoryPulse'; id: string }
+      >
+      subContexts: Array<{ __typename?: 'FieldContext'; id: string }>
+    }>
     resonancesInContext: Array<{
       __typename?: 'ResonanceLink'
       id: string
@@ -28826,14 +29944,18 @@ export type GetFieldContextPeopleQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
       photo?: string | null
-      description?: string | null
-      connectionEdges: Array<{
-        __typename?: 'PersonConnectionEdge'
-        connectedPersonId: string
-        why?: string | null
-      }>
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+        description?: string | null
+        connectionEdges: Array<{
+          __typename?: 'PersonConnectionEdge'
+          connectedPersonId: string
+          why?: string | null
+        }>
+      } | null
     }>
     meSpace: Array<{
       __typename?: 'MeSpace'
@@ -28844,8 +29966,12 @@ export type GetFieldContextPeopleQuery = {
         firstName: string
         lastName: string
         name: string
-        email?: string | null
         photo?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
       members: Array<{
         __typename?: 'SpaceMembership'
@@ -28857,8 +29983,12 @@ export type GetFieldContextPeopleQuery = {
           firstName: string
           lastName: string
           name: string
-          email?: string | null
           photo?: string | null
+          privateProfile?: {
+            __typename?: 'PersonPrivateProfile'
+            id: string
+            email?: string | null
+          } | null
         }>
       }>
     }>
@@ -28871,8 +30001,12 @@ export type GetFieldContextPeopleQuery = {
         firstName: string
         lastName: string
         name: string
-        email?: string | null
         photo?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
       members: Array<{
         __typename?: 'SpaceMembership'
@@ -28884,8 +30018,12 @@ export type GetFieldContextPeopleQuery = {
           firstName: string
           lastName: string
           name: string
-          email?: string | null
           photo?: string | null
+          privateProfile?: {
+            __typename?: 'PersonPrivateProfile'
+            id: string
+            email?: string | null
+          } | null
         }>
       }>
     }>
@@ -29151,7 +30289,11 @@ export type GetAllPulsesQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   resourcePulses: Array<{
@@ -29168,7 +30310,11 @@ export type GetAllPulsesQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   storyPulses: Array<{
@@ -29185,7 +30331,11 @@ export type GetAllPulsesQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   coreValuePulses: Array<{
@@ -29202,7 +30352,11 @@ export type GetAllPulsesQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
 }
@@ -29227,7 +30381,11 @@ export type GetAllPulsesByContextQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   resourcePulses: Array<{
@@ -29244,7 +30402,11 @@ export type GetAllPulsesByContextQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   storyPulses: Array<{
@@ -29261,7 +30423,11 @@ export type GetAllPulsesByContextQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   coreValuePulses: Array<{
@@ -29278,7 +30444,11 @@ export type GetAllPulsesByContextQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
 }
@@ -29303,7 +30473,11 @@ export type GetAllPulsesBySpaceQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   resourcePulses: Array<{
@@ -29320,7 +30494,11 @@ export type GetAllPulsesBySpaceQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   storyPulses: Array<{
@@ -29337,7 +30515,11 @@ export type GetAllPulsesBySpaceQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   coreValuePulses: Array<{
@@ -29354,7 +30536,11 @@ export type GetAllPulsesBySpaceQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
 }
@@ -29456,7 +30642,11 @@ export type GetAllMeSpacesQuery = {
       id: string
       firstName: string
       lastName: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
@@ -29468,7 +30658,11 @@ export type GetAllMeSpacesQuery = {
         id: string
         firstName: string
         lastName: string
-        email?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
     }>
     contexts: Array<{
@@ -29496,7 +30690,11 @@ export type GetAllWeSpacesQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
@@ -29508,7 +30706,11 @@ export type GetAllWeSpacesQuery = {
         id: string
         firstName: string
         lastName: string
-        email?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
     }>
     contexts: Array<{
@@ -29590,57 +30792,6 @@ export type GetOrganizationDetailsQuery = {
   }>
 }
 
-export type GetPersonQueryVariables = Exact<{
-  id: Scalars['ID']['input']
-}>
-
-export type GetPersonQuery = {
-  __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
-    id: string
-    firstName: string
-    lastName: string
-    name: string
-    email?: string | null
-    traits?: string | null
-    passions?: string | null
-    fieldsOfCare?: string | null
-    ownsSpaces: Array<
-      | {
-          __typename?: 'MeSpace'
-          id: string
-          name: string
-          visibility: SpaceVisibility
-          createdAt: any
-        }
-      | {
-          __typename?: 'WeSpace'
-          id: string
-          name: string
-          visibility: SpaceVisibility
-          createdAt: any
-        }
-    >
-  }>
-}
-
-export type GetPersonDirectoryQueryVariables = Exact<{
-  personId: Scalars['ID']['input']
-}>
-
-export type GetPersonDirectoryQuery = {
-  __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
-    id: string
-    firstName: string
-    lastName: string
-    name: string
-    photo?: string | null
-  }>
-}
-
 export type GetPersonProfileQueryVariables = Exact<{
   personId: Scalars['ID']['input']
 }>
@@ -29653,29 +30804,33 @@ export type GetPersonProfileQuery = {
     firstName: string
     lastName: string
     name: string
-    email?: string | null
     photo?: string | null
-    description?: string | null
-    traits?: string | null
-    passions?: string | null
-    fieldsOfCare?: string | null
-    interests?: string | null
-    careManual?: string | null
-    favorites?: string | null
-    connections: Array<{
-      __typename?: 'Person'
+    privateProfile?: {
+      __typename?: 'PersonPrivateProfile'
       id: string
-      firstName: string
-      lastName: string
-      name: string
-      photo?: string | null
-    }>
-    connectionEdges: Array<{
-      __typename?: 'PersonConnectionEdge'
-      connectedPersonId: string
-      why?: string | null
+      email?: string | null
+      description?: string | null
+      traits?: string | null
+      passions?: string | null
+      fieldsOfCare?: string | null
       interests?: string | null
-    }>
+      careManual?: string | null
+      favorites?: string | null
+      connections: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+        photo?: string | null
+      }>
+      connectionEdges: Array<{
+        __typename?: 'PersonConnectionEdge'
+        connectedPersonId: string
+        why?: string | null
+        interests?: string | null
+      }>
+    } | null
     ownsSpaces: Array<
       | {
           __typename?: 'MeSpace'
@@ -29909,37 +31064,6 @@ export type GetPersonRelatedPulsesQuery = {
   }>
 }
 
-export type GetAllPeopleQueryVariables = Exact<{
-  where?: InputMaybe<PersonWhere>
-}>
-
-export type GetAllPeopleQuery = {
-  __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
-    id: string
-    name: string
-    email?: string | null
-    traits?: string | null
-    passions?: string | null
-    fieldsOfCare?: string | null
-    ownsSpaces: Array<
-      | {
-          __typename?: 'MeSpace'
-          id: string
-          name: string
-          visibility: SpaceVisibility
-        }
-      | {
-          __typename?: 'WeSpace'
-          id: string
-          name: string
-          visibility: SpaceVisibility
-        }
-    >
-  }>
-}
-
 export type GetRelatedPeopleQueryVariables = Exact<{ [key: string]: never }>
 
 export type GetRelatedPeopleQuery = {
@@ -29962,66 +31086,6 @@ export type GetRelatedPeopleQuery = {
           name: string
           visibility: SpaceVisibility
         }
-    >
-  }>
-}
-
-export type GetPeopleAndTheirGoalsQueryVariables = Exact<{
-  personWhere?: InputMaybe<PersonWhere>
-  goalLimit?: InputMaybe<Scalars['Int']['input']>
-}>
-
-export type GetPeopleAndTheirGoalsQuery = {
-  __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
-    id: string
-    name: string
-    ownsSpaces: Array<
-      | { __typename?: 'MeSpace'; id: string; name: string }
-      | { __typename?: 'WeSpace'; id: string; name: string }
-    >
-  }>
-}
-
-export type GetPeopleAndTheirResourcesQueryVariables = Exact<{
-  [key: string]: never
-}>
-
-export type GetPeopleAndTheirResourcesQuery = {
-  __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
-    name: string
-    id: string
-    email?: string | null
-    traits?: string | null
-    passions?: string | null
-    fieldsOfCare?: string | null
-    ownsSpaces: Array<
-      | { __typename?: 'MeSpace'; name: string; id: string }
-      | { __typename?: 'WeSpace'; name: string; id: string }
-    >
-  }>
-}
-
-export type GetPeopleAndTheirCoreValuesQueryVariables = Exact<{
-  [key: string]: never
-}>
-
-export type GetPeopleAndTheirCoreValuesQuery = {
-  __typename?: 'Query'
-  people: Array<{
-    __typename?: 'Person'
-    id: string
-    name: string
-    email?: string | null
-    traits?: string | null
-    passions?: string | null
-    fieldsOfCare?: string | null
-    ownsSpaces: Array<
-      | { __typename?: 'MeSpace'; id: string; name: string }
-      | { __typename?: 'WeSpace'; id: string; name: string }
     >
   }>
 }
@@ -30720,7 +31784,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -30728,7 +31796,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   resourcePulses: Array<{
@@ -30747,7 +31819,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -30755,7 +31831,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   storyPulses: Array<{
@@ -30772,7 +31852,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -30780,7 +31864,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   carePulses: Array<{
@@ -30797,7 +31885,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -30805,7 +31897,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
   coreValuePulses: Array<{
@@ -30822,7 +31918,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -30830,7 +31930,11 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
   }>
 }
@@ -31019,8 +32123,12 @@ export type GetSpaceDetailsCompleteQuery = {
           firstName: string
           lastName: string
           name: string
-          email?: string | null
           photo?: string | null
+          privateProfile?: {
+            __typename?: 'PersonPrivateProfile'
+            id: string
+            email?: string | null
+          } | null
         }>
         members: Array<{
           __typename?: 'SpaceMembership'
@@ -31033,7 +32141,11 @@ export type GetSpaceDetailsCompleteQuery = {
             firstName: string
             lastName: string
             name: string
-            email?: string | null
+            privateProfile?: {
+              __typename?: 'PersonPrivateProfile'
+              id: string
+              email?: string | null
+            } | null
           }>
         }>
         contexts: Array<{
@@ -31042,6 +32154,8 @@ export type GetSpaceDetailsCompleteQuery = {
           title: string
           emergentName?: string | null
           createdAt: any
+          parentContext: Array<{ __typename?: 'FieldContext'; id: string }>
+          subContexts: Array<{ __typename?: 'FieldContext'; id: string }>
           pulses: Array<
             | {
                 __typename: 'CarePulse'
@@ -31088,8 +32202,12 @@ export type GetSpaceDetailsCompleteQuery = {
           firstName: string
           lastName: string
           name: string
-          email?: string | null
           photo?: string | null
+          privateProfile?: {
+            __typename?: 'PersonPrivateProfile'
+            id: string
+            email?: string | null
+          } | null
         }>
         members: Array<{
           __typename?: 'SpaceMembership'
@@ -31102,7 +32220,11 @@ export type GetSpaceDetailsCompleteQuery = {
             firstName: string
             lastName: string
             name: string
-            email?: string | null
+            privateProfile?: {
+              __typename?: 'PersonPrivateProfile'
+              id: string
+              email?: string | null
+            } | null
           }>
         }>
         contexts: Array<{
@@ -31111,6 +32233,8 @@ export type GetSpaceDetailsCompleteQuery = {
           title: string
           emergentName?: string | null
           createdAt: any
+          parentContext: Array<{ __typename?: 'FieldContext'; id: string }>
+          subContexts: Array<{ __typename?: 'FieldContext'; id: string }>
           pulses: Array<
             | {
                 __typename: 'CarePulse'
@@ -31202,7 +32326,11 @@ export type GetSpaceMembersQuery = {
         firstName: string
         lastName: string
         name: string
-        email?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
     }>
   }>
@@ -31221,7 +32349,11 @@ export type GetSpaceMembersQuery = {
         firstName: string
         lastName: string
         name: string
-        email?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
     }>
   }>
@@ -31245,7 +32377,11 @@ export type GetWeSpaceDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
@@ -31258,7 +32394,11 @@ export type GetWeSpaceDetailsQuery = {
         firstName: string
         lastName: string
         name: string
-        email?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
     }>
     contexts: Array<{
@@ -31289,7 +32429,11 @@ export type GetMeSpaceDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
@@ -31302,7 +32446,11 @@ export type GetMeSpaceDetailsQuery = {
         firstName: string
         lastName: string
         name: string
-        email?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
     }>
     contexts: Array<{
@@ -31331,8 +32479,12 @@ export type GetWeSpaceMembersWithConnectionsQuery = {
       firstName: string
       lastName: string
       name: string
-      email?: string | null
       photo?: string | null
+      privateProfile?: {
+        __typename?: 'PersonPrivateProfile'
+        id: string
+        email?: string | null
+      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
@@ -31344,8 +32496,12 @@ export type GetWeSpaceMembersWithConnectionsQuery = {
         firstName: string
         lastName: string
         name: string
-        email?: string | null
         photo?: string | null
+        privateProfile?: {
+          __typename?: 'PersonPrivateProfile'
+          id: string
+          email?: string | null
+        } | null
       }>
     }>
   }>
@@ -31360,20 +32516,24 @@ export type GetPersonConnectionsQuery = {
   people: Array<{
     __typename?: 'Person'
     id: string
-    connections: Array<{
-      __typename?: 'Person'
+    privateProfile?: {
+      __typename?: 'PersonPrivateProfile'
       id: string
-      firstName: string
-      lastName: string
-      name: string
-      photo?: string | null
-    }>
-    connectionEdges: Array<{
-      __typename?: 'PersonConnectionEdge'
-      connectedPersonId: string
-      why?: string | null
-      interests?: string | null
-    }>
+      connections: Array<{
+        __typename?: 'Person'
+        id: string
+        firstName: string
+        lastName: string
+        name: string
+        photo?: string | null
+      }>
+      connectionEdges: Array<{
+        __typename?: 'PersonConnectionEdge'
+        connectedPersonId: string
+        why?: string | null
+        interests?: string | null
+      }>
+    } | null
   }>
 }
 
@@ -32203,6 +33363,10 @@ export const DeleteFieldContextDocument = {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'deletedPulseCount' },
                 },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'deletedSubContextCount' },
+                },
               ],
             },
           },
@@ -32213,6 +33377,172 @@ export const DeleteFieldContextDocument = {
 } as unknown as DocumentNode<
   DeleteFieldContextMutation,
   DeleteFieldContextMutationVariables
+>
+export const CreateSubFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreateSubFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'parentContextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'title' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'String' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'emergentName' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'String' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createSubFieldContext' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'parentContextId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'parentContextId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'title' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'title' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'emergentName' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'emergentName' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'contextId' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'parentContextId' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreateSubFieldContextMutation,
+  CreateSubFieldContextMutationVariables
+>
+export const MoveFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'MoveFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'newParentContextId' },
+          },
+          type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'moveFieldContext' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'contextId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'contextId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'newParentContextId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'newParentContextId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'contextId' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'newParentContextId' },
+                },
+                { kind: 'Field', name: { kind: 'Name', value: 'moved' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  MoveFieldContextMutation,
+  MoveFieldContextMutationVariables
 >
 export const ConnectFieldToSpaceDocument = {
   kind: 'Document',
@@ -32995,7 +34325,23 @@ export const CreatePeopleDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'ownsSpaces' },
@@ -33103,7 +34449,6 @@ export const UpdatePersonDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'firstName' },
@@ -33112,27 +34457,47 @@ export const UpdatePersonDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
-                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'pronouns' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'traits' },
-                      },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'location' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'passions' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'fieldsOfCare' },
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'phone' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'pronouns' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'traits' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'location' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'passions' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'fieldsOfCare' },
+                            },
+                          ],
+                        },
                       },
                       {
                         kind: 'Field',
@@ -33294,10 +34659,6 @@ export const UpdatePersonPulseDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
                     ],
                   },
                 },
@@ -36923,7 +38284,20 @@ export const AddSpaceMemberDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -37060,7 +38434,20 @@ export const InviteToSpaceByEmailDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -37894,16 +39281,10 @@ export const GetLoggedInUserDocument = {
       variableDefinitions: [
         {
           kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'email' },
-          },
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
           type: {
             kind: 'NonNullType',
-            type: {
-              kind: 'NamedType',
-              name: { kind: 'Name', value: 'String' },
-            },
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
           },
         },
       ],
@@ -37922,10 +39303,10 @@ export const GetLoggedInUserDocument = {
                   fields: [
                     {
                       kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'email_EQ' },
+                      name: { kind: 'Name', value: 'id_EQ' },
                       value: {
                         kind: 'Variable',
-                        name: { kind: 'Name', value: 'email' },
+                        name: { kind: 'Name', value: 'id' },
                       },
                     },
                   ],
@@ -37939,20 +39320,104 @@ export const GetLoggedInUserDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'pronouns' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'fieldsOfCare' },
+                  name: { kind: 'Name', value: 'privateProfile' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pronouns' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'passions' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'traits' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'fieldsOfCare' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'interests' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'careManual' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'favorites' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connections' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connectionEdges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: {
+                                kind: 'Name',
+                                value: 'connectedPersonId',
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'why' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'interests' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
                 },
-                { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'careManual' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'favorites' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'onboardingCurrentStepIndex' },
@@ -38116,44 +39581,6 @@ export const GetLoggedInUserDocument = {
                             },
                           ],
                         },
-                      },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'connections' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'connectionEdges' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'connectedPersonId' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'interests' },
                       },
                     ],
                   },
@@ -38828,6 +40255,73 @@ export const GetFieldContextDetailsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 {
                   kind: 'Field',
+                  name: { kind: 'Name', value: 'parentContext' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ancestorContexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'subContexts' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'emergentName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'pulses' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'subContexts' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
                   name: { kind: 'Name', value: 'resonancesInContext' },
                   selectionSet: {
                     kind: 'SelectionSet',
@@ -39403,28 +40897,44 @@ export const GetFieldContextPeopleDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'description' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'connectionEdges' },
+                        name: { kind: 'Name', value: 'privateProfile' },
                         selectionSet: {
                           kind: 'SelectionSet',
                           selections: [
                             {
                               kind: 'Field',
-                              name: {
-                                kind: 'Name',
-                                value: 'connectedPersonId',
-                              },
+                              name: { kind: 'Name', value: 'id' },
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'why' },
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'description' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'connectionEdges' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'connectedPersonId',
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'why' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -39463,11 +40973,24 @@ export const GetFieldContextPeopleDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'photo' },
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'photo' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -39510,11 +41033,30 @@ export const GetFieldContextPeopleDocument = {
                                   },
                                   {
                                     kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
+                                    name: { kind: 'Name', value: 'photo' },
                                   },
                                   {
                                     kind: 'Field',
-                                    name: { kind: 'Name', value: 'photo' },
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'privateProfile',
+                                    },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'id' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'email',
+                                          },
+                                        },
+                                      ],
+                                    },
                                   },
                                 ],
                               },
@@ -39556,11 +41098,24 @@ export const GetFieldContextPeopleDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'photo' },
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'photo' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -39603,11 +41158,30 @@ export const GetFieldContextPeopleDocument = {
                                   },
                                   {
                                     kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
+                                    name: { kind: 'Name', value: 'photo' },
                                   },
                                   {
                                     kind: 'Field',
-                                    name: { kind: 'Name', value: 'photo' },
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'privateProfile',
+                                    },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'id' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'email',
+                                          },
+                                        },
+                                      ],
+                                    },
                                   },
                                 ],
                               },
@@ -40547,7 +42121,23 @@ export const GetAllPulsesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -40593,7 +42183,23 @@ export const GetAllPulsesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -40639,7 +42245,23 @@ export const GetAllPulsesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -40685,7 +42307,23 @@ export const GetAllPulsesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -40787,7 +42425,23 @@ export const GetAllPulsesByContextDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -40861,7 +42515,23 @@ export const GetAllPulsesByContextDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -40935,7 +42605,23 @@ export const GetAllPulsesByContextDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -41009,7 +42695,23 @@ export const GetAllPulsesByContextDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -41177,7 +42879,23 @@ export const GetAllPulsesBySpaceDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -41314,7 +43032,23 @@ export const GetAllPulsesBySpaceDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -41451,7 +43185,23 @@ export const GetAllPulsesBySpaceDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -41588,7 +43338,23 @@ export const GetAllPulsesBySpaceDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -42107,7 +43873,23 @@ export const GetAllMeSpacesDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -42143,7 +43925,20 @@ export const GetAllMeSpacesDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -42210,7 +44005,23 @@ export const GetAllWeSpacesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -42246,7 +44057,20 @@ export const GetAllWeSpacesDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -42469,153 +44293,6 @@ export const GetOrganizationDetailsDocument = {
   GetOrganizationDetailsQuery,
   GetOrganizationDetailsQueryVariables
 >
-export const GetPersonDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPerson' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'id_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'id' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'fieldsOfCare' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'ownsSpaces' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'visibility' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetPersonQuery, GetPersonQueryVariables>
-export const GetPersonDirectoryDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPersonDirectory' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'personId' },
-          },
-          type: {
-            kind: 'NonNullType',
-            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'ObjectValue',
-                  fields: [
-                    {
-                      kind: 'ObjectField',
-                      name: { kind: 'Name', value: 'id_EQ' },
-                      value: {
-                        kind: 'Variable',
-                        name: { kind: 'Name', value: 'personId' },
-                      },
-                    },
-                  ],
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetPersonDirectoryQuery,
-  GetPersonDirectoryQueryVariables
->
 export const GetPersonProfileDocument = {
   kind: 'Document',
   definitions: [
@@ -42668,52 +44345,95 @@ export const GetPersonProfileDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'firstName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'lastName' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'fieldsOfCare' },
-                },
-                { kind: 'Field', name: { kind: 'Name', value: 'interests' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'careManual' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'favorites' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'connections' },
+                  name: { kind: 'Name', value: 'privateProfile' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
+                        name: { kind: 'Name', value: 'description' },
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
+                        name: { kind: 'Name', value: 'traits' },
                       },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'connectionEdges' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'connectedPersonId' },
+                        name: { kind: 'Name', value: 'passions' },
                       },
-                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'fieldsOfCare' },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'interests' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'careManual' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'favorites' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connections' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'connectionEdges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: {
+                                kind: 'Name',
+                                value: 'connectedPersonId',
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'why' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'interests' },
+                            },
+                          ],
+                        },
                       },
                     ],
                   },
@@ -43258,77 +44978,6 @@ export const GetPersonRelatedPulsesDocument = {
   GetPersonRelatedPulsesQuery,
   GetPersonRelatedPulsesQueryVariables
 >
-export const GetAllPeopleDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getAllPeople' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'where' },
-          },
-          type: {
-            kind: 'NamedType',
-            name: { kind: 'Name', value: 'PersonWhere' },
-          },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'where' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'fieldsOfCare' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'ownsSpaces' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'visibility' },
-                      },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<GetAllPeopleQuery, GetAllPeopleQueryVariables>
 export const GetRelatedPeopleDocument = {
   kind: 'Document',
   definitions: [
@@ -43373,171 +45022,6 @@ export const GetRelatedPeopleDocument = {
 } as unknown as DocumentNode<
   GetRelatedPeopleQuery,
   GetRelatedPeopleQueryVariables
->
-export const GetPeopleAndTheirGoalsDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPeopleAndTheirGoals' },
-      variableDefinitions: [
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'personWhere' },
-          },
-          type: {
-            kind: 'NamedType',
-            name: { kind: 'Name', value: 'PersonWhere' },
-          },
-        },
-        {
-          kind: 'VariableDefinition',
-          variable: {
-            kind: 'Variable',
-            name: { kind: 'Name', value: 'goalLimit' },
-          },
-          type: { kind: 'NamedType', name: { kind: 'Name', value: 'Int' } },
-        },
-      ],
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
-            arguments: [
-              {
-                kind: 'Argument',
-                name: { kind: 'Name', value: 'where' },
-                value: {
-                  kind: 'Variable',
-                  name: { kind: 'Name', value: 'personWhere' },
-                },
-              },
-            ],
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'ownsSpaces' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetPeopleAndTheirGoalsQuery,
-  GetPeopleAndTheirGoalsQueryVariables
->
-export const GetPeopleAndTheirResourcesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPeopleAndTheirResources' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'fieldsOfCare' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'ownsSpaces' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetPeopleAndTheirResourcesQuery,
-  GetPeopleAndTheirResourcesQueryVariables
->
-export const GetPeopleAndTheirCoreValuesDocument = {
-  kind: 'Document',
-  definitions: [
-    {
-      kind: 'OperationDefinition',
-      operation: 'query',
-      name: { kind: 'Name', value: 'getPeopleAndTheirCoreValues' },
-      selectionSet: {
-        kind: 'SelectionSet',
-        selections: [
-          {
-            kind: 'Field',
-            name: { kind: 'Name', value: 'people' },
-            selectionSet: {
-              kind: 'SelectionSet',
-              selections: [
-                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'traits' } },
-                { kind: 'Field', name: { kind: 'Name', value: 'passions' } },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'fieldsOfCare' },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'ownsSpaces' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                    ],
-                  },
-                },
-              ],
-            },
-          },
-        ],
-      },
-    },
-  ],
-} as unknown as DocumentNode<
-  GetPeopleAndTheirCoreValuesQuery,
-  GetPeopleAndTheirCoreValuesQueryVariables
 >
 export const GetPromiseWeaveDetailsDocument = {
   kind: 'Document',
@@ -45990,7 +47474,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46010,7 +47510,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46080,7 +47596,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46100,7 +47632,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46165,7 +47713,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46185,7 +47749,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46250,7 +47830,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46270,7 +47866,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46335,7 +47947,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -46355,7 +47983,23 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -47122,7 +48766,20 @@ export const GetSpaceDetailsCompleteDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                             {
                               kind: 'Field',
@@ -47177,7 +48834,26 @@ export const GetSpaceDetailsCompleteDocument = {
                                   },
                                   {
                                     kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'privateProfile',
+                                    },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'id' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'email',
+                                          },
+                                        },
+                                      ],
+                                    },
                                   },
                                 ],
                               },
@@ -47206,6 +48882,32 @@ export const GetSpaceDetailsCompleteDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'createdAt' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'parentContext' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'subContexts' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                ],
+                              },
                             },
                             {
                               kind: 'Field',
@@ -47285,7 +48987,20 @@ export const GetSpaceDetailsCompleteDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                             {
                               kind: 'Field',
@@ -47340,7 +49055,26 @@ export const GetSpaceDetailsCompleteDocument = {
                                   },
                                   {
                                     kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'privateProfile',
+                                    },
+                                    selectionSet: {
+                                      kind: 'SelectionSet',
+                                      selections: [
+                                        {
+                                          kind: 'Field',
+                                          name: { kind: 'Name', value: 'id' },
+                                        },
+                                        {
+                                          kind: 'Field',
+                                          name: {
+                                            kind: 'Name',
+                                            value: 'email',
+                                          },
+                                        },
+                                      ],
+                                    },
                                   },
                                 ],
                               },
@@ -47369,6 +49103,32 @@ export const GetSpaceDetailsCompleteDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'createdAt' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'parentContext' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'subContexts' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                ],
+                              },
                             },
                             {
                               kind: 'Field',
@@ -47593,7 +49353,20 @@ export const GetSpaceMembersDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -47667,7 +49440,20 @@ export const GetSpaceMembersDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -47754,7 +49540,23 @@ export const GetWeSpaceDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -47794,7 +49596,20 @@ export const GetWeSpaceDetailsDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -47900,7 +49715,23 @@ export const GetMeSpaceDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -47940,7 +49771,20 @@ export const GetMeSpaceDetailsDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -48044,8 +49888,24 @@ export const GetWeSpaceMembersWithConnectionsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'privateProfile' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'email' },
+                            },
+                          ],
+                        },
+                      },
                     ],
                   },
                 },
@@ -48081,11 +49941,24 @@ export const GetWeSpaceMembersWithConnectionsDocument = {
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
+                              name: { kind: 'Name', value: 'photo' },
                             },
                             {
                               kind: 'Field',
-                              name: { kind: 'Name', value: 'photo' },
+                              name: { kind: 'Name', value: 'privateProfile' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'id' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'email' },
+                                  },
+                                ],
+                              },
                             },
                           ],
                         },
@@ -48164,38 +50037,63 @@ export const GetPersonConnectionsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 {
                   kind: 'Field',
-                  name: { kind: 'Name', value: 'connections' },
+                  name: { kind: 'Name', value: 'privateProfile' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
+                        name: { kind: 'Name', value: 'connections' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'photo' },
+                            },
+                          ],
+                        },
                       },
                       {
                         kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'connectionEdges' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'connectedPersonId' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'why' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'interests' },
+                        name: { kind: 'Name', value: 'connectionEdges' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: {
+                                kind: 'Name',
+                                value: 'connectedPersonId',
+                              },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'why' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'interests' },
+                            },
+                          ],
+                        },
                       },
                     ],
                   },

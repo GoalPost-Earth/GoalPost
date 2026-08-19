@@ -30,7 +30,16 @@ export const retryLink = new RetryLink({
     retryIf: (error) => {
       const status = (error as { statusCode?: number } | undefined)
         ?.statusCode
-      if (typeof status === 'number' && status >= 400 && status < 500) {
+      // Any response that reached us with a status — 4xx or 5xx — is not the
+      // transient case RetryLink is for. A 504 means the request exhausted the
+      // API's execution budget and a 502 means the function died on it; both
+      // repeat identically, so retrying burned 5 × 60s before any error could
+      // surface (a page whose loading state is gated on the query looked like
+      // it hung forever) while multiplying load on an already-saturated
+      // endpoint. Fail fast and let the caller render a retry affordance the
+      // user controls. Genuinely transient faults — connection reset, DNS,
+      // aborted fetch — carry no status and still retry below.
+      if (typeof status === 'number' && status >= 400) {
         return false
       }
       return !!error

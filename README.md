@@ -119,7 +119,7 @@ inline, including the ones with sharp edges. The essentials:
 | PDF document ingestion | `GOOGLE_GENERATIVE_AI_API_KEY`, `GEMINI_INGEST_*`                   | No PDF extraction                   |
 | Document blob storage | `AWS_REGION`, `S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Set `INGEST_BLOB_BACKEND=memory` for local testing |
 | Transactional email   | `RESEND_API_KEY`, `NEXT_PUBLIC_EMAIL_FROM`                           | No password reset or invite emails  |
-| Rate limiting         | `KV_REST_API_URL`, `KV_REST_API_TOKEN` (Upstash / Vercel KV)         | Limiter falls back — see `src/lib/auth/rate-limit.ts` |
+| Rate limiting         | `KV_REST_API_URL`, `KV_REST_API_TOKEN` (Upstash via Vercel Marketplace) | Auth limiters fail open, but invites/member-adds are DENIED (fail-closed) — see `src/lib/auth/rate-limit.ts` |
 | Cron authentication   | `CRON_SECRET`                                                        | Cron endpoint auth check disabled locally |
 
 GoalPost currently uses proprietary models (OpenAI for the assistant and

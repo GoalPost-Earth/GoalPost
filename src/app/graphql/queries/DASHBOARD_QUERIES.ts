@@ -1,23 +1,48 @@
 import { graphql } from '@/gql'
 
+// Keyed on the caller's own Person id, NOT their email. `Person.email` is no
+// longer filterable: the generated `email_STARTS_WITH` / `_CONTAINS` operators
+// that came with `email_EQ` were an account-enumeration oracle for any
+// authenticated caller. The id is already in hand — login and signup both
+// return it and it is the same value as the JWT's `user.id` — so this lookup
+// loses nothing, seeks the id index instead of scanning a property, and cannot
+// be aimed at somebody else's account.
 export const GET_LOGGED_IN_USER = graphql(`
-  query getLoggedInUser($email: String!) {
-    people(where: { email_EQ: $email }) {
+  query getLoggedInUser($id: ID!) {
+    people(where: { id_EQ: $id }) {
       id
       name
       firstName
       lastName
-      email
-      phone
-      pronouns
-      location
-      passions
-      traits
       photo
-      fieldsOfCare
-      interests
-      careManual
-      favorites
+      # GOAL-275 PII — read through the single type-level gate. This is the
+      # caller's OWN node (matched on their own id), so the "is the person"
+      # branch always authorizes it and privateProfile is never null here.
+      privateProfile {
+        id
+        email
+        phone
+        pronouns
+        location
+        passions
+        traits
+        fieldsOfCare
+        interests
+        careManual
+        favorites
+        connections {
+          id
+          firstName
+          lastName
+          name
+          photo
+        }
+        connectionEdges {
+          connectedPersonId
+          why
+          interests
+        }
+      }
       onboardingCurrentStepIndex
       onboardingCompletedSteps
       onboardingIsCompleted
@@ -57,18 +82,6 @@ export const GET_LOGGED_IN_USER = graphql(`
             name
           }
         }
-      }
-      connections {
-        id
-        firstName
-        lastName
-        name
-        photo
-      }
-      connectionEdges {
-        connectedPersonId
-        why
-        interests
       }
     }
   }

@@ -205,15 +205,30 @@ async function getFocalRecord(
       return rows?.[0]?.record ?? null
     }
     case 'FieldContext': {
+      // GOAL-295: contexts can be nested. Surface the parent chain and the
+      // live sub-contexts (titles included — kb/07 Rule 3) so the assistant
+      // describes a sub-field as sitting inside its parent field, not as
+      // hanging directly off the Space.
       const cypher = `
         MATCH (c:FieldContext {id: $id})
         OPTIONAL MATCH (s:Space)-[:HAS_CONTEXT]->(c)
         WITH c, head(collect(s)) AS s
+        OPTIONAL MATCH (parent:FieldContext)-[:HAS_SUBCONTEXT]->(c)
+        WITH c, s, head(collect(parent)) AS parent
+        OPTIONAL MATCH (c)-[:HAS_SUBCONTEXT]->(child:FieldContext)
+        WHERE child.deletedAt IS NULL
+        WITH c, s, parent,
+             [ch IN collect(DISTINCT child) | { id: ch.id, title: ch.title }] AS subContexts
         RETURN {
           id: c.id,
           title: c.title,
           emergentName: c.emergentName,
           createdAt: c.createdAt,
+          parentContext: CASE WHEN parent IS NULL THEN null ELSE {
+            id: parent.id,
+            title: parent.title
+          } END,
+          subContexts: subContexts,
           space: CASE WHEN s IS NULL THEN null ELSE {
             id: s.id,
             name: s.name,
@@ -807,7 +822,7 @@ export async function buildSimulationChatTools(
         logToolDispatch('search_person', ctx, { name })
         try {
           const graph = await initGraph()
-          const personTool = createPersonSearchTool(graph)
+          const personTool = createPersonSearchTool(graph, ctx.currentUserId)
           const result = await personTool.invoke({ name })
           return JSON.parse(result)
         } catch (error) {

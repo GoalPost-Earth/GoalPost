@@ -1,49 +1,5 @@
 import { graphql } from '@/gql'
 
-export const GET_PERSON = graphql(`
-  query getPerson($id: ID!) {
-    people(where: { id_EQ: $id }) {
-      id
-      firstName
-      lastName
-      name
-      email
-      traits
-      passions
-      fieldsOfCare
-      ownsSpaces {
-        id
-        name
-        visibility
-        createdAt
-      }
-    }
-  }
-`)
-
-/**
- * Open directory-only lookup — selects ONLY the fields left ungated by the
- * GOAL-275 Person PII filter (id / firstName / lastName / name / photo). Because
- * it never touches a gated field, this query resolves for ANY existing Person
- * regardless of the caller's relationship to them. The drawer uses it as a
- * fallback: when GET_PERSON_PROFILE returns empty (the PII gate filtered the
- * node out for this caller — e.g. a connection the caller neither created nor
- * shares a Space with), a non-empty result here means "the person exists, you
- * just can't see their private profile" → render a graceful limited card
- * instead of the misleading "no longer available / you lost access" not-found.
- */
-export const GET_PERSON_DIRECTORY = graphql(`
-  query getPersonDirectory($personId: ID!) {
-    people(where: { id_EQ: $personId }) {
-      id
-      firstName
-      lastName
-      name
-      photo
-    }
-  }
-`)
-
 export const GET_PERSON_PROFILE = graphql(`
   query getPersonProfile($personId: ID!) {
     people(where: { id_EQ: $personId }) {
@@ -51,26 +7,32 @@ export const GET_PERSON_PROFILE = graphql(`
       firstName
       lastName
       name
-      email
       photo
-      description
-      traits
-      passions
-      fieldsOfCare
-      interests
-      careManual
-      favorites
-      connections {
+      # Null when the caller is not authorized for this person's PII — the
+      # single GOAL-275 gate. The row itself still resolves, so the drawer and
+      # profile page can render the directory card rather than a not-found.
+      privateProfile {
         id
-        firstName
-        lastName
-        name
-        photo
-      }
-      connectionEdges {
-        connectedPersonId
-        why
+        email
+        description
+        traits
+        passions
+        fieldsOfCare
         interests
+        careManual
+        favorites
+        connections {
+          id
+          firstName
+          lastName
+          name
+          photo
+        }
+        connectionEdges {
+          connectedPersonId
+          why
+          interests
+        }
       }
       ownsSpaces {
         ... on MeSpace {
@@ -194,24 +156,6 @@ export const GET_PERSON_RELATED_PULSES = graphql(`
   }
 `)
 
-export const GET_ALL_PEOPLE = graphql(`
-  query getAllPeople($where: PersonWhere) {
-    people(where: $where) {
-      id
-      name
-      email
-      traits
-      passions
-      fieldsOfCare
-      ownsSpaces {
-        id
-        name
-        visibility
-      }
-    }
-  }
-`)
-
 export const GET_RELATED_PEOPLE = graphql(`
   query getRelatedPeople {
     relatedPeople {
@@ -222,53 +166,6 @@ export const GET_RELATED_PEOPLE = graphql(`
         id
         name
         visibility
-      }
-    }
-  }
-`)
-
-export const GET_PEOPLE_AND_THEIR_GOALS = graphql(`
-  query getPeopleAndTheirGoals($personWhere: PersonWhere, $goalLimit: Int) {
-    people(where: $personWhere) {
-      id
-      name
-      ownsSpaces {
-        id
-        name
-      }
-    }
-  }
-`)
-
-export const GET_PEOPLE_AND_THEIR_RESOURCES = graphql(`
-  query getPeopleAndTheirResources {
-    people {
-      name
-      id
-      email
-      traits
-      passions
-      fieldsOfCare
-      ownsSpaces {
-        name
-        id
-      }
-    }
-  }
-`)
-
-export const GET_PEOPLE_AND_THEIR_COREVALUES = graphql(`
-  query getPeopleAndTheirCoreValues {
-    people {
-      id
-      name
-      email
-      traits
-      passions
-      fieldsOfCare
-      ownsSpaces {
-        id
-        name
       }
     }
   }

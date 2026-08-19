@@ -1,11 +1,17 @@
 import { Context } from '@/config/types'
 
-// GOAL-275: directory-safe shape only. This resolver returns [Person!]! but is
-// a custom resolver, so the Person type's field-level PII @authorization does
-// NOT apply to the objects it emits — it must therefore never carry PII (the
-// related set includes CONNECTED_TO-only contacts the caller shares no Space
-// with). Name + photo + owned spaces are the directory fields; `name` is
-// resolved from firstName/lastName by the Person.name customResolver.
+// GOAL-275: directory-safe shape only. This resolver returns [Person!]! as
+// plain objects rather than going through Cypher translation, so it must never
+// carry PII itself — the related set includes CONNECTED_TO-only contacts the
+// caller shares no Space with. Name + photo + owned spaces are the directory
+// fields; `name` is resolved from firstName/lastName by the Person.name
+// customResolver.
+//
+// Since the gate moved to `PersonPrivateProfile`, this fails closed on its own:
+// PII is no longer selectable on `Person` at all, and `Person.privateProfile`
+// is a @cypher field with no standalone resolver, so it resolves to null on a
+// hand-built object. Keep the projection directory-only anyway — that is the
+// invariant, not an accident of the current library behaviour.
 interface PersonRecord {
   id: string
   firstName: string

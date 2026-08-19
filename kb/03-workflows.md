@@ -14,6 +14,8 @@ WF-06: Resonance Discovery               (Background: AI finds semantic connecti
 WF-07: Human Resonance Review            (User confirms, edits, or rejects AI-found resonances)
 WF-08: WeSpace Collaboration             (Owner invites members, shared pulse creation)
 WF-09: Data Import                       (User imports CSV/XLSX data into the system)
+WF-10: Document Ingestion                (User uploads a file; a worker extracts entities from it)
+WF-11: Bulk Article Import               (User uploads a spreadsheet; a worker mints one pulse per row)
 ```
 
 ---
@@ -58,6 +60,25 @@ WF-09: Data Import                       (User imports CSV/XLSX data into the sy
 2. Creates a new FieldContext with a title.
 3. FieldContext appears within the space, ready to receive pulses.
 4. Over time, an emergent name may be generated from the content within.
+
+### Sub-context creation & nesting (GOAL-295)
+
+**Actor:** Space Owner, ADMIN, or MEMBER (`canEditContent`)
+
+1. User opens a FieldContext detail page and uses "New sub-field" in the
+   Sub-fields section (custom `createSubFieldContext` mutation).
+2. The child is created in the SAME Space as the parent — its own
+   `HAS_CONTEXT` edge — plus a `HAS_SUBCONTEXT` overlay edge from the
+   parent. Depth is capped at 5 levels.
+3. "Move" on the detail page re-parents a field under another same-Space
+   field, or lifts it to the top level (custom `moveFieldContext` mutation;
+   cycles and depth violations are rejected server-side).
+4. The Space page lists only TOP-LEVEL fields; nested sub-fields are
+   reached by drilling into their parent (breadcrumb shows
+   Space → field → … → sub-field).
+5. Both mutations write an activity Log in the same transaction.
+6. Resonance discovery is NOT partitioned by nesting: the root field's
+   whole subtree is one resonance scope (see ADR-017).
 
 ---
 
@@ -138,6 +159,9 @@ WF-09: Data Import                       (User imports CSV/XLSX data into the sy
 
 1. Owner creates a WeSpace (see WF-02).
 2. Owner invites members — each gets a `SpaceMembership` with a role (ADMIN / MEMBER / GUEST).
+   - **Existing User:** gets a token-free "you've been added" email deep-linking into the space.
+   - **Not yet registered (GOAL-329):** a placeholder `Person` (no `:User` label) is created/resolved by email, the `SpaceMembership` is created immediately, and a **single-use invite link (7-day expiry)** is emailed. The raw token only exists in the email; only its sha256 hash is stored on the Person. Accepting the link (`/auth/accept-invite`) collects name + password, promotes the Person to `:User`, creates their MeSpace, and signs them in to the invited space.
+   - **Re-adding a pending invitee re-mints + re-sends the link** — this is the recovery path for expired, overwritten, or lost invite links. The pending membership's role is never changed by a re-invite. Emailed links are built via `resolveAppBaseUrl` (never a raw `NEXT_PUBLIC_BASE_URL`), so they always point at the deployment whose DB minted the token.
 3. Members can browse the space's FieldContexts and pulses (based on role permissions).
 4. ADMIN and MEMBER roles can create pulses within shared FieldContexts.
 5. Resonances form across contributions from different members.
@@ -166,12 +190,28 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    FieldContext focused. The browser POSTs to
    `/api/ingest/document/presign` to get a short-lived presigned PUT URL,
    then uploads the file **directly to S3** (bytes never traverse our
-   server). It then POSTs `/api/ingest/document/process` to trigger
+   server). It then POSTs `/api/ingest/document/process` to **enqueue**
    extraction. (The legacy GraphQL `uploadDocument` mutation has been
    removed — see ADR-015.)
 2. The process endpoint gates on `canEditContent`, anchors a Document
    node to the FieldContext via `HAS_DOCUMENT` and to the uploader via
-   `UPLOADED_BY`, and stamps the S3 `blobKey`.
+   `UPLOADED_BY`, stamps the S3 `blobKey`, sets `status = 'PENDING'`, and
+   returns **202 Accepted** immediately (GOAL-292). Nothing has been read
+   or extracted at this point.
+2b. **`/api/cron/process-document-ingestion` (every minute) does steps 3–7.**
+   It claims PENDING documents with a conditional transition to
+   `PROCESSING` that is safe against overlapping runs, then runs the shared
+   pipeline as the **persisted uploader** — the worker holds no JWT, so the
+   `UPLOADED_BY` edge written at step 2 *is* the captured authorization
+   decision. It finishes by setting `COMPLETE`, or `FAILED` with member-safe
+   `statusMessage`. A claim stranded by a killed worker is reclaimed after
+   15 minutes and abandoned to `FAILED` after 3 attempts, so nothing spins
+   forever. Status lifecycle: `kb/04-state-machines.md`.
+   The upload UI polls `Document.status` and shows Queued / Extracting /
+   Failed on the document row rather than blocking on the response.
+   This replaced the original synchronous orchestrator, which held the
+   whole LLM pipeline inside the request and was the source of every
+   observed 504 (`maxDuration = 300` was the stopgap).
 3. A dedicated extraction model (independent of the chat assistant; may
    be reasoning — `kb/07-ai-assistant-ux.md` Rule 6) reads the document
    alongside the FieldContext roster (persons + pulses + **organizations**)
@@ -216,7 +256,15 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    ingest thread, refreshes the summary + concepts, and auto-executes
    the new proposals. Delete removes the blob and Document node;
    extracted entities survive (their `EXTRACTED_FROM` edges drop with
-   the Document).
+   the Document). In the same transaction the delete also nulls
+   `location` on surviving pulses whose stored value parses (via
+   `parseDocumentDownloadLocation`) to the deleted document's durable
+   download locator, and writes an attributed `:Log` for the clearing
+   (GOAL-321) — extracted or manually set locations that aren't this
+   document's locator are never touched. A stale locator that survives
+   elsewhere (browser history, shared links) resolves to a friendly
+   `/document-unavailable` page for browser navigations; API callers
+   keep the JSON 404.
 9. Extracted pulses flow through the existing post-creation embedding and
    enrichment jobs (WF-05) and become eligible for daily resonance
    discovery (WF-06) without any ingest-specific pipeline.
@@ -227,8 +275,79 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
 - **Pulse types extracted.** `GoalPulse`, `ResourcePulse`, `StoryPulse` only. `CarePulse` and `CoreValuePulse` remain manual-only (StoryPulse absorbs the legacy Care + CoreValue concepts).
 - **Organizations are captured (GOAL-298).** Named organizations / groups / cooperatives are extracted as first-class `:Organization` nodes (`create_organization`), attached to the FieldContext via `HAS_ORGANIZATION`, and idempotent by name-within-context. Full first-class org modelling beyond upload-time capture (Living-System / LifeSensor sub-classes) is a follow-up.
 - **Durable source link on extracted pulses (GOAL-283 / GOAL-316).** Every pulse created from a document — `GoalPulse`, `ResourcePulse`, and `StoryPulse` alike — gets `location` auto-populated with the durable Space-scoped download URL (`/api/ingest/document/<id>/download`) when the extractor read no explicit location from the text. `location` is the **user-facing** provenance surface (the UI renders it as an opaque "Open document" action per GOAL-302, never the raw URL); the `EXTRACTED_FROM` edge remains a graph-only audit trail. An extracted or manually set location is never clobbered.
-- **Deduplication is in-extractor.** The process endpoint pre-loads the FieldContext roster (persons + pulses + organizations, projected to id + name + minimal context) and inlines it in the model prompt; the model emits `update_person` / `update_pulse` for roster matches rather than creating duplicates (orgs dedup at write time by name-in-context).
+- **Deduplication is in-extractor.** The ingest worker pre-loads the FieldContext roster (persons + pulses + organizations, projected to id + name + minimal context) and inlines it in the model prompt; the model emits `update_person` / `update_pulse` for roster matches rather than creating duplicates (orgs dedup at write time by name-in-context).
 - **Partial persons are skipped.** `create_person` / `update_person` is emitted only when both `firstName` AND `lastName` can be confidently filled. First-name-only / initial-only / role-only mentions are listed in the assistant's free-text reply for manual follow-up — but a single-name mention that is actually an organization is routed to `organizations`, not dropped.
 - **No auto-`CONNECTED_TO`.** Extraction does not create `CONNECTED_TO` edges between the uploader and extracted Persons. `EXTRACTED_FROM` records "this person came from a doc the user has"; `CONNECTED_TO` remains a deliberate user gesture.
-- **Failure path.** On extraction failure (model error, malformed output, empty result), the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message. The Document persists; re-extract is the uniform retry path.
+- **Failure path.** On extraction failure (model error, malformed output, empty result), the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message. The Document persists; re-extract is the uniform retry path. A failure *before* the model runs (unreadable blob, unsupported type, oversize, parse error) never produces a thread — it lands the Document in `status = 'FAILED'` with member-safe `statusMessage`, rendered as a Failed chip plus an inline error on the document row. Re-extract is blocked while a document is `PENDING`/`PROCESSING`, since a second pipeline would double-write its summary and thread.
 - **Re-upload semantics.** Uploading the same file again creates a new `Document` node with its own ingest thread — no file versioning in v1.
+
+---
+
+## WF-11 — Bulk Article Import (FieldContext)
+
+**Actor:** Authenticated User with `canEditContent` on the parent Space.
+
+Spreadsheet-driven bulk upload of articles as pulses (GOAL-317), made durable
+in GOAL-326. See ADR-019 in `kb/06-adr.md` for why the job lives in the graph
+rather than on Redis, and `kb/04-state-machines.md` for the status machine.
+
+1. From the field action bar the member picks a `.csv` / `.xlsx` where each
+   row is an article — title, author, date, URL, plus optional
+   `author_email` / `pulse_type` / `description`. Parsing, header mapping and
+   per-row validation happen **in the browser** (`article-import.ts`), so the
+   preview step can show exactly what will and will not import.
+2. The preview is the human-in-the-loop gate: valid rows, rows with issues,
+   and the file name. Nothing has been written yet. Confirming POSTs the typed
+   rows to `/api/import/articles`.
+3. That request **enqueues and returns 202** with a job id. It authenticates,
+   applies the `bulk-import` rate limit (10/hour/account), re-runs the same
+   validation server-side, gates on `canEditContent`, checks the per-account
+   in-flight cap (5), and anchors an `:ArticleImportJob` as `PENDING`, linked to
+   the FieldContext by `HAS_IMPORT_JOB` and to the member by `REQUESTED_BY`.
+   Missing and forbidden contexts share one message, so the response cannot be
+   used to probe other people's Spaces.
+4. **`/api/cron/process-article-imports` (every minute) does the work.** It
+   reclaims stalled claims, claims `PENDING` jobs with a transition that is safe
+   against overlapping runs, re-validates the requester's `canEditContent`
+   *live*, then walks the rows from the resume cursor. Each row goes through
+   `executeAuthorizedWriteTool` — the same audited path chat HITL and document
+   ingestion use — so it inherits the enrich-don't-duplicate idempotency, the
+   `INITIATED_BY` attribution guard, and one `:Log` per write attributed to the
+   requester. A failing row never aborts the batch.
+5. Author resolution per row: email match first, scoped to the member's
+   relational world (themselves → people already in the context → their
+   `CONNECTED_TO` contacts, which are attached to the context under the
+   GOAL-275 target gate), then the name path via `create_person`, which
+   self-links, enriches, or mints a `PersonPulse`. Results are cached per run,
+   so a 50-row sheet by one author resolves once.
+6. Each row's outcome is persisted **before the next row starts**. That list is
+   the resume cursor and the source of every summary count, so a worker killed
+   mid-batch resumes where it stopped instead of re-walking the sheet. A run
+   that is out of time hands the job back to the queue and the next tick
+   continues it.
+7. The worker lands the job in `COMPLETE` (or `FAILED` with member-safe
+   `statusMessage`) and then runs the embedding + resonance sweep
+   (`runContextResonanceDiscovery`) for any context that gained pulses —
+   **awaited, in the worker**, not fired at a request that has already answered.
+   Imported articles therefore surface in search and resonance without waiting
+   for the nightly cron.
+8. The modal polls `GET /api/import/articles/<jobId>` and shows Queued →
+   Importing (with a row-count meter) → the per-row result summary. Closing it
+   does not cancel anything; the job id is remembered per field, so reopening
+   Import Articles returns to the running import. Reads are requester-scoped.
+
+### WF-11 implementation constraints
+
+- **300 rows per sheet** (`MAX_ARTICLE_IMPORT_ROWS`), unchanged by the move to a
+  queue: it bounds one job's share of the shared worker and the size of the
+  payload the job node carries. Larger backlogs are several jobs, which now
+  drain reliably rather than racing a request ceiling.
+- **Pulse types.** `ResourcePulse` (the default — articles are resources),
+  `GoalPulse`, `StoryPulse`. `ResourcePulse` rows also get
+  `resourceType: 'article'`.
+- **`location` and `time`** carry the article's URL and normalized date. A date
+  that isn't a calendar date ("Spring 2026") survives verbatim rather than
+  failing the row.
+- **Retry is re-upload.** A `FAILED` job is terminal; re-uploading the same
+  sheet is safe because rows that already landed come back as
+  `skipped_existing` (having filled in any missing details).

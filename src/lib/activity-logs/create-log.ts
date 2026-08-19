@@ -132,7 +132,10 @@ export async function getContextLogs(
     }>(
       `
       MATCH (log:Log)-[:LOGGED_FOR]->(pulse:FieldPulse)-[:HAS_PULSE]-(context:FieldContext {id: $contextId})
-      WITH log, pulse
+      // One feed row per Log, not per LOGGED_FOR edge — a Log fanned out to
+      // many same-context pulses (e.g. the GOAL-321 locator-clearing Log)
+      // must not flood the feed with duplicates.
+      WITH DISTINCT log
       MATCH (log)-[:CREATED_BY]->(person:Person)
       WITH
         log,

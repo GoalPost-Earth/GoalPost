@@ -113,12 +113,22 @@ export const StudioChrome: FC = () => {
 
   return (
     <>
-      <header className="relative z-30 mx-4 lg:mx-8 mt-4 gp-glass rounded-full border border-gp-glass-border shadow-lg">
-        <div className="flex items-center justify-between gap-3 px-4 lg:px-6 py-2.5">
-          <div className="flex flex-1 items-center gap-3 lg:gap-4 min-w-0">
+      {/* Phone density: the breadcrumb below `md` lives here and is the last
+          thing to get width, so the shell's own chrome (margins, padding, the
+          gaps around the control cluster) tightens at the base size and
+          relaxes again at `sm`. Reclaiming ~42px is what makes the mobile
+          breadcrumb legible at 390px instead of collapsing to bare icons. */}
+      <header className="relative z-30 mx-3 sm:mx-4 lg:mx-8 mt-4 gp-glass rounded-full border border-gp-glass-border shadow-lg">
+        <div className="flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 lg:px-6 py-2.5">
+          <div className="flex flex-1 items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
+            {/* Below `sm` the mark is redundant chrome: the breadcrumb's own
+                first crumb is a home affordance pointing at the same place,
+                and the ~44px the mark costs is the difference between the
+                current location reading as a word and reading as an ellipsis.
+                The mark returns at `sm`, where there is room for both. */}
             <Link
               href="/protected"
-              className="flex items-center gap-2 text-gp-primary shrink-0"
+              className="hidden sm:flex items-center gap-2 text-gp-primary shrink-0"
               aria-label="GoalPost home"
             >
               <span className="size-9 flex items-center justify-center">
@@ -133,13 +143,13 @@ export const StudioChrome: FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 lg:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 shrink-0">
             <StudioSearchInput />
             <div className="relative" ref={notificationRef}>
               <button
                 onClick={() => setShowNotifications(!showNotifications)}
                 data-notification-button
-                className="flex cursor-pointer size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all relative"
+                className="flex cursor-pointer size-9 sm:size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all relative"
                 aria-label="Notifications"
               >
                 {isMounted && <NotificationIcon />}
@@ -179,7 +189,7 @@ export const StudioChrome: FC = () => {
 
             <button
               onClick={toggleTheme}
-              className="flex size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
+              className="flex size-9 sm:size-10 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 transition-all cursor-pointer"
               aria-label="Toggle theme"
             >
               {isMounted && (isDark ? <MoonIcon /> : <SunIcon />)}
@@ -188,7 +198,7 @@ export const StudioChrome: FC = () => {
             <div className="relative" ref={menuRef}>
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
-                className="rounded-full size-10 border-2 border-gp-surface-strong hover:border-gp-primary shadow-sm transition-all cursor-pointer"
+                className="rounded-full size-9 sm:size-10 border-2 border-gp-surface-strong hover:border-gp-primary shadow-sm transition-all cursor-pointer"
                 aria-label="User menu"
               >
                 <Avatar className="size-full">

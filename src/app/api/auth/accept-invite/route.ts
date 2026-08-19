@@ -7,6 +7,7 @@ import { getOrCreateMeSpace } from '@/lib/validation/space-validation'
 import { createLog } from '@/lib/activity-logs/create-log'
 import { hashAuthToken } from '@/lib/auth/token-hash'
 import { clientIp, rateLimit } from '@/lib/auth/rate-limit'
+import { INVITE_INVALID_MESSAGE } from '@/constants'
 
 /**
  * Accept a space-invite token and provision the Person as a :User.
@@ -29,16 +30,19 @@ import { clientIp, rateLimit } from '@/lib/auth/rate-limit'
 const acceptInviteSchema = z.object({
   token: z.string().min(1),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
+  // Capped + trimmed server-side: this endpoint is unauthenticated
+  // (token-gated only) and these values land on the Person node, in the
+  // MeSpace name, and inside the JWT payload — an unbounded name can blow
+  // the 4KB cookie limit and wedge the session.
+  firstName: z.string().trim().max(100).optional(),
+  lastName: z.string().trim().max(100).optional(),
 })
 
 // Single string for every "this won't work" outcome — invalid / expired /
 // already-claimed / rate-limited / wrong-state — so the endpoint can't
-// be used as an enumeration oracle. Module-scoped so the rate-limit
-// branch at the very top of POST can reference it before the inner
-// const declarations are reached.
-const INVALID_INVITE = 'This invite is invalid or has expired.'
+// be used as an enumeration oracle. The shared constant lets the accept
+// page recognize this exact outcome and show recovery guidance.
+const INVALID_INVITE = INVITE_INVALID_MESSAGE
 
 export async function POST(req: NextRequest) {
   // Per-IP burst limit — applied before parsing or DB I/O so a flood

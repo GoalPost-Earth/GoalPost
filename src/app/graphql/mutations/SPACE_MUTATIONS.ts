@@ -33,7 +33,10 @@ export const ADD_SPACE_MEMBER_MUTATION = graphql(`
           firstName
           lastName
           name
-          email
+          privateProfile {
+            id
+            email
+          }
         }
       }
     }
@@ -59,7 +62,10 @@ export const INVITE_TO_SPACE_BY_EMAIL_MUTATION = gql`
           firstName
           lastName
           name
-          email
+          privateProfile {
+            id
+            email
+          }
         }
       }
     }

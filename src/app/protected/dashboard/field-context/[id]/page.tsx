@@ -82,6 +82,8 @@ import {
   DocumentList,
   type DocumentRecord,
 } from '@/components/fields/document-list'
+import { SubContextsSection } from '@/components/fields/sub-contexts-section'
+import { MoveFieldModal } from '@/components/fields/move-field-modal'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 import {
@@ -154,6 +156,7 @@ export default function FieldContextDetailsPage() {
     useState(false)
   const [isUploadDocumentModalOpen, setIsUploadDocumentModalOpen] =
     useState(false)
+  const [isMoveFieldModalOpen, setIsMoveFieldModalOpen] = useState(false)
   const [isUploadingDocument, setIsUploadingDocument] = useState(false)
   const [isImportArticlesModalOpen, setIsImportArticlesModalOpen] =
     useState(false)
@@ -194,6 +197,11 @@ export default function FieldContextDetailsPage() {
     {
       variables: { contextId },
       skip: !contextId,
+      // cache-and-network (matching GET_SPACE_DETAILS): moving or deleting a
+      // sub-field only refetches the sub-field's own query, so the former
+      // parent's cached subContexts would otherwise stay stale when the user
+      // navigates back to it (GOAL-295).
+      fetchPolicy: 'cache-and-network',
     }
   )
 
@@ -262,6 +270,7 @@ export default function FieldContextDetailsPage() {
 
   const context = data?.fieldContexts?.[0]
   const space = context?.space?.[0]
+  const subContextCount = context?.subContexts?.length ?? 0
   // Resonance discovery is Space-scoped (WF-06): it scans the parent Space's
   // pulses and writes `pending` ResonanceSuggestions for human review (WF-07).
   // Empty until the field's parent Space resolves — the hooks no-op on a blank
@@ -293,7 +302,14 @@ export default function FieldContextDetailsPage() {
     setFocalLabel(context.id, context.title, 'FieldContext')
   }, [context?.id, context?.title, setFocalLabel])
 
-  // Declare the parent Space for the breadcrumb.
+  // Declare the parent Space — and, for a nested sub-field (GOAL-295), the
+  // ancestor field chain (root → immediate parent) — for the breadcrumb.
+  // `ancestorContexts` comes pre-ordered from the server; StudioBreadcrumb
+  // already renders N parents and folds the middle ones on phones.
+  const ancestorContexts = context?.ancestorContexts
+  const ancestorsKey = (ancestorContexts ?? [])
+    .map((a) => `${a.id}::${a.title}`)
+    .join('|')
   useEffect(() => {
     if (!context?.id) return
     if (!space?.id || !space?.name) {
@@ -303,12 +319,21 @@ export default function FieldContextDetailsPage() {
     const spaceType = space.__typename === 'MeSpace' ? 'MeSpace' : 'WeSpace'
     setFocalParents(context.id, [
       { type: spaceType, id: space.id, label: space.name },
+      ...(ancestorContexts ?? []).map((ancestor) => ({
+        type: 'FieldContext' as const,
+        id: ancestor.id,
+        label: ancestor.title,
+      })),
     ])
+    // `ancestorContexts` intentionally omitted — `ancestorsKey` is its
+    // content-stable proxy (Apollo returns a fresh array per cache refresh).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     context?.id,
     space?.id,
     space?.name,
     space?.__typename,
+    ancestorsKey,
     setFocalParents,
   ])
   const peopleContext = (
@@ -320,13 +345,19 @@ export default function FieldContextDetailsPage() {
               firstName?: string | null
               lastName?: string | null
               name?: string | null
-              email?: string | null
               photo?: string | null
-              description?: string | null
-              connectionEdges?: Array<{
-                connectedPersonId?: string | null
-                why?: string | null
-              }> | null
+              // GOAL-275: email / description / the connection graph read
+              // through the single type-level gate. Null when this caller is
+              // not authorized for that person — the roster then shows the
+              // open directory identity only.
+              privateProfile?: {
+                email?: string | null
+                description?: string | null
+                connectionEdges?: Array<{
+                  connectedPersonId?: string | null
+                  why?: string | null
+                }> | null
+              } | null
             }>
             meSpace?: Array<{
               owner?: Array<{ id: string }>
@@ -395,12 +426,12 @@ export default function FieldContextDetailsPage() {
       firstName: person.firstName || '',
       lastName: person.lastName || '',
       name: person.name || null,
-      email: person.email || null,
+      email: person.privateProfile?.email || null,
       photo: person.photo || null,
       role: roleById.get(person.id) || ('PERSON' as const),
-      description: person.description || null,
+      description: person.privateProfile?.description || null,
       relationshipWhy: resolveRelationshipWhy(
-        person.connectionEdges,
+        person.privateProfile?.connectionEdges,
         user?.id
       ),
     }))
@@ -409,7 +440,7 @@ export default function FieldContextDetailsPage() {
   // Slice 7 (GOAL-242) — UI permission gate for the upload control. We mirror
   // `canEditContent` from kb/02-user-roles.md: OWNER + ADMIN + MEMBER pass,
   // GUEST and non-members do not. The route boundary re-checks this server-side
-  // (see `handleIngestDocument`), so this is purely a "don't show a control
+  // (see `enqueueDocumentIngest`), so this is purely a "don't show a control
   // the user cannot use" measure — never a security boundary on its own.
   //
   // The rule itself lives in `deriveCanEditContent` so the floating canvas
@@ -505,15 +536,29 @@ export default function FieldContextDetailsPage() {
 
       setIsDeleteLoading(true)
 
-      // Deletion cascades server-side (GOAL-319): the field and all of its
-      // pulses are soft deleted together, and the server writes the activity
-      // Log in the same transaction — no client-side log call here.
-      await deleteFieldContext({
+      // Deletion cascades server-side (GOAL-319 + GOAL-295): the field, its
+      // sub-fields, and all of their pulses are soft deleted together, and
+      // the server writes the activity Log in the same transaction — no
+      // client-side log call here.
+      const result = await deleteFieldContext({
         variables: { id: contextId },
       })
 
-      toast.success('Field deleted successfully')
-      router.push('/protected/dashboard')
+      const deletedSubFields =
+        result.data?.deleteFieldContext?.deletedSubContextCount ?? 0
+      toast.success(
+        deletedSubFields > 0
+          ? `Field deleted along with ${deletedSubFields} sub-field${deletedSubFields === 1 ? '' : 's'}`
+          : 'Field deleted successfully'
+      )
+      // Land on the parent field (for a nested sub-field) or the owning
+      // Space — not the dashboard root.
+      const parentFieldId = context.parentContext?.[0]?.id
+      router.push(
+        parentFieldId
+          ? `/protected/dashboard/field-context/${parentFieldId}`
+          : spaceBackHref
+      )
     } catch (err) {
       console.error('Failed to delete context:', err)
       toast.error('Failed to delete field. Please try again.')
@@ -1267,6 +1312,12 @@ export default function FieldContextDetailsPage() {
                   {pulses.length !== 1 ? 's' : ''}.
                 </span>
               )}
+              {subContextCount > 0 && (
+                <span className="text-xs mt-2 block">
+                  This will also delete its {subContextCount} sub-field
+                  {subContextCount !== 1 ? 's' : ''} and their pulses.
+                </span>
+              )}
             </p>
 
             <div className="flex justify-end gap-3">
@@ -1337,6 +1388,14 @@ export default function FieldContextDetailsPage() {
                 label="Edit"
                 onClick={handleEditStart}
               />
+              {canEditContent && (
+                <TopBarPill
+                  icon="move_down"
+                  label="Move"
+                  onClick={() => setIsMoveFieldModalOpen(true)}
+                  disabled={loading}
+                />
+              )}
               <TopBarPill
                 icon="delete"
                 label="Delete"
@@ -1419,6 +1478,29 @@ export default function FieldContextDetailsPage() {
               />
             </div>
           </header>
+
+          <SubContextsSection
+            parentContextId={contextId}
+            parentTitle={context.title || 'Untitled field'}
+            subContexts={[...(context.subContexts ?? [])]
+              // Stable order — Neo4j guarantees none without a sort.
+              .sort((a, b) =>
+                String(a.createdAt ?? '').localeCompare(
+                  String(b.createdAt ?? '')
+                )
+              )
+              .map((sub) => ({
+                id: sub.id,
+                title: sub.title,
+                emergentName: sub.emergentName,
+                createdAt: sub.createdAt,
+                pulseCount: sub.pulses?.length ?? 0,
+                subContextCount: sub.subContexts?.length ?? 0,
+              }))}
+            isMe={isMe}
+            canEdit={canEditContent}
+            onChanged={() => refetch()}
+          />
 
           <DocumentList
             documents={documents}
@@ -1673,6 +1755,17 @@ export default function FieldContextDetailsPage() {
         isSubmitting={isUploadingDocument}
         onClose={() => setIsUploadDocumentModalOpen(false)}
         onSubmit={handleUploadDocument}
+      />
+
+      <MoveFieldModal
+        isOpen={isMoveFieldModalOpen}
+        onClose={() => setIsMoveFieldModalOpen(false)}
+        contextId={contextId}
+        contextTitle={context.title || 'Untitled field'}
+        spaceId={spaceId}
+        currentParentId={context.parentContext?.[0]?.id ?? null}
+        excludedIds={(context.subContexts ?? []).map((sub) => sub.id)}
+        onMoved={() => refetch()}
       />
 
       {isImportArticlesModalOpen && (

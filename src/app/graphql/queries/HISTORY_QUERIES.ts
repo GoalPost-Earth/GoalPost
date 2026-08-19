@@ -22,7 +22,10 @@ export const GET_ALL_PULSES = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     resourcePulses {
@@ -41,7 +44,10 @@ export const GET_ALL_PULSES = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     storyPulses {
@@ -60,7 +66,10 @@ export const GET_ALL_PULSES = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     coreValuePulses {
@@ -79,7 +88,10 @@ export const GET_ALL_PULSES = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
   }
@@ -113,7 +125,10 @@ export const GET_ALL_PULSES_BY_CONTEXT = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     resourcePulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -132,7 +147,10 @@ export const GET_ALL_PULSES_BY_CONTEXT = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     storyPulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -151,7 +169,10 @@ export const GET_ALL_PULSES_BY_CONTEXT = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     coreValuePulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -170,7 +191,10 @@ export const GET_ALL_PULSES_BY_CONTEXT = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
   }
@@ -213,7 +237,10 @@ export const GET_ALL_PULSES_BY_SPACE = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     resourcePulses(
@@ -241,7 +268,10 @@ export const GET_ALL_PULSES_BY_SPACE = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     storyPulses(
@@ -269,7 +299,10 @@ export const GET_ALL_PULSES_BY_SPACE = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     coreValuePulses(
@@ -297,7 +330,10 @@ export const GET_ALL_PULSES_BY_SPACE = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
   }
@@ -432,7 +468,10 @@ export const GET_ALL_ME_SPACES = graphql(`
         id
         firstName
         lastName
-        email
+        privateProfile {
+          id
+          email
+        }
       }
       members {
         id
@@ -442,7 +481,10 @@ export const GET_ALL_ME_SPACES = graphql(`
           id
           firstName
           lastName
-          email
+          privateProfile {
+            id
+            email
+          }
         }
       }
       contexts {
@@ -469,7 +511,10 @@ export const GET_ALL_WE_SPACES = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
       members {
         id
@@ -479,7 +524,10 @@ export const GET_ALL_WE_SPACES = graphql(`
           id
           firstName
           lastName
-          email
+          privateProfile {
+            id
+            email
+          }
         }
       }
       contexts {
