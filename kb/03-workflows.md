@@ -14,6 +14,8 @@ WF-06: Resonance Discovery               (Background: AI finds semantic connecti
 WF-07: Human Resonance Review            (User confirms, edits, or rejects AI-found resonances)
 WF-08: WeSpace Collaboration             (Owner invites members, shared pulse creation)
 WF-09: Data Import                       (User imports CSV/XLSX data into the system)
+WF-10: Document Ingestion                (User uploads a file; a worker extracts entities from it)
+WF-11: Bulk Article Import               (User uploads a spreadsheet; a worker mints one pulse per row)
 ```
 
 ---
@@ -278,3 +280,74 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
 - **No auto-`CONNECTED_TO`.** Extraction does not create `CONNECTED_TO` edges between the uploader and extracted Persons. `EXTRACTED_FROM` records "this person came from a doc the user has"; `CONNECTED_TO` remains a deliberate user gesture.
 - **Failure path.** On extraction failure (model error, malformed output, empty result), the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message. The Document persists; re-extract is the uniform retry path. A failure *before* the model runs (unreadable blob, unsupported type, oversize, parse error) never produces a thread — it lands the Document in `status = 'FAILED'` with member-safe `statusMessage`, rendered as a Failed chip plus an inline error on the document row. Re-extract is blocked while a document is `PENDING`/`PROCESSING`, since a second pipeline would double-write its summary and thread.
 - **Re-upload semantics.** Uploading the same file again creates a new `Document` node with its own ingest thread — no file versioning in v1.
+
+---
+
+## WF-11 — Bulk Article Import (FieldContext)
+
+**Actor:** Authenticated User with `canEditContent` on the parent Space.
+
+Spreadsheet-driven bulk upload of articles as pulses (GOAL-317), made durable
+in GOAL-326. See ADR-019 in `kb/06-adr.md` for why the job lives in the graph
+rather than on Redis, and `kb/04-state-machines.md` for the status machine.
+
+1. From the field action bar the member picks a `.csv` / `.xlsx` where each
+   row is an article — title, author, date, URL, plus optional
+   `author_email` / `pulse_type` / `description`. Parsing, header mapping and
+   per-row validation happen **in the browser** (`article-import.ts`), so the
+   preview step can show exactly what will and will not import.
+2. The preview is the human-in-the-loop gate: valid rows, rows with issues,
+   and the file name. Nothing has been written yet. Confirming POSTs the typed
+   rows to `/api/import/articles`.
+3. That request **enqueues and returns 202** with a job id. It authenticates,
+   applies the `bulk-import` rate limit (10/hour/account), re-runs the same
+   validation server-side, gates on `canEditContent`, checks the per-account
+   in-flight cap (5), and anchors an `:ArticleImportJob` as `PENDING`, linked to
+   the FieldContext by `HAS_IMPORT_JOB` and to the member by `REQUESTED_BY`.
+   Missing and forbidden contexts share one message, so the response cannot be
+   used to probe other people's Spaces.
+4. **`/api/cron/process-article-imports` (every minute) does the work.** It
+   reclaims stalled claims, claims `PENDING` jobs with a transition that is safe
+   against overlapping runs, re-validates the requester's `canEditContent`
+   *live*, then walks the rows from the resume cursor. Each row goes through
+   `executeAuthorizedWriteTool` — the same audited path chat HITL and document
+   ingestion use — so it inherits the enrich-don't-duplicate idempotency, the
+   `INITIATED_BY` attribution guard, and one `:Log` per write attributed to the
+   requester. A failing row never aborts the batch.
+5. Author resolution per row: email match first, scoped to the member's
+   relational world (themselves → people already in the context → their
+   `CONNECTED_TO` contacts, which are attached to the context under the
+   GOAL-275 target gate), then the name path via `create_person`, which
+   self-links, enriches, or mints a `PersonPulse`. Results are cached per run,
+   so a 50-row sheet by one author resolves once.
+6. Each row's outcome is persisted **before the next row starts**. That list is
+   the resume cursor and the source of every summary count, so a worker killed
+   mid-batch resumes where it stopped instead of re-walking the sheet. A run
+   that is out of time hands the job back to the queue and the next tick
+   continues it.
+7. The worker lands the job in `COMPLETE` (or `FAILED` with member-safe
+   `statusMessage`) and then runs the embedding + resonance sweep
+   (`runContextResonanceDiscovery`) for any context that gained pulses —
+   **awaited, in the worker**, not fired at a request that has already answered.
+   Imported articles therefore surface in search and resonance without waiting
+   for the nightly cron.
+8. The modal polls `GET /api/import/articles/<jobId>` and shows Queued →
+   Importing (with a row-count meter) → the per-row result summary. Closing it
+   does not cancel anything; the job id is remembered per field, so reopening
+   Import Articles returns to the running import. Reads are requester-scoped.
+
+### WF-11 implementation constraints
+
+- **300 rows per sheet** (`MAX_ARTICLE_IMPORT_ROWS`), unchanged by the move to a
+  queue: it bounds one job's share of the shared worker and the size of the
+  payload the job node carries. Larger backlogs are several jobs, which now
+  drain reliably rather than racing a request ceiling.
+- **Pulse types.** `ResourcePulse` (the default — articles are resources),
+  `GoalPulse`, `StoryPulse`. `ResourcePulse` rows also get
+  `resourceType: 'article'`.
+- **`location` and `time`** carry the article's URL and normalized date. A date
+  that isn't a calendar date ("Spring 2026") survives verbatim rather than
+  failing the row.
+- **Retry is re-upload.** A `FAILED` job is terminal; re-uploading the same
+  sheet is safe because rows that already landed come back as
+  `skipped_existing` (having filled in any missing details).

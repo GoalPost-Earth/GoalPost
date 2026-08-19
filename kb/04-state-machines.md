@@ -167,6 +167,98 @@ Rules:
 
 ---
 
+## Article Import Job Status (GOAL-326)
+
+```
+PENDING → PROCESSING → COMPLETE
+        ↑            → FAILED
+        └── requeued (out of time, or a stalled claim reclaimed)
+```
+
+`:ArticleImportJob.status` is both the lifecycle and the work queue for bulk
+spreadsheet article import. Unlike document ingestion — where `Document.status`
+*is* the queue because the document already carries everything a worker needs —
+a bulk import has no pre-existing entity to hang state on: the rows exist only
+in the request. So the job node carries them. See ADR-019.
+
+| Status       | Set By                                          | Meaning                                                              |
+| ------------ | ----------------------------------------------- | -------------------------------------------------------------------- |
+| `PENDING`    | `POST /api/import/articles` (anchor + 202)      | Rows are validated, gated, and queued; nothing written into the field |
+| `PROCESSING` | `/api/cron/process-article-imports` on claim    | A worker owns this job and is minting pulses row by row               |
+| `COMPLETE`   | The worker, once every row has an outcome       | Per-row outcomes are final; `rowsJson` is dropped                     |
+| `FAILED`     | The worker, or the reclaim path at 3 attempts   | `statusMessage` holds member-safe copy; rows already imported stay    |
+
+Three `FAILED` reasons are the worker's rather than a row's, and two are
+security-relevant: the job has **no single `REQUESTED_BY` requester** (no
+identity to attribute writes to), the requester **lost `canEditContent` between
+enqueue and the claim**, or an unexpected crash. The `REQUESTED_BY` edge carries
+the authorization decision across the queue boundary, and the worker
+re-validates it live before spending anything — `kb/03-workflows.md` WF-11.
+
+Rules:
+
+- **Claiming is conditional**, in exactly the shape the document queue uses: a
+  throwaway `lockToken` write forces Neo4j's write lock, the `status = 'PENDING'`
+  guard is re-evaluated *under* that lock, and only the winner stamps
+  `claimedBy`. Never simplify it back to
+  `MATCH (j {status:'PENDING'}) SET j.status='PROCESSING'` — that loses updates
+  and every overlapping run wins (measured: 24 racing claimants, all 24 won).
+- **The claim FENCE needs the same lock-forcing write as the claim.** Every
+  statement that reads `claimedBy` in a `WHERE` and then `SET`s — each outcome
+  append and all three terminal writes — is itself a read-then-write, and Neo4j
+  only takes the node lock at the `SET`. Without a throwaway `lockToken` write
+  first, a run whose claim was revoked mid-statement evaluates the fence against
+  the pre-revoke value and its write lands anyway (measured 2–3 of every 4).
+  The worst case stamped `COMPLETE` onto a job another worker was still
+  processing, so the member saw a successful import with rows silently missing
+  and no error. Mirroring the claim's shape is not enough; mirror its *reason*.
+- **`size(rowOutcomes)` is the resume cursor.** Outcomes are appended one per
+  processed row, in row order, so the list length is how far the job got. There
+  is no second counter that could disagree with it, and the summary is
+  recomputed from the list on every read. **Exactly one outcome per row is the
+  load-bearing invariant**: resolving a row and persisting its outcome are
+  deliberately separate steps, because a failure path that also recorded would
+  write two outcomes for one row — advancing the cursor by two and silently
+  skipping an unprocessed row on the next tick.
+- **Row counts survive a resume; people counts do not.** created / skipped /
+  failed are stable, but the author cache starts cold on a resumed tick, so the
+  first row for an author an earlier tick created comes back `matched` rather
+  than `created`. One person can be counted once as new and once as matched.
+  Making it exact would mean persisting an author identity on every row — more
+  member PII in the job node than the count is worth.
+- **Every outcome append is fenced on the claim.** A rejected append tells the
+  worker it no longer owns the job, and it stops immediately: a zombie run
+  minting pulses beside the new claimant would double-write every remaining row.
+- **A run out of time requeues itself** (`PROCESSING → PENDING`, cursor intact),
+  resetting `attempts` **only if it actually landed rows** — progress is what
+  proves the job is not the poison-payload case the ceiling exists for. The
+  yield is checked at the top of the row loop, so a job claimed near the run's
+  claim deadline can yield having processed nothing; resetting there would let
+  it be claimed, yield, and requeue forever without ever being abandoned. A
+  300-row import may legitimately span several ticks.
+- **Stalled claims are recovered, not orphaned.** A `PROCESSING` job whose
+  `statusUpdatedAt` is older than 15 minutes returns to `PENDING`, or lands in
+  `FAILED` once `attempts` reaches 3. The per-row outcome write refreshes that
+  clock, so a job that is genuinely progressing is never stolen.
+- **A `PENDING` job whose FieldContext was deleted is failed, not left.** Once
+  the context is soft-deleted nothing can move the job — the drain skips it, the
+  in-flight cap skips it, and the stale sweep only matches `PROCESSING` — so it
+  would sit `PENDING` forever and the member's modal would poll forever. Enqueue
+  refuses a soft-deleted context up front; the sweep covers the
+  delete-after-enqueue window.
+- **The stale sweep can requeue a job that is actually alive.** It reads
+  `statusUpdatedAt` before it holds the lock, so a concurrent append that
+  refreshes the clock may go unobserved (measured 3 of 4 trials). This degrades
+  safely and is left alone: the displaced run's next append fails the claim
+  fence, it stops, and at worst one row is processed twice — which the
+  enrich-don't-duplicate write tools absorb.
+- **Retry is re-upload, not re-queue.** A `FAILED` job is terminal; the member
+  uploads the sheet again. That is safe because every row goes through
+  `create_pulse` / `create_person`, which enrich rather than duplicate — the
+  rows that already landed come back as `skipped_existing`.
+
+---
+
 ## Background Job States
 
 ### Pulse Processing Job

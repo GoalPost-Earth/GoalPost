@@ -5,6 +5,10 @@
       "schedule": "* * * * *"
     },
     {
+      "path": "/api/cron/process-article-imports",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/discover-resonances",
       "schedule": "0 0 * * *"
     },

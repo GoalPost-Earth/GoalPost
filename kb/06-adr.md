@@ -384,3 +384,77 @@ demoted to GUEST — and every individual entity write re-gates itself inside
   with `status` writable, any Space member could re-queue ingestion at will.
 - Documents predating this story have no `status`; every read coalesces the
   absence to `COMPLETE` so the backlog is never re-ingested.
+
+---
+
+## ADR-019: Bulk Article Import Is Asynchronous, With a Job Node As the Queue (GOAL-326)
+
+**Context:** `POST /api/import/articles` (GOAL-317) walked all 300 rows inside
+the request under `maxDuration = 300`, and scheduled the embedding/resonance
+sweep in a fire-and-forget `after()` callback. A large sheet, a slow batch, or
+several concurrent field imports pushed the request toward the serverless
+ceiling; the sweep — real OpenAI spend — was neither durable, retried, nor
+observable. Identical failure mode to the one ADR-018 fixed for document
+ingestion, so this is the same fix: the request enqueues, a Vercel Cron worker
+processes.
+
+**Decision:** `POST /api/import/articles` authenticates, rate-limits, validates,
+gates on `canEditContent`, anchors an `:ArticleImportJob` as `PENDING`, and
+returns **202** with a job id. `/api/cron/process-article-imports` runs every
+minute, claims jobs, mints one pulse per row through
+`executeAuthorizedWriteTool`, and lands them in `COMPLETE`/`FAILED`. The modal
+polls `GET /api/import/articles/<jobId>`.
+
+**The queue is a job node, unlike ADR-018.** Document ingestion had no job node
+because the `Document` already carried everything a worker needed. A bulk import
+has no such entity — the rows exist only in the request — so something has to
+hold them. Considered and rejected: the provisioned Upstash Redis (a 300-row
+payload can exceed its per-record ceiling at the field caps we accept, and job
+state living apart from the graph it mutates would split the resume cursor from
+the `:Log` audit trail it has to stay consistent with) and reusing `FieldPulse`
+rows as their own queue (a half-imported sheet would be indistinguishable from
+real content, and a failed row has no node to record itself on).
+
+**The job node is deliberately absent from the GraphQL schema**, like
+`:LlmUsage`. Generated CRUD roots over a status machine are exactly the hole
+ADR-018 had to close on `Document` with `@mutation(operations: [])`; not opening
+it is cheaper than closing it. Status is read through a requester-scoped REST
+GET beside the POST that creates the job.
+
+**Authorization crosses the queue boundary via the `REQUESTED_BY` edge**, and is
+re-validated live at claim time — the requester may have been removed from the
+Space or demoted to GUEST in the minutes since. Every row write re-gates itself
+inside `executeAuthorizedWriteTool` regardless, and writes its `:Log` attributed
+to the requester, so moving work off the request path does not weaken the audit
+trail.
+
+**Consequences:**
+
+- Claiming reuses the document queue's lock-forcing write before its status
+  guard, for the same read-committed reason. See `kb/04-state-machines.md`.
+- Resume is a first-class path, not an error path: per-row outcomes are appended
+  before the next row starts, `size(rowOutcomes)` is the cursor, and a run that
+  is out of time requeues itself rather than being killed at the ceiling. The
+  summary is recomputed from those outcomes on every read, so an interrupted job
+  reports the same ROW counts as a straight-through run. People counts are
+  per-run by design — the author cache starts cold on a resume, and making them
+  exact would mean persisting an author identity on every row.
+- Every outcome append is fenced on the claim, and a rejected append stops the
+  run — otherwise a zombie worker would double-write alongside the new claimant.
+- Enqueue got cheap, which removed the synchronous design's accidental
+  self-throttle: one account may hold 5 jobs in flight (429 `queue_full`) on top
+  of the 10/hour `bulk-import` rate limit. The in-flight cap lives in the graph
+  precisely because that limiter fails OPEN when Redis is unreachable.
+- Failures surface as `status = FAILED` plus member-safe `statusMessage`, not an
+  HTTP error, because the member is no longer waiting on a response. Retry is
+  re-uploading the sheet, which is safe: the write tools enrich rather than
+  duplicate.
+- The stored payload is dropped at every terminal status — the outcomes are what
+  the member reads from then on, and a second copy of their spreadsheet in the
+  graph buys nothing. The outcomes still hold the member's article titles, so a
+  finished job is itself dropped 30 days after it lands; jobs are also
+  hard-deleted with their FieldContext at the 90-day purge.
+- The in-flight cap is enforced *inside* the enqueue write, not by a read before
+  it. A count-then-create is a check-then-act, and it is precisely the bound
+  that has to survive a Redis outage (`bulk-import` fails open), so it must not
+  evaporate under concurrency.

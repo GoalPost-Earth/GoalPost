@@ -762,6 +762,62 @@ Document node with its own ingest thread.
 
 ---
 
+### ArticleImportJob
+
+**Neo4j Labels:** `["ArticleImportJob"]`
+
+One queued bulk spreadsheet import (GOAL-326). `POST /api/import/articles`
+validates the rows, gates on `canEditContent`, anchors this node as `PENDING`
+and returns **202**; `/api/cron/process-article-imports` mints one pulse per row
+through the authorized write path and drives the status machine. The member
+polls `GET /api/import/articles/<jobId>`. See WF-11 in `kb/03-workflows.md`,
+the status machine in `kb/04-state-machines.md`, and ADR-019 in `kb/06-adr.md`.
+
+**Not in the GraphQL schema** — this is queue infrastructure, not domain data
+(same class as `LlmUsage`). Exposing it would generate CRUD roots over its own
+status machine, exactly the hole `Document` had to close with
+`@mutation(operations: [])`.
+
+| Field           | Type     | Notes                                                                                     |
+| --------------- | -------- | ----------------------------------------------------------------------------------------- |
+| id              | string   | Required, unique (`article_import_job_id` constraint). `import_<uuid>` — the handle the client polls with. Every hot path matches by it: the claim, each of up to 300 per-row outcome appends, all three terminal writes, the load, and the member's 2-second poll |
+| status          | string   | `PENDING` → `PROCESSING` → `COMPLETE` / `FAILED`. See `kb/04-state-machines.md`            |
+| statusMessage   | string   | Member-safe failure copy, safe to render verbatim; null unless `status = FAILED`           |
+| statusUpdatedAt | datetime | When `status` last changed; also the staleness clock, refreshed by every per-row outcome    |
+| createdAt       | datetime | Enqueue time; the queue drains oldest-first on this                                        |
+| totalRows       | int      | Row count at enqueue — the one summary value that cannot be derived from the outcomes      |
+| rowsJson        | string   | The validated payload, JSON. Written once at enqueue, **nulled at every terminal status** — the outcomes are what the member reads from then on |
+| rowOutcomes     | string[] | One JSON outcome per processed row, in row order. `size()` is the resume cursor, and the whole summary is recomputed from it |
+| attempts        | int      | Times claimed; at 3 a stalled claim is abandoned to `FAILED`. Reset to 0 by a voluntary requeue, which proves progress |
+| claimedBy       | string   | Worker run id holding the claim; null when not `PROCESSING`. Only the winning claimant writes it, so it is a truthful owner — every outcome append and terminal write fences on it |
+| lockToken       | string   | Throwaway value written to force Neo4j's write lock during a claim. Never read           |
+
+**Import throughput limits:** a single sheet is capped at **300** rows
+(`MAX_ARTICLE_IMPORT_ROWS`), one account may hold **5** jobs in
+`PENDING`/`PROCESSING` at once (**429** `reason: 'queue_full'` beyond that), and
+the `bulk-import` rate limit allows **10 imports/hour/account**. The in-flight
+cap is enforced in the graph specifically because the rate limiter fails OPEN
+when Redis is unreachable. The worker claims at most **2** jobs per one-minute
+tick and stops starting rows at ~220s, handing the rest back to the queue.
+
+**Relationships:**
+
+- `HAS_IMPORT_JOB` ← FieldContext (the target field; purged with it)
+- `REQUESTED_BY` → Person:User (the member who submitted the sheet)
+
+**Authorization:** `canEditContent` on the parent Space is checked at enqueue
+*and* re-checked by the worker at claim time, since the gap can be minutes. The
+`REQUESTED_BY` edge is how that decision crosses the queue boundary — the worker
+holds no JWT and attributes every write, and every activity `Log`, to that
+person. Reads are scoped to the requester alone: a job belonging to someone else
+is indistinguishable from one that does not exist.
+
+**Lifecycle:** jobs are not user-deletable and have no restore. They are hard-
+deleted with their FieldContext at the 90-day purge — an unfinished one still
+holds the member's uploaded rows, so it must not outlive the context.
+
+---
+
 ### AssistantFeedback
 
 Captures signal about a single assistant turn so devs can improve prompts and
@@ -910,6 +966,10 @@ spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
 | `person_reset_token_hash`          | Person.resetTokenHash           |
 | `llm_usage_createdAt`              | LlmUsage.createdAt              |
 | `document_status`                  | Document.status — the ingest queue; the one-minute cron seeks it twice per tick (measured 53 dbHits with it vs 10,101 without, at 5k documents) |
+| `article_import_job_status`        | ArticleImportJob.status — the bulk-import queue; the one-minute cron seeks it twice per tick and every enqueue seeks it twice more for the in-flight cap. **The drain query must anchor on this seek, not on `(c:FieldContext)-[:HAS_IMPORT_JOB]->(j)`** — the context-anchored form never touches the index and label-scans instead (measured 1,501 dbHits vs 1 at a 1,500-job backlog). It plans as a seek against an EMPTY label, so only a seeded profile proves anything |
+| `context_deletedAt`                | FieldContext.deletedAt — the daily purge sweep (GOAL-319) |
+| `notification_createdAt`           | Notification.createdAt |
+| `notification_read`                | Notification.read      |
 
 Uniqueness constraints also carry backing RANGE indexes — notably `pulse_id`
 on `FieldPulse.id` (`scripts/init-db.js`), which is what makes by-id pulse

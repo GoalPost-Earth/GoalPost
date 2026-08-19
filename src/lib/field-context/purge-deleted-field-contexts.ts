@@ -27,6 +27,9 @@ import type { BlobStore } from '@/lib/ingest/blob-store'
  *     than a dangling graph reference)
  *   - Organizations attached ONLY to this context (their read gate is
  *     contexts_SOME, so with no other context they are unreachable forever)
+ *   - ArticleImportJobs anchored on the context (GOAL-326) — an unfinished one
+ *     still holds the member's uploaded rows, and nothing can reach it once the
+ *     context is gone
  *
  * Deliberately kept:
  *   - Person nodes (globally readable relational-world entities, never
@@ -67,6 +70,7 @@ export interface PurgedContextSummary {
   suggestionCount: number
   weaveCount: number
   documentCount: number
+  importJobCount: number
   organizationCount: number
 }
 
@@ -128,6 +132,13 @@ export async function purgeDeletedFieldContexts(
           WITH c, pulses, ctxLinks, ctxSugs, collect(DISTINCT weave) AS weaves
           OPTIONAL MATCH (c)-[:HAS_DOCUMENT]->(doc:Document)
           WITH c, pulses, ctxLinks, ctxSugs, weaves, collect(DISTINCT doc) AS docs
+          // Queued/finished bulk-import jobs (GOAL-326). They belong to this
+          // context and nothing else can reach them once it is gone, and until
+          // they reach a terminal status they still hold the member's uploaded
+          // rows — an orphan would keep that content past the retention window.
+          OPTIONAL MATCH (c)-[:HAS_IMPORT_JOB]->(job:ArticleImportJob)
+          WITH c, pulses, ctxLinks, ctxSugs, weaves, docs,
+               collect(DISTINCT job) AS importJobs
           // An organization whose ONLY context is this one becomes forever
           // unreachable after the purge (Organization reads gate on
           // contexts_SOME) — remove it rather than leave an invisible orphan.
@@ -136,19 +147,19 @@ export async function purgeDeletedFieldContexts(
             MATCH (other:FieldContext)-[:HAS_ORGANIZATION]->(org)
             WHERE other <> c
           }
-          WITH c, pulses, ctxLinks, ctxSugs, weaves, docs,
+          WITH c, pulses, ctxLinks, ctxSugs, weaves, docs, importJobs,
                collect(DISTINCT org) AS orphanOrgs
           UNWIND (CASE WHEN size(pulses) = 0 THEN [null] ELSE pulses END) AS p
           OPTIONAL MATCH (p)-[:HAS_CHUNK]->(chunk:ConversationChunk)
           OPTIONAL MATCH (conn)-[:SOURCE|TARGET]->(p)
           WHERE conn:ResonanceLink OR conn:ResonanceSuggestion
-          WITH c, pulses, ctxLinks, ctxSugs, weaves, docs, orphanOrgs,
+          WITH c, pulses, ctxLinks, ctxSugs, weaves, docs, importJobs, orphanOrgs,
                collect(DISTINCT chunk) AS chunks,
                collect(DISTINCT conn) AS pulseConns
-          WITH c, pulses, weaves, docs, orphanOrgs, chunks,
+          WITH c, pulses, weaves, docs, importJobs, orphanOrgs, chunks,
                ctxLinks + [x IN pulseConns WHERE x:ResonanceLink AND NOT x IN ctxLinks] AS links,
                ctxSugs + [x IN pulseConns WHERE x:ResonanceSuggestion AND NOT x IN ctxSugs] AS sugs
-          WITH c, pulses, weaves, docs, orphanOrgs, chunks, links, sugs,
+          WITH c, pulses, weaves, docs, importJobs, orphanOrgs, chunks, links, sugs,
                c.title AS title,
                [d IN docs WHERE d.blobKey IS NOT NULL | d.blobKey] AS blobKeys
           FOREACH (n IN chunks | DETACH DELETE n)
@@ -156,6 +167,7 @@ export async function purgeDeletedFieldContexts(
           FOREACH (n IN sugs | DETACH DELETE n)
           FOREACH (n IN weaves | DETACH DELETE n)
           FOREACH (n IN docs | DETACH DELETE n)
+          FOREACH (n IN importJobs | DETACH DELETE n)
           FOREACH (n IN orphanOrgs | DETACH DELETE n)
           FOREACH (n IN pulses | DETACH DELETE n)
           WITH c, title, blobKeys,
@@ -165,10 +177,12 @@ export async function purgeDeletedFieldContexts(
                size(sugs) AS suggestionCount,
                size(weaves) AS weaveCount,
                size(docs) AS documentCount,
+               size(importJobs) AS importJobCount,
                size(orphanOrgs) AS organizationCount
           DETACH DELETE c
           RETURN title, blobKeys, pulseCount, chunkCount, linkCount,
-                 suggestionCount, weaveCount, documentCount, organizationCount
+                 suggestionCount, weaveCount, documentCount, importJobCount,
+                 organizationCount
           `,
           { contextId, retentionDays: neo4j.int(retentionDays) }
         )
@@ -186,6 +200,7 @@ export async function purgeDeletedFieldContexts(
         suggestionCount: Number(record.get('suggestionCount') ?? 0),
         weaveCount: Number(record.get('weaveCount') ?? 0),
         documentCount: Number(record.get('documentCount') ?? 0),
+        importJobCount: Number(record.get('importJobCount') ?? 0),
         organizationCount: Number(record.get('organizationCount') ?? 0),
       })
 

@@ -109,6 +109,17 @@ async function initializeDatabase() {
       // all Spaces.
       `CREATE CONSTRAINT document_id IF NOT EXISTS
        FOR (n:Document) REQUIRE n.id IS UNIQUE`,
+      // GOAL-326: same reasoning for the bulk-import queue, and the by-id path
+      // is far hotter — the claim, EVERY per-row outcome append (300 per job),
+      // all three terminal writes, the load, and the member's 2-second poll all
+      // match by id. Measured at a 2,000-job backlog: the append alone went
+      // 4,020 dbHits (NodeByLabelScan + Filter) → 6 (NodeUniqueIndexSeek), so a
+      // 300-row import was paying ~1.2M dbHits in pure lookup overhead.
+      // Uniqueness also closes the one ambiguity `loadArticleImportJob`'s
+      // edge-count check cannot see: duplicate ids would make `records[0]`
+      // arbitrary and let a claim take two nodes at once.
+      `CREATE CONSTRAINT article_import_job_id IF NOT EXISTS
+       FOR (n:ArticleImportJob) REQUIRE n.id IS UNIQUE`,
       // AI self-improvement loop: AssistantFeedback nodes capture both
       // explicit user thumb-ratings and server-side auto-signals (tool
       // errors, empty responses, Rule-1 raw-id leaks). Powers the
@@ -279,6 +290,14 @@ async function initializeDatabase() {
       // A composite (status, uploadedAt) was tried and the planner ignored it.
       `CREATE INDEX document_status IF NOT EXISTS
        FOR (d:Document) ON (d.status)`,
+      // GOAL-326: same story for the bulk-article-import queue. The one-minute
+      // cron seeks PENDING (findPendingArticleImportJobIds) and PROCESSING
+      // (reclaimStalledArticleImports) on every tick, and the enqueue path
+      // seeks both again for the per-user in-flight cap. Without the index each
+      // of those is a full ArticleImportJob label scan that grows with every
+      // import ever run.
+      `CREATE INDEX article_import_job_status IF NOT EXISTS
+       FOR (j:ArticleImportJob) ON (j.status)`,
       // LlmUsage is the fastest-growing node in the system (one per LLM /
       // embedding call, never pruned). The /dev/llm-usage report filters
       // `WHERE u.createdAt >= datetime($since)` for its time windows and

@@ -116,9 +116,10 @@ function getLimiter(policy: PolicyName): Ratelimit | null {
     case 'bulk-import':
       // 10 spreadsheet imports per hour per account (GOAL-317). At the
       // 300-row cap that's 3000 rows/hour — generous for a member working
-      // through a large article list in batches, but it bounds the
-      // post-response embedding spend (each batch schedules a resonance
-      // discovery sweep with OpenAI round-trips) a looping caller can incur.
+      // through a large article list in batches, but it bounds the embedding
+      // spend a looping caller can incur (each batch ends in a resonance
+      // discovery sweep with OpenAI round-trips, run by the import worker
+      // since GOAL-326 — it is no longer a post-response `after()` callback).
       limiter = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(10, '1 h'),
