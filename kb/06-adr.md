@@ -142,6 +142,23 @@
 - Filters check ownership (`OWNS` relationship) and/or membership (`HAS_MEMBER` chain)
 - `@private` fields (password, tokens) are excluded from all queries
 - Computed fields use `@cypher` directives for complex access patterns
+- **Prefer a TYPE-level filter over a field-level one.** `@neo4j/graphql` v6
+  expands a field-level `@authorization` filter once per gated field **in the
+  selection set**, with no deduplication, and Neo4j's planning cost is
+  super-linear in the resulting predicate count. The GOAL-275 Person PII rule,
+  copied onto 14 fields, compiled to 348 `EXISTS` and took ~31 s to *plan* —
+  past the 60 s `maxDuration` on `/api/graphql`. A type-level filter is emitted
+  exactly once no matter how many fields are selected. When a subset of a
+  node's fields needs gating, put that subset on its own type over the same
+  `@node(labels:)` (locked down with `@query(read: false, aggregate: false)` and
+  `@mutation(operations: [])`) and reach it from the open type via a `@cypher`
+  field — see `Person.privateProfile` → `PersonPrivateProfile`.
+- **Do not put a `@cypher` field inside an `@authorization` filter.** The
+  library emits it as `MATCH (n) CALL { … } WITH * WHERE <your where>`, and
+  Neo4j will not push a predicate below a `CALL` subquery, so the gate runs for
+  every node of that label instead of the one the caller asked for (measured:
+  168 → 146,453 dbHits on a single-row lookup). Declarative filters inline into
+  the `WHERE` and keep the index seek.
 
 **Why:** Declarative authorization at the schema level is harder to bypass than middleware. The `@neo4j/graphql` library automatically applies filters to every query, making it impossible to accidentally return unauthorized data.
 
@@ -210,6 +227,10 @@
 ---
 
 ## ADR-014: Doc Ingestion Uses a Dedicated Extraction Endpoint, Not the Chat Route
+
+> **Superseded in part by ADR-018 (GOAL-292):** the endpoint no longer runs the
+> pipeline inline — it enqueues, and a cron worker extracts. The "dedicated
+> endpoint, not the chat route" decision below still holds.
 
 **Decision:** Document ingestion runs through `POST /api/ingest/document/{presign,process}` — not through the existing `/api/chat/simulation` route. The process endpoint loads the blob + the FieldContext roster, invokes its own extraction model, and auto-executes the proposed write tool calls in a fresh ingest `ConversationThread`.
 
@@ -309,3 +330,57 @@ they never partition its resonance.
   context still anchors through `HAS_CONTEXT`.
 - Depth cap 5 keeps every variable-length traversal bounded (`*0..10` in
   queries for headroom).
+
+---
+
+## ADR-018: Document Ingestion Is Asynchronous, With `Document.status` As the Queue (GOAL-292)
+
+**Context:** ADR-014 gave ingestion its own endpoint, and that endpoint ran the
+whole pipeline inline: fetch the blob back, LLM entity extraction, LLM
+summarization, Neo4j entity writes. Every 504 observed in the prototype traced
+to it. Raising `maxDuration` 60 → 300 bought headroom but a slow enough
+extraction still blows the ceiling, and a 300-second synchronous request is a
+poor experience regardless.
+
+**Decision:** the request enqueues; a Vercel Cron worker extracts.
+`POST /api/ingest/document/process` gates on `canEditContent`, anchors the
+`Document` as `PENDING`, and returns **202** (measured warm median ~1.4 s).
+`/api/cron/process-document-ingestion` runs every minute, claims PENDING
+documents, and runs the pipeline. The UI polls `Document.status`.
+
+**The queue is `Document.status` — there is no job node.** The document already
+carries everything a worker needs (`blobKey`, `mimeType`, `userHint`, parent
+FieldContext, uploader), so a separate node would duplicate that state and
+invite the two to drift. Considered and rejected: the provisioned Upstash Redis
+(job state would live apart from the graph data it mutates, complicating
+resumability and the `:Log` audit trail) and the dormant BullMQ setup in
+`src/lib/jobs/` (needs a long-lived worker process, which serverless has no
+place to host).
+
+**Authorization crosses the queue boundary via the `UPLOADED_BY` edge.** The
+worker holds no JWT, so the enqueue-time decision is persisted as that edge and
+the worker acts as the uploader. It is **re-validated live at claim time** — the
+gap can be minutes, and the uploader may have been removed from the Space or
+demoted to GUEST — and every individual entity write re-gates itself inside
+`executeAuthorizedWriteTool` regardless.
+
+**Consequences:**
+
+- Claiming needs a lock-forcing write before its status guard. Neo4j is
+  read-committed, and an index seek only becomes `Locking` when a write follows,
+  so the obvious `MATCH (d {status:'PENDING'}) SET d.status='PROCESSING'` loses
+  updates and *every* overlapping run wins (measured 11/12 trials). See
+  `kb/04-state-machines.md`.
+- A worker killed at the function ceiling leaves a claim behind, so stalled
+  claims are reclaimed after 15 minutes and abandoned to `FAILED` after 3
+  attempts. Nothing may spin forever.
+- Enqueue got cheap, which removed the synchronous design's accidental
+  self-throttle: one account may now hold at most 20 documents in flight (429
+  `queue_full` beyond that), and the worker drains 4 per tick.
+- Failures are surfaced through `Document.status = FAILED` + a member-safe
+  `statusMessage`, not an HTTP error, because the member is no longer waiting on
+  a response. Re-extract (GOAL-241) remains the recovery path.
+- `Document` lost its generated GraphQL CRUD (`@mutation(operations: [])`):
+  with `status` writable, any Space member could re-queue ingestion at will.
+- Documents predating this story have no `status`; every read coalesces the
+  absence to `COMPLETE` so the backlog is never re-ingested.

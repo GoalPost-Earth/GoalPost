@@ -1,390 +1,47 @@
 import { randomUUID } from 'node:crypto'
 import type { Driver } from 'neo4j-driver'
-import type { BlobStore } from './blob-store'
-import { anchorDocument, setDocumentSummary } from './document-storage'
-import { prepareExtractionInputs } from './extraction-input-preparer'
-import { loadFieldContextRoster } from './field-context-roster'
+import { anchorDocument } from './document-storage'
 import {
-  extractEntities,
-  type ExtractionModelClient,
-  type ExtractionResult,
-} from './extraction-model-invoker'
+  DOCUMENT_INGEST_STATUS,
+  INGEST_UNEXPECTED_FAILURE_MESSAGE,
+  MAX_IN_FLIGHT_INGESTS_PER_USER,
+  countInFlightIngestsForUser,
+  markDocumentIngestComplete,
+  markDocumentIngestFailed,
+  memberSafeIngestFailureMessage,
+} from './document-ingest-queue'
+import { ingestRouteForMime } from './supported-file-types'
 import {
-  summarizeDocument,
-  type DocumentSummarizerClient,
-} from './document-summarizer'
-import type {
-  ExecutedToolCallRecord,
-  ExecutedToolResult,
-  SynthesizedToolCall,
-} from './synthesized-turn-appender'
-import { buildExecutedAssistantTurnParts } from './synthesized-turn-appender'
-import { appendConversationTurn } from '@/lib/simulation/conversation-thread.service'
-import { executeAuthorizedWriteTool } from '@/lib/chat/hitl'
-import { initGraph } from '@/modules/graph'
+  countExecutedToolCalls,
+  runDocumentIngestPipeline,
+  type DocumentIngestPipelineDependencies,
+  type DocumentIngestPipelineFailureReason,
+} from './run-document-ingest-pipeline'
+import type { ExecutedToolCallRecord } from './synthesized-turn-appender'
 
 /**
- * Creates a fresh ConversationThread for this ingest run, plus a
- * HAS_INGEST_THREAD edge from the source Document so slice 6's Document
- * detail view can list every thread the document has been processed in.
- * Both the original upload and every subsequent re-extract land here.
+ * Entry points for getting an uploaded document into the graph.
  *
- * Slice 5 (GOAL-240) — write-time invariant: every ingest thread is born with
- * `kind = 'ingest'` and `mode = 'default'`. Aiden / Braider are non-action
- * modes, so they cannot drive the tool calls the synthesized turn already
- * pre-staged. Forcing `default` at creation guarantees subsequent replies in
- * the thread route through the standard tool-execution path regardless of
- * the user's prior global mode. Also stamps `lastViewedThreadId` so a hard
- * refresh restores the user to the ingest thread the upload just opened.
+ * GOAL-292 split this into two halves so the browser upload no longer holds the
+ * LLM pipeline open:
+ *
+ *   - `enqueueDocumentIngest` — cheap and synchronous. Gates on
+ *     `canEditContent`, anchors the Document as PENDING, returns. This is what
+ *     `POST /api/ingest/document/process` calls before answering 202.
+ *   - `runDocumentIngestPipeline` (separate module) — the extraction /
+ *     summarization / entity-write half, run by
+ *     `/api/cron/process-document-ingestion`.
+ *
+ * `handleIngestDocument` composes both. It has NO production caller — the
+ * browser upload goes through `enqueueDocumentIngest` + the cron, and the
+ * server-side `uploadDocument` path is itself test-only. It is kept because the
+ * ingest integration tests need the whole pipeline to run inline, with no cron
+ * to hand off to. Bear that in mind when reading its race guards: they are
+ * production-shaped logic exercised only by tests.
+ *
+ * The heavy steps (`createIngestThread`, `appendSynthesizedIngestTurns`) live in
+ * `run-document-ingest-pipeline.ts`.
  */
-export async function createIngestThread(
-  driver: Driver,
-  userId: string,
-  documentId: string,
-  title: string
-): Promise<string> {
-  const threadId = `thread_${randomUUID()}`
-  const session = driver.session()
-  try {
-    await session.executeWrite(async (tx) =>
-      tx.run(
-        `
-        MATCH (p:Person:User {id: $userId})
-        MATCH (d:Document {id: $documentId})
-        CREATE (p)-[:HAS_THREAD]->(t:ConversationThread {
-          id: $threadId,
-          createdAt: datetime(),
-          lastTurnAt: datetime(),
-          turnCount: 0,
-          title: $title,
-          mode: 'default',
-          kind: 'ingest'
-        })
-        CREATE (d)-[:HAS_INGEST_THREAD]->(t)
-        SET p.lastViewedThreadId = $threadId
-        `,
-        { userId, documentId, threadId, title }
-      )
-    )
-  } finally {
-    await session.close()
-  }
-  return threadId
-}
-
-/**
- * Auto-executes the proposed tool calls server-side and writes both turns
- * of the synthesized assistant trace into a thread the caller has already
- * created. Shared between the initial upload path and the re-extract path
- * so the turn shape (user "Uploaded X" / "Re-extracted X" + executed
- * assistant parts) stays identical across both surfaces.
- *
- * Auto-approve rationale (see PRD § revised flow): doc ingestion historically
- * pre-staged HITL tool calls and waited for the user to click Approve. That
- * left "I uploaded a document but no pulses appeared" as the most common
- * failure mode — the work was done but invisible. The upload itself already
- * gates on `canEditContent`, so re-asking for approval was a UX wall, not a
- * second security layer. Auto-execute closes the loop while keeping the
- * audit trail (one `:Log` per created entity, written inline by the same
- * `executeAuthorizedWriteTool` path manual creation uses).
- *
- * Each tool call's args are still enriched with `conversationThreadId` so
- * the Log row's metadata can carry both `documentId` and the originating
- * thread — closing the audit loop end-to-end.
- */
-export async function appendSynthesizedIngestTurns(
-  userId: string,
-  threadId: string,
-  userTurnContent: string,
-  extraction: ExtractionResult
-): Promise<ExecutedToolCallRecord[]> {
-  await appendConversationTurn(
-    userId,
-    {
-      role: 'user',
-      content: userTurnContent,
-      parts: [{ type: 'text', text: userTurnContent }],
-    },
-    threadId
-  )
-
-  const toolCalls: SynthesizedToolCall[] =
-    extraction.kind === 'ok'
-      ? extraction.toolCalls.map((call) => ({
-          ...call,
-          args: { ...call.args, conversationThreadId: threadId },
-        }))
-      : []
-
-  // Execute each proposed tool call against the live graph. A failure on
-  // one entity does not abort the rest — partial success is recorded in
-  // the assistant turn so the user can see which entities landed and
-  // which need manual follow-up.
-  //
-  // Attribution wiring: roster-matched authors already ride in with their
-  // live id stamped by the invoker (they may get no person call this run).
-  // For persons minted or enriched THIS run, the invoker orders person calls
-  // before pulse calls, and the name→id map below closes the loop from their
-  // executed results. A failed person call (with no roster id to fall back
-  // on) simply leaves the pulse attributed to the uploader.
-  const executed: ExecutedToolCallRecord[] = []
-  const personIdByName = new Map<string, string>()
-  // GOAL-298: name→id for extracted organizations, and (pulseType|title)→id for
-  // created/updated pulses. Both are populated as create_*/update_* results
-  // land, so the trailing link_entity_to_pulse calls (emitted last by the
-  // invoker) can resolve their MENTIONED_IN endpoints by name/title.
-  const orgIdByName = new Map<string, string>()
-  const pulseIdByKey = new Map<string, string>()
-  const registerPulseId = (
-    args: Record<string, unknown>,
-    result: ExecutedToolResult
-  ): void => {
-    const pulseId =
-      typeof result.pulseId === 'string' && result.pulseId
-        ? result.pulseId
-        : typeof (result.pulse as { id?: string } | undefined)?.id === 'string'
-          ? (result.pulse as { id?: string }).id!
-          : ''
-    if (!pulseId) return
-    const pulseType = String(args.pulseType ?? result.pulseType ?? '')
-    const titles = [
-      typeof result.title === 'string' ? result.title : '',
-      String(args.title ?? ''),
-      String(args.newTitle ?? ''),
-      String(args.currentTitle ?? ''),
-    ]
-    for (const t of titles) {
-      const title = t.trim().toLowerCase()
-      if (!title) continue
-      pulseIdByKey.set(`${pulseType}|${title}`, pulseId)
-      // Keyless fallback so a link whose pulseType drifted still resolves.
-      if (!pulseIdByKey.has(title)) pulseIdByKey.set(title, pulseId)
-    }
-  }
-  if (toolCalls.length > 0) {
-    const graph = await initGraph()
-    for (const call of toolCalls) {
-      let args = call.args
-      if (call.tool === 'create_pulse' || call.tool === 'update_pulse') {
-        const attributedToName =
-          typeof args.attributedToName === 'string'
-            ? args.attributedToName.trim().toLowerCase()
-            : ''
-        const attributedToPersonId = attributedToName
-          ? personIdByName.get(attributedToName)
-          : undefined
-        if (attributedToPersonId) {
-          args = { ...args, attributedToPersonId }
-        }
-      } else if (call.tool === 'link_entity_to_pulse') {
-        // Resolve the MENTIONED_IN endpoints by name/title from entities that
-        // executed earlier this run. Any id the invoker already knew (a roster
-        // match) is preserved.
-        const next = { ...args }
-        const entityKey =
-          typeof next.entityName === 'string'
-            ? next.entityName.trim().toLowerCase()
-            : ''
-        if (next.entityType === 'organization') {
-          if (!next.organizationId && entityKey) {
-            const id = orgIdByName.get(entityKey)
-            if (id) next.organizationId = id
-          }
-        } else if (!next.personId && entityKey) {
-          const id = personIdByName.get(entityKey)
-          if (id) next.personId = id
-        }
-        if (!next.pulseId) {
-          const pulseType = String(next.pulseType ?? '')
-          const title =
-            typeof next.pulseTitle === 'string'
-              ? next.pulseTitle.trim().toLowerCase()
-              : ''
-          const id =
-            pulseIdByKey.get(`${pulseType}|${title}`) ??
-            (title ? pulseIdByKey.get(title) : undefined)
-          if (id) next.pulseId = id
-        }
-        args = next
-      }
-      let result: ExecutedToolResult
-      try {
-        result = (await executeAuthorizedWriteTool(
-          graph,
-          userId,
-          call.tool,
-          args
-        )) as ExecutedToolResult
-      } catch (err) {
-        result = {
-          success: false,
-          message:
-            err instanceof Error
-              ? err.message
-              : 'Tool execution failed unexpectedly.',
-        }
-      }
-      if (
-        (call.tool === 'create_person' || call.tool === 'update_person') &&
-        result.success !== false &&
-        typeof result.personId === 'string' &&
-        result.personId
-      ) {
-        // Key by both the graph's canonical name and the extractor's
-        // firstName+lastName — the two can differ (e.g. enrich returns the
-        // existing node's richer name) and attribution must match either.
-        const keys = [
-          typeof result.name === 'string' ? result.name : '',
-          `${String(args.firstName ?? '')} ${String(args.lastName ?? '')}`,
-        ]
-        for (const key of keys) {
-          const normalized = key.trim().toLowerCase()
-          if (normalized) personIdByName.set(normalized, result.personId)
-        }
-      }
-      if (
-        call.tool === 'create_organization' &&
-        result.success !== false &&
-        typeof result.organizationId === 'string' &&
-        result.organizationId
-      ) {
-        const keys = [
-          typeof result.name === 'string' ? result.name : '',
-          String(args.name ?? ''),
-        ]
-        for (const key of keys) {
-          const normalized = key.trim().toLowerCase()
-          if (normalized) orgIdByName.set(normalized, result.organizationId)
-        }
-      }
-      if (
-        (call.tool === 'create_pulse' || call.tool === 'update_pulse') &&
-        result.success !== false
-      ) {
-        registerPulseId(args, result)
-      }
-      executed.push({ tool: call.tool, args, result })
-    }
-  }
-
-  const succeededCalls = executed.filter((e) => e.result.success !== false)
-  const failed = executed.length - succeededCalls.length
-  // The extractor emits a free-text reply explaining what it proposed.
-  // Prepend a one-line execution summary so the thread reads as a record
-  // of what happened, not a record of what was proposed. Count creates and
-  // updates separately — a roster match that only updated an existing
-  // person must not be announced as "created", or the user goes hunting
-  // the graph for a new node that was never minted.
-  // A MENTIONED_IN link is a connection, not a created/updated entity — count
-  // it on its own axis so the summary never claims a link is a new node.
-  const linkedCount = succeededCalls.filter(
-    (e) => e.tool === 'link_entity_to_pulse'
-  ).length
-  const entityCalls = succeededCalls.filter(
-    (e) => e.tool !== 'link_entity_to_pulse'
-  )
-  // A `create_*` tool that hit its idempotency path (enrich-don't-duplicate)
-  // returns `alreadyExisted: true` — that's an update, not a mint. Counting it
-  // as "created" sends the user hunting the graph for a node that was never
-  // added (the same invariant the person path preserves via update_person).
-  const createdCount = entityCalls.filter(
-    (e) => e.tool.startsWith('create_') && e.result.alreadyExisted !== true
-  ).length
-  const updatedCount = entityCalls.length - createdCount
-  const outcome = [
-    createdCount > 0
-      ? `created ${createdCount} ${createdCount === 1 ? 'entity' : 'entities'}`
-      : '',
-    updatedCount > 0
-      ? `updated ${updatedCount} existing ${updatedCount === 1 ? 'entry' : 'entries'}`
-      : '',
-    linkedCount > 0
-      ? `made ${linkedCount} ${linkedCount === 1 ? 'connection' : 'connections'}`
-      : '',
-  ]
-    .filter(Boolean)
-    .join(' and ')
-  const capitalizedOutcome = outcome.charAt(0).toUpperCase() + outcome.slice(1)
-  const summaryLine =
-    executed.length === 0
-      ? ''
-      : failed === 0
-        ? `${capitalizedOutcome} from this document.`
-        : outcome
-          ? `${capitalizedOutcome} from this document; ${failed} of ${executed.length} proposed didn't land — see details above.`
-          : `None of the ${executed.length} proposed entities landed — see details above.`
-  // Attribution is reported from EXECUTED results, never from the proposal —
-  // a pulse only counts as attributed when the write actually linked it to
-  // the person (names only in chat copy, per kb/07 Rule 1).
-  const pulsesByAuthor = new Map<string, string[]>()
-  for (const e of executed) {
-    // update_pulse counts too (GOAL-318): a re-extract that corrected a
-    // pulse's default uploader attribution reports the credited author the
-    // same way a fresh create does.
-    if (
-      (e.tool !== 'create_pulse' && e.tool !== 'update_pulse') ||
-      e.result.success === false
-    )
-      continue
-    const author =
-      typeof e.result.attributedTo === 'string' ? e.result.attributedTo.trim() : ''
-    // update_pulse nests the title under result.pulse (updatePulse service
-    // shape); create_pulse reports it top-level. Fall back to the args the
-    // invoker sent so a rename-free update still reports a title.
-    const nestedTitle = (e.result.pulse as { title?: string } | undefined)
-      ?.title
-    const title =
-      (typeof e.result.title === 'string' && e.result.title.trim()) ||
-      (typeof nestedTitle === 'string' && nestedTitle.trim()) ||
-      String(e.args.newTitle ?? e.args.currentTitle ?? '').trim()
-    if (!author || !title) continue
-    pulsesByAuthor.set(author, [...(pulsesByAuthor.get(author) ?? []), title])
-  }
-  const attributionLine = Array.from(pulsesByAuthor.entries())
-    .map(
-      ([author, titles]) =>
-        `${titles.map((t) => `"${t}"`).join(', ')} ${titles.length === 1 ? 'is' : 'are'} attributed to ${author}, so their contributions stay connected to them in the graph.`
-    )
-    .join(' ')
-  const assistantText = [
-    [summaryLine, attributionLine].filter((s) => s.length > 0).join(' '),
-    extraction.assistantText,
-  ]
-    .filter((s) => s.length > 0)
-    .join('\n\n')
-
-  const parts = buildExecutedAssistantTurnParts({
-    toolCalls: executed,
-    assistantText,
-  })
-  await appendConversationTurn(
-    userId,
-    { role: 'assistant', content: assistantText, parts },
-    threadId
-  )
-  return executed
-}
-
-export interface IngestDocumentDependencies {
-  driver: Driver
-  blobStore: BlobStore
-  /**
-   * Multimodal extractor (Gemini) used for the `multimodal` route — PDFs and
-   * images. Reads the file by presigned URL.
-   */
-  pdfExtractionClient: ExtractionModelClient
-  /**
-   * Text extractor (OpenAI) used for the `text` and `office` routes. Reads the
-   * document body that was decoded (text) or extracted in-process (office).
-   */
-  textExtractionClient: ExtractionModelClient
-  /**
-   * Optional summarizers — one per modality. Failure is non-fatal.
-   * Tests can omit both to keep the entity-extraction surface in isolation.
-   */
-  pdfSummarizerClient?: DocumentSummarizerClient | null
-  textSummarizerClient?: DocumentSummarizerClient | null
-}
 
 export interface IngestDocumentInput {
   currentUserId: string
@@ -401,13 +58,15 @@ export interface IngestDocumentInput {
   hint: string | null
 }
 
+/**
+ * Derived from the pipeline's own failure reasons rather than re-listing them,
+ * so adding a reason there is a compile error here instead of being silently
+ * widened by a cast.
+ */
 export type IngestFailureReason =
+  | DocumentIngestPipelineFailureReason
   | 'forbidden'
-  | 'unsupported_mime'
-  | 'oversize_pages'
-  | 'oversize_chars'
-  | 'parse_failure'
-  | 'blob_missing'
+  | 'queue_full'
 
 export interface IngestSuccess {
   ok: true
@@ -430,8 +89,13 @@ export type IngestDocumentResult = IngestSuccess | IngestFailure
 /**
  * Permission gate: caller must hold canEditContent on the FieldContext's
  * parent Space (MeSpace owner OR WeSpace admin/member).
+ *
+ * Exported because the cron worker re-runs it at claim time (GOAL-292): the
+ * decision captured at enqueue can be minutes old by the time a document is
+ * picked up, and the uploader may have been removed from the Space or demoted
+ * to GUEST in between.
  */
-async function userCanEditContext(
+export async function userCanEditFieldContext(
   driver: Driver,
   userId: string,
   fieldContextId: string
@@ -457,30 +121,59 @@ async function userCanEditContext(
   }
 }
 
-async function getFieldContextTitle(
-  driver: Driver,
-  fieldContextId: string
-): Promise<string | null> {
-  const session = driver.session()
-  try {
-    const result = await session.executeRead(async (tx) =>
-      tx.run(
-        `MATCH (c:FieldContext {id: $fieldContextId}) RETURN c.title AS title LIMIT 1`,
-        { fieldContextId }
-      )
-    )
-    return (result.records[0]?.get('title') as string | null) ?? null
-  } finally {
-    await session.close()
-  }
+/**
+ * Presign mints blob keys as `documents/document_<uuid>/<sanitized-name>`, so
+ * the key already carries a server-generated document id. Returns null for any
+ * key that doesn't match (server-side upload path, legacy keys), leaving the
+ * caller to mint one.
+ */
+// Mirrors BLOB_KEY_PATTERN in the process route, filename segment included, so
+// the validator and the parser cannot disagree about what a valid key is.
+const BLOB_KEY_DOCUMENT_ID = /^documents\/(document_[0-9a-f-]{36})\/[^/]+$/i
+
+export function documentIdFromBlobKey(blobKey: string): string | null {
+  const match = BLOB_KEY_DOCUMENT_ID.exec(blobKey)
+  return match ? match[1].toLowerCase() : null
 }
 
-export async function handleIngestDocument(
-  deps: IngestDocumentDependencies,
-  input: IngestDocumentInput
-): Promise<IngestDocumentResult> {
+export interface EnqueueDocumentIngestSuccess {
+  ok: true
+  documentId: string
+}
+export type EnqueueDocumentIngestResult =
+  | EnqueueDocumentIngestSuccess
+  | IngestFailure
+
+/**
+ * Synchronous half of the upload (GOAL-292): permission gate → anchor a PENDING
+ * Document → done. No blob is read and no model is called, so this returns in
+ * milliseconds and the request can answer 202 well inside the pre-stopgap 60s
+ * limit that used to produce 504s.
+ *
+ * The mime check is kept here because it is a pure function of the declared
+ * type — no I/O — so an unsupported file still fails immediately and visibly
+ * rather than being queued only to fail a minute later. Every other validation
+ * needs the blob's bytes and therefore belongs to the worker, which reports it
+ * through `Document.status = FAILED` + `statusMessage`.
+ *
+ * Anchoring before returning is deliberate: the Document row is the queue
+ * entry AND the thing the UI polls, so it must exist by the time the client
+ * gets its 202.
+ */
+export async function enqueueDocumentIngest(
+  deps: Pick<DocumentIngestPipelineDependencies, 'driver'>,
+  input: IngestDocumentInput,
+  options: {
+    /**
+     * Status to anchor with. Callers that run the pipeline themselves pass
+     * PROCESSING so the cron worker cannot claim the document out from under
+     * them mid-run and ingest it a second time.
+     */
+    initialStatus?: (typeof DOCUMENT_INGEST_STATUS)[keyof typeof DOCUMENT_INGEST_STATUS]
+  } = {}
+): Promise<EnqueueDocumentIngestResult> {
   // Permission gate FIRST so a bad caller never causes graph writes.
-  const allowed = await userCanEditContext(
+  const allowed = await userCanEditFieldContext(
     deps.driver,
     input.currentUserId,
     input.fieldContextId
@@ -489,36 +182,46 @@ export async function handleIngestDocument(
     return {
       ok: false,
       reason: 'forbidden',
-      error: 'You do not have permission to add documents to this field context.',
+      error:
+        'You do not have permission to add documents to this field context.',
     }
   }
 
-  const fieldContextTitle =
-    (await getFieldContextTitle(deps.driver, input.fieldContextId)) ?? ''
-
-  // The browser has already uploaded the file to S3. Prepare extractor +
-  // summarizer inputs by route (multimodal / office / text) — shared with the
-  // re-extract path so the routing can never drift. See
-  // extraction-input-preparer.ts.
-  const prepared = await prepareExtractionInputs(deps, {
-    mimeType: input.mimeType,
-    blobKey: input.blobKey,
-    filename: input.filename,
-  })
-  if (!prepared.ok) {
-    return { ok: false, reason: prepared.reason, error: prepared.error }
+  if (!ingestRouteForMime(input.mimeType)) {
+    // Defense in depth — the presign gate already rejects unsupported mimes,
+    // so reaching here means a client skipped presign or the allow-list
+    // drifted. Fail closed rather than queueing work no extractor can do.
+    return {
+      ok: false,
+      reason: 'unsupported_mime',
+      error: `We don't support this file type (${input.mimeType}).`,
+    }
   }
-  const {
-    extractionModelInputExtras,
-    summarizerExtras,
-    modelClient,
-    summarizerClient,
-    pageCount,
-  } = prepared
 
-  // Anchor the Document node in the graph. The blob already lives at
-  // input.blobKey; we record both the key and a stable identifier URL.
-  const documentId = `document_${randomUUID()}`
+  // Bound how much of the shared worker one account can occupy. The queue
+  // drains oldest-first, so an unbounded burst here would delay every other
+  // Space's uploads behind it.
+  const inFlight = await countInFlightIngestsForUser(
+    deps.driver,
+    input.currentUserId
+  )
+  if (inFlight >= MAX_IN_FLIGHT_INGESTS_PER_USER) {
+    return {
+      ok: false,
+      reason: 'queue_full',
+      error: `You have ${inFlight} documents still being processed. Wait for those to finish before uploading more.`,
+    }
+  }
+
+  // Derive the id from the blob key rather than minting a fresh one, so a
+  // retried /process call (flaky connection where the first request actually
+  // landed, a double-click) re-anchors the SAME document instead of creating a
+  // second one over the same blob — which would be ingested twice, at double the
+  // model spend, and only noticed when duplicate entities appeared. The key was
+  // shape-validated by the route and its uuid segment is server-minted at
+  // presign time, so it is a safe idempotency key; `anchorDocument` MERGEs on it.
+  const documentId =
+    documentIdFromBlobKey(input.blobKey) ?? `document_${randomUUID()}`
   await anchorDocument({
     driver: deps.driver,
     documentId,
@@ -527,71 +230,79 @@ export async function handleIngestDocument(
     filename: input.filename,
     mimeType: input.mimeType,
     sizeBytes: input.sizeBytes,
-    pageCount,
+    // Only knowable once the blob is read, which now happens in the worker.
+    pageCount: null,
     userHint: input.hint,
     blobKey: input.blobKey,
     // The canonical blob locator is the key — presigned URLs are minted on
     // demand and never persisted.
     blobUrl: input.blobKey,
+    status: options.initialStatus ?? DOCUMENT_INGEST_STATUS.pending,
   })
 
-  // Load roster + run extraction and summarizer concurrently.
-  const roster = await loadFieldContextRoster({
+  return { ok: true, documentId }
+}
+
+/**
+ * Enqueue + run the pipeline inline, i.e. the pre-GOAL-292 behavior.
+ *
+ * TEST-ONLY: the sole caller is `__test-utils__/handle-ingest-document-helper`.
+ * The browser upload route enqueues and lets
+ * `/api/cron/process-document-ingestion` do this work; the `uploadDocument`
+ * server-side path that used to justify keeping this is also test-only.
+ */
+export async function handleIngestDocument(
+  deps: DocumentIngestPipelineDependencies,
+  input: IngestDocumentInput
+): Promise<IngestDocumentResult> {
+  // Anchor as PROCESSING, not PENDING: this call runs the pipeline itself, and a
+  // PENDING document is fair game for the cron worker — which would claim it
+  // mid-run and ingest the same file a second time (duplicate thread, duplicate
+  // LLM spend). The dev database is shared with a worker that ticks every
+  // minute, so the exposure is real, not theoretical.
+  const enqueued = await enqueueDocumentIngest(deps, input, {
+    initialStatus: DOCUMENT_INGEST_STATUS.processing,
+  })
+  if (!enqueued.ok) return enqueued
+
+  // Land a terminal status on EVERY exit path — including a thrown error.
+  // Anything left at PENDING would be picked up by the cron worker and ingested
+  // a SECOND time, double-creating every entity this call already wrote.
+  let run: Awaited<ReturnType<typeof runDocumentIngestPipeline>>
+  try {
+    run = await runDocumentIngestPipeline(deps, {
+      documentId: enqueued.documentId,
+      actingUserId: input.currentUserId,
+      userTurnVerb: 'Uploaded',
+    })
+  } catch (error) {
+    await markDocumentIngestFailed({
+      driver: deps.driver,
+      documentId: enqueued.documentId,
+      statusMessage: INGEST_UNEXPECTED_FAILURE_MESSAGE,
+    })
+    throw error
+  }
+
+  if (!run.ok) {
+    await markDocumentIngestFailed({
+      driver: deps.driver,
+      documentId: enqueued.documentId,
+      statusMessage: memberSafeIngestFailureMessage(run.reason, run.error),
+    })
+    return { ok: false, reason: run.reason, error: run.error }
+  }
+
+  await markDocumentIngestComplete({
     driver: deps.driver,
-    fieldContextId: input.fieldContextId,
+    documentId: enqueued.documentId,
+    ...countExecutedToolCalls(run.executedToolCalls),
   })
-
-  const [extraction, summary] = await Promise.all([
-    extractEntities(
-      {
-        ...extractionModelInputExtras,
-        filename: input.filename,
-        hint: input.hint,
-        roster,
-        fieldContextId: input.fieldContextId,
-        fieldContextTitle,
-        documentId,
-        userId: input.currentUserId,
-      },
-      modelClient
-    ),
-    summarizeDocument(summarizerClient, {
-      ...summarizerExtras,
-      filename: input.filename,
-      hint: input.hint,
-      fieldContextTitle,
-      userId: input.currentUserId,
-    }),
-  ])
-
-  await setDocumentSummary({
-    driver: deps.driver,
-    documentId,
-    summary: summary.summary,
-    concepts: summary.concepts,
-  })
-
-  const threadId = await createIngestThread(
-    deps.driver,
-    input.currentUserId,
-    documentId,
-    `Ingest: ${input.filename}`
-  )
-
-  const userTurnContent = input.hint
-    ? `Uploaded ${input.filename}. Hint: ${input.hint}`
-    : `Uploaded ${input.filename}`
-  const executedToolCalls = await appendSynthesizedIngestTurns(
-    input.currentUserId,
-    threadId,
-    userTurnContent,
-    extraction
-  )
 
   return {
     ok: true,
-    documentId,
-    threadId,
-    executedToolCalls,
+    documentId: run.documentId,
+    threadId: run.threadId,
+    executedToolCalls: run.executedToolCalls,
   }
 }

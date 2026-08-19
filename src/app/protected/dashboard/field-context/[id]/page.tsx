@@ -345,13 +345,19 @@ export default function FieldContextDetailsPage() {
               firstName?: string | null
               lastName?: string | null
               name?: string | null
-              email?: string | null
               photo?: string | null
-              description?: string | null
-              connectionEdges?: Array<{
-                connectedPersonId?: string | null
-                why?: string | null
-              }> | null
+              // GOAL-275: email / description / the connection graph read
+              // through the single type-level gate. Null when this caller is
+              // not authorized for that person — the roster then shows the
+              // open directory identity only.
+              privateProfile?: {
+                email?: string | null
+                description?: string | null
+                connectionEdges?: Array<{
+                  connectedPersonId?: string | null
+                  why?: string | null
+                }> | null
+              } | null
             }>
             meSpace?: Array<{
               owner?: Array<{ id: string }>
@@ -420,12 +426,12 @@ export default function FieldContextDetailsPage() {
       firstName: person.firstName || '',
       lastName: person.lastName || '',
       name: person.name || null,
-      email: person.email || null,
+      email: person.privateProfile?.email || null,
       photo: person.photo || null,
       role: roleById.get(person.id) || ('PERSON' as const),
-      description: person.description || null,
+      description: person.privateProfile?.description || null,
       relationshipWhy: resolveRelationshipWhy(
-        person.connectionEdges,
+        person.privateProfile?.connectionEdges,
         user?.id
       ),
     }))
@@ -434,7 +440,7 @@ export default function FieldContextDetailsPage() {
   // Slice 7 (GOAL-242) — UI permission gate for the upload control. We mirror
   // `canEditContent` from kb/02-user-roles.md: OWNER + ADMIN + MEMBER pass,
   // GUEST and non-members do not. The route boundary re-checks this server-side
-  // (see `handleIngestDocument`), so this is purely a "don't show a control
+  // (see `enqueueDocumentIngest`), so this is purely a "don't show a control
   // the user cannot use" measure — never a security boundary on its own.
   //
   // The rule itself lives in `deriveCanEditContent` so the floating canvas

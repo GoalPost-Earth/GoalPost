@@ -96,15 +96,22 @@ type PersonConnectionEdge {
 Base interface for Person entities.
 Defines common properties across Person and User types.
 
-`@query(read: false, aggregate: false)`: the GOAL-275 PII gate lives on the
-concrete `Person` type (field-level `@authorization` READ + `@selectable`
-onAggregate:false). Those do NOT flow to the interface's auto-generated roots
-(`personInterfaces`, `personInterfacesAggregate`, `personInterfacesConnection`),
-which read the same `:Person` nodes with NO authorization — a cross-Space leak
-of email/phone/location/pronouns to any authenticated user. Disabling the
-interface roots closes that parallel path; the app never queries them (all
-Person access goes through `people` / `relatedPeople`). Mirrors the `User`
-type lock. If a new gated field is added to `Person`, this stays sufficient.
+This interface carries ONLY the open directory identity. `phone` / `email` /
+`pronouns` / `location` used to be declared here too; they moved to
+`PersonPrivateProfile` behind the single GOAL-275 gate, and a GraphQL type must
+expose every field its interface declares — so leaving them here would have
+forced `Person` to keep exposing them.
+
+`@query(read: false, aggregate: false)`: the interface's auto-generated roots
+(`personInterfaces`, `personInterfacesAggregate`, `personInterfacesConnection`)
+read the same `:Person` nodes as a parallel path that inherits no
+authorization. Even now that the interface itself is PII-free, those roots
+would still hand out an ungated enumeration of every Person, so the lock stays.
+The app never queries them — all Person access goes through `people` /
+`relatedPeople`. Mirrors the `User` type lock.
+
+Add new gated fields to `PersonPrivateProfile`, never here and never to
+`Person` — see that type's docstring for why.
 """
 interface PersonInterface @query(read: false, aggregate: false) {
   id: ID!
@@ -112,10 +119,6 @@ interface PersonInterface @query(read: false, aggregate: false) {
   lastName: String!
   name: String!
   photo: String
-  phone: String
-  email: String
-  pronouns: String
-  location: String
   createdAt: DateTime!
   updatedAt: DateTime
 }
@@ -159,12 +162,24 @@ type Person implements PersonInterface
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
 
-  # ── GOAL-275 sensitive-field READ gate ─────────────────────────────────────
+  # ── GOAL-275 sensitive-field READ gate (write/filter side) ─────────────────
   # The Person type stays open for directory lookup: id / firstName / lastName /
   # name / photo are readable by any authenticated user (kb/02-user-roles.md).
   # The fields below carry PII or relational narrative and MUST NOT leak across
-  # Space boundaries. Each carries an identical field-level `@authorization`
-  # `filter` rule that authorizes the read only when the caller
+  # Space boundaries. They remain declared HERE because they are the WRITABLE
+  # properties (`updatePeople` sets them) — but they are NOT readable from this
+  # type: every one carries `@selectable(onRead: false, onAggregate: false)`, so
+  # they appear in no output type and no aggregate selection. None of them is
+  # filterable either, `email` included since the enumeration fix — see the note
+  # on that field.
+  #
+  # READS go through `privateProfile` (below), a single `PersonPrivateProfile`
+  # over the same `:Person` node carrying ONE type-level `@authorization`
+  # filter. See that type's docstring for the policy and the measurements that
+  # forced the restructure. The rule that used to be duplicated here on 14
+  # fields now exists in exactly one place.
+  #
+  # The policy is unchanged. A read is authorized only when the caller
   #   • is the person           (id_EQ $jwt.user.id), OR
   #   • created the person node  (createdBy_SOME id_EQ $jwt.user.id — their own
   #                               imported / ingested contact), OR
@@ -189,38 +204,56 @@ type Person implements PersonInterface
   #     parent Space. The declarative filter here cannot express "NOT :User",
   #     which is exactly why that guard lives in the resolver, not this rule.
   #
-  # MECHANISM (important — @neo4j/graphql v6): a field-level `filter` rule is
-  # ANDed onto the PARENT Person's match *whenever that field appears in the
-  # selection set*. It does NOT null just the one field — an unauthorized caller
-  # who selects any gated field does not receive the Person row at all (it is
-  # filtered out). Consequences, by design:
-  #   • Directory/search queries that select ONLY the open fields
-  #     (id/firstName/lastName/name/photo) never trigger the rule, so every
-  #     Person is still findable by name cross-Space.
-  #   • A query that selects a gated field (the Person / Connection drawers,
-  #     the profile page) returns the Person to authorized callers and an EMPTY
-  #     result to everyone else — so every such surface MUST render a graceful
-  #     not-found. `filter` (not `validate`) is used so this fails closed by
-  #     omission rather than erroring the whole operation.
-  # This is fail-closed and leak-free; it is a deliberately stricter posture
-  # than "show name+photo, hide the sensitive bits" (which the declarative
-  # filter cannot express without a raw projection).
+  # MECHANISM: an unauthorized caller now gets the Person row with
+  # `privateProfile: null` instead of no row at all. That is strictly less
+  # information than the old behaviour leaked anyway — name / photo are already
+  # public cross-Space by design (SEARCH_PEOPLE_QUERY), and the PII itself is
+  # still withheld. It also removes the trap that every PII surface had to
+  # render a graceful not-found for a person who plainly exists.
   #
-  # AGGREGATION: the filter rules cover READ only, and field-level rules do NOT
-  # gate aggregate selections — `peopleAggregate { email { shortest } }` was
-  # confirmed to return real cross-Space emails. Every gated scalar therefore
-  # also carries `@selectable(onRead: true, onAggregate: false)`, which removes
-  # it from ALL aggregate selection types (top-level and nested) at schema-build
-  # time — fail-closed by construction. Plain `count` aggregates are
-  # unaffected (the app currently issues no aggregate selections at all —
-  # the last one, GET_GRAPH_STATS, was removed with the dead Graph View
-  # queries). If you add a new gated field, add BOTH directives.
+  # SORTING: `@sortable(byValue: false)` on every scalar below is load-bearing
+  # and is NOT implied by `@selectable(onRead: false)` — verified by building
+  # the schema both ways: without it, all twelve stay in `PersonSort`. Ordering
+  # is a comparison oracle. Under the old design
+  # `people(sort: [{ location: ASC }], limit: 5) { id name }` compiled to a bare
+  # `MATCH (this:Person) … ORDER BY this.location` with ZERO auth predicates —
+  # the rule never fired because no gated field was *selected* — letting any
+  # authenticated caller order every Person by `email` / `phone` / `careManual`
+  # and binary-search values with `sort` + `limit` + `offset`. That hole
+  # predates this change; these directives close it.
+  #
+  # AGGREGATION: field-level rules do NOT gate aggregate selections —
+  # `peopleAggregate { email { shortest } }` was confirmed to return real
+  # cross-Space emails. `@selectable(onAggregate: false)` on each scalar here
+  # removes it from ALL aggregate selection types at schema-build time, and
+  # `PersonPrivateProfile` carries `@query(aggregate: false)` so it has no
+  # aggregate root of its own. Plain `count` aggregates are unaffected.
   #
   # The predicate reuses the exact owner/member pattern from the WeSpace +
-  # SpaceMembership authorization filters above, over the pre-existing
-  # `ownsSpaces` / `memberOf` / `createdBy` relationships — so it adds NO new
-  # filter surface (all three are already declared `@relationship` fields on
-  # this type, so their `*_SOME` filters already exist in PersonWhere).
+  # SpaceMembership authorization filters below, over the pre-existing
+  # `ownsSpaces` / `memberOf` / `createdBy` relationships.
+  #
+  # It DOES add one new filter surface, and the honest accounting is:
+  # `PersonWhere` gains `privateProfile: PersonPrivateProfileWhere`, because a
+  # `@cypher` field must be filterable for the type-level `@authorization` rule
+  # to validate against it (making `Person.privateProfile` unfilterable fails
+  # the build outright: `Field "node" is not defined by type`). It leaks no
+  # INFORMATION — after the `@filterable(byValue: false)` sweep on
+  # `PersonPrivateProfile` it offers only `id_*` plus the four relationship
+  # predicates, all of which already exist verbatim on `PersonWhere`. But it is
+  # a COST multiplier: `people(where: { privateProfile: { id_EQ: … } })`
+  # compiles to a label scan plus a per-row `CALL` (measured 2,439 dbHits on a
+  # 1,216-Person fixture, against 5 for the equivalent `people(where: { id_EQ
+  # })` index seek), because the predicate lands below the `CALL` and cannot be
+  # pushed out — the same trap documented on `PersonPrivateProfile`.
+  #
+  # It is deliberately NOT special-cased in a validation rule, because an
+  # unfiltered `people { privateProfile { email } }` already costs at least as
+  # much and always has. The general mitigation is query complexity/depth
+  # limiting on `/api/graphql`, not a `privateProfile`-shaped patch that would
+  # leave the cheaper path open. That limiting now exists — see
+  # `src/lib/graphql/query-limits.ts` (cost / depth / alias / token ceilings,
+  # each set against the measured maximum over the app's own documents).
   # The `createdBy_SOME` branch closes the regression where a user could not
   # open the profile of a non-member contact they themselves imported/ingested
   # (e.g. a document-extracted PersonPulse): such a contact owns no Space and is
@@ -228,76 +261,71 @@ type Person implements PersonInterface
   # by — and belongs to — the caller. It only ever unlocks persons the caller
   # created, and CREATED_BY edges are written server-side (never via the
   # self-gated updatePeople), so it cannot be forged to reach a stranger's PII.
-  # A legacy CONNECTED_TO edge, by contrast, does NOT unlock these fields:
-  # expressing "caller is connected to this person" declaratively would require
-  # adding a CONNECTED_TO relationship filter to PersonWhere, which `people(where:)`
-  # would then expose for cross-Space connection-graph enumeration — re-opening
-  # the very leak this ticket closes. CONNECTED_TO is legacy (migrating to
-  # ResonanceLinks), so createdBy / sharing a Space are the intended paths to a
-  # person's private profile.
-  # Keep the OR-branches byte-identical on every gated field — a drifted copy
-  # is a leak.
+  # A legacy CONNECTED_TO edge, by contrast, does NOT unlock these fields —
+  # an edge records a claim by its author, never the far endpoint's consent.
+  # Note this also USED to be undermined by its own escape hatch: the
+  # `connections` / `connectionEdges` `@cypher` fields generated
+  # `PersonWhere.connections_SOME`, so `people(where: { connections_SOME: {
+  # id_EQ: … } })` did expose exactly the cross-Space connection-graph
+  # enumeration this rule is meant to prevent. Moving both fields onto
+  # `PersonPrivateProfile` and marking them `@filterable(byValue: false)`
+  # removes that predicate from the schema entirely. CONNECTED_TO is legacy
+  # (migrating to ResonanceLinks), so createdBy / sharing a Space are the
+  # intended paths to a person's private profile.
   # ────────────────────────────────────────────────────────────────────────────
-  # NOTE: `email` stays filterable — `people(where: { email_EQ })` is the
-  # self-bootstrap lookup (GET_LOGGED_IN_USER). Its value is still gated by the
-  # @authorization filter below; only the exact-match filter capability remains.
+  # `email` is NOT filterable, and that is load-bearing. @neo4j/graphql v6 has
+  # no operator-level control: declaring a field filterable generates `_EQ`
+  # AND `_IN` / `_CONTAINS` / `_STARTS_WITH` / `_ENDS_WITH` together. While
+  # this field was filterable, `people(where: { email_STARTS_WITH: "a" }) { id
+  # name }` was an account-enumeration oracle for any authenticated caller —
+  # recover any registered address character by character, or confirm whether
+  # a given person has an account. `peopleAggregate(where: …) { count }` leaked
+  # the same signal while returning no rows, so no row-level defence saw it.
+  # An `@authorization` filter gates PROJECTIONS, not `where` predicates (see
+  # the long note on PersonPrivateProfile), so gating the VALUE never closed
+  # this; only removing the predicate does.
+  #
+  # It was kept filterable for `people(where: { email_EQ })`, the login
+  # self-bootstrap behind GET_LOGGED_IN_USER. That lookup did not actually
+  # need email: JWT `user.id` IS the `Person.id`, the login/signup responses
+  # already hand the client its own `id`, and every authorization rule on this
+  # type matches on `id` anyway. GET_LOGGED_IN_USER now keys on `id_EQ`, which
+  # is an index seek instead of a property scan and cannot be pointed at
+  # another account. No caller needs an email predicate; if one ever does, it
+  # is a narrow custom resolver (`findPersonByEmail`, rate-limited, exact match
+  # only), never re-opening this surface.
+  #
+  # `@filterable(byValue: false)` here also removes
+  # `PersonConnectionWhere` / `PersonSort` exposure of the field — pinned by
+  # `person-pii-read-auth.integration.test.ts`.
   email: String
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @filterable(byValue: false)
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
 
   # Profile properties (merged from reference).
   # photo/avatar/status stay open (directory / presence — non-PII); the PII
-  # scalars — including `gender`, which is collected on the person forms — carry
-  # the GOAL-275 gate below.
+  # scalars — including `gender`, which is collected on the person forms — are
+  # read-gated via `privateProfile`.
   photo: String
   phone: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   pronouns: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   location: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   avatar: String
   status: String
   gender: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
 
   # Rich profile content
   # `description` is a short relational note about a PersonPulse — who they are
@@ -306,74 +334,32 @@ type Person implements PersonInterface
   # the authorized `updatePersonPulse` mutation (NOT the self-gated updatePeople).
   description: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   careManual: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   favorites: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   passions: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   traits: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   fieldsOfCare: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   interests: String
     @filterable(byValue: false)
-    @selectable(onRead: true, onAggregate: false)
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
 
   # Authentication properties (for users)
   password: String @private
@@ -462,44 +448,22 @@ type Person implements PersonInterface
   ownsSpaces: [Space!]! @relationship(type: "OWNS", direction: OUT)
   memberOf: [SpaceMembership!]! @relationship(type: "IS_MEMBER", direction: IN)
 
-  # Legacy relationships (preserved for migration)
-  # NOTE: Person-to-person connections should migrate to ResonanceLinks.
-  # Both fields carry the SAME GOAL-275 gate as the PII scalars: the connection
-  # graph + narrative (`why`/`interests`) are only readable when the caller is
-  # the person or shares a Space with them. Each endpoint in the returned
-  # `connections` list is itself a Person, so its own PII re-enters the
-  # field-auth gate and stays independently scoped.
-  connections: [Person!]!
+  """
+  The gated read view of this person — the single place every PII scalar and
+  the person-to-person connection graph is readable from. Null when the caller
+  is not authorized (see `PersonPrivateProfile`), which is how the GOAL-275
+  policy fails closed. Resolves to the same `:Person` node, so it costs one
+  projection subquery on the rows the query already matched.
+  """
+  privateProfile: PersonPrivateProfile
     @cypher(
       statement: """
-      MATCH (this)-[:CONNECTED_TO]-(other:Person)
-      RETURN other
+      MATCH (this)
+      RETURN this AS privateProfile
       """
-      columnName: "other"
+      columnName: "privateProfile"
     )
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
-  connectionEdges: [PersonConnectionEdge!]!
-    @cypher(
-      statement: """
-      MATCH (this)-[r:CONNECTED_TO]-(other:Person)
-      RETURN {connectedPersonId: other.id, why: r.why, interests: r.interests} AS connectionEdge
-      """
-      columnName: "connectionEdge"
-    )
-    @authorization(filter: [{ operations: [READ], where: { node: { OR: [
-      { id_EQ: "$jwt.user.id" }
-      { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-      { ownsSpaces_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } }
-      { memberOf_SOME: { space_SOME: { OR: [ { owner_SOME: { id_EQ: "$jwt.user.id" } } { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } ] } } }
-      { contexts_SOME: { OR: [ { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } } { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } } ] } }
-    ] } } }])
-  
+
   # PULSE ACCESS: Pulses are accessed through FieldContexts in owned/member Spaces
   # To get a person's pulses:
   #   1. Query ownsSpaces → get MeSpaces/WeSpaces
@@ -561,6 +525,221 @@ type Person implements PersonInterface
 }
 
 """
+The GOAL-275 gated read view of a `:Person` — every PII scalar plus the
+person-to-person connection graph, behind ONE type-level `@authorization`
+filter. Reached only through `Person.privateProfile`; it has no root query and
+no mutations of its own.
+
+WHY THIS TYPE EXISTS (do not fold these fields back onto `Person`):
+`@neo4j/graphql` v6 expands a FIELD-level `@authorization` filter once per
+gated field in the selection set, with no deduplication, and Neo4j's planning
+cost is super-linear in the resulting predicate count. Measured on a
+1,000-person fixture against dev Aura, selecting N gated fields from `Person`
+when each carried its own copy of the rule below:
+
+  | gated fields | EXISTS | cold plan |
+  |      1       |   29   |   1.1 s   |
+  |      4       |  116   |   2.8 s   |
+  |      8       |  232   |  12.1 s   |
+  |     12       |  348   |  31.4 s   |
+
+GET_LOGGED_IN_USER — which fires on every protected page — sat at the bottom
+of that table and blew the 60 s `maxDuration` on `/api/graphql`
+(src/app/api/graphql/route.ts), which is what surfaced as the profile page
+hanging forever. A TYPE-level filter is emitted exactly ONCE regardless of how
+many fields are selected, so the cost is now flat in field count: this schema
+now emits 29 EXISTS whether the caller selects one gated field or all twelve
+(`person-pii-gate-plan-size.test.ts` asserts that equality). End to end on the
+same fixture, GET_PERSON_PROFILE went from 20,442 ms cold / 168 dbHits /
+38,761 characters of Cypher to 1,553 ms / 33 dbHits / 7,510 characters.
+
+Rejected alternative, for the record: keeping the fields on `Person` and
+pointing their filters at a single `@cypher` Boolean gate. That does cut
+planning, but `@neo4j/graphql` emits a cypher-field filter as
+`MATCH (this:Person) CALL { … } WITH * WHERE this.id = $param`, and Neo4j will
+NOT push a predicate below a `CALL` subquery (measured: 3 dbHits with the
+predicate before the CALL, 3,021 after). The gate therefore ran for every
+Person in the database on a single-row lookup — 168 dbHits became 146,453,
+scaling with database size. A type-level filter stays declarative and inlines
+into the `WHERE`, so the index seek survives.
+
+AUTHORIZATION — the policy is byte-for-byte the rule that used to be
+duplicated on 14 fields, and is documented in full on `Person` above. A read is
+authorized when the caller is the person, created them, shares a Space with
+them, or can view a FieldContext holding them.
+
+Two consequences of the `contexts_SOME` branch worth stating, both unchanged
+from the original rule and both covered by
+`person-pii-read-auth.integration.test.ts`:
+  • A nested sub-context (`HAS_SUBCONTEXT`, GOAL-295) DOES unlock PII, because
+    every context — nested or not — also hangs off its Space by its own
+    `HAS_CONTEXT` edge, which is what `meSpace_SOME` / `weSpace_SOME` traverse.
+  • A soft-deleted context does NOT, because GOAL-319 re-points that edge to
+    `HAS_DELETED_CONTEXT`. Deleting a field therefore withdraws the PII reach
+    it granted.
+
+`@query(read: false, aggregate: false)` — no `personPrivateProfiles` root and
+no aggregate root. Without it this type would be a second, parallel read path
+over the same `:Person` nodes, exactly the leak that the `PersonInterface` and
+`LifeSensor` lockdowns close.
+`@mutation(operations: [])` — no create/update/delete. Writes keep going
+through `Person` (self-gated `updatePeople`) and the authorized
+`updatePersonPulse` resolver.
+`@subscription(events: [])` — matches the `SearchResults` / `PersonSearchResult`
+lockdown. Subscriptions are not enabled in `apollo-server.ts` today, so this is
+latent, but a gated type should not be the one that forgets it.
+"""
+type PersonPrivateProfile
+  @node(labels: ["Person"])
+  @query(read: false, aggregate: false)
+  @mutation(operations: [])
+  @subscription(events: [])
+  @authorization(
+    filter: [
+      {
+        operations: [READ]
+        where: {
+          node: {
+            OR: [
+              { id_EQ: "$jwt.user.id" }
+              { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
+              {
+                ownsSpaces_SOME: {
+                  OR: [
+                    { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                    { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+                  ]
+                }
+              }
+              {
+                memberOf_SOME: {
+                  space_SOME: {
+                    OR: [
+                      { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                      { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+                    ]
+                  }
+                }
+              }
+              {
+                contexts_SOME: {
+                  OR: [
+                    { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } }
+                    { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                    { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  ) {
+  """
+  Same value as `Person.id`. Kept so the filter above can express the
+  "caller is the person" branch, and so Apollo can normalize the object.
+  """
+  id: ID!
+
+  # ── `@filterable(byValue: false)` on EVERY field below is a HARD REQUIREMENT ──
+  # An `@authorization` filter gates PROJECTIONS, not `where` predicates. Left
+  # filterable, these scalars generate a full `PersonPrivateProfileWhere`
+  # (`_EQ` / `_IN` / `_CONTAINS` / `_STARTS_WITH` / `_ENDS_WITH` per field) that
+  # `@neo4j/graphql` hangs off `PersonWhere` as `privateProfile:`. That turns
+  # the gate inside out: an unrelated caller cannot READ `careManual`, but
+  # `people(where: { privateProfile: { careManual_STARTS_WITH: "a" } }) { id }`
+  # answers "does it start with a?" for EVERY Person in the database, so the
+  # whole value is recoverable character by character. `peopleAggregate(where:
+  # …) { count }` leaks the same signal while returning no rows at all, so no
+  # row-level defence sees it. The surface follows `PersonWhere` everywhere it
+  # is accepted — `people`, `peopleConnection`, `peopleAggregate`,
+  # `Space.owner(where:)`, `FieldContext.people(where:)`, and so on.
+  #
+  # These fields were `@filterable(byValue: false)` on `Person` before the
+  # restructure, so omitting it here is a silent REGRESSION, not a new gap.
+  # `id` deliberately stays filterable — the rule above needs `id_EQ` — as do
+  # the four relationships below, which need `*_SOME`.
+  # Pinned by `person-pii-read-auth.integration.test.ts`.
+  email: String @filterable(byValue: false)
+  phone: String @filterable(byValue: false)
+  pronouns: String @filterable(byValue: false)
+  location: String @filterable(byValue: false)
+  gender: String @filterable(byValue: false)
+  description: String @filterable(byValue: false)
+  careManual: String @filterable(byValue: false)
+  favorites: String @filterable(byValue: false)
+  passions: String @filterable(byValue: false)
+  traits: String @filterable(byValue: false)
+  fieldsOfCare: String @filterable(byValue: false)
+  interests: String @filterable(byValue: false)
+
+  """
+  Person-to-person connections. Legacy — should migrate to ResonanceLinks.
+  Each endpoint is itself a `Person`, so the endpoint's own PII stays behind
+  its own `privateProfile` gate and is not widened by appearing here.
+
+  `@filterable(byValue: false)` removes the generated `connections_SOME`
+  predicate. That predicate is what would actually expose the CONNECTED_TO
+  graph for cross-Space enumeration — the leak the `Person` docstring above
+  describes.
+  """
+  connections: [Person!]!
+    @filterable(byValue: false)
+    @cypher(
+      statement: """
+      MATCH (this)-[:CONNECTED_TO]-(other:Person)
+      RETURN other
+      """
+      columnName: "other"
+    )
+  """
+  The CONNECTED_TO edge properties (`why` / `interests`) flattened alongside the
+  far endpoint's id — the relational narrative, gated with the rest of the PII.
+  """
+  connectionEdges: [PersonConnectionEdge!]!
+    @filterable(byValue: false)
+    @cypher(
+      statement: """
+      MATCH (this)-[r:CONNECTED_TO]-(other:Person)
+      RETURN {connectedPersonId: other.id, why: r.why, interests: r.interests} AS connectionEdge
+      """
+      columnName: "connectionEdge"
+    )
+
+  # Relationship fields required by the @authorization filter above — the
+  # `*_SOME` predicates only exist in PersonPrivateProfileWhere if the
+  # relationships are declared on this type. They exist ONLY to be filtered on:
+  # `Person` already exposes the same four edges, each auth-filtered by its own
+  # target type, so re-exposing them here would be duplicate surface.
+  #
+  # All three directives are load-bearing, and `@selectable` alone is NOT
+  # enough. `@selectable(onRead: false)` drops the plain field but leaves the
+  # generated `ownsSpacesConnection` / `ownsSpacesAggregate` companions
+  # reachable (verified against the built schema); `aggregate: false` on the
+  # `@relationship` is what removes BOTH. `nestedOperations: []` is
+  # belt-and-braces — `@mutation(operations: [])` already means this type has
+  # no create/update inputs for a nested write to hang off.
+  #
+  # After all three, the built type exposes exactly: id, the 12 PII scalars,
+  # connections, connectionEdges. If you add a relationship here, re-check the
+  # built type — do not assume `@selectable` covered it.
+  ownsSpaces: [Space!]!
+    @relationship(type: "OWNS", direction: OUT, nestedOperations: [], aggregate: false)
+    @selectable(onRead: false, onAggregate: false)
+  memberOf: [SpaceMembership!]!
+    @relationship(type: "IS_MEMBER", direction: IN, nestedOperations: [], aggregate: false)
+    @selectable(onRead: false, onAggregate: false)
+  contexts: [FieldContext!]!
+    @relationship(type: "HAS_PERSON", direction: IN, nestedOperations: [], aggregate: false)
+    @selectable(onRead: false, onAggregate: false)
+  createdBy: [Person!]!
+    @relationship(type: "CREATED_BY", direction: OUT, nestedOperations: [], aggregate: false)
+    @selectable(onRead: false, onAggregate: false)
+}
+
+"""
 User authentication and preferences.
 Extends Person with login and feature flags.
 Multi-label: ["Person", "User"]
@@ -605,8 +784,17 @@ type User implements PersonInterface
   firstName: String!
   lastName: String!
   name: String! @customResolver(requires: "firstName lastName")
-  email: String
-  
+  # Not filterable, for the same reason as `Person.email` — see the long note
+  # there. `@query(read: false)` removes the `users` root, but `UserWhere` is
+  # still reachable through `updateUsers` / `deleteUsers`, and the `validate`
+  # rule below turns those into an oracle rather than closing one: a `where`
+  # that matches somebody else's account raises Forbidden while one that
+  # matches nothing succeeds, so `updateUsers(where: { email_STARTS_WITH: "a" })`
+  # answers "does any account start with a?". Closing this on `Person` alone
+  # would have been half a fix. Nothing filters users by email — the by-email
+  # member lookup is the exact-match `findUserByEmail` resolver.
+  email: String @filterable(byValue: false)
+
   # Profile properties
   photo: String
   phone: String
@@ -1079,6 +1267,17 @@ delete mutation).
 """
 type Document
   @node(labels: ["Document"])
+  # No generated CRUD (GOAL-292). Every Document write goes through a purpose-
+  # built path that owns an invariant the generic mutations cannot: the REST
+  # presign/process flow (anchors with a server-minted id + PENDING status), the
+  # cron worker (drives the status machine), `reExtractDocument`, and
+  # `deleteDocument` (which also removes the blob and clears stale pulse
+  # locations). Leaving the generated roots in place let any ADMIN/MEMBER of the
+  # Space re-queue ingestion at will via `update: { status_SET: "PENDING" }` —
+  # unbounded Gemini/OpenAI spend attributed to the original uploader — plant
+  # arbitrary member-visible copy in `statusMessage`, falsify the entity counts,
+  # and re-point `uploadedBy` so the worker ran as somebody else.
+  @mutation(operations: [])
   @authorization(
     # READ — inherits from the parent FieldContext / Space.
     filter: [
@@ -1172,6 +1371,24 @@ type Document
   see what the doc is *about* before scanning extracted entities. Empty when
   the summarizer returned nothing or the call failed."""
   concepts: [String!]
+  """Ingest lifecycle (GOAL-292): PENDING → PROCESSING → COMPLETE / FAILED.
+  The upload route anchors PENDING and returns 202; the
+  /api/cron/process-document-ingestion worker transitions the rest. The upload
+  UI polls this to show queued/processing/failed instead of blocking on a
+  synchronous response. Documents uploaded before GOAL-292 have no stored value
+  and read back as COMPLETE, so an old upload never looks stuck."""
+  status: String @settable(onCreate: false, onUpdate: false)
+  """Member-safe explanation when `status` is FAILED — safe to render verbatim
+  (kb/07 Rule 1: raw driver/model error text is logged server-side only). Null
+  in every other state. The file and its Document row both survive a failure,
+  so Re-extract stays the recovery path."""
+  statusMessage: String @settable(onCreate: false, onUpdate: false)
+  """Entities the ingest run wrote into the graph. Populated when `status`
+  reaches COMPLETE; the upload UI reports it in the success toast."""
+  ingestCreatedEntityCount: Int @settable(onCreate: false, onUpdate: false)
+  """Proposed entities whose write failed during the ingest run — partial
+  success is normal and is detailed in the ingest thread."""
+  ingestFailedEntityCount: Int @settable(onCreate: false, onUpdate: false)
   uploadedAt: DateTime!
   fieldContext: [FieldContext!]! @relationship(type: "HAS_DOCUMENT", direction: IN)
   uploadedBy: [Person!]! @relationship(type: "UPLOADED_BY", direction: OUT)
@@ -1186,7 +1403,9 @@ type Document
     @cypher(
       statement: """
       MATCH (this)-[:HAS_INGEST_THREAD]->(t:ConversationThread)
-      RETURN {id: t.id, title: t.title, createdAt: toString(t.createdAt)} AS thread
+      // coalesce: DocumentIngestThread.title is String!, so a null title would
+      // error the whole field. The hand-rolled resolver twin already does this.
+      RETURN {id: t.id, title: coalesce(t.title, ''), createdAt: toString(t.createdAt)} AS thread
       ORDER BY t.createdAt DESC
       """
       columnName: "thread"

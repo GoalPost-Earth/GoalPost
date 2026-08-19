@@ -188,12 +188,28 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    FieldContext focused. The browser POSTs to
    `/api/ingest/document/presign` to get a short-lived presigned PUT URL,
    then uploads the file **directly to S3** (bytes never traverse our
-   server). It then POSTs `/api/ingest/document/process` to trigger
+   server). It then POSTs `/api/ingest/document/process` to **enqueue**
    extraction. (The legacy GraphQL `uploadDocument` mutation has been
    removed — see ADR-015.)
 2. The process endpoint gates on `canEditContent`, anchors a Document
    node to the FieldContext via `HAS_DOCUMENT` and to the uploader via
-   `UPLOADED_BY`, and stamps the S3 `blobKey`.
+   `UPLOADED_BY`, stamps the S3 `blobKey`, sets `status = 'PENDING'`, and
+   returns **202 Accepted** immediately (GOAL-292). Nothing has been read
+   or extracted at this point.
+2b. **`/api/cron/process-document-ingestion` (every minute) does steps 3–7.**
+   It claims PENDING documents with a conditional transition to
+   `PROCESSING` that is safe against overlapping runs, then runs the shared
+   pipeline as the **persisted uploader** — the worker holds no JWT, so the
+   `UPLOADED_BY` edge written at step 2 *is* the captured authorization
+   decision. It finishes by setting `COMPLETE`, or `FAILED` with member-safe
+   `statusMessage`. A claim stranded by a killed worker is reclaimed after
+   15 minutes and abandoned to `FAILED` after 3 attempts, so nothing spins
+   forever. Status lifecycle: `kb/04-state-machines.md`.
+   The upload UI polls `Document.status` and shows Queued / Extracting /
+   Failed on the document row rather than blocking on the response.
+   This replaced the original synchronous orchestrator, which held the
+   whole LLM pipeline inside the request and was the source of every
+   observed 504 (`maxDuration = 300` was the stopgap).
 3. A dedicated extraction model (independent of the chat assistant; may
    be reasoning — `kb/07-ai-assistant-ux.md` Rule 6) reads the document
    alongside the FieldContext roster (persons + pulses + **organizations**)
@@ -257,8 +273,8 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
 - **Pulse types extracted.** `GoalPulse`, `ResourcePulse`, `StoryPulse` only. `CarePulse` and `CoreValuePulse` remain manual-only (StoryPulse absorbs the legacy Care + CoreValue concepts).
 - **Organizations are captured (GOAL-298).** Named organizations / groups / cooperatives are extracted as first-class `:Organization` nodes (`create_organization`), attached to the FieldContext via `HAS_ORGANIZATION`, and idempotent by name-within-context. Full first-class org modelling beyond upload-time capture (Living-System / LifeSensor sub-classes) is a follow-up.
 - **Durable source link on extracted pulses (GOAL-283 / GOAL-316).** Every pulse created from a document — `GoalPulse`, `ResourcePulse`, and `StoryPulse` alike — gets `location` auto-populated with the durable Space-scoped download URL (`/api/ingest/document/<id>/download`) when the extractor read no explicit location from the text. `location` is the **user-facing** provenance surface (the UI renders it as an opaque "Open document" action per GOAL-302, never the raw URL); the `EXTRACTED_FROM` edge remains a graph-only audit trail. An extracted or manually set location is never clobbered.
-- **Deduplication is in-extractor.** The process endpoint pre-loads the FieldContext roster (persons + pulses + organizations, projected to id + name + minimal context) and inlines it in the model prompt; the model emits `update_person` / `update_pulse` for roster matches rather than creating duplicates (orgs dedup at write time by name-in-context).
+- **Deduplication is in-extractor.** The ingest worker pre-loads the FieldContext roster (persons + pulses + organizations, projected to id + name + minimal context) and inlines it in the model prompt; the model emits `update_person` / `update_pulse` for roster matches rather than creating duplicates (orgs dedup at write time by name-in-context).
 - **Partial persons are skipped.** `create_person` / `update_person` is emitted only when both `firstName` AND `lastName` can be confidently filled. First-name-only / initial-only / role-only mentions are listed in the assistant's free-text reply for manual follow-up — but a single-name mention that is actually an organization is routed to `organizations`, not dropped.
 - **No auto-`CONNECTED_TO`.** Extraction does not create `CONNECTED_TO` edges between the uploader and extracted Persons. `EXTRACTED_FROM` records "this person came from a doc the user has"; `CONNECTED_TO` remains a deliberate user gesture.
-- **Failure path.** On extraction failure (model error, malformed output, empty result), the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message. The Document persists; re-extract is the uniform retry path.
+- **Failure path.** On extraction failure (model error, malformed output, empty result), the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message. The Document persists; re-extract is the uniform retry path. A failure *before* the model runs (unreadable blob, unsupported type, oversize, parse error) never produces a thread — it lands the Document in `status = 'FAILED'` with member-safe `statusMessage`, rendered as a Failed chip plus an inline error on the document row. Re-extract is blocked while a document is `PENDING`/`PROCESSING`, since a second pipeline would double-write its summary and thread.
 - **Re-upload semantics.** Uploading the same file again creates a new `Document` node with its own ingest thread — no file versioning in v1.

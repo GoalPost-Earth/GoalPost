@@ -270,6 +270,15 @@ async function initializeDatabase() {
       // planner falls back to a full label scan as the feedback table grows.
       `CREATE INDEX assistant_feedback_createdAt IF NOT EXISTS
        FOR (f:AssistantFeedback) ON (f.createdAt)`,
+      // GOAL-292: Document.status IS the ingest queue. The one-minute cron seeks
+      // PENDING (findPendingDocumentIds) and PROCESSING (reclaimStalledIngests)
+      // on every single tick, so this is the hottest index in the schema by
+      // frequency. Measured at 5k documents: 53 dbHits with the index vs 10,101
+      // without (a full Document label scan), per query, twice a minute —
+      // ~144k dbHits/day indexed against ~29.1M unindexed, growing linearly.
+      // A composite (status, uploadedAt) was tried and the planner ignored it.
+      `CREATE INDEX document_status IF NOT EXISTS
+       FOR (d:Document) ON (d.status)`,
       // LlmUsage is the fastest-growing node in the system (one per LLM /
       // embedding call, never pruned). The /dev/llm-usage report filters
       // `WHERE u.createdAt >= datetime($since)` for its time windows and

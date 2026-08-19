@@ -1,6 +1,10 @@
 {
   "crons": [
     {
+      "path": "/api/cron/process-document-ingestion",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/cron/discover-resonances",
       "schedule": "0 0 * * *"
     },

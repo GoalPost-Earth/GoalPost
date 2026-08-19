@@ -81,6 +81,45 @@ The `Person` node is the single entity for all humans in the system. Adjacent la
 
 **Auth fields (private):** `password`, `refreshToken`, `refreshTokenExp`, `refreshTokenRevoked`, `authId`, `inviteTokenHash`, `inviteTokenExpires`, `resetTokenHash`, `resetTokenExpires` — the two single-use token fields store sha256(rawToken); the raw token only ever lives in the outgoing email URL.
 
+**Reading PII — go through `privateProfile` (GOAL-275).** In GraphQL, the
+`Person` type exposes the open directory identity — `id`, `firstName`,
+`lastName`, `name`, `photo`, `avatar`, `status` — which any authenticated user
+may read so people stay findable by name across Spaces (it also still exposes
+onboarding state, timestamps, and the relationship fields, each auth-filtered
+by its own target type). Every PII / narrative scalar (`email`, `phone`, `pronouns`, `location`, `gender`, `description`,
+`careManual`, `favorites`, `passions`, `traits`, `fieldsOfCare`, `interests`)
+plus `connections` / `connectionEdges` is readable **only** through
+`Person.privateProfile`, which resolves to a `PersonPrivateProfile` over the
+same node behind a single type-level `@authorization` filter:
+
+```graphql
+people(where: { id_EQ: $id }) {
+  id  name  photo              # always readable
+  privateProfile {             # null when the caller is not authorized
+    email  description  traits
+  }
+}
+```
+
+A caller is authorized when they are the person, created them (`CREATED_BY`),
+share a Space with them, or can view a FieldContext holding them
+(`HAS_PERSON`). Otherwise `privateProfile` comes back **null** — the Person row
+itself still resolves, so surfaces render the directory identity rather than a
+not-found. See `kb/02-user-roles.md` for the branch list.
+
+These scalars are still ordinary node properties: writes (`updatePeople`,
+`updatePersonPulse`) are unchanged, and server-side Cypher reads them directly.
+Only the GraphQL read path moved. None of them is **filterable**, `email`
+included — the login bootstrap that needed `email_EQ` now keys on `id_EQ`,
+because the generated `email_STARTS_WITH` sibling was an account-enumeration
+oracle (see `kb/02-user-roles.md`). Raw-Cypher readers get no gate at all and
+must restate the branch table themselves; `person-search.tool.ts` is the worked
+example. Do **not** re-add a field-level `@authorization` to `Person` for a
+new sensitive field — add it to `PersonPrivateProfile` instead; the type-level
+rule compiles once, while a field-level rule is re-expanded per selected field
+and blew the 60 s `/api/graphql` ceiling (guarded by
+`person-pii-gate-plan-size.test.ts`).
+
 **Onboarding fields:** `onboardingCurrentStepIndex`, `onboardingCompletedSteps`, `onboardingIsCompleted`, `onboardingSkipped`
 
 **Relationships:**
@@ -620,25 +659,40 @@ production caller until a mention-authoring surface exists.
 Uploaded source document attached to a FieldContext. Created by the
 direct-to-S3 ingestion flow: `POST /api/ingest/document/presign` mints a
 short-lived presigned PUT URL; the browser uploads straight to S3; `POST
-/api/ingest/document/process` then anchors the Document node and triggers
-extraction (Gemini multimodal for PDFs, OpenAI for text/markdown). The
+/api/ingest/document/process` then anchors the Document node as `PENDING` and
+returns **202** — extraction itself (Gemini multimodal for PDFs, OpenAI for
+text/markdown) runs in `/api/cron/process-document-ingestion` (GOAL-292). The
 original file lives in AWS S3 (memory store for dev/tests); the graph node
 carries metadata and provenance edges. See WF-10 in `kb/03-workflows.md`
 and ADR-014 / ADR-015 in `kb/06-adr.md`.
 
-| Field      | Type     | Notes                                                                                  |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| id         | string   | Required, unique                                                                       |
-| filename   | string   | Required                                                                               |
-| mimeType   | string   | v1: `text/plain`, `text/markdown`, `application/pdf`                                   |
-| sizeBytes  | int      | Required                                                                               |
-| pageCount  | int      | `1` for .txt/.md; real page count for .pdf; null when unknown                          |
-| blobKey    | string   | Internal — UI surfaces filename instead                                                |
-| blobUrl    | string   | Provider-issued URL for the blob (may be private/expiring; treat as opaque)            |
-| userHint   | string   | Optional one-line "What is this?" hint; reused on re-extract                           |
-| summary    | string   | AI-generated 1-paragraph synopsis; refreshed on re-extract; null on summarizer failure |
-| concepts   | string[] | Up to 5 short concept phrases the AI surfaced as top-level themes; empty on failure    |
-| uploadedAt | datetime | Immutable, set on create                                                               |
+| Field                    | Type     | Notes                                                                                  |
+| ------------------------ | -------- | -------------------------------------------------------------------------------------- |
+| id                       | string   | Required, unique                                                                       |
+| filename                 | string   | Required                                                                               |
+| mimeType                 | string   | v1: `text/plain`, `text/markdown`, `application/pdf`                                   |
+| sizeBytes                | int      | Required                                                                               |
+| pageCount                | int      | `1` for .txt/.md; real page count for .pdf; null until the worker reads the blob        |
+| blobKey                  | string   | Internal — UI surfaces filename instead                                                |
+| blobUrl                  | string   | Provider-issued URL for the blob (may be private/expiring; treat as opaque)            |
+| userHint                 | string   | Optional one-line "What is this?" hint; reused on re-extract                           |
+| summary                  | string   | AI-generated 1-paragraph synopsis; refreshed on re-extract; null on summarizer failure |
+| concepts                 | string[] | Up to 5 short concept phrases the AI surfaced as top-level themes; empty on failure    |
+| status                   | string   | *GraphQL-exposed.* Ingest lifecycle (GOAL-292): `PENDING` → `PROCESSING` → `COMPLETE` / `FAILED`. **Absent on pre-GOAL-292 documents — every read coalesces missing to `COMPLETE`.** See `kb/04-state-machines.md` |
+| statusMessage            | string   | *GraphQL-exposed.* Member-safe failure copy, safe to render verbatim; null unless `status = FAILED`        |
+| statusUpdatedAt          | datetime | *Internal (not in the GraphQL schema).* When `status` last changed; also the staleness clock for reclaiming dead claims         |
+| ingestAttempts           | int      | *Internal.* Times this document has been claimed; at 3 a stalled claim is abandoned to `FAILED`     |
+| ingestClaimedBy          | string   | *Internal.* Worker run id holding the claim; null when not `PROCESSING`. Only the winning claimant writes it, so it is a truthful owner — the terminal writes fence on it |
+| ingestLockToken          | string   | *Internal.* Throwaway value written to force Neo4j's write lock during a claim. Never read — its only job is making the status guard evaluate post-lock |
+| ingestCreatedEntityCount | int      | *GraphQL-exposed.* Tool calls the ingest run landed, set when `status` reaches `COMPLETE`. Counts `MENTIONED_IN` links as well as entities, so it slightly over-reads as "entities" in the UI copy |
+| ingestFailedEntityCount  | int      | *GraphQL-exposed.* Proposed entities whose write failed (partial success is normal)                       |
+| uploadedAt               | datetime | Immutable, set on create                                                               |
+
+**Ingest throughput limits (GOAL-292):** one account may hold at most **20**
+documents in `PENDING`/`PROCESSING` at a time; `POST /api/ingest/document/process`
+refuses beyond that with **429** and `reason: 'queue_full'`. The worker drains
+**4** documents per one-minute tick, oldest upload first, with no per-user
+interleaving — so the cap is what stops one member starving every other Space.
 
 **Relationships:**
 
@@ -855,6 +909,7 @@ spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
 | `person_invite_token_hash`         | Person.inviteTokenHash          |
 | `person_reset_token_hash`          | Person.resetTokenHash           |
 | `llm_usage_createdAt`              | LlmUsage.createdAt              |
+| `document_status`                  | Document.status — the ingest queue; the one-minute cron seeks it twice per tick (measured 53 dbHits with it vs 10,101 without, at 5k documents) |
 
 Uniqueness constraints also carry backing RANGE indexes — notably `pulse_id`
 on `FieldPulse.id` (`scripts/init-db.js`), which is what makes by-id pulse
