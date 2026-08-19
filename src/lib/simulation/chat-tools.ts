@@ -822,7 +822,7 @@ export async function buildSimulationChatTools(
         logToolDispatch('search_person', ctx, { name })
         try {
           const graph = await initGraph()
-          const personTool = createPersonSearchTool(graph)
+          const personTool = createPersonSearchTool(graph, ctx.currentUserId)
           const result = await personTool.invoke({ name })
           return JSON.parse(result)
         } catch (error) {

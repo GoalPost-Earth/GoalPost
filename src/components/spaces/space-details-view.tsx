@@ -47,7 +47,7 @@ function extractPermissionMembers(members: any[]) {
           name:
             memberData?.name ||
             `${memberData?.firstName || ''} ${memberData?.lastName || ''}`.trim(),
-          email: memberData?.email ?? null,
+          email: memberData?.privateProfile?.email ?? null,
         },
       }
     }) || []

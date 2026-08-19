@@ -283,9 +283,9 @@ export const SpaceDetailsBody: FC<{ spaceId: string; label?: string }> = ({
                 </span>
               )}
             </p>
-            {owner?.email && (
+            {owner?.privateProfile?.email && (
               <p className="text-xs text-gp-ink-muted dark:text-white/50 truncate">
-                {owner.email}
+                {owner.privateProfile.email}
               </p>
             )}
             {owner?.id && (

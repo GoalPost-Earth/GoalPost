@@ -237,7 +237,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         __typename: mp?.__typename || 'Person',
         id: mp?.id || '',
         name: fullName,
-        email: mp?.email ?? undefined,
+        email: mp?.privateProfile?.email ?? undefined,
       },
     }
   })

@@ -18,7 +18,10 @@ export const GET_SPACE_DETAILS = graphql(`
           firstName
           lastName
           name
-          email
+          privateProfile {
+            id
+            email
+          }
           photo
         }
         members {
@@ -31,7 +34,10 @@ export const GET_SPACE_DETAILS = graphql(`
             firstName
             lastName
             name
-            email
+            privateProfile {
+              id
+              email
+            }
           }
         }
         contexts {
@@ -64,7 +70,10 @@ export const GET_SPACE_DETAILS = graphql(`
           firstName
           lastName
           name
-          email
+          privateProfile {
+            id
+            email
+          }
           photo
         }
         members {
@@ -77,7 +86,10 @@ export const GET_SPACE_DETAILS = graphql(`
             firstName
             lastName
             name
-            email
+            privateProfile {
+              id
+              email
+            }
           }
         }
         contexts {

@@ -58,7 +58,10 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
           firstName
           lastName
           name
-          email
+          privateProfile {
+            id
+            email
+          }
         }
       }
     }
@@ -74,7 +77,10 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
           firstName
           lastName
           name
-          email
+          privateProfile {
+            id
+            email
+          }
         }
       }
     }
@@ -97,7 +103,10 @@ export const GET_WE_SPACE_DETAILS_QUERY = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
       members {
         id
@@ -108,7 +117,10 @@ export const GET_WE_SPACE_DETAILS_QUERY = graphql(`
           firstName
           lastName
           name
-          email
+          privateProfile {
+            id
+            email
+          }
         }
       }
       contexts {
@@ -137,7 +149,10 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
       members {
         id
@@ -148,7 +163,10 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
           firstName
           lastName
           name
-          email
+          privateProfile {
+            id
+            email
+          }
         }
       }
       contexts {
@@ -175,8 +193,11 @@ export const GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY = graphql(`
         firstName
         lastName
         name
-        email
         photo
+        privateProfile {
+          id
+          email
+        }
       }
       members {
         id
@@ -186,8 +207,11 @@ export const GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY = graphql(`
           firstName
           lastName
           name
-          email
           photo
+          privateProfile {
+            id
+            email
+          }
         }
       }
     }
@@ -202,17 +226,20 @@ export const GET_PERSON_CONNECTIONS = graphql(`
   query GetPersonConnections($personIds: [ID!]!) {
     people(where: { id_IN: $personIds }) {
       id
-      connections {
+      privateProfile {
         id
-        firstName
-        lastName
-        name
-        photo
-      }
-      connectionEdges {
-        connectedPersonId
-        why
-        interests
+        connections {
+          id
+          firstName
+          lastName
+          name
+          photo
+        }
+        connectionEdges {
+          connectedPersonId
+          why
+          interests
+        }
       }
     }
   }

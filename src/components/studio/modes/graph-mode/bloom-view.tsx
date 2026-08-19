@@ -555,10 +555,15 @@ export const BloomView: FC = () => {
               fieldContexts?: Array<{
                 people?: Array<{
                   id: string
-                  connectionEdges?: Array<{
-                    connectedPersonId?: string | null
-                    why?: string | null
-                  }> | null
+                  // GOAL-275: the connection graph reads through the single
+                  // type-level gate; null when this caller isn't authorized
+                  // for that person, in which case they contribute no edges.
+                  privateProfile?: {
+                    connectionEdges?: Array<{
+                      connectedPersonId?: string | null
+                      why?: string | null
+                    }> | null
+                  } | null
                 }>
               }>
             }
@@ -569,7 +574,7 @@ export const BloomView: FC = () => {
       const out: Array<{ fromId: string; toId: string; why: string | null }> = []
       for (const p of fieldCtx.people) {
         if (!p?.id) continue
-        for (const edge of p.connectionEdges ?? []) {
+        for (const edge of p.privateProfile?.connectionEdges ?? []) {
           const other = edge?.connectedPersonId
           if (!other || other === p.id) continue
           // CONNECTED_TO is undirected — key on the sorted id-pair so the same

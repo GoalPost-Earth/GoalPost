@@ -61,12 +61,14 @@ export const FieldContextDetailsBody: FC<{
   const { data: peopleData } = useQuery<{
     fieldContexts?: {
       id: string
+      // Only the open directory identity is read here. Email and the rest of
+      // the PII live behind `privateProfile` (GOAL-275) and this surface has
+      // no need for them, so it does not declare them.
       people?: {
         id: string
         name: string | null
         firstName: string | null
         lastName: string | null
-        email: string | null
         photo: string | null
       }[]
     }[]
