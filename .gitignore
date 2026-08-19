@@ -82,3 +82,8 @@ Thumbs.db
 
 # GOAL-299 one-off backfill (contains inline DB creds — never commit)
 scripts/backfill-artisans-organization.mjs
+# Catch-all added by `vercel link` (GOAL-326) — belt-and-braces over the
+# explicit .env rules above so a new env file can't be committed by accident.
+# .env.example is the committed template and must stay visible.
+.env*
+!.env.example

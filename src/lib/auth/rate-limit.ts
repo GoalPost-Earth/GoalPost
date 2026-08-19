@@ -22,11 +22,12 @@ import { Redis } from '@upstash/redis'
  * same window and limit. To tune one, change the constant; routes don't
  * need to know the numbers.
  *
- * Failure modes (see POLICY_FAILURE_MODE):
+ * Failure modes (see POLICY_FAILURE_MODE) — applied both when Redis errors
+ * at runtime AND when KV_REST_API_URL / KV_REST_API_TOKEN are missing:
  *   - fail-open for the read-y unauthenticated endpoints (login, accept,
- *     reset-password, request-reset, refresh-token). If Redis is
- *     unreachable we'd rather let legitimate users in than 503 the whole
- *     auth surface.
+ *     reset-password, request-reset, refresh-token) and for the
+ *     authenticated, size-capped bulk-import. If Redis is unreachable we'd
+ *     rather let legitimate users in than 503 the whole auth surface.
  *   - fail-CLOSED for invite-blast. A broken limiter must NOT let a
  *     compromised admin blast unlimited emails through info@goalpost.earth
  *     and torch our sender reputation.
@@ -68,6 +69,14 @@ function getRedis(): Redis | null {
 // "auth-burst" and the same IP under "invite-blast" must be independent).
 const limiterCache = new Map<PolicyName, Ratelimit>()
 
+// One Upstash database is shared by production, preview, and local dev, so
+// the environment goes into every key prefix — otherwise a tester bursting
+// logins from their IP against the preview deploy would also throttle that
+// same IP on production. VERCEL_ENV is 'production' | 'preview' |
+// 'development' on Vercel and undefined locally, where 'dev' keeps local
+// buckets separate from all deploys.
+const ENV_PREFIX = process.env.VERCEL_ENV ?? 'dev'
+
 function getLimiter(policy: PolicyName): Ratelimit | null {
   const cached = limiterCache.get(policy)
   if (cached) return cached
@@ -81,7 +90,7 @@ function getLimiter(policy: PolicyName): Ratelimit | null {
       limiter = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(5, '1 m'),
-        prefix: 'rl:auth-burst',
+        prefix: `rl:${ENV_PREFIX}:auth-burst`,
       })
       break
     case 'invite-blast':
@@ -91,7 +100,7 @@ function getLimiter(policy: PolicyName): Ratelimit | null {
       limiter = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(20, '1 h'),
-        prefix: 'rl:invite-blast',
+        prefix: `rl:${ENV_PREFIX}:invite-blast`,
       })
       break
     case 'reset-request':
@@ -101,7 +110,7 @@ function getLimiter(policy: PolicyName): Ratelimit | null {
       limiter = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(3, '1 h'),
-        prefix: 'rl:reset-request',
+        prefix: `rl:${ENV_PREFIX}:reset-request`,
       })
       break
     case 'bulk-import':
@@ -113,7 +122,7 @@ function getLimiter(policy: PolicyName): Ratelimit | null {
       limiter = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(10, '1 h'),
-        prefix: 'rl:bulk-import',
+        prefix: `rl:${ENV_PREFIX}:bulk-import`,
       })
       break
   }
@@ -127,8 +136,14 @@ const POLICY_FAILURE_MODE: Record<PolicyName, 'allow' | 'deny'> = {
   'auth-burst': 'allow',
   'invite-blast': 'deny',
   'reset-request': 'allow',
-  // Fail-open: imports are authenticated + size-capped; blocking a member's
-  // legitimate batch on a Redis outage is worse than briefly unmetered spend.
+  // Fail-OPEN, re-affirmed in GOAL-326 now that Redis is actually
+  // provisioned. Considered flipping to closed since the 10/hour cap exists
+  // to bound OpenAI spend on the post-import embedding sweep, but: imports
+  // are authenticated, capped at MAX_ARTICLE_IMPORT_ROWS (300) per request,
+  // and a member working through a large article backlog is exactly who a
+  // Redis outage would punish. Unmetered spend for the length of an outage
+  // is recoverable; a member losing the ability to import is a visible
+  // product failure. Revisit if import spend ever becomes the dominant cost.
   'bulk-import': 'allow',
 }
 
@@ -138,11 +153,13 @@ export async function rateLimit({
 }: RateLimitArgs): Promise<RateLimitResult> {
   const limiter = getLimiter(policy)
   if (!limiter) {
-    // Hard guard: the bypass below must NEVER reach the production target.
-    // On Vercel, localhost has VERCEL_ENV undefined and the dev.goalpost.earth
-    // preview is VERCEL_ENV='preview' — both keep working. A real prod deploy
-    // missing KV_REST_API_* fails fast here rather than silently running an
-    // unenforced invite-blast limiter (email-blast via info@goalpost.earth).
+    // Hard guard: production must fail FAST and LOUD on missing config, not
+    // degrade. Below this, missing config falls back to POLICY_FAILURE_MODE —
+    // fine for localhost (VERCEL_ENV undefined) and previews ('preview'),
+    // but in prod that would mean silently unenforced fail-open limiters and
+    // every invite denied with a misleading "try again in 1 minute" message.
+    // A 500 on the auth surface gets noticed and fixed; quiet misbehavior
+    // doesn't.
     if (process.env.VERCEL_ENV === 'production') {
       throw new Error(
         '[rate-limit] FATAL: no Upstash Redis configured (KV_REST_API_URL/' +
@@ -150,27 +167,20 @@ export async function rateLimit({
           'Provision Upstash KV before deploying to production.'
       )
     }
-    // TODO(rate-limit): provision Upstash Redis (KV_REST_API_URL /
-    // KV_REST_API_TOKEN) in dev + on Vercel (incl. the dev.goalpost.earth
-    // preview) so invite-blast et al. actually enforce, then restore the
-    // fail-CLOSED behavior for invite-blast on missing config (revert this
-    // branch to honor POLICY_FAILURE_MODE).
-    //
-    // INTERIM (deliberate): when NO Redis is configured we BYPASS the
-    // limiter and ALLOW for every policy — including invite-blast, which is
-    // normally fail-CLOSED. Without this, an unconfigured limiter denied
-    // 100% of invites/member-adds (the "Invite limit reached, retry in 1
-    // minute" wall), making the feature unusable in any env without Redis.
-    // This only affects the never-configured case; a configured-but-erroring
-    // Redis still fails per POLICY_FAILURE_MODE in the catch block below, so
-    // invite-blast remains fail-closed on a genuine prod outage once Redis
-    // is wired up.
-    console.warn(
-      `[rate-limit] no redis configured; policy=${policy} key=${redactKey(
-        key
-      )} → BYPASS (allow). TODO: provision Upstash Redis to enforce.`
+    // Missing config honors POLICY_FAILURE_MODE, same as a runtime error
+    // (GOAL-326): fail-open policies degrade gracefully with a warning,
+    // while invite-blast fails CLOSED — an unconfigured env must not be
+    // able to blast unlimited emails through info@goalpost.earth. Upstash
+    // Redis is provisioned for prod, preview, and dev; a denied invite
+    // here means this env is missing KV_REST_API_URL / KV_REST_API_TOKEN
+    // (locally: copy them from Vercel project env into .env.local).
+    const allowed = POLICY_FAILURE_MODE[policy] === 'allow'
+    const logFn = allowed ? console.warn : console.error
+    logFn(
+      `[rate-limit] no redis configured (KV_REST_API_URL/KV_REST_API_TOKEN); ` +
+        `policy=${policy} key=${redactKey(key)} → ${allowed ? 'allow' : 'deny'}`
     )
-    return { allowed: true, retryAfter: 0 }
+    return { allowed, retryAfter: allowed ? 0 : 60 }
   }
 
   try {
