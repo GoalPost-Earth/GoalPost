@@ -72,6 +72,15 @@ Thumbs.db
 # Claude Code worktrees (per-session ephemeral checkouts, never tracked)
 .claude/worktrees/
 
+# Vendored third-party agent skills, materialized locally by `npx skills add`
+# (GOAL-326 pulled in the Upstash ones). skills-lock.json IS committed — it
+# pins the set and their hashes, so anyone can re-materialize them — but the
+# fetched docs themselves are not source, and the `.claude/skills/<name>`
+# entries the installer leaves behind are symlinks to a MACHINE-ABSOLUTE path
+# that would be dangling for every other checkout.
+.agents/
+.claude/skills/upstash-*
+
 # Ad-hoc agent scratch files (do not let Tailwind scan)
 .profile-tmp/
 
