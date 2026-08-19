@@ -177,7 +177,14 @@
   --gp-ink-strong: #292524;
   --gp-ink-muted: #57534e;
   --gp-ink-soft: #a8a29e;
-  --gp-glass-border: rgba(255, 255, 255, 0.6);
+  /* Warm is a LIGHT theme (--gp-surface is #ffffff), so its glass border has to
+     be a darker tint like every other light theme. It was rgba(255,255,255,0.6)
+     — white on white, ΔRGB 0.00 against the surface it sits on — which erased
+     every glass border in the app under this theme: card outlines, panel
+     containers, and secondary buttons, whose only affordance is that border.
+     A "Close" button rendered as bare body text. Measured against the other
+     themes' borders (ΔRGB 23–41) for parity. */
+  --gp-glass-border: rgba(120, 53, 15, 0.12);
   --gp-glass-bg: rgba(255, 255, 255, 0.65);
   --gp-goal: #f59e0b;
   --gp-resource: #f97316;
