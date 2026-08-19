@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useQuery } from '@apollo/client/react'
 import Image from 'next/image'
 import { ArrowRight, Hash, Layers, Sparkles, Users } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { useFocalEntity } from '@/contexts'
 import {
   GET_PERSON_DIRECTORY,
@@ -20,7 +19,6 @@ import {
   EntityProvenance,
   type ProvenanceDocument,
 } from '@/components/fields/entity-provenance'
-import { LinkifiedText } from '@/components/ui/linkified-text'
 import { saveFocusEntities } from '@/lib/simulation/focus-entities-storage'
 import type { PivotEntityType } from '@/lib/simulation/entity-collector'
 import {
@@ -33,6 +31,12 @@ import {
   StatCell,
 } from './shared'
 import { LimitedPersonBody } from './limited-person-body'
+import {
+  AttrBlock,
+  PersonConnectionsSection,
+  PersonPulsesSection,
+  SpaceRow,
+} from './person-sections'
 import { dispatchOpenInfoDrawer } from './types'
 
 /**
@@ -197,12 +201,6 @@ export const PersonDetailsBody: FC<{
     router.push(`/protected/dashboard?focus=${focus}`)
   }
 
-  const connectionEdge = (id: string) =>
-    person.connectionEdges?.find(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (e: any) => e.connectedPersonId === id
-    )
-
   return (
     <div className="flex flex-col">
       <section className="relative px-6 pt-7 pb-6 border-b border-gp-glass-border bg-gradient-to-br from-gp-primary/20 via-gp-accent-glow/10 to-transparent">
@@ -307,72 +305,10 @@ export const PersonDetailsBody: FC<{
         </section>
       )}
 
-      {person.connections && person.connections.length > 0 && (
-        <section className="px-6 pb-5">
-          <SectionHeader>Connections ({person.connections.length})</SectionHeader>
-          <ul className="mt-2 space-y-2">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {person.connections.slice(0, 6).map((connection: any) => {
-              const edge = connectionEdge(connection.id)
-              return (
-                <li key={connection.id}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      dispatchOpenInfoDrawer({
-                        type: 'Person',
-                        id: connection.id,
-                        label: connection.name ?? undefined,
-                      })
-                    }
-                    className="group w-full text-left rounded-xl border border-gp-glass-border bg-white/5 dark:bg-white/[0.03] hover:bg-white/10 dark:hover:bg-white/[0.06] hover:border-white/20 px-4 py-3 transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="size-9 shrink-0 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-primary/10 flex items-center justify-center">
-                        {connection.photo ? (
-                          <Image
-                            src={connection.photo}
-                            alt={connection.name}
-                            width={36}
-                            height={36}
-                            className="size-9 rounded-full object-cover"
-                          />
-                        ) : (
-                          <span className="material-symbols-outlined text-gp-primary text-lg">
-                            person
-                          </span>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-gp-ink-strong dark:text-white/90 truncate">
-                          {connection.name}
-                        </p>
-                      </div>
-                      <ArrowRight className="w-4 h-4 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all" />
-                    </div>
-                    {edge?.why && (
-                      <p className="mt-2 text-[11px] text-gp-ink-muted dark:text-white/55 leading-relaxed line-clamp-2">
-                        {edge.why}
-                      </p>
-                    )}
-                    {edge?.interests && (
-                      <p className="mt-1 text-[11px] text-gp-ink-muted dark:text-white/45 leading-relaxed line-clamp-1">
-                        <span className="font-semibold">Interests:</span>{' '}
-                        {edge.interests}
-                      </p>
-                    )}
-                  </button>
-                </li>
-              )
-            })}
-            {person.connections.length > 6 && (
-              <li className="text-[11px] text-gp-ink-muted dark:text-white/45 px-3 pt-1">
-                + {person.connections.length - 6} more
-              </li>
-            )}
-          </ul>
-        </section>
-      )}
+      <PersonConnectionsSection
+        connections={person.connections ?? []}
+        connectionEdges={person.connectionEdges}
+      />
 
       {person.ownsSpaces && person.ownsSpaces.length > 0 && (
         <section className="px-6 pb-5">
@@ -414,38 +350,7 @@ export const PersonDetailsBody: FC<{
         </section>
       )}
 
-      {allPulses.length > 0 && (
-        <section className="px-6 pb-5">
-          <SectionHeader>Recent pulses</SectionHeader>
-          <ul className="mt-2 space-y-1.5">
-            {allPulses.slice(0, 5).map((pulse) => (
-              <li key={pulse.id}>
-                <button
-                  type="button"
-                  onClick={() =>
-                    dispatchOpenInfoDrawer({
-                      type: 'Pulse',
-                      id: pulse.id,
-                      label: pulse.title ?? undefined,
-                    })
-                  }
-                  className="group w-full text-left rounded-xl border border-gp-glass-border bg-white/5 dark:bg-white/[0.03] hover:bg-white/10 dark:hover:bg-white/[0.06] hover:border-white/20 px-4 py-2.5 transition-all cursor-pointer flex items-center gap-3"
-                >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-gp-ink-strong dark:text-white/90 truncate">
-                      {pulse.title}
-                    </p>
-                    <p className="text-[10px] text-gp-ink-muted dark:text-white/45 truncate">
-                      {pulse.spaceName} · {pulse.contextName}
-                    </p>
-                  </div>
-                  <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <PersonPulsesSection pulses={allPulses} />
 
       {relatedRows.length > 0 && (
         <section className="px-6 pb-5">
@@ -481,44 +386,3 @@ export const PersonDetailsBody: FC<{
     </div>
   )
 }
-
-const AttrBlock: FC<{ label: string; text: string }> = ({ label, text }) => (
-  <div>
-    <SectionHeader>{label}</SectionHeader>
-    <div className="mt-1.5 text-xs text-gp-ink-muted dark:text-white/65 leading-relaxed">
-      <LinkifiedText text={text} />
-    </div>
-  </div>
-)
-
-const SpaceRow: FC<{
-  id: string
-  name: string
-  kind: 'MeSpace' | 'WeSpace'
-  meta?: string
-}> = ({ id, name, kind, meta }) => (
-  <li>
-    <button
-      type="button"
-      onClick={() =>
-        dispatchOpenInfoDrawer({ type: kind, id, label: name })
-      }
-      className={cn(
-        'group w-full text-left rounded-xl border border-gp-glass-border bg-white/5 dark:bg-white/[0.03]',
-        'hover:bg-white/10 dark:hover:bg-white/[0.06] hover:border-white/20',
-        'px-3 py-2.5 transition-all cursor-pointer flex items-center justify-between gap-2'
-      )}
-    >
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-semibold text-gp-ink-strong dark:text-white/90 truncate">
-          {name}
-        </p>
-        <p className="text-[10px] uppercase tracking-wider text-gp-ink-muted dark:text-white/45">
-          {kind === 'MeSpace' ? 'Me Space' : 'We Space'}
-          {meta ? ` · ${meta}` : ''}
-        </p>
-      </div>
-      <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all" />
-    </button>
-  </li>
-)
