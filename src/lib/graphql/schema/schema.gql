@@ -400,10 +400,55 @@ type Person implements PersonInterface
   # Type is one of the FocalEntityType discriminators
   # (MeSpace/WeSpace/FieldContext/User/PersonPulse/<Pulse subtype>) —
   # validated server-side via isFocalEntityType.
+  #
+  # READ is self-only. These are browsing state, not profile data: together
+  # they say *what* a user last looked at and *when*. `lastFocalLabel` holds
+  # the entity's display name — a person's name, a private FieldContext title,
+  # a MeSpace pulse title — so leaving it ungated handed any authenticated
+  # caller a cross-Space activity feed for every other user, routing around
+  # the GOAL-275 PII gate for exactly the entities that gate protects. The
+  # only production reader/writer is /api/user/focal-entity, which scopes to
+  # `resolveAuthenticatedUserId` in raw Cypher and never goes through these
+  # fields, so no query loses data. `onAggregate: false` matches the GOAL-275
+  # fields: field-level rules do not gate aggregate selections, so a
+  # `peopleAggregate { lastFocalLabel { longest } }` would otherwise leak the
+  # value straight back out.
   lastFocalType: String
+    @filterable(byValue: false)
+    @sortable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
+    @authorization(
+      filter: [
+        { operations: [READ], where: { node: { id_EQ: "$jwt.user.id" } } }
+      ]
+    )
   lastFocalId: String
+    @filterable(byValue: false)
+    @sortable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
+    @authorization(
+      filter: [
+        { operations: [READ], where: { node: { id_EQ: "$jwt.user.id" } } }
+      ]
+    )
   lastFocalLabel: String
+    @filterable(byValue: false)
+    @sortable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
+    @authorization(
+      filter: [
+        { operations: [READ], where: { node: { id_EQ: "$jwt.user.id" } } }
+      ]
+    )
   lastFocalAt: DateTime
+    @filterable(byValue: false)
+    @sortable(byValue: false)
+    @selectable(onRead: true, onAggregate: false)
+    @authorization(
+      filter: [
+        { operations: [READ], where: { node: { id_EQ: "$jwt.user.id" } } }
+      ]
+    )
 
   # Timestamps
   createdAt: DateTime!
