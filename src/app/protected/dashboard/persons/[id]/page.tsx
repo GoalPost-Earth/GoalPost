@@ -13,6 +13,11 @@ import {
 import { SEARCH_PEOPLE_QUERY } from '@/app/graphql/queries/DASHBOARD_QUERIES'
 import { buildRelatedPulseRows } from '@/lib/person-related-pulses'
 import { RelatedPulsesList } from '@/components/persons/related-pulses-list'
+import {
+  ProfileErrorState,
+  ProfileLoadingState,
+  ProfileUnavailableState,
+} from '@/components/persons/profile-states'
 // Import from the lightweight `types` module, NOT the drawer barrel — the barrel
 // (index.tsx) statically pulls in all nine drawer body components + gsap, which
 // would bloat this route's client bundle (and can crash the dev compile worker
@@ -57,9 +62,15 @@ export default function PersonProfilePage() {
     setPageTitle('Dashboard')
   }, [setPageTitle])
 
+  // `cache-and-network` mirrors the person drawer (person-details-body.tsx): a
+  // cached profile paints immediately instead of blocking, and the entity is
+  // revalidated on every visit rather than being served from cache forever.
+  // `errorPolicy` is deliberately left to the client default ('all', set in
+  // apollo-wrapper.tsx) — same as the drawer.
   const { data, loading, error, refetch } = useQuery(GET_PERSON_PROFILE, {
     variables: { personId },
     skip: !personId,
+    fetchPolicy: 'cache-and-network',
   })
 
   // Pulses this person authored (INITIATED_BY) or is mentioned in (MENTIONED_IN).
@@ -332,56 +343,25 @@ export default function PersonProfilePage() {
   ).filter((row) => !allPulses.some((p) => p.id === row.id))
   const totalPulseCount = allPulses.length + relatedRows.length
 
-  if (loading) {
+  // Only block on the very first load. Once a profile is in hand, a background
+  // refetch must never replace the page with a spinner.
+  if (loading && !person) {
+    return <ProfileLoadingState />
+  }
+
+  // Only when there is nothing cached to render.
+  if (error && !person) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center z-50 bg-gp-surface/50 dark:bg-gp-surface-dark/50 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-4">
-          <span
-            className={cn(
-              'material-symbols-outlined text-5xl text-gp-primary',
-              'motion-safe:animate-spin'
-            )}
-          >
-            hourglass_bottom
-          </span>
-          <p className="text-sm font-medium text-gp-ink-muted dark:text-gp-ink-soft">
-            Loading...
-          </p>
-        </div>
-      </div>
+      <ProfileErrorState
+        onRetry={() => {
+          refetch().catch(() => {})
+        }}
+      />
     )
   }
 
-  if (error) {
-    return (
-      <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors flex items-center justify-center">
-        <div className="text-red-500">Error loading person profile</div>
-      </div>
-    )
-  }
-
-  // GOAL-275: this page selects Space-scoped PII fields, so an unauthorized
-  // viewer (shares no Space with this person, and isn't them) gets an EMPTY
-  // result rather than a partial one — the whole Person row is filtered out.
-  // Render a neutral "not available" state, not an error: nothing failed, the
-  // profile is simply private to people outside their Spaces.
   if (!person) {
-    return (
-      <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors flex items-center justify-center px-6">
-        <div className="max-w-sm text-center flex flex-col items-center gap-3">
-          <span className="material-symbols-outlined text-4xl text-gp-ink-soft dark:text-white/40">
-            lock_person
-          </span>
-          <h1 className="text-lg font-semibold text-gp-ink-strong dark:text-white">
-            This profile isn&apos;t available
-          </h1>
-          <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft">
-            You can only view someone&apos;s full profile if you share a Space
-            with them. Ask them to add you to a Space to connect.
-          </p>
-        </div>
-      </div>
-    )
+    return <ProfileUnavailableState />
   }
 
   return (
