@@ -13,7 +13,11 @@ import { cn } from '@/lib/utils'
 
 function ProfileStateShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors flex items-center justify-center p-4 sm:p-8">
+    // `h-full`, not `min-h-screen`: the canvas pane is shorter than the
+    // viewport (the studio chrome sits above it), so a 100vh box centres its
+    // content below the pane's middle and clips the bottom of it — the pane
+    // has no scroll of its own to recover it.
+    <div className="relative h-full overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors flex items-center justify-center p-4 sm:p-8">
       <div className="max-w-sm text-center flex flex-col items-center gap-3">
         {children}
       </div>
