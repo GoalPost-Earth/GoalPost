@@ -17,6 +17,14 @@
  * Adding a label here? Give it a distinct color, then check the legend rows
  * in `bloom-legend.tsx` decode it (there is a drift test in
  * `bloom-legend.test.ts` that fails if a color is left undecodable).
+ *
+ * EXCEPTION — provenance/marker labels (e.g. `:CoreValue`, which rides
+ * alongside `:FieldPulse` and a subtype rather than replacing them). A map
+ * entry alone does NOT work for those: `styleFor` returns the first label that
+ * hits the map, and the node's own base label usually hits first. Give them a
+ * precedence branch at the top of `styleFor` that reuses the canonical
+ * subtype's color instead — reusing the color also keeps the legend decodable
+ * with no new row.
  * Known pre-existing ambiguity: '#5eead4' doubles as the native WeSpace
  * field tint (bloom-palette FIELD_COLOR.WeSpace) and the overlay
  * Organization color, so a native WeSpace field view also surfaces the
@@ -66,8 +74,36 @@ export const UNKNOWN_NODE_STYLE: NodeStyle = Object.freeze({
   size: 24,
 })
 
+/**
+ * Labels that are the GENERIC base of a family whose specific member carries
+ * the meaning: every pulse is a `FieldPulse`, every human a `Person`, every
+ * space a `Space`. They have styles of their own (a node may legitimately
+ * arrive with nothing else), but they must never win over the subtype.
+ */
+const BASE_LABELS = new Set(['FieldPulse', 'Person', 'Space'])
+
 export function styleFor(labels: string[]): NodeStyle {
   const byLabel = NODE_STYLE as Record<string, NodeStyle>
+
+  // A migrated core value carries a `:CoreValue` provenance marker alongside
+  // its base labels, and in an un-backfilled env it carries ONLY
+  // `FieldPulse:StoryPulse:CoreValue` (GOAL-287) — the subtype label present is
+  // `StoryPulse`, so subtype precedence alone would paint it as a story.
+  // Resolve the value marker FIRST, mirroring the precedence
+  // `pulseProjectionCypher()` applies in pulse.service.ts.
+  if (labels.includes('CoreValue') || labels.includes('CoreValuePulse')) {
+    return NODE_STYLE.CoreValuePulse
+  }
+
+  // Neo4j gives NO ordering guarantee on `labels`, so a plain first-match loop
+  // painted a node with whichever label happened to come back first: a
+  // `["FieldPulse","StoryPulse"]` story rendered in FieldPulse blue —
+  // indistinguishable from a goal — and a `["Person","PersonPulse"]` non-member
+  // rendered at the larger member size. Take the specific subtype first, and
+  // fall back to the base label only when there is no subtype at all.
+  for (const l of labels) {
+    if (!BASE_LABELS.has(l) && byLabel[l]) return byLabel[l]
+  }
   for (const l of labels) {
     if (byLabel[l]) return byLabel[l]
   }

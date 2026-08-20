@@ -56,6 +56,11 @@ const CONTENT_VIA_SPACE = new Set([
   'StoryPulse',
   'CarePulse',
   'CoreValuePulse',
+  // Provenance marker on every migrated core value (GOAL-287/GOAL-333). The
+  // driver really does return it FIRST for these nodes
+  // (labels = ["CoreValue","FieldPulse","StoryPulse"]), so it must be in this
+  // set for the membership test below to classify them as Space-scoped content.
+  'CoreValue',
   'ResonanceLink',
 ])
 
@@ -276,7 +281,15 @@ async function mapNodesToEnclosingSpaces(
       continue
     }
 
-    if (labels.includes('FieldPulse') || CONTENT_VIA_SPACE.has(labels[0] ?? '')) {
+    // `labels.some(...)` rather than `CONTENT_VIA_SPACE.has(labels[0])`: Neo4j
+    // gives NO ordering guarantee on a node's labels, and migrated core values
+    // demonstrably come back as ["CoreValue","FieldPulse","StoryPulse"] — so the
+    // old labels[0] test classified them by whichever label happened to land
+    // first. Only the `FieldPulse` disjunct was keeping them out of the
+    // permissive generic fallback below, which anchors through ANY Space within
+    // 3 undirected hops (e.g. via the pulse's author into that author's own
+    // MeSpace) and would surface content from a Space the caller cannot see.
+    if (labels.some((l) => CONTENT_VIA_SPACE.has(l))) {
       // Seek the node by its indexed BASE label rather than a label-less
       // `MATCH (p {id})`, which the planner can only satisfy with an
       // AllNodesScan of the whole graph per content node (the id UNIQUE
@@ -325,8 +338,33 @@ async function mapNodesToEnclosingSpaces(
       continue
     }
 
-    // SpaceMembership / FieldResonance / unknown — anchor through any
-    // adjacent Space at up to 3 hops.
+    if (labels.includes('SpaceMembership')) {
+      // A SpaceMembership belongs to EXACTLY the Space that HAS_MEMBER it —
+      // anchor there and nowhere else, exactly as Document anchors to its
+      // FieldContext's Space above.
+      //
+      // It must not fall through to the generic sweep below: three undirected
+      // hops is precisely enough to escape the membership's own Space and land
+      // on a different Space the same person belongs to —
+      //   (sm)-[:IS_MEMBER]->(person)<-[:IS_MEMBER]-(sm2)<-[:HAS_MEMBER]-(other)
+      // — so a membership held by someone else INSIDE A SPACE THE CALLER CANNOT
+      // SEE was anchored through a space they share with that person and kept,
+      // while the hidden Space itself was correctly dropped. That disclosed the
+      // existence of a cross-boundary membership (and rendered it on the canvas
+      // captioned with the raw label, a kb/07 Rule 1 leak). Found by the
+      // GOAL-333 security review; fail closed to the owning Space.
+      const r = await runRead(
+        `MATCH (:SpaceMembership {id: $id})<-[:HAS_MEMBER]-(s:Space) RETURN collect(DISTINCT s.id) AS sids`,
+        { id }
+      )
+      const sids = (r.records[0]?.get('sids') as string[] | null) ?? []
+      for (const sid of sids) anchors.add(sid)
+      result.set(id, anchors)
+      continue
+    }
+
+    // FieldResonance / unknown — anchor through any adjacent Space at up to
+    // 3 hops.
     const r = await runRead(
       `
       MATCH (n {id: $id})
@@ -352,7 +390,31 @@ async function mapNodesToEnclosingSpaces(
  * Uses the project's allowed-relationships whitelist as the disjunction
  * filter so the query is safe and bounded regardless of what surprise
  * relationship types might exist in the graph.
+ *
+ * The seek carries a LABEL EXPRESSION for the same reason branch 7 of
+ * `mapNodesToEnclosingSpaces` does: a label-less `MATCH (a {id: aid})` cannot
+ * use the per-label `REQUIRE n.id IS UNIQUE` constraints, so the planner falls
+ * back to an `AllNodesScan` PER ID — measured at 487k dbHits / 2.4s for 60 ids
+ * on a small dev graph, and it grows linearly with total graph size forever.
+ * The disjunction below is a fixed, code-controlled list (never user input),
+ * so the seek returns exactly the same nodes; only the plan changes —
+ * `Union` of `NodeUniqueIndexSeek`s, measured at 2.1k dbHits (−99.6%).
+ * Any id whose label is outside this list simply matches nothing here, which
+ * costs at most a missing rescued edge — never a wrong one.
  */
+const SEEKABLE_LABELS = [
+  'FieldPulse',
+  'FieldContext',
+  'Space',
+  'Person',
+  'SpaceMembership',
+  'ResonanceLink',
+  'Document',
+  'Organization',
+  'Community',
+  'PromiseWeave',
+].join('|')
+
 async function fillInRelationships(
   session: ReturnType<typeof driver.session>,
   nodeIds: string[],
@@ -365,7 +427,7 @@ async function fillInRelationships(
     tx.run(
       `
       UNWIND $nodeIds AS aid
-      MATCH (a {id: aid})
+      MATCH (a:${SEEKABLE_LABELS} {id: aid})
       MATCH (a)-[r]->(b)
       WHERE b.id IN $nodeIds AND type(r) IN $allowedTypes
       RETURN a.id AS fromId, b.id AS toId, type(r) AS relType, r.id AS relId

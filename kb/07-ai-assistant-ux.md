@@ -171,7 +171,7 @@ So a label/edge that exists in Neo4j but is absent from this file is doubly invi
 
 1. Add the label to `ALLOWED_LABELS` and each edge to `ALLOWED_RELATIONSHIPS` in `schema-context.ts`.
 2. Document the node (its props + the human-label field) and its edge directions in `SCHEMA_DOC`, and add an Intent-Glossary line in `cypher-generator/generate.ts` so the model knows what phrasing maps to it.
-3. In `cypher-generator/execute.ts`, add a `NODE_STYLE` entry **and** an auth-anchor branch in `mapNodesToEnclosingSpaces` that maps the node to its enclosing Space — otherwise the post-execute `canViewContent` filter can't resolve a Space for it and silently drops it (fail-closed). Connector nodes anchor through their context edge, e.g. `(:PromiseWeave {id})<-[:HAS_WEAVE]-(:FieldContext)<-[:HAS_CONTEXT]-(:Space)`, mirroring how `ResonanceLink` anchors via `HAS_RESONANCE`.
+3. Give the label a `NODE_STYLE` entry in `cypher-generator/node-style.ts` — **unless it is a provenance/marker label** that rides alongside a base label and a subtype (e.g. `:CoreValue`), in which case add a precedence branch at the top of `styleFor` reusing the canonical subtype's colour; a bare map entry loses to whichever label the driver returns first, and `labels` has no guaranteed order. Then, in `cypher-generator/execute.ts`, add the label to `CONTENT_VIA_SPACE` if it is Space-scoped content **and** add an auth-anchor branch in `mapNodesToEnclosingSpaces` that maps the node to its enclosing Space — otherwise the post-execute `canViewContent` filter can't resolve a Space for it and silently drops it (fail-closed). Connector nodes anchor through their context edge, e.g. `(:PromiseWeave {id})<-[:HAS_WEAVE]-(:FieldContext)<-[:HAS_CONTEXT]-(:Space)`, mirroring how `ResonanceLink` anchors via `HAS_RESONANCE`.
 
 Whitelisting an edge never bypasses authorization — node visibility is always re-gated by the Space post-filter in `execute.ts`. The whitelist only controls what the generator may *traverse*.
 
@@ -189,6 +189,9 @@ Whitelisting an edge never bypasses authorization — node visibility is always 
 | User sees `__typename` or `GoalPulse` strings                        | Static mode prompts leaking internal labels — Rule 1                            |
 | Approval Dialog summary contains an id                               | `describeWriteAction` formatting an id; fix to use name (Rule 1 + Rule 3)       |
 | Assistant says "couldn't find" a node/entity the user can clearly see | The node's label or an edge to it is missing from `cypher-generator/schema-context.ts` — `query_for_bloom` can neither name nor return it (Rule 9). Also check `execute.ts` has an auth-anchor branch for the label, or the Space post-filter drops it. |
+| `search_pulses` finds an entity but the graph canvas insists it doesn't exist | The two surfaces disagree on labels. A bridge exists in `pulse.service.ts` (`typeFilterCypher()`) that was never mirrored into `schema-context.ts`'s `ALLOWED_LABELS` / `SCHEMA_DOC`. This was GOAL-333 for `:CoreValue`. Fix BOTH or neither. |
+| An "all my X" / "every X" request comes back empty, but the entities exist | The generator reached content only through `(user)-[:OWNS]->(:Space)`. Content in a Space the member merely *belongs* to needs the `(user)<-[:IS_MEMBER]-(:SpaceMembership)<-[:HAS_MEMBER]-(:Space)` branch too — see the enumeration canonical shape in `generate.ts`. |
+| Canvas shows a lone "you" node and the model narrates it as an answer | An all-`OPTIONAL MATCH` sweep missed on every branch but still returned its driving row. `index.ts` treats that exact signature as empty; check the guard still matches the emitted query shape. |
 
 ---
 
