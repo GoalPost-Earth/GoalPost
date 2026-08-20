@@ -187,7 +187,11 @@ WF-11: Bulk Article Import               (User uploads a spreadsheet; a worker m
 See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage + `EXTRACTED_FROM` edges) in `kb/06-adr.md` for rationale.
 
 1. User picks a `.txt` / `.md` / `.pdf` from the studio with a
-   FieldContext focused. The browser POSTs to
+   FieldContext focused — via the **bottom floating canvas action bar** →
+   the **Upload** dropdown → **Upload document**
+   (`field-context-upload-action.tsx`). Upload is *not* in the FieldContext
+   page header; it shares that one dropdown with **Import articles** (WF-11).
+   The browser POSTs to
    `/api/ingest/document/presign` to get a short-lived presigned PUT URL,
    then uploads the file **directly to S3** (bytes never traverse our
    server). It then POSTs `/api/ingest/document/process` to **enqueue**
@@ -291,11 +295,22 @@ Spreadsheet-driven bulk upload of articles as pulses (GOAL-317), made durable
 in GOAL-326. See ADR-019 in `kb/06-adr.md` for why the job lives in the graph
 rather than on Redis, and `kb/04-state-machines.md` for the status machine.
 
-1. From the field action bar the member picks a `.csv` / `.xlsx` where each
+1. The member opens the import modal and picks a `.csv` / `.xlsx` where each
    row is an article — title, author, date, URL, plus optional
    `author_email` / `pulse_type` / `description`. Parsing, header mapping and
    per-row validation happen **in the browser** (`article-import.ts`), so the
    preview step can show exactly what will and will not import.
+
+   **Two entry points open the same modal**, both gated on `canEditContent`:
+   - The **bottom floating canvas action bar** → the **Upload** dropdown →
+     **Import articles** (`field-context-upload-action.tsx`, GOAL-327). This is
+     the primary one. Upload is *not* in the FieldContext page header.
+   - The **Pulses** section header pill inside the FieldContext page
+     (`pulses-section.tsx`, `onImportArticles`).
+
+   The action-bar item emits `emitOpenImportArticlesModal`; the FieldContext
+   page owns the modal itself (it holds the post-import refetch wiring and
+   loads it dynamically so SheetJS stays out of the dashboard bundle).
 2. The preview is the human-in-the-loop gate: valid rows, rows with issues,
    and the file name. Nothing has been written yet. Confirming POSTs the typed
    rows to `/api/import/articles`.
