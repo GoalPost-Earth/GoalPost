@@ -91,7 +91,7 @@ ${SCHEMA_DOC}
 5. RELATIONSHIPS ARE CRITICAL. The Bloom canvas draws lines between nodes ONLY when the relationship variables appear in your RETURN. Therefore:
    (a) EVERY relationship in your MATCH patterns MUST be bound to a variable (e.g. \`[hc:HAS_CONTEXT]\`, NOT \`[:HAS_CONTEXT]\`). Anonymous relationships are wasted — they exist in the planner but never reach the result.
    (b) EVERY bound relationship MUST appear in the RETURN. A query that matches edges and then drops them is wrong.
-   (c) The RETURN clause's columns must be node or relationship variables (never scalar projections like \`p.id\`, \`count(*)\`, or \`labels(n)\`; never \`collect()\`). One row per matched path is correct; multi-column rows like \`RETURN user, owns, space, hc, ctx\` are fine.
+   (c) The RETURN clause's columns must be node or relationship variables (never scalar projections like \`p.id\`, \`count(*)\`, or \`labels(n)\`). \`collect()\` is likewise banned — with ONE exception: an enumeration may \`collect(DISTINCT <node-or-relationship-variable>)\` into a list column to keep neighbours from multiplying rows (see the Enumeration canonical shape). Even there, never collect a scalar. One row per matched path is correct; multi-column rows like \`RETURN user, owns, space, hc, ctx\` are fine.
 
    Canonical shape:
 
@@ -119,6 +119,7 @@ The user's natural-language intent rarely names entity types precisely. Read the
 - "promise weave" / "weave" / "X's weaves", or "show the node <title>" where the title is a PromiseWeave's → \`PromiseWeave\` nodes (MATCH the \`:PromiseWeave\` label). Reach them via \`(ctx:FieldContext)-[hw:HAS_WEAVE]->(w:PromiseWeave)\`, and include the weave's own edges (\`(w)-[wv:WEAVES]->(:FieldPulse)\`, \`(w)-[wf:WOVEN_FOR]->(:Person)\`) so the connected pulses/person render too. PromiseWeave nodes are INVISIBLE to any query that omits the \`:PromiseWeave\` label — never substitute a FieldPulse keyword match for them.
 - "X's pulses" / "X's goals/resources/stories/cares/values" / "pulses by X" / "what has X created or contributed" → \`FieldPulse\` nodes reached through the AUTHOR edge: \`(x:Person)<-[:INITIATED_BY|CREATED_BY]-(p:FieldPulse)\`. INITIATED_BY is the canonical author edge, written by the assistant and doc-ingest paths (doc-ingested pulses point at the extracted author, who may be a non-member \`:Person:PersonPulse\`); CREATED_BY carries the same meaning but is written by the dashboard create flow and imports. NEITHER edge alone covers all pulses — always match the alternation, and filter by subtype label when the user names one.
 - "documents" / "source documents" / "uploaded files/articles" / "what documents are associated with these resources" / "what documents led to these pulses" / "where did this resource come from" → \`Document\` nodes (MATCH the \`:Document\` label). Reach them TWO ways and include BOTH: a field's uploaded docs via \`(ctx:FieldContext)-[hd:HAS_DOCUMENT]->(doc:Document)\`, and the source doc(s) behind specific pulses via \`(p:FieldPulse)-[ef:EXTRACTED_FROM]->(doc:Document)\`. For "documents associated with the Resources in <field>", anchor the field, OPTIONAL MATCH its \`ResourcePulse\`s via HAS_PULSE, then OPTIONAL MATCH each resource's \`EXTRACTED_FROM\` document AND the field's \`HAS_DOCUMENT\` documents — bind and RETURN every edge so both the resources and their source documents render. Documents are INVISIBLE to any query that omits the \`:Document\` label — never substitute a pulse keyword match for them. Caption a Document by its \`filename\`; never surface its id/blobKey/blobUrl.
+- "all core values" / "all my values" / "every goal" / "all the resources" / "list all <type>" / "find and display all X and their associated nodes" — an ENUMERATION with NO named entity to root on → walk EVERY Space the member can access (see the enumeration canonical shape below) and return each matching pulse plus its neighbours. Do NOT root this on a single Space, and do NOT reach only through \`OWNS\`.
 - "X's spaces" → \`MeSpace\` / \`WeSpace\` nodes X owns or is a member of.
 - "X's people" / "who does X know" → \`Person\` nodes connected via CONNECTED_TO, people attached to X's field contexts via \`(:FieldContext)-[:HAS_PERSON]->(:Person)\` (usually non-members, occasionally a self-linked member — match base \`:Person\` and filter by the \`:User\` label), or co-members of any shared Space.
 - "members" / "platform users" / "people on GoalPost" connected to X → \`Person\` nodes that ALSO carry the \`:User\` label. Match \`(m:Person:User)\` or add \`WHERE m:User\`.
@@ -167,6 +168,83 @@ When the focal entity is a pulse and the user asks to expand / explore / see its
   - Bind AND return every relationship variable (per Rule 5) so the edges render. Drop the \`ppl\` / \`com\` branches if the intent is clearly only about pulse-to-pulse links.
   - The runtime auth filter drops any connected pulse/person the user cannot see — do NOT add visibility predicates of your own.
 
+# Enumeration canonical shape (use this for "all core values", "every goal in my spaces", "list all the resources", any "all X" request with NO named entity to root on)
+
+A member reaches content through TWO different structures, and an enumeration
+must sweep BOTH or it silently under-reports:
+
+  1. Spaces they OWN            — \`(user)-[:OWNS]->(:Space)\`
+  2. Spaces they BELONG TO      — \`(user)<-[:IS_MEMBER]-(:SpaceMembership)<-[:HAS_MEMBER]-(:Space)\`
+
+Reaching only through \`OWNS\` is the single most common way an enumeration comes
+back empty: a member's values/goals usually live in a shared WeSpace that
+someone ELSE owns, so an OWNS-only sweep finds nothing and the person is told
+their content does not exist.
+
+ROWS ARE THE BUDGET — this decides the whole shape. The runtime wraps your
+query as \`CALL { <your query> } RETURN * LIMIT 60\`, so only the first 60 ROWS
+ever reach the canvas, no matter what LIMIT you write. Chaining the two access
+paths as separate OPTIONAL MATCH clauses MULTIPLIES their row counts together
+(and multiplies again for every neighbour branch you add), so the permutations
+of the FIRST entity eat the entire budget. Measured on a realistic account with
+245 visible core values, the chained form delivered 2 of them — worse than the
+OWNS-only sweep it was meant to replace.
+
+Use UNION, so rows ADD instead of multiplying, and give each branch its OWN
+LIMIT (~half the 60-row budget) so one branch cannot starve the other:
+
+    MATCH (user:Person {id: $userId})-[owns:OWNS]->(s:Space)-[hc:HAS_CONTEXT]->(c:FieldContext)-[hp:HAS_PULSE]->(p:FieldPulse)
+    WHERE p:CoreValuePulse OR p:CoreValue
+    RETURN owns AS acc, s AS space, hc AS ctxEdge, c AS ctx, hp AS pulseEdge, p AS pulse
+    LIMIT 28
+    UNION
+    MATCH (user:Person {id: $userId})<-[:IS_MEMBER]-(:SpaceMembership)<-[hm:HAS_MEMBER]-(s:Space)-[hc:HAS_CONTEXT]->(c:FieldContext)-[hp:HAS_PULSE]->(p:FieldPulse)
+    WHERE p:CoreValuePulse OR p:CoreValue
+    RETURN hm AS acc, s AS space, hc AS ctxEdge, c AS ctx, hp AS pulseEdge, p AS pulse
+    LIMIT 28
+
+Rules for this shape:
+  - BOTH branches must project the SAME column names — UNION requires it. Alias
+    the differing access edge to one shared name (\`acc\`), as above.
+  - Swap the \`WHERE\` predicate for the type being enumerated: a goal is
+    \`p:GoalPulse\`, a resource \`p:ResourcePulse\`, a story \`p:StoryPulse\`, a care
+    \`p:CarePulse\`. A CORE VALUE is the special case — it MUST be
+    \`p:CoreValuePulse OR p:CoreValue\` (see the CORE VALUES note in the schema).
+    Drop the WHERE entirely to enumerate every pulse type.
+  - The \`SpaceMembership\` hop stays ANONYMOUS (\`(:SpaceMembership)\`). It is
+    internal plumbing: returning it puts a node on the canvas captioned with a
+    raw database label, and it burns one of the 60 node slots. This is the one
+    place the "bind and return every relationship" rule (output rule 5) is
+    deliberately relaxed — bind only the access edge you actually return.
+  - "and their associated nodes" / "and what they connect to" — do NOT add
+    neighbour \`OPTIONAL MATCH\` clauses to the branches. Every per-row fan-out
+    divides your breadth by its factor. Gather neighbours into LIST columns with
+    \`collect()\` instead, which keeps ONE row per pulse:
+
+        MATCH (user:Person {id: $userId})-[owns:OWNS]->(s:Space)-[hc:HAS_CONTEXT]->(c:FieldContext)-[hp:HAS_PULSE]->(p:FieldPulse)
+        WHERE p:CoreValuePulse OR p:CoreValue
+        OPTIONAL MATCH (p)-[sem:ALIGNED_TO|ENABLES|ENABLED_BY|DEPENDS_ON|APPLIED_TO|APPLIED_IN|CARES_FOR]-(rel:FieldPulse)
+        OPTIONAL MATCH (p)-[ppl:EMBRACES|MOTIVATED_BY|PROVIDES|GUIDED_BY|INITIATED_BY|CREATED_BY|MENTIONED_IN]-(per:Person)
+        WITH owns AS acc, s, hc, c, hp, p,
+             collect(DISTINCT sem) AS sems, collect(DISTINCT rel) AS rels,
+             collect(DISTINCT ppl) AS ppls, collect(DISTINCT per) AS pers
+        RETURN acc, s AS space, hc AS ctxEdge, c AS ctx, hp AS pulseEdge, p AS pulse, sems, rels, ppls, pers
+        LIMIT 28
+        UNION
+        …the membership branch, same collect() treatment, aliasing \`hm AS acc\`…
+
+    The runtime walks list columns, so collected nodes and edges render exactly
+    like plain ones. This is the ONE case where \`collect()\` is allowed (output
+    rule 5c) — and only over node/relationship variables, never scalars.
+  - Do NOT put \`user\` in the RETURN for an enumeration. The anchor MATCH is
+    there for authorization only; returning it means a sweep that found nothing
+    still renders a one-node canvas ("here is you"), which reads as a confident
+    answer to a question that actually has no results.
+  - Each UNION branch is a REQUIRED match, which is correct here: a member with
+    no owned Space simply contributes no rows from that branch, and the other
+    branch still returns its own. That is exactly why UNION is safe where a
+    required MATCH in a single chained query would not be.
+
 # People-by-membership canonical shape (use this for "show the non-members connected to me", "who are my contacts", "people who aren't on the platform", "my members" / "my platform-user connections")
 
 When the intent is about the PEOPLE connected to the user filtered by membership, reach them BOTH via CONNECTED_TO and via the field contexts they are attached to (HAS_PERSON), then filter on the \`:User\` label. Non-members are a bare \`:Person\` or a \`:Person:PersonPulse\` — the defining test is the ABSENCE of \`:User\`, so use \`WHERE NOT other:User\`.
@@ -183,7 +261,7 @@ Rules for this shape:
   - The membership filter is a LABEL predicate on the person variable, NOT a relationship type: \`WHERE NOT other:User\` (non-members) or \`WHERE other:User\` (members). A \`:Person:PersonPulse\` and a bare \`:Person\` are BOTH non-members — do not try to enumerate subtype labels, just test for the absence of \`:User\`.
   - Bind and RETURN every relationship variable (Rule 5) so the CONNECTED_TO / HAS_PERSON edges render.
   - For "only members" flip both predicates to \`WHERE other:User\` / \`WHERE attached:User\`. For "all the people connected to me" regardless of membership, drop the WHERE lines entirely.
-  - Use a generous \`LIMIT\` (≥ 200). The two OPTIONAL MATCH branches multiply into a cross-product of rows (connections × attached people), and the RETURN contract forbids aggregation — so a tight row LIMIT can truncate a cross-product and silently drop real people. The executor caps DISTINCT nodes at 60, so a high row LIMIT is bounded there, not by the row count.
+  - The two OPTIONAL MATCH branches multiply into a cross-product of rows (connections × attached people), and the RETURN contract forbids aggregation. The runtime wraps your query as \`CALL { <your query> } RETURN * LIMIT 60\`, so only the first 60 ROWS survive — writing a larger LIMIT of your own does NOT buy more, and a wide cross-product can burn the whole budget on permutations of one person's neighbours and silently drop the rest. Keep the product narrow (as few multiplying branches as the intent needs) and cap with \`LIMIT 60\`.
   - This shape reaches people through the user's OWNED spaces and direct CONNECTED_TO edges — a scoping choice for "my relational world," not a security boundary. Authorization is enforced solely by the post-execute filter in execute.ts (which currently treats every Person as visible per kb/02); do NOT rely on the OWNS clause as a privacy gate.
 
 # Shortest-path canonical shape (use this for "How is X connected to Y?" / "path between X and Y" / "how is X related to Y?")

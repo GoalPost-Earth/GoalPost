@@ -390,6 +390,29 @@ production also retain `:CoreValue` for traceability — see
 
 Minimal additional fields beyond the base FieldPulse interface.
 
+> **Any query that filters for values MUST test BOTH markers** —
+> `WHERE p:CoreValuePulse OR p:CoreValue` — and must never match
+> `(:CoreValuePulse)` alone. An environment that predates the GOAL-287 relabel
+> holds `["FieldPulse", "StoryPulse", "CoreValue"]` with **no**
+> `:CoreValuePulse` at all, so a single-label match returns nothing there while
+> the member can plainly see their values. Two live implementations to keep in
+> step: `typeFilterCypher()` / `pulseProjectionCypher()` in
+> `src/modules/agent/tools/pulse/pulse.service.ts` (the `search_pulses` path),
+> and `SCHEMA_DOC` + `ALLOWED_LABELS` in
+> `src/lib/cypher-generator/schema-context.ts` (the `query_for_bloom` path).
+> The two drifting apart — text search finding values the graph canvas swore
+> did not exist — was GOAL-333.
+>
+> Do not *anchor* on `(:CoreValue)`: only `FieldPulse.id` carries a uniqueness
+> constraint (`scripts/init-db.js`), so a bare `:CoreValue` pattern is a label
+> scan. Match `(:FieldPulse)` and filter with the label predicate.
+>
+> Because the subtype label present on a legacy value is `:StoryPulse`, any
+> code deriving a display type or colour from labels must check the value
+> marker **before** `:StoryPulse` (see `styleFor` in
+> `src/lib/cypher-generator/node-style.ts`). Neo4j gives no ordering guarantee
+> on `labels`, so never rely on `labels[0]`.
+
 ---
 
 ### ResonanceLink

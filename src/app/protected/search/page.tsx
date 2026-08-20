@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAnimations } from '@/contexts/animation-context'
 import { usePageContext } from '@/contexts/PageContext'
 import { SEARCH_ALL } from '@/app/graphql/queries'
@@ -272,10 +272,16 @@ function EntityCardWrapper({
   )
 }
 
-export default function SearchPage() {
+function SearchPageContent() {
   const router = useRouter()
-  const [query, setQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const searchParams = useSearchParams()
+  // The studio header submits to `/protected/search?q=…`, so `?q=` — not this
+  // component's mount — is what says which search the user asked for. Seeding
+  // both the box and the debounced value from it means a query typed up in the
+  // header lands already run, and a refreshed or shared link reproduces it.
+  const queryParam = searchParams.get('q') ?? ''
+  const [query, setQuery] = useState(queryParam)
+  const [debouncedQuery, setDebouncedQuery] = useState(queryParam)
   const [activeType, setActiveType] = useState<EntityType | 'all'>('all')
   const { animationsEnabled } = useAnimations()
   const { setPageTitle } = usePageContext()
@@ -283,6 +289,32 @@ export default function SearchPage() {
     variables: { query: debouncedQuery },
     skip: debouncedQuery.length === 0,
   })
+
+  // `?q=` the box was last reconciled against. Comparing against it — rather
+  // than against `query` — is what tells an incoming search apart from the
+  // rewrite this page performs on itself as the user types.
+  const [syncedParam, setSyncedParam] = useState(queryParam)
+
+  // URL → box, adjusted during render (React's "changing state when props
+  // change" pattern) rather than in an effect, so the new query is rendered in
+  // one pass instead of a visible flash of the previous results.
+  //
+  // This is what makes the *second* search onwards work: searching again from
+  // the header while this page is already open is a `router.push` to the route
+  // we're on, which re-renders rather than remounts, so the `useState` seeds
+  // above never run again. Setting `debouncedQuery` here too skips the 400ms
+  // wait for a query the user already committed with Enter.
+  if (queryParam !== syncedParam) {
+    setSyncedParam(queryParam)
+    // Our own rewrite below always sets `?q=` to `debouncedQuery`, so a param
+    // that already matches it is this page's echo, not a new request — record
+    // it and leave the box alone. Adopting it here would clobber whatever the
+    // user has typed since the debounce last fired.
+    if (queryParam !== debouncedQuery) {
+      setQuery(queryParam)
+      setDebouncedQuery(queryParam)
+    }
+  }
 
   useEffect(() => {
     setPageTitle('Search')
@@ -296,6 +328,19 @@ export default function SearchPage() {
 
     return () => clearTimeout(timer)
   }, [query])
+
+  // Box → URL, so edits made in this page's own input stay refreshable and
+  // shareable, and so a repeat search for the term already in `?q=` still
+  // registers as a change. `replaceState` rather than `router.replace` keeps
+  // it off the history stack and avoids an RSC round-trip per settled
+  // keystroke; reading the live URL keeps the write idempotent.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if ((url.searchParams.get('q') ?? '') === debouncedQuery) return
+    if (debouncedQuery) url.searchParams.set('q', debouncedQuery)
+    else url.searchParams.delete('q')
+    window.history.replaceState(null, '', url)
+  }, [debouncedQuery])
 
   const handleEntityClick = (entity: SearchEntity, e: React.MouseEvent) => {
     e.preventDefault()
@@ -487,5 +532,24 @@ export default function SearchPage() {
         </section>
       </main>
     </div>
+  )
+}
+
+// `useSearchParams` opts a client page into dynamic rendering, which Next
+// requires a Suspense boundary to isolate. Without it the whole route falls
+// back to client-side rendering at build time.
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="relative min-h-screen bg-gp-surface dark:bg-gp-surface-dark pt-20 transition-colors">
+          <div className="w-full max-w-6xl mx-auto px-4 py-10 sm:py-16 md:py-20 text-sm text-gp-ink-muted dark:text-gp-ink-soft">
+            Loading search…
+          </div>
+        </div>
+      }
+    >
+      <SearchPageContent />
+    </Suspense>
   )
 }

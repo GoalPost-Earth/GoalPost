@@ -15,6 +15,7 @@ import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
 import { handleDeleteDocument } from '@/lib/ingest/handle-delete-document'
 import { buildDocumentDownloadUrl } from '@/lib/ingest/document-download-url'
 import { DOCUMENT_INGEST_STATUS } from '@/lib/ingest/document-ingest-queue'
+import { projectedList } from './projection'
 
 /**
  * GraphQL surface for the doc-ingestion epic.
@@ -167,6 +168,12 @@ export const documentMutations = {
  * Each resolver re-derives state from the source document id; cost is one
  * Cypher round-trip per field per row, which is acceptable for the < 20
  * documents/list expected in v1.
+ *
+ * They must NOT run when the library resolved the parent itself (the
+ * `documents` root, `fieldContexts { documents { … } }`, …): there the
+ * projection is already on `source`, authorization-filtered and complete, and
+ * replacing it with these three-column re-queries drops every nested field the
+ * caller selected. `projectedList` is that guard — see ./projection.ts.
  */
 export const documentTypeResolvers = {
   /**
@@ -178,7 +185,9 @@ export const documentTypeResolvers = {
    */
   downloadUrl: (source: { id?: string }): string | null =>
     source?.id ? buildDocumentDownloadUrl(source.id) : null,
-  extractedPeople: async (source: { id?: string }) => {
+  extractedPeople: async (source: Record<string, unknown>) => {
+    const projected = projectedList(source, 'extractedPeople')
+    if (projected) return projected
     if (!source?.id) return []
     const session = driver.session()
     try {
@@ -202,7 +211,9 @@ export const documentTypeResolvers = {
       await session.close()
     }
   },
-  extractedPulses: async (source: { id?: string }) => {
+  extractedPulses: async (source: Record<string, unknown>) => {
+    const projected = projectedList(source, 'extractedPulses')
+    if (projected) return projected
     if (!source?.id) return []
     const session = driver.session()
     try {
@@ -232,7 +243,9 @@ export const documentTypeResolvers = {
       await session.close()
     }
   },
-  ingestThreads: async (source: { id?: string }) => {
+  ingestThreads: async (source: Record<string, unknown>) => {
+    const projected = projectedList(source, 'ingestThreads')
+    if (projected) return projected
     if (!source?.id) return []
     const session = driver.session()
     try {
