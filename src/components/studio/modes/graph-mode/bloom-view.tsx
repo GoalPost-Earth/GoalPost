@@ -28,24 +28,14 @@ import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { useFocalEntity } from '@/contexts'
-import { useNvlTouchGestures } from '@/hooks'
+import { useIsDarkMode, useNvlTouchGestures } from '@/hooks'
 import { useRouteFocalScope } from '@/lib/focal-entity/use-route-focal-scope'
 import type { FocalEntityType } from '@/lib/focal-entity/types'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
+import { lightColorFor, UNKNOWN_NODE_STYLE } from '@/lib/cypher-generator/node-style'
 import { GraphLoadingState } from './graph-loading-state'
 import { BloomLegend } from './bloom-legend'
-import {
-  SPACE_COLOR,
-  FIELD_COLOR,
-  PULSE_COLOR,
-  PERSON_COLOR,
-  STRUCTURAL_EDGE_COLOR,
-  RESONANCE_EDGE_COLOR,
-  INITIATED_EDGE_COLOR,
-  WEAVE_NODE_COLOR,
-  WEAVE_EDGE_COLOR,
-  CONNECTED_EDGE_COLOR,
-} from './bloom-palette'
+import { getBloomPalette } from './bloom-palette'
 import { useBloomOverlay, type BloomOverlay } from '../../bloom-overlay-context'
 import {
   useVisibleEntities,
@@ -83,7 +73,7 @@ const GraphVisualizer = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="relative w-full h-full bg-slate-950">
+      <div className="relative w-full h-full bg-gp-surface dark:bg-gp-surface-dark">
         <GraphLoadingState label="Preparing canvas" />
       </div>
     ),
@@ -335,6 +325,12 @@ interface SpacePersonRecord {
 
 export const BloomView: FC = () => {
   const { setFocalEntity } = useFocalEntity()
+  // NVL paints to a <canvas> from resolved color strings, so it can't consume
+  // the `--gp-*` tokens every other surface themes with — the canvas palette
+  // is the documented exception that has to be picked in JS. Everything else
+  // in this component (backdrop, empty state, panels) uses tokens.
+  const isDark = useIsDarkMode()
+  const palette = getBloomPalette(isDark)
   const { overlay, clearOverlay } = useBloomOverlay()
   const { publish: publishVisibleEntities } = useVisibleEntities()
   const nvlRef = useRef<NvlRefHandle | null>(null)
@@ -708,14 +704,22 @@ export const BloomView: FC = () => {
   //   4. Default — the user's MeSpace + WeSpace cluster.
   const nodes: Node[] = useMemo(() => {
     if (overlay) {
+      // The overlay payload is styled server-side (cypher-generator/execute.ts)
+      // with the dark pastel palette — the executor can't know the viewer's
+      // theme. Remap to the light counterparts here so a chat "custom view"
+      // doesn't dissolve into a light backdrop. Only the *painted* color is
+      // remapped; `overlay.nodes[].color` keeps its original value, which is
+      // what `colorToInfoEntityType` resolves clicks against.
       return overlay.nodes.map(
-        (n) =>
-          ({
+        (n) => {
+          const color = n.color ?? UNKNOWN_NODE_STYLE.color
+          return {
             id: n.id,
             caption: n.caption ?? n.id,
-            color: n.color ?? '#cbd5e1',
+            color: isDark ? color : lightColorFor(color),
             size: n.size ?? 30,
-          }) as Node
+          } as Node
+        }
       )
     }
     if (inField) {
@@ -724,7 +728,7 @@ export const BloomView: FC = () => {
           ({
             id: pulse.id,
             caption: pulse.name,
-            color: PULSE_COLOR[pulse.pulseType],
+            color: palette.pulse[pulse.pulseType],
             size: PULSE_SIZE,
           }) as Node
       )
@@ -733,7 +737,7 @@ export const BloomView: FC = () => {
           ({
             id: person.id,
             caption: person.name,
-            color: PERSON_COLOR,
+            color: palette.person,
             size: PERSON_SIZE,
           }) as Node
       )
@@ -742,7 +746,7 @@ export const BloomView: FC = () => {
           ({
             id: weave.id,
             caption: weave.name,
-            color: WEAVE_NODE_COLOR,
+            color: palette.weaveNode,
             size: PULSE_SIZE,
           }) as Node
       )
@@ -756,7 +760,7 @@ export const BloomView: FC = () => {
             {
               id: spaceAnchor.id,
               caption: spaceAnchor.name,
-              color: SPACE_COLOR[spaceAnchor.kind],
+              color: palette.space[spaceAnchor.kind],
               size: SPACE_SIZE[spaceAnchor.kind],
             } as Node,
           ]
@@ -766,7 +770,7 @@ export const BloomView: FC = () => {
           ({
             id: ctx.id,
             caption: ctx.name,
-            color: FIELD_COLOR[ctx.spaceKind],
+            color: palette.field[ctx.spaceKind],
             size: FIELD_SIZE,
           }) as Node
       )
@@ -775,7 +779,7 @@ export const BloomView: FC = () => {
           ({
             id: p.id,
             caption: p.name,
-            color: PERSON_COLOR,
+            color: palette.person,
             size: PERSON_SIZE,
           }) as Node
       )
@@ -787,7 +791,7 @@ export const BloomView: FC = () => {
         ({
           id: space.id,
           caption: space.name,
-          color: SPACE_COLOR[space.type],
+          color: palette.space[space.type],
           size: SPACE_SIZE[space.type],
         }) as Node
     )
@@ -797,7 +801,7 @@ export const BloomView: FC = () => {
             {
               id: currentUserId,
               caption: 'You',
-              color: PERSON_COLOR,
+              color: palette.person,
               size: YOU_SIZE,
             } as Node,
           ]
@@ -805,6 +809,8 @@ export const BloomView: FC = () => {
     return [...youNode, ...spaceNodes]
   }, [
     overlay,
+    isDark,
+    palette,
     inField,
     pulses,
     persons,
@@ -867,7 +873,7 @@ export const BloomView: FC = () => {
           from: r.sourceId,
           to: r.targetId,
           caption: r.label,
-          color: RESONANCE_EDGE_COLOR,
+          color: palette.resonanceEdge,
           width: 2,
         } as Relationship)
       }
@@ -903,7 +909,7 @@ export const BloomView: FC = () => {
           from: pulse.id,
           to: initiatorId,
           caption: 'initiated',
-          color: INITIATED_EDGE_COLOR,
+          color: palette.initiatedEdge,
           width: 1.5,
         } as Relationship)
       }
@@ -919,7 +925,7 @@ export const BloomView: FC = () => {
             from: w.id,
             to: pid,
             caption: 'weaves',
-            color: WEAVE_EDGE_COLOR,
+            color: palette.weaveEdge,
             width: 1.5,
           } as Relationship)
         }
@@ -936,7 +942,7 @@ export const BloomView: FC = () => {
           from: c.fromId,
           to: c.toId,
           caption: 'connected',
-          color: CONNECTED_EDGE_COLOR,
+          color: palette.connectedEdge,
           width: 1.5,
         } as Relationship)
       }
@@ -957,7 +963,7 @@ export const BloomView: FC = () => {
           from: spaceAnchor.id,
           to: ctx.id,
           caption: 'has',
-          color: STRUCTURAL_EDGE_COLOR,
+          color: palette.structuralEdge,
           width: 1.5,
         } as Relationship)
       }
@@ -969,7 +975,7 @@ export const BloomView: FC = () => {
           from: p.id,
           to: spaceAnchor.id,
           caption: owns ? 'owns' : 'member',
-          color: STRUCTURAL_EDGE_COLOR,
+          color: palette.structuralEdge,
           width: 1.5,
         } as Relationship)
       }
@@ -998,7 +1004,7 @@ export const BloomView: FC = () => {
           from: currentUserId,
           to: space.id,
           caption: owns ? 'owns' : 'member',
-          color: STRUCTURAL_EDGE_COLOR,
+          color: palette.structuralEdge,
           width: 1.5,
         } as Relationship
       })
@@ -1007,6 +1013,7 @@ export const BloomView: FC = () => {
     return EMPTY_RELATIONSHIPS
   }, [
     overlay,
+    palette,
     inField,
     resonances,
     pulses,
@@ -1579,7 +1586,30 @@ export const BloomView: FC = () => {
         : spaces.length === 0)
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex">
+    <div className="relative w-full h-full bg-gp-surface dark:bg-gp-surface-dark flex">
+      {/* Themed canvas backdrop. NVL renders on a transparent canvas, so this
+          is what the graph floats over. Built from `gp-*` tokens via
+          color-mix so it re-tints with light/dark AND with every theme
+          variant — it used to be a hardcoded slate-950 gradient, which is why
+          Bloom stayed night-dark while the rest of the app was in light mode.
+          Absolutely positioned, so it takes no part in the flex row. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 gp-dot-grid opacity-40 dark:opacity-20"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(at 18% 20%, color-mix(in srgb, var(--gp-primary) 10%, transparent) 0, transparent 55%),
+            radial-gradient(at 82% 16%, color-mix(in srgb, var(--gp-accent-glow) 10%, transparent) 0, transparent 55%),
+            radial-gradient(at 78% 84%, color-mix(in srgb, var(--gp-goal) 9%, transparent) 0, transparent 55%),
+            radial-gradient(at 16% 86%, color-mix(in srgb, var(--gp-resource) 10%, transparent) 0, transparent 55%)
+          `,
+        }}
+      />
+
       <div ref={canvasWrapperRef} className="flex-1 relative">
         {!overlay && loading && nodes.length === 0 ? (
           <GraphLoadingState
@@ -1594,10 +1624,10 @@ export const BloomView: FC = () => {
           />
         ) : isEmpty ? (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
-            <span className="material-symbols-outlined text-5xl text-white/20 mb-3">
+            <span className="material-symbols-outlined text-5xl text-gp-ink-soft/70 mb-3">
               {inField ? 'graphic_eq' : inSpace ? 'category' : 'hub'}
             </span>
-            <p className="text-sm text-white/55 max-w-md">
+            <p className="text-sm text-gp-ink-muted max-w-md">
               {inField
                 ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here as a native NVL node.'
                 : inSpace
@@ -1635,19 +1665,19 @@ export const BloomView: FC = () => {
           persisted entity behind them). Real node clicks open the
           unified EntityInfoDrawer mounted in CanvasHost. */}
       {selectedNode && overlay && (
-        <div className="w-80 h-full bg-slate-900/85 backdrop-blur-xl border-l border-white/10 overflow-y-auto z-20 p-5">
+        <div className="w-80 h-full bg-gp-glass-bg backdrop-blur-xl border-l border-gp-glass-border overflow-y-auto z-20 p-5">
           <div className="flex items-start justify-between mb-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted">
                 Node
               </p>
-              <h3 className="mt-1 text-xl font-bold text-white">
+              <h3 className="mt-1 text-xl font-bold text-gp-ink-strong">
                 {selectedNode.caption}
               </h3>
             </div>
             <button
               onClick={() => setSelectedNode(null)}
-              className="text-white/40 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+              className="gp-menu-item shrink-0 p-1 rounded-full cursor-pointer"
               aria-label="Close details"
             >
               <span className="material-symbols-outlined text-lg leading-none">
@@ -1655,13 +1685,13 @@ export const BloomView: FC = () => {
               </span>
             </button>
           </div>
-          <div className="flex items-center gap-2 text-sm text-white/70 mb-4">
+          <div className="flex items-center gap-2 mb-4">
             <span
               className="inline-block h-3 w-3 rounded-full"
               style={{ backgroundColor: selectedNode.color }}
               aria-hidden="true"
             />
-            <span className="text-xs text-white/60 uppercase tracking-wider">
+            <span className="text-xs text-gp-ink-muted uppercase tracking-wider">
               From chat
             </span>
           </div>

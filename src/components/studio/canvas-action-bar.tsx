@@ -67,7 +67,7 @@ export const StudioCanvasActionBar: FC = () => {
     <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center px-4">
       <div className="pointer-events-auto flex items-center gap-3 md:gap-4">
         {inGraphSurface && (
-          <div className="flex items-center gap-2 p-1.5 rounded-full gp-glass dark:gp-glass border border-gp-glass-border shadow-xl">
+          <div className="flex items-center gap-2 p-1.5 rounded-full gp-glass border border-gp-glass-border shadow-xl">
             <ZoomButton
               label="Zoom out"
               icon="remove"
@@ -104,7 +104,7 @@ export const StudioCanvasActionBar: FC = () => {
             <PrimaryAddButton
               label="Add pulse"
               ariaLabel="Add pulse to this field context"
-              iconTint="text-teal-300 group-hover:text-teal-200"
+              iconTint="text-teal-600 dark:text-teal-300"
               onClick={() => emitOpenAddPulseModal(focalEntity!.id)}
             />
           </div>
@@ -123,7 +123,7 @@ const SpaceActions: FC<{ spaceId: string }> = ({ spaceId }) => (
     <PrimaryAddButton
       label="Add field context"
       ariaLabel="Add field context to this space"
-      iconTint="text-teal-300 group-hover:text-teal-200"
+      iconTint="text-teal-600 dark:text-teal-300"
       onClick={() => emitOpenAddFieldContextModal(spaceId)}
     />
     {/* MeSpace owners see this too — first member add auto-converts the
@@ -224,11 +224,13 @@ const DefaultActions: FC<{ router: ReturnType<typeof useRouter> }> = ({
           <button
             type="button"
             onClick={() => router.push('/protected/dashboard')}
-            className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+            className="gp-glass-hover cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass border border-gp-glass-border hover:border-gp-primary/40 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
             aria-label="Create MeSpace"
           >
-            <PlusCircle className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
-            <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+            {/* MeSpace amber. No `--gp-mespace` token exists, and amber-300 is
+                ~1.4:1 on light glass, so the light value is a darker step. */}
+            <PlusCircle className="w-5 h-5 text-amber-600 dark:text-amber-300 transition-colors" />
+            <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong">
               MeSpace
             </span>
           </button>
@@ -237,11 +239,12 @@ const DefaultActions: FC<{ router: ReturnType<typeof useRouter> }> = ({
           type="button"
           onClick={() => setShowCreateWeSpaceModal(true)}
           data-tour="create-wespace-button"
-          className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+          className="gp-glass-hover cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass border border-gp-glass-border hover:border-gp-primary/40 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
           aria-label="Create WeSpace"
         >
-          <PlusCircle className="w-5 h-5 text-teal-300 group-hover:text-teal-200 transition-colors" />
-          <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+          {/* WeSpace teal — darker step in light mode, same rationale as above. */}
+          <PlusCircle className="w-5 h-5 text-teal-600 dark:text-teal-300 transition-colors" />
+          <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong">
             WeSpace
           </span>
         </button>
@@ -270,11 +273,11 @@ const PrimaryAddButton: FC<{
   <button
     type="button"
     onClick={onClick}
-    className="cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
+    className="gp-glass-hover cursor-pointer flex items-center gap-2 px-4 md:px-5 h-10 md:h-11 rounded-full gp-glass border border-gp-glass-border hover:border-gp-primary/40 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group"
     aria-label={ariaLabel}
   >
     <Plus className={cn('w-5 h-5 transition-colors', iconTint)} />
-    <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+    <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong">
       {label}
     </span>
   </button>
@@ -291,16 +294,18 @@ const SecondaryActionButton: FC<{
     onClick={onClick}
     aria-label={ariaLabel}
     title={label}
-    className="cursor-pointer flex items-center gap-2 px-3 md:px-4 h-10 md:h-11 rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 transition-all"
+    // `.gp-menu-item` owns the color + hover tint (a themed --gp-primary wash)
+    // so the affordance is visible on light glass, dark glass, and every theme
+    // variant. Hand-rolled `hover:bg-gp-ink-strong/10` was near-invisible on a
+    // near-white surface — see the design skill's menu/popover note.
+    className="gp-menu-item cursor-pointer flex items-center gap-2 px-3 md:px-4 h-10 md:h-11 rounded-full"
   >
     {icon}
     <span className="hidden sm:inline text-sm font-medium">{label}</span>
   </button>
 )
 
-const Divider: FC = () => (
-  <div className="w-px h-4 bg-gp-ink-soft/20 dark:bg-white/10" />
-)
+const Divider: FC = () => <div className="w-px h-4 bg-gp-glass-border" />
 
 const ZoomButton: FC<{
   label: string
@@ -312,7 +317,7 @@ const ZoomButton: FC<{
     onClick={onClick}
     aria-label={label}
     title={label}
-    className="cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 transition-all"
+    className="gp-menu-item cursor-pointer size-9 md:size-10 flex items-center justify-center rounded-full"
   >
     <span className="material-symbols-outlined">{icon}</span>
   </button>
@@ -340,7 +345,7 @@ const ViewToggle: FC<{
     <div
       role="tablist"
       aria-label="Canvas view"
-      className="flex items-center gap-1 p-1 rounded-full gp-glass dark:gp-glass border border-gp-glass-border shadow-xl"
+      className="flex items-center gap-1 p-1 rounded-full gp-glass border border-gp-glass-border shadow-xl"
     >
       {items.map(({ id, label, Icon }, idx) => {
         const active = activeView === id
@@ -361,10 +366,10 @@ const ViewToggle: FC<{
               className={cn(
                 'size-9 md:size-10 flex items-center justify-center rounded-full transition-all duration-200',
                 disabled
-                  ? 'opacity-40 cursor-not-allowed text-gp-ink-muted dark:text-gp-ink-soft'
+                  ? 'opacity-40 cursor-not-allowed text-gp-ink-muted'
                   : active
                     ? 'cursor-pointer bg-gp-primary/20 text-gp-primary'
-                    : 'cursor-pointer text-gp-ink-muted dark:text-gp-ink-soft hover:text-gp-ink-strong dark:hover:text-gp-ink-strong hover:bg-gp-ink-strong/10 dark:hover:bg-white/20'
+                    : 'gp-menu-item cursor-pointer'
               )}
             >
               <Icon className="w-4 h-4" />

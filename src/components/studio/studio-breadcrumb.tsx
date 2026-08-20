@@ -192,20 +192,34 @@ export const StudioBreadcrumb: FC = () => {
               )
             )}
             {isLast ? (
-              <>
+              // The type tag (10px caps) and the entity name (14px) sit on one
+              // line at different sizes. Centring them on their box centres —
+              // what the row's `items-center` does — leaves the caps riding
+              // ~1.5px high, because half-leading centres the *content box*,
+              // not the baseline. Group the pair in their own baseline-aligned
+              // row; the outer row still centres that group against the dot.
+              <span className="flex min-w-0 items-baseline gap-1 sm:gap-1.5">
                 {style && (
-                  <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft sm:inline">
+                  <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft sm:block">
                     {style.label}
                   </span>
                 )}
                 <span className="max-w-[18ch] truncate text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong sm:max-w-[22ch]">
                   {crumb.label}
                 </span>
-              </>
+              </span>
             ) : (
               <span
                 className={cn(
-                  'max-w-[10ch] sm:max-w-[16ch] truncate font-medium',
+                  // Every crumb label is `text-sm`. A smaller ancestor size
+                  // looked tidy in isolation but shortened its line box, and
+                  // the row's `items-center` then parked its baseline ~1.3px
+                  // above the Dashboard and current crumbs. One size across
+                  // the trail makes every baseline line up by construction;
+                  // the hierarchy is carried by weight and ink colour instead.
+                  // `sm:max-w` drops from 16ch to 14ch so the wider glyphs
+                  // don't cost the trail any horizontal budget.
+                  'max-w-[10ch] sm:max-w-[14ch] truncate text-sm font-medium',
                   // Ancestor labels would be squeezed to zero width on a phone
                   // anyway — drop them so their space goes to the crumb that
                   // names the current location. The dot/home icon still carries
@@ -214,8 +228,8 @@ export const StudioBreadcrumb: FC = () => {
                   // (search, profile, audit) it is the only crumb there is.
                   !isLastInList && 'hidden sm:block',
                   isFirst
-                    ? 'text-sm text-gp-ink-strong dark:text-gp-ink-strong'
-                    : 'text-xs text-gp-ink-muted dark:text-gp-ink-soft'
+                    ? 'text-gp-ink-strong dark:text-gp-ink-strong'
+                    : 'text-gp-ink-muted dark:text-gp-ink-soft'
                 )}
               >
                 {crumb.label}

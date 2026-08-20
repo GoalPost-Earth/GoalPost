@@ -398,6 +398,38 @@
     animation: glow 2s ease-in-out infinite;
   }
 
+  /* Hover / keyboard-focus affordance for INTERACTIVE GLASS surfaces — the
+     floating canvas action-bar pills, the Bloom legend chip.
+     `.gp-glass` paints its frosted fill with `background-color`, and a
+     `hover:bg-*` utility REPLACES that fill rather than layering over it.
+     In light mode the pills did exactly that: hovering swapped the white
+     frost for a 10% ink wash, so the chip turned into a dark translucent
+     patch and its near-black `gp-ink-strong` label lost its backing — the
+     hover read as broken. Painting the tint as a `background-image` layer
+     composites it ON TOP of the glass fill, so the frost survives, and the
+     tint re-derives from `--gp-primary` in light, dark, and every theme
+     variant. Deliberately avoids `background-color`, `border-color` and
+     `box-shadow` — those are all set by utilities on the same elements, and
+     the utilities layer always wins over this one. */
+  .gp-glass-hover {
+    transition:
+      background-image 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .gp-glass-hover:hover,
+  .gp-glass-hover:focus-visible {
+    background-image: linear-gradient(
+      color-mix(in srgb, var(--gp-primary) 16%, transparent),
+      color-mix(in srgb, var(--gp-primary) 16%, transparent)
+    );
+  }
+
+  .gp-glass-hover:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--gp-primary) 60%, transparent);
+    outline-offset: 2px;
+  }
+
   /* Theme-aware wrapper for floating action buttons */
   .gp-action-button-shell {
     display: inline-block;

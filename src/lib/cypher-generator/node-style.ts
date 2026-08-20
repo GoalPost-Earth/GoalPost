@@ -73,3 +73,51 @@ export function styleFor(labels: string[]): NodeStyle {
   }
   return UNKNOWN_NODE_STYLE
 }
+
+/**
+ * Light-mode counterpart of every color above, keyed by the dark color the
+ * executor actually emits.
+ *
+ * The palette above is a set of 200/300-level pastels chosen to glow on the
+ * dark Bloom canvas; against the light surface (`#f6f7f8`) they read at
+ * 1.3–2.5:1 and the overlay dissolves into the background. The executor runs
+ * on the server and cannot know the viewer's theme, so it keeps emitting the
+ * dark colors and the *client* remaps them at paint time
+ * (`bloom-view.tsx`) — see `bloom-palette.ts` for the derivation method
+ * (hue preserved, saturation floored, lightness lowered to a 3.1–5.6:1 band
+ * that keeps the palette's internal lightness ordering).
+ *
+ * Keyed by color rather than by label on purpose: overlay nodes cached from
+ * older chat threads can arrive without `labels`, and the color is the one
+ * field every overlay node has always carried.
+ *
+ * Two values intentionally match `BLOOM_PALETTE_LIGHT`, mirroring collisions
+ * the dark palettes already have: Person (`#f9a8d4`) and Organization
+ * (`#5eead4`, which doubles as the native WeSpace field tint).
+ */
+export const LIGHT_NODE_COLOR: Record<string, string> = {
+  '#86efac': '#149844', // MeSpace / WeSpace / Space
+  '#fdba74': '#bc6103', // Community
+  '#5eead4': '#13907d', // Organization
+  '#fde68a': '#ab8a03', // FieldContext
+  '#93c5fd': '#0472ee', // GoalPulse / FieldPulse
+  '#a7f3d0': '#169f5f', // ResourcePulse
+  '#c4b5fd': '#7a58fa', // StoryPulse
+  '#fca5a5': '#ea0808', // CarePulse
+  '#fcd34d': '#a27c03', // CoreValuePulse
+  '#f9a8d4': '#e21082', // Person / User / PersonPulse
+  '#d8b4fe': '#9e45fd', // ResonanceLink
+  '#e9d5ff': '#ab5eff', // FieldResonance
+  '#f0abfc': '#ca08eb', // PromiseWeave
+  '#94a3b8': '#5a6d88', // Document
+  '#cbd5e1': '#6583a6', // SpaceMembership / unknown-label fallback
+}
+
+/**
+ * The color to paint `color` with in light mode. Returns the input unchanged
+ * for anything not in the map, so an overlay node carrying a color from
+ * outside this palette still renders (just without a light-mode correction).
+ */
+export function lightColorFor(color: string): string {
+  return LIGHT_NODE_COLOR[color.toLowerCase()] ?? color
+}
