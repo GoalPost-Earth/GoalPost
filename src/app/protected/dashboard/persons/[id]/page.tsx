@@ -176,7 +176,17 @@ export default function PersonProfilePage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors pt-20">
+    // This route renders inside the studio canvas, which mounts route children
+    // in an `absolute inset-0` box under an `overflow-hidden` pane
+    // (canvas-host.tsx). A page that only declares `min-h-screen` therefore
+    // paints past the bottom of the pane with nothing to scroll it — the
+    // profile below the fold was simply unreachable. Every other canvas route
+    // (dashboard, space, field-context, profile, audit) owns its own
+    // `h-full … overflow-y-auto scroller` container; this one now does too.
+    // The old `pt-20` compensated for a fixed top navbar that no longer
+    // overlaps this surface — the studio chrome is a flow sibling above the
+    // canvas — so it was 80px of dead space making the overflow worse.
+    <div className="relative h-full w-full overflow-y-auto overflow-x-hidden scroller bg-gp-surface dark:bg-gp-surface-dark transition-colors">
       <ProfileBackground />
 
       <main className="relative">

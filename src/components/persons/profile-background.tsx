@@ -9,7 +9,7 @@ type ProfileBackgroundProps = {
 export function ProfileBackground({ className }: ProfileBackgroundProps) {
   return (
     <div
-      className={cn('fixed inset-0 pointer-events-none pt-20', className)}
+      className={cn('fixed inset-0 pointer-events-none', className)}
       style={{
         backgroundImage: `
           radial-gradient(at 18% 18%, color-mix(in srgb, var(--gp-primary) 12%, transparent) 0, transparent 55%),
