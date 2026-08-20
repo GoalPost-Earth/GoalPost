@@ -193,12 +193,23 @@ export const StudioBreadcrumb: FC = () => {
             )}
             {isLast ? (
               // The type tag (10px caps) and the entity name (14px) sit on one
-              // line at different sizes. Centring them on their box centres —
-              // what the row's `items-center` does — leaves the caps riding
-              // ~1.5px high, because half-leading centres the *content box*,
-              // not the baseline. Group the pair in their own baseline-aligned
-              // row; the outer row still centres that group against the dot.
-              <span className="flex min-w-0 items-baseline gap-1 sm:gap-1.5">
+              // line at different sizes. They must NOT share a baseline: caps
+              // of different sizes on one baseline have different cap-band
+              // centres, so the 10px tag's ink centre lands ~1.5px BELOW the
+              // 14px name's — measurably out of line with the dot, the chevrons
+              // and every other crumb, which all centre on the row.
+              //
+              // `items-center` is right here, and robustly so: half-leading
+              // splits evenly, so a span's ink centre sits at its box centre
+              // offset by a term that depends on the FONT and SIZE only, never
+              // on the line-height — which matters because the tag's `text-
+              // [10px]` sets no line-height and inherits whatever the shell
+              // provides. Measured in-browser for the current Inter/10px +
+              // Inter/14px pairing, that offset is ≈0 for both, and every ink
+              // centre in the nav (home glyph, labels, chevrons, dot, tag) lands
+              // on the row centre. Re-measure if the tag's size/weight or the UI
+              // font changes; the conclusion is empirical, not universal.
+              <span className="flex min-w-0 items-center gap-1 sm:gap-1.5">
                 {style && (
                   <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft sm:block">
                     {style.label}
