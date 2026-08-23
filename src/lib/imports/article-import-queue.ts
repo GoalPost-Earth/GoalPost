@@ -1,6 +1,7 @@
 import type { Driver } from 'neo4j-driver'
 import {
   ARTICLE_IMPORT_STATUS,
+  FINISHED_JOB_RETENTION_DAYS,
   type ArticleImportRowInput,
   type ArticleImportStatus,
   type PersistedArticleRowOutcome,
@@ -88,8 +89,12 @@ export const IMPORT_FIELD_GONE_MESSAGE =
  * How long a finished job survives. It is a receipt for a completed import —
  * the member reads it minutes after uploading, not weeks — and it holds their
  * article titles in `rowOutcomes`, so it should not live forever.
+ *
+ * Defined in `article-import.ts` (the client-safe module) because the status
+ * section renders it in copy; re-exported here so queue callers keep their
+ * one import site.
  */
-export const FINISHED_JOB_RETENTION_DAYS = 30
+export { FINISHED_JOB_RETENTION_DAYS }
 
 export interface ArticleImportJobRecord {
   id: string
@@ -800,6 +805,87 @@ export async function purgeFinishedArticleImportJobs(
       )
     )
     return Number(result.records[0]?.get('purged') ?? 0)
+  } finally {
+    await session.close()
+  }
+}
+
+/**
+ * How many jobs `listArticleImportJobsForRequester` returns at most. Generous
+ * against real use — the in-flight cap is 5 and finished receipts purge after
+ * `FINISHED_JOB_RETENTION_DAYS` — while bounding what one poll can pull.
+ */
+export const MAX_LISTED_ARTICLE_IMPORT_JOBS = 20
+
+/** One row of the requester's per-field job list (GOAL-336). */
+export interface ArticleImportJobListEntry extends ArticleImportJobSnapshot {
+  jobId: string
+  /** Enqueue time as epoch millis; 0 if the property is somehow missing. */
+  createdAtMs: number
+  /** When `status` last changed, as epoch millis; 0 when missing. */
+  statusUpdatedAtMs: number
+}
+
+/**
+ * The requester's own import jobs for one FieldContext, newest first — the
+ * server-driven discovery path behind the field-context status surface
+ * (GOAL-336), so a member no longer needs the sessionStorage job id to find
+ * their way back to a queued import or its receipt.
+ *
+ * Scoped exactly like `readArticleImportJobForRequester` below: only jobs with
+ * a `REQUESTED_BY` edge to this user are visible, so a WeSpace peer's imports
+ * are indistinguishable from no imports at all. A missing, soft-deleted
+ * (GOAL-319), or not-yours context all return the same empty list.
+ *
+ * Anchored on the FieldContext unique-id index, NOT the status index the drain
+ * scan needs (`findPendingArticleImportJobIds`): this read is bounded by one
+ * field's own jobs, so the seek-then-expand shape is the cheap one here.
+ */
+export async function listArticleImportJobsForRequester(
+  driver: Driver,
+  fieldContextId: string,
+  userId: string,
+  limit = MAX_LISTED_ARTICLE_IMPORT_JOBS
+): Promise<ArticleImportJobListEntry[]> {
+  const session = driver.session()
+  try {
+    const result = await session.executeRead(async (tx) =>
+      tx.run(
+        `
+        MATCH (c:FieldContext {id: $fieldContextId})-[:HAS_IMPORT_JOB]->(j:ArticleImportJob)
+        WHERE c.deletedAt IS NULL
+          // EXISTS rather than a pattern MATCH, so a job with duplicate
+          // REQUESTED_BY edges yields one row instead of two (the same
+          // dedup reasoning as findPendingArticleImportJobIds). It does NOT
+          // cover a duplicate HAS_IMPORT_JOB edge — that one sits in the
+          // MATCH — which is what the DISTINCT below is for.
+          AND EXISTS { (j)-[:REQUESTED_BY]->(:Person {id: $userId}) }
+        WITH DISTINCT j
+        RETURN j.id AS jobId,
+               j.status AS status,
+               j.statusMessage AS statusMessage,
+               j.totalRows AS totalRows,
+               coalesce(j.rowOutcomes, []) AS rowOutcomes,
+               j.createdAt.epochMillis AS createdAtMs,
+               j.statusUpdatedAt.epochMillis AS statusUpdatedAtMs
+        // coalesce: null sorts LARGEST in Neo4j, so a corrupt job with no
+        // createdAt would otherwise pin to the top as "newest". Sink it.
+        ORDER BY coalesce(j.createdAt, datetime({epochMillis: 0})) DESC
+        LIMIT toInteger($limit)
+        `,
+        { fieldContextId, userId, limit }
+      )
+    )
+    return result.records.map((record) => ({
+      jobId: record.get('jobId') as string,
+      status: (record.get('status') as ArticleImportStatus) ??
+        ARTICLE_IMPORT_STATUS.pending,
+      statusMessage: (record.get('statusMessage') as string | null) ?? null,
+      totalRows: Number(record.get('totalRows') ?? 0),
+      outcomes: parseOutcomes(record.get('rowOutcomes')),
+      createdAtMs: Number(record.get('createdAtMs') ?? 0),
+      statusUpdatedAtMs: Number(record.get('statusUpdatedAtMs') ?? 0),
+    }))
   } finally {
     await session.close()
   }

@@ -8,12 +8,16 @@ import { loadEditableContext } from '@/lib/imports/article-import-service'
 import {
   IMPORT_FORBIDDEN_MESSAGE,
   createArticleImportJob,
+  listArticleImportJobsForRequester,
 } from '@/lib/imports/article-import-queue'
 import {
   ARTICLE_EMAIL_SHAPE,
   ARTICLE_FIELD_LIMITS,
   ARTICLE_IMPORT_STATUS,
   MAX_ARTICLE_IMPORT_ROWS,
+  buildArticleImportMessage,
+  summarizeArticleOutcomes,
+  type ArticleImportJobListItem,
 } from '@/lib/imports/article-import'
 
 /**
@@ -68,6 +72,71 @@ const articleImportSchema = z.object({
       `A single import is capped at ${MAX_ARTICLE_IMPORT_ROWS} rows — split larger sheets into batches.`
     ),
 })
+
+/**
+ * GOAL-336 — the requester's own import jobs for one FieldContext.
+ *
+ *   GET /api/import/articles?fieldContextId=<id>
+ *   → 200 { jobs: ArticleImportJobListItem[] }   (newest first)
+ *
+ * The field-context page renders this as the durable status surface: closing
+ * the import modal, a new tab, or another device can all rediscover a queued
+ * import and its receipt without the sessionStorage job id (which stays as an
+ * accelerator only). Summaries only — the full per-row receipt is fetched per
+ * job from `GET /api/import/articles/<jobId>`, keeping this poll cheap.
+ *
+ * Scoped to the requester alone via the `REQUESTED_BY` edge, exactly like the
+ * jobId route: a WeSpace member who did not queue an import sees an empty
+ * list, and a missing, soft-deleted, or not-visible context answers
+ * identically — the response cannot be used to probe other people's Spaces.
+ */
+export async function GET(req: Request) {
+  const currentUserId = resolveAuthenticatedUserId(req)
+  if (!currentUserId) {
+    return Response.json({ error: 'Authentication required' }, { status: 401 })
+  }
+
+  const fieldContextId = new URL(req.url).searchParams
+    .get('fieldContextId')
+    ?.trim()
+  if (!fieldContextId) {
+    return Response.json(
+      { error: 'fieldContextId is required.' },
+      { status: 400 }
+    )
+  }
+
+  const entries = await listArticleImportJobsForRequester(
+    driver,
+    fieldContextId,
+    currentUserId
+  )
+  const jobs: ArticleImportJobListItem[] = entries.map((entry) => {
+    const summary = summarizeArticleOutcomes(entry.outcomes, entry.totalRows)
+    return {
+      jobId: entry.jobId,
+      status: entry.status,
+      statusMessage: entry.statusMessage,
+      processedRows: entry.outcomes.length,
+      // Same batch semantics as the jobId route: true only once the job
+      // finished AND every row landed.
+      success:
+        entry.status === ARTICLE_IMPORT_STATUS.complete &&
+        summary.failed === 0,
+      message: buildArticleImportMessage(summary),
+      summary,
+      createdAtMs: entry.createdAtMs,
+      statusUpdatedAtMs: entry.statusUpdatedAtMs,
+    }
+  })
+
+  // Per-user authenticated payload — never let a shared cache hold it,
+  // matching the jobId route.
+  return Response.json(
+    { jobs },
+    { headers: { 'Cache-Control': 'private, no-store' } }
+  )
+}
 
 export async function POST(req: Request) {
   const currentUserId = resolveAuthenticatedUserId(req)

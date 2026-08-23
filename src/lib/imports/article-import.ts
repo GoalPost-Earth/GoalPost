@@ -126,6 +126,39 @@ export interface ArticleImportJobStatus {
   outcomes: ArticleRowOutcome[]
 }
 
+/**
+ * How long a finished job survives (`purgeFinishedArticleImportJobs`). Lives
+ * here rather than in `article-import-queue.ts` because the client renders it
+ * in the status section's retention copy (GOAL-336), and this module is the
+ * deliberately dependency-free half the client may bundle.
+ */
+export const FINISHED_JOB_RETENTION_DAYS = 30
+
+/**
+ * One job in `GET /api/import/articles?fieldContextId=...` (GOAL-336) — the
+ * summary-only shape the field-context page lists. Deliberately carries no
+ * `outcomes`: the list is polled while imports run, and the full receipt is
+ * fetched per job from `GET /api/import/articles/<jobId>` once someone opens
+ * it (the same payload discipline that route applies while a job is in
+ * flight).
+ */
+export interface ArticleImportJobListItem {
+  jobId: string
+  status: ArticleImportStatus
+  /** Member-safe copy when `status` is FAILED; null in every other state. */
+  statusMessage: string | null
+  /** Rows the worker has landed an outcome for — drives the progress meter. */
+  processedRows: number
+  /** True only once the job finished AND every row landed. */
+  success: boolean
+  message: string
+  summary: ArticleImportSummary
+  /** Enqueue time as epoch millis — the client renders relative time from it. */
+  createdAtMs: number
+  /** When the status last changed (epoch millis) — a finished job's "when". */
+  statusUpdatedAtMs: number
+}
+
 export function isArticleImportInFlight(status: ArticleImportStatus): boolean {
   return (
     status === ARTICLE_IMPORT_STATUS.pending ||

@@ -16,6 +16,7 @@ import {
   countInFlightArticleImportsForUser,
   createArticleImportJob,
   findPendingArticleImportJobIds,
+  listArticleImportJobsForRequester,
   loadArticleImportJob,
   markArticleImportJobComplete,
   markArticleImportJobFailed,
@@ -779,5 +780,104 @@ describe('readArticleImportJobForRequester', () => {
     ).resolves.toBeNull()
 
     await deleteJobs([jobId])
+  })
+})
+
+describe('listArticleImportJobsForRequester', () => {
+  it('lists only the requester’s jobs for the field, newest first', async () => {
+    if (!neo4jReady()) return
+    const older = await createJob({ key: 'list_old', createdMinutesAgo: 30 })
+    const newer = await createJob({ key: 'list_new', createdMinutesAgo: 1 })
+    // Another member's job in the SAME field must be invisible — requester
+    // scoping is the security boundary, not Space membership.
+    const someoneElses = await createJob({
+      key: 'list_other',
+      requesterUserId: ids.otherUser,
+    })
+
+    // Give the newer job an outcome so the entry proves outcomes come back
+    // parsed (the route derives every summary count from them).
+    const workerRunId = `${prefix}worker_list`
+    await claimArticleImportJob(driver, newer, workerRunId)
+    await appendArticleImportRowOutcome(driver, {
+      jobId: newer,
+      workerRunId,
+      outcome: makeOutcome(2),
+    })
+
+    const listed = await listArticleImportJobsForRequester(
+      driver,
+      ids.fieldContext,
+      ids.user
+    )
+    const mine = listed.filter((entry) => entry.jobId.startsWith(prefix))
+
+    expect(mine.map((entry) => entry.jobId)).toEqual([newer, older])
+    expect(mine.map((entry) => entry.jobId)).not.toContain(someoneElses)
+    expect(mine[0]).toMatchObject({
+      status: ARTICLE_IMPORT_STATUS.processing,
+      totalRows: 2,
+    })
+    expect(mine[0].outcomes).toHaveLength(1)
+    expect(mine[0].outcomes[0]).toMatchObject({ row: 2, status: 'created' })
+    expect(mine[0].createdAtMs).toBeGreaterThan(0)
+    expect(mine[0].statusUpdatedAtMs).toBeGreaterThan(0)
+
+    // The other member sees exactly their own job — and nothing of ids.user's.
+    const theirs = await listArticleImportJobsForRequester(
+      driver,
+      ids.fieldContext,
+      ids.otherUser
+    )
+    expect(
+      theirs
+        .filter((entry) => entry.jobId.startsWith(prefix))
+        .map((entry) => entry.jobId)
+    ).toEqual([someoneElses])
+
+    await deleteJobs([older, newer, someoneElses])
+  })
+
+  it('answers a soft-deleted context with the same empty list as a missing one', async () => {
+    if (!neo4jReady()) return
+    const hidden = await createJob({
+      key: 'list_deleted_ctx',
+      fieldContextId: ids.deletedFieldContext,
+    })
+
+    await expect(
+      listArticleImportJobsForRequester(
+        driver,
+        ids.deletedFieldContext,
+        ids.user
+      )
+    ).resolves.toEqual([])
+    await expect(
+      listArticleImportJobsForRequester(
+        driver,
+        `${prefix}ctx_never_existed`,
+        ids.user
+      )
+    ).resolves.toEqual([])
+
+    await deleteJobs([hidden])
+  })
+
+  it('caps the list at the requested limit, keeping the newest', async () => {
+    if (!neo4jReady()) return
+    const oldest = await createJob({ key: 'list_cap_a', createdMinutesAgo: 20 })
+    const middle = await createJob({ key: 'list_cap_b', createdMinutesAgo: 10 })
+    const newest = await createJob({ key: 'list_cap_c', createdMinutesAgo: 1 })
+
+    const listed = await listArticleImportJobsForRequester(
+      driver,
+      ids.fieldContext,
+      ids.user,
+      2
+    )
+
+    expect(listed.map((entry) => entry.jobId)).toEqual([newest, middle])
+
+    await deleteJobs([oldest, middle, newest])
   })
 })
