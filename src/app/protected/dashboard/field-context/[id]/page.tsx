@@ -78,6 +78,7 @@ import {
 } from '@/contexts'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { FieldContextSections } from '@/components/fields/field-context-sections'
+import { ArticleImportStatusSection } from '@/components/fields/article-import-status-section'
 import {
   DocumentList,
   type DocumentRecord,
@@ -160,6 +161,10 @@ export default function FieldContextDetailsPage() {
   const [isUploadingDocument, setIsUploadingDocument] = useState(false)
   const [isImportArticlesModalOpen, setIsImportArticlesModalOpen] =
     useState(false)
+  // Bumped when the import modal closes or reports landed rows, so the
+  // GOAL-336 status section refetches its job list immediately instead of
+  // waiting for its own poll.
+  const [importStatusVersion, setImportStatusVersion] = useState(0)
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
   const [selectedPerson, setSelectedPerson] = useState<{
     id: string
@@ -1507,6 +1512,18 @@ export default function FieldContextDetailsPage() {
             onRefetch={refetchDocuments}
           />
 
+          {/* GOAL-336 — server-driven import status. Renders nothing unless
+              this member has queued imports for this field, so it costs no
+              space for everyone else. */}
+          <ArticleImportStatusSection
+            fieldContextId={contextId}
+            refreshKey={importStatusVersion}
+            onRowsLanded={() => {
+              void refetch()
+              void refetchFieldPeople()
+            }}
+          />
+
           <FieldContextSections
             createdDate={createdDate}
             pulses={pulses}
@@ -1772,12 +1789,18 @@ export default function FieldContextDetailsPage() {
         <ImportArticlesModal
           isOpen
           fieldContextId={contextId}
-          onClose={() => setIsImportArticlesModalOpen(false)}
+          onClose={() => {
+            setIsImportArticlesModalOpen(false)
+            // A just-queued job should appear in the status section the
+            // moment the modal hides, not a poll later.
+            setImportStatusVersion((version) => version + 1)
+          }}
           onImported={() => {
             // Imported pulses land in the Pulses section; new/matched authors
             // land in the People section.
             void refetch()
             void refetchFieldPeople()
+            setImportStatusVersion((version) => version + 1)
           }}
         />
       )}
