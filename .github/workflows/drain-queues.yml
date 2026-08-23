@@ -1,0 +1,129 @@
+name: Drain queues (dev + demo)
+
+# Vercel Cron only ever fires against a project's PRODUCTION deployment. The
+# `goal-post` Vercel project (prj_dLPYsunfwb8rZsbiCERLS6pqvpIS) is a single
+# project whose production target is `main` -> goalpost.earth, so the `crons`
+# block in vercel.json never reaches dev.goalpost.earth or demo.goalpost.earth.
+# Without an external scheduler the GOAL-292 (document ingest) and GOAL-326
+# (bulk article import) queues sit at PENDING forever on those environments:
+# the enqueue returns 202, the UI polls, and nothing ever drains it.
+#
+# This workflow is that scheduler. It is a *replacement for cron on
+# non-production targets only* — production is still driven by vercel.json and
+# must not be added here, or every job would be claimed twice.
+#
+# ⚠️  A `schedule:` trigger only ever fires from the repository's DEFAULT branch
+#     (main). Editing this file on `dev` changes nothing until it is merged.
+# ⚠️  GitHub disables scheduled workflows on repos with 60 days of no activity.
+
+on:
+  schedule:
+    # Every 5 minutes — GitHub's minimum. Scheduled runs are best-effort and are
+    # routinely delayed under load, so treat this as "within ~10 minutes", not a
+    # hard tick. Vercel's own crons run these same routes every minute in prod.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which environment to drain
+        type: choice
+        default: all
+        options: [all, dev, demo]
+
+# Both workers are safe against overlapping invocation by design (conditional
+# claim behind a lock-forcing write), so an overlap is correct — just wasteful.
+# Queue rather than cancel: cancelling mid-run would strand a live claim on the
+# 15-minute stalled-reclaim path instead of letting it finish.
+concurrency:
+  group: drain-queues
+  cancel-in-progress: false
+
+# No checkout, no repo writes — this workflow only makes outbound HTTP calls.
+permissions: {}
+
+jobs:
+  drain:
+    runs-on: ubuntu-latest
+    # Worst case is 4 calls x the routes' 300s maxDuration = 20 min.
+    timeout-minutes: 25
+    steps:
+      - name: Drain document-ingest and article-import queues
+        env:
+          DEV_CRON_SECRET: ${{ secrets.DEV_CRON_SECRET }}
+          DEMO_CRON_SECRET: ${{ secrets.DEMO_CRON_SECRET }}
+          TARGET: ${{ github.event.inputs.target || 'all' }}
+        run: |
+          set -uo pipefail
+
+          attempted=0
+          failures=0
+          body="$RUNNER_TEMP/drain-response.json"
+
+          drain() {
+            name="$1"; base="$2"; secret="$3"
+            upper=$(printf '%s' "$name" | tr '[:lower:]' '[:upper:]')
+
+            if [ -z "$secret" ]; then
+              echo "::warning title=Skipped ${name}::No ${upper}_CRON_SECRET repository secret is set — ${name} was not drained."
+              return 0
+            fi
+
+            for path in /api/cron/process-document-ingestion \
+                        /api/cron/process-article-imports; do
+              attempted=$((attempted + 1))
+              echo "--> [${name}] ${path}"
+
+              # --max-time matches the routes' `export const maxDuration = 300`.
+              # The worker runs for the life of the request, so hanging up early
+              # would truncate a legitimate drain mid-document. No --retry: a
+              # retried 300s call would blow the job timeout, and the next tick
+              # is only 5 minutes away anyway.
+              code=$(curl -sS -o "$body" -w '%{http_code}' \
+                       --max-time 300 \
+                       -H "Authorization: Bearer ${secret}" \
+                       "${base}${path}") || code="000"
+
+              snippet=$(head -c 400 "$body" 2>/dev/null | tr -d '\r\n')
+
+              case "$code" in
+                200)
+                  echo "    ok — ${snippet}"
+                  echo "| ${name} | \`${path##*/}\` | ✅ ${code} |" >> "$GITHUB_STEP_SUMMARY"
+                  ;;
+                401)
+                  failures=$((failures + 1))
+                  echo "::error title=${name} ${path} rejected::HTTP 401. The ${upper}_CRON_SECRET secret does not match CRON_SECRET in the ${name} Vercel environment (or CRON_SECRET is unset there — these routes are fail-CLOSED)."
+                  echo "| ${name} | \`${path##*/}\` | ❌ 401 auth |" >> "$GITHUB_STEP_SUMMARY"
+                  ;;
+                000)
+                  failures=$((failures + 1))
+                  echo "::error title=${name} ${path} unreachable::curl failed or timed out after 300s."
+                  echo "| ${name} | \`${path##*/}\` | ❌ timeout |" >> "$GITHUB_STEP_SUMMARY"
+                  ;;
+                *)
+                  failures=$((failures + 1))
+                  echo "::error title=${name} ${path} failed::HTTP ${code} — ${snippet}"
+                  echo "| ${name} | \`${path##*/}\` | ❌ ${code} |" >> "$GITHUB_STEP_SUMMARY"
+                  ;;
+              esac
+            done
+          }
+
+          printf '| Environment | Worker | Result |\n|---|---|---|\n' >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$TARGET" = "all" ] || [ "$TARGET" = "dev" ]; then
+            drain dev https://dev.goalpost.earth "$DEV_CRON_SECRET"
+          fi
+          if [ "$TARGET" = "all" ] || [ "$TARGET" = "demo" ]; then
+            drain demo https://demo.goalpost.earth "$DEMO_CRON_SECRET"
+          fi
+
+          if [ "$attempted" -eq 0 ]; then
+            echo "::error title=Nothing drained::No target environment had a CRON_SECRET secret configured."
+            exit 1
+          fi
+          if [ "$failures" -gt 0 ]; then
+            echo "${failures} of ${attempted} drain call(s) failed."
+            exit 1
+          fi
+          echo "All ${attempted} drain call(s) succeeded."
