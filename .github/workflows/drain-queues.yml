@@ -44,8 +44,8 @@ permissions: {}
 jobs:
   drain:
     runs-on: ubuntu-latest
-    # Worst case is 4 calls x the routes' 300s maxDuration = 20 min.
-    timeout-minutes: 25
+    # Worst case is 4 calls x the 320s curl ceiling = ~21.5 min.
+    timeout-minutes: 30
     steps:
       - name: Drain document-ingest and article-import queues
         env:
@@ -54,6 +54,11 @@ jobs:
           TARGET: ${{ github.event.inputs.target || 'all' }}
         run: |
           set -uo pipefail
+          # GitHub runs `run:` steps as `bash -e {0}` — errexit is ALREADY on and
+          # `set -uo pipefail` does not clear it. With pipefail, a non-zero curl or
+          # a failing `head` pipeline would abort the whole step before it could
+          # classify the result, and every later endpoint would go uncalled.
+          set +e
 
           attempted=0
           failures=0
@@ -73,22 +78,34 @@ jobs:
               attempted=$((attempted + 1))
               echo "--> [${name}] ${path}"
 
-              # --max-time matches the routes' `export const maxDuration = 300`.
-              # The worker runs for the life of the request, so hanging up early
-              # would truncate a legitimate drain mid-document. No --retry: a
-              # retried 300s call would blow the job timeout, and the next tick
+              # Slightly ABOVE the routes' `maxDuration = 300` so we RECEIVE the worker's
+              # 504 and can classify it, instead of curl giving up at the same instant
+              # and reporting a bare timeout with no information. No --retry: a
+              # retried 320s call would blow the job timeout, and the next tick
               # is only 5 minutes away anyway.
               code=$(curl -sS -o "$body" -w '%{http_code}' \
-                       --max-time 300 \
+                       --max-time 320 \
                        -H "Authorization: Bearer ${secret}" \
                        "${base}${path}") || code="000"
 
-              snippet=$(head -c 400 "$body" 2>/dev/null | tr -d '\r\n')
+              snippet=$(head -c 400 "$body" 2>/dev/null | tr -d '\r\n') || snippet=''
 
               case "$code" in
                 200)
                   echo "    ok — ${snippet}"
                   echo "| ${name} | \`${path##*/}\` | ✅ ${code} |" >> "$GITHUB_STEP_SUMMARY"
+                  ;;
+                504)
+                  # The worker authenticated and ran, but hit Vercel's 300s
+                  # function ceiling mid-sweep. Anything already marked terminal
+                  # is durable; stalled claims are reclaimed after 15 minutes and
+                  # the next tick resumes from the cursor. Expected while draining
+                  # a backlog for the first time, so this warns rather than fails
+                  # — but it stays visible, because a worker that 504s forever is
+                  # not making progress and should be looked at.
+                  echo "    ceiling — worker ran, hit the 300s limit, resumes next tick"
+                  echo "::warning title=${name} ${path} hit the function ceiling::HTTP 504 after 300s. Work was done and committed; the remainder resumes on the next tick. Persistent 504s mean the backlog is not shrinking."
+                  echo "| ${name} | \`${path##*/}\` | ⏱ 504 ceiling |" >> "$GITHUB_STEP_SUMMARY"
                   ;;
                 401)
                   failures=$((failures + 1))
@@ -97,7 +114,7 @@ jobs:
                   ;;
                 000)
                   failures=$((failures + 1))
-                  echo "::error title=${name} ${path} unreachable::curl failed or timed out after 300s."
+                  echo "::error title=${name} ${path} unreachable::curl failed or timed out after 320s with no response at all."
                   echo "| ${name} | \`${path##*/}\` | ❌ timeout |" >> "$GITHUB_STEP_SUMMARY"
                   ;;
                 *)
