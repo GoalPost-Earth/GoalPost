@@ -96,9 +96,12 @@ export function SpaceFieldModals({
       if (createdField?.id) {
         router.push(`/protected/dashboard/field-context/${createdField.id}`)
       }
+      return true
     } catch (err) {
       console.error('Error creating field:', err)
       toast.error('Failed to create field context')
+      // `false` tells the modal to keep the typed draft for retry.
+      return false
     } finally {
       setIsCreating(false)
     }
