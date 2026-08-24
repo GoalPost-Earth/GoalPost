@@ -15,6 +15,11 @@ name: Drain queues (dev + demo)
 # ⚠️  A `schedule:` trigger only ever fires from the repository's DEFAULT branch
 #     (main). Editing this file on `dev` changes nothing until it is merged.
 # ⚠️  GitHub disables scheduled workflows on repos with 60 days of no activity.
+# ⚠️  GitHub schedule ticks are best-effort and in practice land 19–94 minutes
+#     apart on this repo (measured 2026-08-24), so this workflow is NOT the
+#     latency path. The enqueue routes kick their worker directly at enqueue
+#     time (`src/lib/jobs/kick-queue-worker.ts`); this sweep is the backstop
+#     that retries failures and reclaims stalled claims.
 
 on:
   schedule:

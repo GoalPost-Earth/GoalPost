@@ -2,6 +2,7 @@ import { driver } from '@/lib/neo4j/driver'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import { enqueueDocumentIngest } from '@/lib/ingest/handle-ingest-document'
 import { DOCUMENT_INGEST_STATUS } from '@/lib/ingest/document-ingest-queue'
+import { kickQueueWorker } from '@/lib/jobs/kick-queue-worker'
 
 /**
  * Step 2 of the direct-to-S3 upload flow.
@@ -112,6 +113,11 @@ export async function POST(req: Request) {
       { status }
     )
   }
+
+  // The document is durable in the queue either way; the kick starts a worker
+  // sweep as soon as the 202 is on the wire instead of waiting for a
+  // scheduler tick, which on dev/demo can be the better part of an hour away.
+  kickQueueWorker(req, 'document-ingest')
 
   // 202 Accepted: the document is anchored and queued, nothing has been
   // extracted yet. The client polls `Document.status` (PENDING → PROCESSING →

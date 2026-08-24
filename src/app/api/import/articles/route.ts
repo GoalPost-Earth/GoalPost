@@ -10,6 +10,7 @@ import {
   createArticleImportJob,
   listArticleImportJobsForRequester,
 } from '@/lib/imports/article-import-queue'
+import { kickQueueWorker } from '@/lib/jobs/kick-queue-worker'
 import {
   ARTICLE_EMAIL_SHAPE,
   ARTICLE_FIELD_LIMITS,
@@ -211,6 +212,11 @@ export async function POST(req: Request) {
       { status: 429 }
     )
   }
+
+  // The batch is durable in the queue either way; the kick starts a worker
+  // sweep as soon as the 202 is on the wire instead of waiting for a
+  // scheduler tick, which on dev/demo can be the better part of an hour away.
+  kickQueueWorker(req, 'article-imports')
 
   // 202 Accepted: the batch is queued, nothing has been written into the field
   // yet. The client polls the job for progress rather than waiting here.
