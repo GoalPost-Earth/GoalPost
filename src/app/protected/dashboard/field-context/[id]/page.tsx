@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { useQuery, useMutation } from '@apollo/client/react'
+import { useApolloClient, useQuery, useMutation } from '@apollo/client/react'
 import { useEffect, useState, useMemo, type FC } from 'react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
@@ -85,8 +85,7 @@ import {
 } from '@/components/fields/document-list'
 import { SubContextsSection } from '@/components/fields/sub-contexts-section'
 import { MoveFieldModal } from '@/components/fields/move-field-modal'
-import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
-import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
+import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
 import {
   onOpenAddPulseModal,
   onOpenImportArticlesModal,
@@ -157,6 +156,12 @@ export default function FieldContextDetailsPage() {
     useState(false)
   const [isUploadDocumentModalOpen, setIsUploadDocumentModalOpen] =
     useState(false)
+  // Bumped on every open so the modal remounts with clean state (GOAL-337).
+  // The shared upload flow releases the modal at the 202 while its ingest
+  // watch keeps the `onSubmit` promise pending for minutes, so the modal's
+  // own post-await reset can land long after — or into — the next upload.
+  // Mirrors the studio action bar's `uploadSessionKey`.
+  const [uploadSessionKey, setUploadSessionKey] = useState(0)
   const [isMoveFieldModalOpen, setIsMoveFieldModalOpen] = useState(false)
   const [isUploadingDocument, setIsUploadingDocument] = useState(false)
   const [isImportArticlesModalOpen, setIsImportArticlesModalOpen] =
@@ -225,6 +230,10 @@ export default function FieldContextDetailsPage() {
       skip: !contextId,
     }
   )
+
+  // For the shared document-upload flow (GOAL-337), whose refetches and
+  // ingest watch run against the client directly rather than a single query.
+  const apolloClient = useApolloClient()
   const documents = useMemo<DocumentRecord[]>(() => {
     const raw = (
       documentsData as
@@ -1053,77 +1062,20 @@ export default function FieldContextDetailsPage() {
   const handleUploadDocument = async (input: UploadDocumentSubmitInput) => {
     setIsUploadingDocument(true)
     try {
-      const authHeaders = await chatApiAuthHeaders()
-      // Step 1: presign PUT URL.
-      const presignRes = await fetch('/api/ingest/document/presign', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          fieldContextId: contextId,
-          filename: input.filename,
-          mimeType: input.mimeType,
-          sizeBytes: input.file.size,
-        }),
+      // Shared with the studio action-bar entry point (GOAL-337): presign →
+      // S3 PUT → enqueue, then follow the ingest to a terminal status with an
+      // evolving toast and open the ingest thread when it lands. The flow
+      // settles its own toasts (including errors) and rethrows, so the
+      // modal's catch renders the same message inline; this page's active
+      // documents/details/people queries are refreshed by its refetches.
+      await runDocumentUploadFlow(apolloClient, {
+        fieldContextId: contextId,
+        input,
+        onQueued: () => {
+          setIsUploadDocumentModalOpen(false)
+          setIsUploadingDocument(false)
+        },
       })
-      if (!presignRes.ok) {
-        const errorBody = await presignRes.json().catch(() => ({}))
-        throw new Error(errorBody.error ?? `Presign failed (${presignRes.status})`)
-      }
-      const presign = (await presignRes.json()) as {
-        documentId: string
-        blobKey: string
-        uploadUrl: string
-        contentType: string
-      }
-
-      // Step 2: PUT the file straight to S3.
-      const putRes = await fetch(presign.uploadUrl, {
-        method: 'PUT',
-        body: input.file,
-        headers: { 'Content-Type': presign.contentType },
-      })
-      if (!putRes.ok) {
-        throw new Error(`Upload to storage failed (${putRes.status}).`)
-      }
-
-      // Step 3: trigger extraction.
-      const processRes = await fetch('/api/ingest/document/process', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          documentId: presign.documentId,
-          blobKey: presign.blobKey,
-          fieldContextId: contextId,
-          filename: input.filename,
-          mimeType: input.mimeType,
-          sizeBytes: input.file.size,
-          hint: input.hint ?? null,
-        }),
-      })
-      if (!processRes.ok) {
-        const errorBody = await processRes.json().catch(() => ({}))
-        throw new Error(errorBody.error ?? `Extraction failed (${processRes.status})`)
-      }
-      const processResult = (await processRes.json()) as {
-        threadId?: string
-      }
-
-      // Slice 5 (GOAL-240) — fire-and-forget signal so the assistant panel
-      // auto-switches to the freshly created ingest thread. The studio shell
-      // listens for the same event to open the panel if it's currently closed.
-      if (processResult.threadId) emitOpenAssistantThread(processResult.threadId)
-      toast.success(
-        'Document uploaded. Review the extracted entities in the assistant.'
-      )
-      setIsUploadDocumentModalOpen(false)
-      await refetchDocuments()
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Upload failed'
-      toast.error(message)
-      throw error
     } finally {
       setIsUploadingDocument(false)
     }
@@ -1547,7 +1499,10 @@ export default function FieldContextDetailsPage() {
             }}
             onUploadDocument={
               canEditContent
-                ? () => setIsUploadDocumentModalOpen(true)
+                ? () => {
+                    setUploadSessionKey((key) => key + 1)
+                    setIsUploadDocumentModalOpen(true)
+                  }
                 : undefined
             }
             onImportArticles={
@@ -1768,6 +1723,7 @@ export default function FieldContextDetailsPage() {
       />
 
       <UploadDocumentModal
+        key={uploadSessionKey}
         isOpen={isUploadDocumentModalOpen}
         isSubmitting={isUploadingDocument}
         onClose={() => setIsUploadDocumentModalOpen(false)}

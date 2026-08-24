@@ -187,14 +187,22 @@ WF-11: Bulk Article Import               (User uploads a spreadsheet; a worker m
 See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage + `EXTRACTED_FROM` edges) in `kb/06-adr.md` for rationale.
 
 1. User picks a `.txt` / `.md` / `.pdf` from the studio with a
-   FieldContext focused — via the **bottom floating canvas action bar** →
-   the **Upload** dropdown → **Upload document**
-   (`field-context-upload-action.tsx`). Upload is *not* in the FieldContext
-   page header; it shares that one dropdown with **Import articles** (WF-11).
-   The browser POSTs to
+   FieldContext focused. **Two entry points open the same modal**, both
+   gated on `canEditContent`:
+   - The **bottom floating canvas action bar** → the **Upload** dropdown →
+     **Upload document** (`field-context-upload-action.tsx`). This is the
+     primary one; it shares that dropdown with **Import articles** (WF-11).
+     Upload is *not* in the FieldContext page header.
+   - The Pulses section's **empty-state secondary CTA** ("Upload a
+     document", `pulses-section.tsx`) on the FieldContext page — shown only
+     while the field has no pulses.
+
+   Both converge on one client flow
+   (`src/lib/ingest/upload-document-flow.ts`, GOAL-337 — the page briefly
+   carried a drifted pre-GOAL-292 copy): POST
    `/api/ingest/document/presign` to get a short-lived presigned PUT URL,
-   then uploads the file **directly to S3** (bytes never traverse our
-   server). It then POSTs `/api/ingest/document/process` to **enqueue**
+   then upload the file **directly to S3** (bytes never traverse our
+   server), then POST `/api/ingest/document/process` to **enqueue**
    extraction. (The legacy GraphQL `uploadDocument` mutation has been
    removed — see ADR-015.)
 2. The process endpoint gates on `canEditContent`, anchors a Document
@@ -211,10 +219,18 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    `statusMessage`. A claim stranded by a killed worker is reclaimed after
    15 minutes and abandoned to `FAILED` after 3 attempts, so nothing spins
    forever. Status lifecycle: `kb/04-state-machines.md`.
-   The upload UI polls `Document.status` and shows Queued / Extracting /
-   Failed on the document row rather than blocking on the response.
-   This replaced the original synchronous orchestrator, which held the
-   whole LLM pipeline inside the request and was the source of every
+   Instead of blocking on the response, the upload flow follows the ingest
+   client-side (`src/lib/ingest/watch-document-ingest.ts`): a narrow
+   `Document.status` projection is polled every 3s for up to 8 minutes,
+   driving one evolving toast (uploaded → extracting → entity counts on
+   COMPLETE, member-safe `statusMessage` on FAILED) and opening the ingest
+   thread when the run lands. The Queued / Extracting / Failed chip on the
+   document row advances during the watch because both queries normalise
+   onto the same Apollo `Document:<id>` cache entry. There is **no standing
+   poll outside an active upload** — after a page reload mid-ingest, the
+   chip shows the status as of the last fetch and updates on the next
+   refetch. This replaced the original synchronous orchestrator, which held
+   the whole LLM pipeline inside the request and was the source of every
    observed 504 (`maxDuration = 300` was the stopgap).
 3. A dedicated extraction model (independent of the chat assistant; may
    be reasoning — `kb/07-ai-assistant-ux.md` Rule 6) reads the document

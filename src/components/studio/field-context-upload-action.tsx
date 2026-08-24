@@ -15,14 +15,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { GET_DOCUMENTS_BY_FIELD_CONTEXT } from '@/app/graphql/queries/DOCUMENT_QUERIES'
-import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
-import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { useFieldContextCanEditContent } from '@/hooks/use-field-context-permissions'
-import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { emitOpenImportArticlesModal } from '@/lib/simulation/pulse-creation-events'
-import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
-import { watchDocumentIngest } from '@/lib/ingest/watch-document-ingest'
+import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
 
 /**
  * Studio-shell entry point for getting source material into a FieldContext.
@@ -45,9 +40,10 @@ import { watchDocumentIngest } from '@/lib/ingest/watch-document-ingest'
  * dynamically so SheetJS stays out of the dashboard bundle for members who
  * never import); this component only emits the open request.
  *
- * On upload success, fires `emitOpenAssistantThread` with the returned ingest
- * thread id. `StudioShell` listens for this and switches the assistant
- * runtime to the new thread (opening the floating chat panel if needed).
+ * The upload flow itself (presign → S3 PUT → enqueue → ingest watch → toasts
+ * → open the ingest thread) lives in `@/lib/ingest/upload-document-flow`,
+ * shared with the Pulses-section empty-state entry point on the field-context
+ * page (GOAL-337) so the two paths cannot drift.
  */
 export const FieldContextUploadAction: FC = () => {
   const { focalEntity } = useFocalEntity()
@@ -92,181 +88,28 @@ export const FieldContextUploadAction: FC = () => {
       throw new Error('No pinned FieldContext')
     }
     // Capture it: the modal is released as soon as the upload is queued, which
-    // clears the pinned id while the ingest watch below is still running.
+    // clears the pinned id while the flow's ingest watch is still running.
     const pinnedContextId = pinnedFieldContextId
     setIsSubmitting(true)
-    // Declared outside the try so the catch can settle the same toast. Left
-    // inside, a throw after the watch started (a refetch rejecting on a network
-    // blip) would leave its spinner on screen forever beside a second, separate
-    // error toast.
-    let watchToastId: string | number | undefined
     try {
-      // Fresh bearer token — cookies alone are not enough; the server route
-      // honours Authorization first and a stale cookie will 401 where a
-      // refreshed bearer succeeds. Mirrors the chat-thread fetch helpers.
-      const authHeaders = await chatApiAuthHeaders()
-
-      // Step 1: ask the server for a presigned PUT URL.
-      const presignRes = await fetch('/api/ingest/document/presign', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          fieldContextId: pinnedContextId,
-          filename: input.filename,
-          mimeType: input.mimeType,
-          sizeBytes: input.file.size,
-        }),
-      })
-      if (!presignRes.ok) {
-        const errorBody = await presignRes.json().catch(() => ({}))
-        throw new Error(
-          errorBody.error ?? `Presign failed (${presignRes.status})`
-        )
-      }
-      const presign = (await presignRes.json()) as {
-        documentId: string
-        blobKey: string
-        uploadUrl: string
-        contentType: string
-      }
-
-      // Step 2: PUT the file straight to S3. The bytes never traverse our
-      // server. Content-Type MUST match the value used at presign time —
-      // S3 binds it into the signature.
-      //
-      // A non-ok response (4xx/5xx from S3) and a rejected fetch are two
-      // different failures. The PUT carries a non-simple Content-Type, so
-      // the browser issues a CORS preflight first; if the bucket lacks a
-      // CORS policy for this origin the preflight is blocked and fetch
-      // rejects with a bare `TypeError: Failed to fetch`. Translate that
-      // into something a user can act on instead of leaking it raw.
-      let putRes: Response
-      try {
-        putRes = await fetch(presign.uploadUrl, {
-          method: 'PUT',
-          body: input.file,
-          headers: { 'Content-Type': presign.contentType },
-        })
-      } catch {
-        throw new Error(
-          'Upload to storage failed — the storage bucket is unreachable or misconfigured. Please try again or contact support if it persists.'
-        )
-      }
-      if (!putRes.ok) {
-        throw new Error(`Upload to storage failed (${putRes.status}).`)
-      }
-
-      // Step 3: tell the server the file is in place. It anchors the Document
-      // as PENDING and answers 202 — extraction itself runs in the background
-      // worker (GOAL-292), so this returns in milliseconds instead of holding
-      // the request open through two LLM calls.
-      const processRes = await fetch('/api/ingest/document/process', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          // No documentId: the server derives it from the server-minted
-          // blobKey, which is what makes a retry idempotent.
-          blobKey: presign.blobKey,
-          fieldContextId: pinnedContextId,
-          filename: input.filename,
-          mimeType: input.mimeType,
-          sizeBytes: input.file.size,
-          hint: input.hint ?? null,
-        }),
-      })
-      if (!processRes.ok) {
-        const errorBody = await processRes.json().catch(() => ({}))
-        throw new Error(
-          errorBody.error ?? `Extraction failed (${processRes.status})`
-        )
-      }
-      const processResult = (await processRes.json()) as {
-        documentId?: string
-        status?: string
-      }
-
-      // The upload itself is done — the file is stored and queued. Release the
-      // modal now rather than holding the member on a spinner for the length of
-      // an LLM extraction they don't need to watch.
-      //
-      // `isSubmitting` must drop here too, not in the `finally`: the watch below
-      // runs for up to eight minutes, and the modal disables Cancel, disables
-      // Upload, and early-returns from its close handler while submitting. Left
-      // set, reopening the dialog to upload a second file would trap the member
-      // with no exit but a page reload — the opposite of what moving ingestion
-      // off the request path is for.
-      setPinnedFieldContextId(null)
-      setIsSubmitting(false)
-      // Show the document (as "Queued") on the page straight away.
-      await apolloClient.refetchQueries({
-        include: [GET_DOCUMENTS_BY_FIELD_CONTEXT],
-      })
-
-      if (!processResult.documentId) {
-        // Queued, but we can't follow it. The list still tracks it.
-        toast.success('Document uploaded. Extraction will start shortly.')
-        return
-      }
-
-      // Follow the document to a terminal status, keeping one toast updated in
-      // place so the member gets a single evolving line instead of a stack.
-      watchToastId = toast.loading(
-        'Document uploaded. Reading it and extracting entities…'
-      )
-      const outcome = await watchDocumentIngest(apolloClient, {
-        documentId: processResult.documentId,
+      // The flow settles its own toasts (including errors) and rethrows, so
+      // the modal's catch can render the same message inline.
+      await runDocumentUploadFlow(apolloClient, {
         fieldContextId: pinnedContextId,
+        input,
+        // The upload is durable in the queue — release the modal rather than
+        // holding the member on a spinner for the length of an LLM extraction
+        // they don't need to watch. `isSubmitting` must drop here too, not in
+        // the `finally`: the ingest watch runs for up to eight minutes, and
+        // the modal disables Cancel, disables Upload, and early-returns from
+        // its close handler while submitting. Left set, reopening the dialog
+        // to upload a second file would trap the member with no exit but a
+        // page reload.
+        onQueued: () => {
+          setPinnedFieldContextId(null)
+          setIsSubmitting(false)
+        },
       })
-
-      if (outcome.state === 'failed') {
-        toast.error(
-          outcome.message ??
-            'We could not read this document. Try re-extracting it from the document list.',
-          { id: watchToastId }
-        )
-        return
-      }
-      if (outcome.state === 'pending') {
-        // Not a failure — still queued or running. The status chip on the
-        // document list keeps tracking it from here.
-        toast.info(
-          'Still extracting — this document is taking a while. The document list will update when it finishes.',
-          { id: watchToastId }
-        )
-        return
-      }
-
-      // Refetch the field's pulse + people views so newly-extracted entities
-      // appear without a route change. (Documents were refetched by the watch.)
-      await apolloClient.refetchQueries({
-        include: [GET_FIELD_CONTEXT_DETAILS, GET_FIELD_CONTEXT_PEOPLE],
-      })
-      if (outcome.threadId) emitOpenAssistantThread(outcome.threadId)
-
-      const created = outcome.createdEntityCount
-      const failed = outcome.failedEntityCount
-      if (created === 0 && failed === 0) {
-        toast.success('Document processed. No entities were extracted.', {
-          id: watchToastId,
-        })
-      } else if (failed === 0) {
-        toast.success(
-          `Document processed. Created ${created} ${created === 1 ? 'entity' : 'entities'} from it.`,
-          { id: watchToastId }
-        )
-      } else {
-        toast.success(
-          `Document processed. Created ${created} of ${created + failed} proposed entities; see the ingest thread for failures.`,
-          { id: watchToastId }
-        )
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Upload failed'
-      // Replace the watch toast when one is showing, rather than stacking.
-      toast.error(message, watchToastId ? { id: watchToastId } : undefined)
-      throw error
     } finally {
       setIsSubmitting(false)
     }
