@@ -28,9 +28,9 @@ interface SubContextsSectionProps {
 }
 
 /**
- * "Sub-fields" section on the field-context detail page (GOAL-295).
+ * "Nested fields" section on the field-context detail page (GOAL-295).
  * Lists the direct nested sub-contexts as drill-down rows and offers a
- * "New sub-field" dialog. The create mutation is the custom
+ * "New nested field" dialog. The create mutation is the custom
  * `createSubFieldContext` — the server enforces canEditContent, the depth
  * cap, and writes the activity Log; the button here is only a "don't show
  * a control the user cannot use" gate, never a security boundary.
@@ -63,13 +63,13 @@ export function SubContextsSection({
       await createSubFieldContext({
         variables: { parentContextId, title: trimmed },
       })
-      toast.success(`Sub-field "${trimmed}" created.`)
+      toast.success(`Nested field "${trimmed}" created.`)
       setIsCreateOpen(false)
       setTitle('')
       await onChanged()
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : 'Could not create sub-field'
+        error instanceof Error ? error.message : 'Could not create nested field'
       )
     } finally {
       setIsCreating(false)
@@ -86,7 +86,7 @@ export function SubContextsSection({
           account_tree
         </span>
         <h2 className="text-sm font-semibold uppercase tracking-wide text-gp-ink-strong dark:text-white truncate">
-          Sub-fields
+          Nested fields
           {subContexts.length > 0 ? ` (${subContexts.length})` : ''}
         </h2>
         {canEdit && (
@@ -96,7 +96,7 @@ export function SubContextsSection({
             className="ml-auto shrink-0 inline-flex items-center gap-1.5 px-3 h-8 rounded-full bg-gp-primary hover:bg-gp-primary/90 text-white font-semibold text-xs shadow-md shadow-gp-primary/20 transition-all cursor-pointer"
           >
             <span className="material-symbols-outlined text-[16px]">add</span>
-            <span className="hidden sm:inline">New sub-field</span>
+            <span className="hidden sm:inline">New nested field</span>
             <span className="sm:hidden">New</span>
           </button>
         )}
@@ -104,7 +104,7 @@ export function SubContextsSection({
 
       {subContexts.length === 0 ? (
         <p className="text-xs text-gp-ink-muted">
-          Organize a growing field into sub-fields — pulses stay part of the
+          Organize a growing field into nested fields — pulses stay part of the
           whole field&apos;s resonance.
         </p>
       ) : (
@@ -176,7 +176,7 @@ export function SubContextsSection({
           <div className="w-full max-w-md rounded-2xl border border-gp-glass-border bg-gp-surface-strong dark:bg-gp-surface-dark shadow-2xl p-5 sm:p-6 space-y-4">
             <div>
               <h3 className="text-base font-bold text-gp-ink-strong dark:text-white">
-                New sub-field
+                New nested field
               </h3>
               <p className="text-xs text-gp-ink-muted mt-1 truncate">
                 Nested inside &quot;{parentTitle}&quot;
@@ -189,7 +189,7 @@ export function SubContextsSection({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') void handleCreate()
               }}
-              placeholder="Sub-field title"
+              placeholder="Nested field title"
               autoFocus
               className="w-full h-10 rounded-xl border border-gp-glass-border bg-gp-glass-bg px-3 text-sm text-gp-ink-strong dark:text-white placeholder:text-gp-ink-soft focus:outline-none focus:ring-2 focus:ring-gp-primary/50"
             />

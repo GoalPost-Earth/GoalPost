@@ -189,7 +189,7 @@ export async function createSubFieldContext(
           // JSON-safe.
           CREATE (log:Log {
             id: $logId,
-            description: 'Created a sub-field: "' + $title + '" under "' +
+            description: 'Created a nested field: "' + $title + '" under "' +
               coalesce(parent.title, 'Untitled') + '"',
             metadata: '{"parentContextId":"' + parent.id +
               '","contextId":"' + child.id + '"}',
@@ -310,7 +310,7 @@ export async function moveFieldContext(
               ok: false,
               reason: 'cycle',
               error:
-                'A field cannot be moved under one of its own sub-fields.',
+                'A field cannot be moved under one of its own nested fields.',
             }
           }
           const newParentDepth = Number(

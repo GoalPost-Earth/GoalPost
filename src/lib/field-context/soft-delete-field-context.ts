@@ -155,8 +155,8 @@ export async function softDeleteFieldContext(
           id: $logId,
           description: 'Deleted field "' + coalesce(title, 'Untitled') + '"' +
             CASE
-              WHEN subContextCount = 1 THEN ' with 1 sub-field'
-              WHEN subContextCount > 1 THEN ' with ' + toString(subContextCount) + ' sub-fields'
+              WHEN subContextCount = 1 THEN ' with 1 nested field'
+              WHEN subContextCount > 1 THEN ' with ' + toString(subContextCount) + ' nested fields'
               ELSE ''
             END +
             CASE

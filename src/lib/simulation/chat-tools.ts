@@ -207,7 +207,7 @@ async function getFocalRecord(
     case 'FieldContext': {
       // GOAL-295: contexts can be nested. Surface the parent chain and the
       // live sub-contexts (titles included — kb/07 Rule 3) so the assistant
-      // describes a sub-field as sitting inside its parent field, not as
+      // describes a nested field as sitting inside its parent field, not as
       // hanging directly off the Space.
       const cypher = `
         MATCH (c:FieldContext {id: $id})

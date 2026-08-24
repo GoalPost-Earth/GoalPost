@@ -65,17 +65,17 @@ WF-11: Bulk Article Import               (User uploads a spreadsheet; a worker m
 
 **Actor:** Space Owner, ADMIN, or MEMBER (`canEditContent`)
 
-1. User opens a FieldContext detail page and uses "New sub-field" in the
-   Sub-fields section (custom `createSubFieldContext` mutation).
+1. User opens a FieldContext detail page and uses "New nested field" in the
+   Nested fields section (custom `createSubFieldContext` mutation).
 2. The child is created in the SAME Space as the parent — its own
    `HAS_CONTEXT` edge — plus a `HAS_SUBCONTEXT` overlay edge from the
    parent. Depth is capped at 5 levels.
 3. "Move" on the detail page re-parents a field under another same-Space
    field, or lifts it to the top level (custom `moveFieldContext` mutation;
    cycles and depth violations are rejected server-side).
-4. The Space page lists only TOP-LEVEL fields; nested sub-fields are
+4. The Space page lists only TOP-LEVEL fields; nested fields are
    reached by drilling into their parent (breadcrumb shows
-   Space → field → … → sub-field).
+   Space → field → … → nested field).
 5. Both mutations write an activity Log in the same transaction.
 6. Resonance discovery is NOT partitioned by nesting: the root field's
    whole subtree is one resonance scope (see ADR-017).

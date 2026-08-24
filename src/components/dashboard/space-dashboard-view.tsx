@@ -85,10 +85,10 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         : null
   const contexts =
     (space && 'contexts' in space ? space.contexts : undefined) ?? []
-  // GOAL-295: nested sub-fields also carry a direct Space edge, so the raw
+  // GOAL-295: nested fields also carry a direct Space edge, so the raw
   // list contains the whole hierarchy. The Space page shows only the
   // top-level fields — children are reached by drilling into their parent
-  // (Sub-fields section on the field detail page).
+  // (Nested fields section on the field detail page).
   const rootContexts = contexts.filter(
     (ctx) => (ctx?.parentContext?.length ?? 0) === 0
   )

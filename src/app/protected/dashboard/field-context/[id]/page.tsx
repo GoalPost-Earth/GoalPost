@@ -203,7 +203,7 @@ export default function FieldContextDetailsPage() {
       variables: { contextId },
       skip: !contextId,
       // cache-and-network (matching GET_SPACE_DETAILS): moving or deleting a
-      // sub-field only refetches the sub-field's own query, so the former
+      // nested field only refetches the nested field's own query, so the former
       // parent's cached subContexts would otherwise stay stale when the user
       // navigates back to it (GOAL-295).
       fetchPolicy: 'cache-and-network',
@@ -307,7 +307,7 @@ export default function FieldContextDetailsPage() {
     setFocalLabel(context.id, context.title, 'FieldContext')
   }, [context?.id, context?.title, setFocalLabel])
 
-  // Declare the parent Space — and, for a nested sub-field (GOAL-295), the
+  // Declare the parent Space — and, for a nested field (GOAL-295), the
   // ancestor field chain (root → immediate parent) — for the breadcrumb.
   // `ancestorContexts` comes pre-ordered from the server; StudioBreadcrumb
   // already renders N parents and folds the middle ones on phones.
@@ -542,7 +542,7 @@ export default function FieldContextDetailsPage() {
       setIsDeleteLoading(true)
 
       // Deletion cascades server-side (GOAL-319 + GOAL-295): the field, its
-      // sub-fields, and all of their pulses are soft deleted together, and
+      // nested fields, and all of their pulses are soft deleted together, and
       // the server writes the activity Log in the same transaction — no
       // client-side log call here.
       const result = await deleteFieldContext({
@@ -553,10 +553,10 @@ export default function FieldContextDetailsPage() {
         result.data?.deleteFieldContext?.deletedSubContextCount ?? 0
       toast.success(
         deletedSubFields > 0
-          ? `Field deleted along with ${deletedSubFields} sub-field${deletedSubFields === 1 ? '' : 's'}`
+          ? `Field deleted along with ${deletedSubFields} nested field${deletedSubFields === 1 ? '' : 's'}`
           : 'Field deleted successfully'
       )
-      // Land on the parent field (for a nested sub-field) or the owning
+      // Land on the parent field (for a nested field) or the owning
       // Space — not the dashboard root.
       const parentFieldId = context.parentContext?.[0]?.id
       router.push(
@@ -1319,7 +1319,7 @@ export default function FieldContextDetailsPage() {
               )}
               {subContextCount > 0 && (
                 <span className="text-xs mt-2 block">
-                  This will also delete its {subContextCount} sub-field
+                  This will also delete its {subContextCount} nested field
                   {subContextCount !== 1 ? 's' : ''} and their pulses.
                 </span>
               )}
