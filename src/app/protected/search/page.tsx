@@ -396,9 +396,11 @@ function SearchPageContent() {
       </div>
 
       <div className="relative h-full w-full overflow-y-auto overflow-x-hidden scroller">
-        {/* `pb-28` clears the canvas action bar, which floats at `bottom-6`
-            over this scroll container (canvas-action-bar.tsx). */}
-        <main className="relative z-10 w-full max-w-6xl mx-auto px-4 pt-8 sm:pt-12 md:pt-16 pb-28 sm:pb-32 flex flex-col gap-6 sm:gap-10">
+        {/* The bottom gutter clears every surface that floats over this
+            scroll container: the canvas action bar at `bottom-6`
+            (canvas-action-bar.tsx) and, on phones, the chat pill stacked
+            above it at `bottom-20` (floating-chat-trigger.tsx, GOAL-340). */}
+        <main className="relative z-10 w-full max-w-6xl mx-auto px-4 pt-8 sm:pt-12 md:pt-16 pb-40 sm:pb-32 flex flex-col gap-6 sm:gap-10">
           <header className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <h1 className="text-4xl md:text-5xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong">
@@ -556,7 +558,7 @@ export default function SearchPage() {
     <Suspense
       fallback={
         <div className="relative h-full w-full overflow-y-auto overflow-x-hidden scroller bg-gp-surface dark:bg-gp-surface-dark transition-colors">
-          <div className="w-full max-w-6xl mx-auto px-4 pt-8 sm:pt-12 md:pt-16 pb-28 text-sm text-gp-ink-muted dark:text-gp-ink-soft">
+          <div className="w-full max-w-6xl mx-auto px-4 pt-8 sm:pt-12 md:pt-16 pb-40 sm:pb-32 text-sm text-gp-ink-muted dark:text-gp-ink-soft">
             Loading search…
           </div>
         </div>
