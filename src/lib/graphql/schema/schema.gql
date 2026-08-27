@@ -2512,6 +2512,11 @@ type SearchResults
   storyPulses: [StoryPulse!]!
   carePulses: [CarePulse!]!
   coreValuePulses: [CoreValuePulse!]!
+  # GOAL-343 — weaves match on `title` and are Space-scoped through their
+  # HAS_WEAVE FieldContext, exactly as ResonanceLink would be. The resolver
+  # restates that reach test in Cypher; the @authorization filter on
+  # PromiseWeave does NOT apply to a custom resolver's raw query.
+  promiseWeaves: [PromiseWeave!]!
 }
 
 # ============================================================================
