@@ -239,10 +239,12 @@ later; these are forward-compatible, not final):
   uses only `HAS_RESONANCE`.
 - **§6.4 Lifecycle → stateless for now.** A free-text `status` (`active` on
   migration-built weaves); no state machine, so no `kb/04` entry yet.
+  *(Superseded by §10 — the lifecycle landed with GOAL-341.)*
 - **§6.5 Authoring → migration-only.** Weaves are built by the prod→dev migration
   (additive Phase 5d). GraphQL mutations are locked off (`@mutation(operations:
   [])`) until the user/AI authoring + HITL slice; the Space-scoped
   `@authorization` validate rules are already in place for that path.
+  *(Superseded by §10 — member authoring landed with GOAL-341.)*
 - **Neighbourhood scope → minimal.** Each weave holds its care point (`WEAVES`),
   its creator (`WOVEN_FOR` + `CREATED_BY`), and its FieldContext (`HAS_WEAVE`).
 - **Activity Log.** Migration-built weaves are `:Log`-exempt, consistent with the
@@ -254,6 +256,86 @@ Shipped: `kb/01`, `kb/05` (PromiseWeave entity + `promise_weave_id` constraint),
 `scripts/migrate-prod-to-dev.ts` (Phase 5d). Verified on dev: 8 weaves built (one
 per migrated care point), idempotent, each authorizable via its FieldContext's
 Space owner.
+
+## 10. Activation — member authoring shipped (2026-08-27, GOAL-341)
+
+The starting point in §9 left weaves readable but unwritable, so the only ones
+that existed anywhere were the 8 the migration built (plus one demo dummy). This
+slice opens the write path and supersedes §9's "stateless" and "migration-only"
+decisions.
+
+- **§6.4 Lifecycle → stateful.** `proposed → active → fulfilled`,
+  `proposed → dissolved`, `active → dissolved`. Stored lowercase like
+  `ResonanceLink.status`. Promoted into `kb/04-state-machines.md`. **A null
+  status reads as `active`, not `proposed`** — otherwise every migrated care
+  point would be parked behind a confirmation gate it never had.
+  `normalizeWeaveStatus` (`src/lib/promise-weave.ts`) is the one place that
+  rule lives.
+- **§6.5 Authoring → members, plus AI behind a gate.** `@mutation(operations:
+  [CREATE, UPDATE, DELETE])` — enumerated rather than the directive removed, so
+  the surface stays explicit. The §4 `@authorization` validate rules that were
+  written ahead of this are now the live gate, verified with a positive **and**
+  negative control (a non-member can neither create into, read, nor re-status a
+  weave in another member's field). New `origin` field: `user` / `ai`, null for
+  migration-built.
+- **Activity Log.** `logWeaveActivity` covers the runtime path
+  (created / updated / confirmed / dissolved / fulfilled / deleted). §9's
+  Log-exemption for migration-built weaves is unchanged.
+- **Surfaces.** The field context's Promise weaves section became its own
+  component with create/edit/delete and an inline Confirm / Dismiss gate for
+  `proposed` rows; the drawer gained the description, a themed status badge, and
+  a provenance line.
+- **Interface gotcha found in verification.** `WEAVES` points at the
+  `FieldPulse` interface, and `@neo4j/graphql` expands each `connect` entry
+  across all five implementations — two entries emit a duplicate Cypher variable
+  and Neo4j rejects the mutation (`42N07`). Connect with ONE entry using
+  `id_IN`. Recorded in `kb/05-data-entities.md` and WF-12.
+
+### What the pre-merge review changed
+
+Opening `@mutation` turned out to open far more than the three root mutations,
+because the library generates a full nested-input tree from every
+`@relationship` on the type. Three things had to close before this could land:
+
+- **A weave delete could take its FieldContext with it.**
+  `deletePromiseWeaves(delete: { context: … })` cascaded a bare DETACH DELETE
+  into the parent field, leaving every pulse in it with no `HAS_PULSE` anchor
+  and no `deletedAt` stamp — invisible to every read, undeletable, and never
+  collected by the 90-day purge cron. Precisely what GOAL-319 removed
+  `deleteFieldContexts` to prevent, reachable by owner and ADMIN.
+- **Any MEMBER could permanently destroy a weave** by disconnecting its context
+  edge. The type-level `validate` block enumerates CREATE/UPDATE/DELETE and so
+  never sees `DELETE_RELATIONSHIP`; only the READ filter applied, and it admits
+  any member. The result was unreadable and undeletable by everyone, its author
+  included.
+- **Authorship was forgeable.** `createdBy` is a plain nested CONNECT, so a
+  member could attribute a weave to the Space owner and the drawer rendered it.
+
+The fix is to **enumerate `nestedOperations` on every relationship** — weaves
+and wovenFor get CONNECT+DISCONNECT, createdBy and context CONNECT only — plus
+`nestedOperations: []` on `FieldContext.weaves`, which is the second door into
+the same input tree. Authorship is pinned by a `createdBy_SINGLE` rule scoped
+to CREATE; it cannot live on the field, because the library rejects
+`@authorization` alongside `@relationship`, and it cannot use
+`CREATE_RELATIONSHIP`, which would also fire when a *different* member edits
+the weave later.
+
+`logWeaveActivity` also needed authorization rather than mere authentication:
+its context lookup takes no caller, so it echoed any field's title and Space
+name back to any signed-in user, and its client-supplied `weaveName` /
+`metadata` let a GUEST write prose into a Space's activity feed. It now gates
+on `canEditContext`.
+
+**Take this as the rule for the next type that opens `@mutation`:** enumerate
+the nested operations at the same time, and check what `delete` and
+`disconnect` reach through each edge.
+
+Still open: AI proposal itself (GOAL-342) and search / dashboard-card surfacing
+(GOAL-343). The `proposed` state and its gate are already in place for GOAL-342
+to write into — but note that an AI-proposed weave has no member author, so the
+discovery path must write its node server-side rather than through
+`createPromiseWeaves`, whose CREATE rule now requires `createdBy` to be the
+caller.
 
 ---
 

@@ -207,7 +207,9 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       weaves {
         id
         title
+        description
         status
+        origin
         createdAt
         weaves {
           id

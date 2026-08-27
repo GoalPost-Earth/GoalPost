@@ -230,15 +230,24 @@ CORE VALUES — read this before writing any query about values.
 ResonanceLink { id, label, description, confidence, evidence, status }
   - Connects two FieldPulses via SOURCE / TARGET.
 
-PromiseWeave { id, title, status, createdAt }
+PromiseWeave { id, title, description, status, origin, createdAt, modifiedAt }
   - A connective CONTAINER node — its own type, NOT a pulse subtype (just like
-    ResonanceLink). Wraps a migrated care point so its neighbourhood is
-    navigable. Its human label is "title". Surfaced inside a FieldContext via a
-    HAS_WEAVE context edge (exactly as ResonanceLink is surfaced via
-    HAS_RESONANCE). When the user names a "promise weave" / "weave", or asks to
-    show a node whose title matches a PromiseWeave title, MATCH the
-    \`:PromiseWeave\` label — these nodes are invisible to any query that omits
-    it.
+    ResonanceLink). Gathers the pulses and the person a promise implicates so
+    its neighbourhood is navigable. Its human label is "title". Surfaced inside
+    a FieldContext via a HAS_WEAVE context edge (exactly as ResonanceLink is
+    surfaced via HAS_RESONANCE). When the user names a "promise weave" /
+    "weave", or asks to show a node whose title matches a PromiseWeave title,
+    MATCH the \`:PromiseWeave\` label — these nodes are invisible to any query
+    that omits it.
+  - "description" says why the woven things belong together.
+  - "status" is the lifecycle: proposed / active / fulfilled / dissolved. It is
+    NOT reliably cased or complete — weaves carried over from migrated care
+    points hold values like "Active" and "Inactive", and some hold nothing at
+    all (which means active). So filter it case-insensitively and tolerate
+    null, e.g. \`toLower(coalesce(w.status,'active')) = 'proposed'\`. Never
+    \`w.status = 'active'\`, which silently drops most weaves.
+  - "origin" is who authored it: "user" (a member), "ai" (proposed by
+    discovery, awaiting confirmation), or null (built by the migration).
 
 FieldResonance { label, description } — semantic theme node.
 

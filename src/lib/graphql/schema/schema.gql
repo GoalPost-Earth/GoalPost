@@ -1183,8 +1183,12 @@ type FieldContext
   documents: [Document!]! @relationship(type: "HAS_DOCUMENT", direction: OUT)
   resonances: [ResonanceLink!]!
     @relationship(type: "HAS_RESONANCE", direction: OUT)
+  # Read-only from this side. Weaves are authored through the PromiseWeave
+  # root mutations, which carry their own Space-scoped validate rules; leaving
+  # nested writes open here is a second, ungated door into the same input tree
+  # (GOAL-341 review). Nothing in the app writes weaves through a FieldContext.
   weaves: [PromiseWeave!]!
-    @relationship(type: "HAS_WEAVE", direction: OUT)
+    @relationship(type: "HAS_WEAVE", direction: OUT, nestedOperations: [])
   # Resonances among the pulses of this context AND its sub-context subtree
   # (GOAL-295): the field is the resonance boundary — sub-contexts organize,
   # they do not partition resonance. The deletedAt filter keeps a soft-deleted
@@ -2206,19 +2210,19 @@ HAS_RESONANCE, so it slots into the same Space-scoped authorization and Bloom
 scoping. Originates in Steve's relational "map" (see
 docs/promise-weave-design-spike.md, GOAL-266).
 
-Starting-point scope: created by the prod→dev migration to wrap each migrated
-care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
-in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+Authoring: three origins now write weaves — the prod→dev migration (which wraps
+each migrated care point), a member authoring one from a FieldContext, and AI
+discovery. AI-discovered weaves land `proposed` and only become `active` once a
+member confirms them; see `status` below and kb/04-state-machines.md.
 
 Multi-label: ["PromiseWeave"]
 """
 type PromiseWeave
   @node(labels: ["PromiseWeave"])
-  # No user-facing writes yet — weaves are migration-built only (starting point).
-  # User/AI authoring + its HITL gate arrive in a later slice (spike §6.5), which
-  # will open the needed operations. The @authorization validate rules below are
-  # already in place for that path.
-  @mutation(operations: [])
+  # Writes opened for member authoring + the AI-discovery HITL gate (spike §6.5).
+  # The @authorization validate rules below gate every one of them to OWNER /
+  # ADMIN / MEMBER on the owning Me/We space.
+  @mutation(operations: [CREATE, UPDATE, DELETE])
   @authorization(
     # READ — anyone who can see the parent FieldContext (owner or any
     # member of the owning Me/We space) can see the weave. Mirrors ResonanceLink.
@@ -2248,7 +2252,28 @@ type PromiseWeave
     ]
     # WRITE — CREATE/UPDATE/DELETE require OWNER, ADMIN, or MEMBER on
     # the owning Me/We space. GUESTs are excluded (kb/02-user-roles.md).
+    #
+    # The FIRST rule pins authorship at creation: `createdBy` is a plain
+    # nested CONNECT, so without it any MEMBER could point the edge at the
+    # Space owner and the entity-info drawer would render "Woven by <owner>"
+    # — forged authorship on a trusted surface (GOAL-341 review).
+    #
+    # Scoped to CREATE rather than CREATE_RELATIONSHIP on purpose: a
+    # relationship-level rule also fires when a DIFFERENT member later edits
+    # the weave's woven pulses, which would wrongly forbid one member from
+    # editing another's weave. It cannot live on the `createdBy` field either
+    # — the library rejects @authorization alongside @relationship.
+    # `_SINGLE` rather than `_SOME` so a forged second edge cannot ride
+    # along beside the honest one.
+    #
+    # NOTE for GOAL-342: an AI-proposed weave has no member author, so the
+    # discovery path must write its node server-side (raw Cypher, as the
+    # migration does) rather than through this mutation.
     validate: [
+      {
+        operations: [CREATE]
+        where: { node: { createdBy_SINGLE: { id_EQ: "$jwt.user.id" } } }
+      }
       {
         operations: [CREATE, UPDATE, DELETE]
         where: {
@@ -2276,12 +2301,80 @@ type PromiseWeave
   ) {
   id: ID! @id
   title: String
+  """
+  Why these things are woven together — a member's note, or the evidence AI
+  discovery cited when it proposed the weave.
+  """
+  description: String
+  """
+  Lifecycle state, stored lowercase to match ResonanceLink's `status`:
+  `proposed` | `active` | `fulfilled` | `dissolved`. See
+  kb/04-state-machines.md. Null on the migration-built starting-point weaves
+  that predate the lifecycle — readers treat null as `active`.
+  """
   status: String
+  """
+  Who authored the weave: `user` (a member, via the field context) or `ai`
+  (discovery, awaiting confirmation). Null means migration-built.
+  """
+  origin: String
   createdAt: DateTime!
-  weaves: [FieldPulse!]! @relationship(type: "WEAVES", direction: OUT)
-  wovenFor: [Person!]! @relationship(type: "WOVEN_FOR", direction: OUT)
-  createdBy: [Person!]! @relationship(type: "CREATED_BY", direction: OUT)
-  context: [FieldContext!]! @relationship(type: "HAS_WEAVE", direction: IN)
+  modifiedAt: DateTime
+  # Nested write operations are ENUMERATED on every edge below, never left
+  # open. Opening the root mutations (see @mutation above) also opens every
+  # nested input the library generates from these relationships — including
+  # `delete`, which cascades a bare DETACH DELETE into the connected node.
+  weaves: [FieldPulse!]!
+    @relationship(
+      type: "WEAVES"
+      direction: OUT
+      nestedOperations: [CONNECT, DISCONNECT]
+    )
+  wovenFor: [Person!]!
+    @relationship(
+      type: "WOVEN_FOR"
+      direction: OUT
+      nestedOperations: [CONNECT, DISCONNECT]
+    )
+  """
+  The member who authored the weave. CONNECT-only, and the validate rule below
+  pins the connected Person to the caller. Without it any MEMBER could point
+  this edge at the Space owner, and the entity-info drawer renders it verbatim
+  as "Woven by <name>" — forged authorship, straight onto a trusted surface.
+  `_SINGLE` rather than `_SOME` so a second, forged edge cannot ride along
+  beside the honest one.
+  """
+  createdBy: [Person!]!
+    @relationship(
+      type: "CREATED_BY"
+      direction: OUT
+      nestedOperations: [CONNECT]
+    )
+  """
+  The FieldContext this weave hangs off — the visibility anchor that EVERY
+  @authorization rule on this type traverses (`context_SOME`).
+
+  CONNECT-only, for two independent reasons:
+
+  - `delete` here cascaded into the parent FieldContext, stranding every pulse
+    in that field with no HAS_PULSE anchor and no `deletedAt` stamp: invisible
+    to every read, undeletable, and never collected by the 90-day purge cron.
+    That is what GOAL-319 removed `deleteFieldContexts` to prevent.
+  - `disconnect` is NOT covered by the type-level validate block below, which
+    enumerates CREATE/UPDATE/DELETE and so never sees DELETE_RELATIONSHIP.
+    Only the READ filter applied, and it admits any member — so a MEMBER could
+    sever this edge and leave the weave unreadable, unwritable and undeletable
+    by everyone including its own author. A permanent ghost.
+
+  Root `deletePromiseWeaves(where:)` still removes the edge along with the
+  node, so ordinary deletion is unaffected.
+  """
+  context: [FieldContext!]!
+    @relationship(
+      type: "HAS_WEAVE"
+      direction: IN
+      nestedOperations: [CONNECT]
+    )
 }
 
 """
@@ -2678,6 +2771,20 @@ input LogResonanceInput {
   metadata: String
 }
 
+"""
+A promise-weave activity. `pulseIds` is a list rather than a source/target pair
+because a weave holds 1..n pulses. `action` is one of `created`, `updated`,
+`confirmed`, `dissolved`, `fulfilled`, `deleted`.
+"""
+input LogWeaveInput {
+  action: String!
+  weaveId: ID!
+  weaveName: String!
+  pulseIds: [ID!]!
+  contextId: ID!
+  metadata: String
+}
+
 type Mutation {
   """
   Send a message to the chatbot and receive a response.
@@ -2858,6 +2965,13 @@ type Mutation {
   Tracks AI-discovered or user-created resonance links between pulses.
   """
   logResonanceActivity(input: LogResonanceInput!): CreateLogResponse!
+
+  """
+  Log a promise-weave activity (created, updated, confirmed, dissolved,
+  fulfilled, deleted). Covers the runtime authoring path; migration-built
+  weaves are Log-exempt like the other structural builds.
+  """
+  logWeaveActivity(input: LogWeaveInput!): CreateLogResponse!
 
   # ============================================================================
   # DOC INGESTION MUTATIONS (see GOAL-235)

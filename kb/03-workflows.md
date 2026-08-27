@@ -16,6 +16,7 @@ WF-08: WeSpace Collaboration             (Owner invites members, shared pulse cr
 WF-09: Data Import                       (User imports CSV/XLSX data into the system)
 WF-10: Document Ingestion                (User uploads a file; a worker extracts entities from it)
 WF-11: Bulk Article Import               (User uploads a spreadsheet; a worker mints one pulse per row)
+WF-12: Promise Weave Authoring           (Member weaves pulses + a person into a navigable neighbourhood)
 ```
 
 ---
@@ -382,3 +383,50 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
 - **Retry is re-upload.** A `FAILED` job is terminal; re-uploading the same
   sheet is safe because rows that already landed come back as
   `skipped_existing` (having filled in any missing details).
+
+---
+
+## WF-12 — Promise Weave Authoring (GOAL-341)
+
+**Actor:** Space Owner, ADMIN, or MEMBER (`canEditContent`). GUESTs see weaves
+but get no write affordance, and the server refuses them anyway.
+
+A **PromiseWeave** is a reified connector node — not a pulse — that gathers the
+pulses and the person a promise implicates, so opening it is a starting point
+for exploration rather than a dead end (`kb/01-glossary.md`). Until GOAL-341
+weaves existed only where the prod→dev migration had built them.
+
+1. Member opens a FieldContext detail page and uses **"Weave"** in the Promise
+   weaves section (`PromiseWeavesSection`). The affordance is disabled while
+   the field has no pulses — a weave must hold at least one.
+2. The dialog (`PromiseWeaveModal`) takes a name, an optional "why", a
+   multi-select of the field's pulses, and optionally the Person it is
+   **woven for**. Candidates are scoped to that field, so a member can only
+   weave what they can already see there.
+3. `createPromiseWeaves` writes the node with `status: 'active'` and
+   `origin: 'user'`, connecting `WEAVES` → the chosen pulses, `WOVEN_FOR` → the
+   person, and `HAS_WEAVE` ← the FieldContext. **That context edge is the
+   visibility anchor and the path the `@authorization` filter traverses** — a
+   weave without it is both invisible and ungated.
+4. Editing re-drives the same dialog; the woven set is *reconnected*, not
+   appended, so unticking a pulse removes it. Deleting removes the connector
+   node and its edges only — the pulses and the person are untouched.
+5. Every runtime write logs an activity `Log` via `logWeaveActivity`
+   (created / updated / confirmed / dissolved / fulfilled / deleted).
+   Migration-built weaves stay Log-exempt, like the other Phase-5 structural
+   builds.
+6. Rows open the entity-info drawer; AI-proposed weaves (`proposed`) instead
+   render an inline **Confirm / Dismiss** gate — see `kb/04-state-machines.md`
+   and WF-13. Marking a weave `fulfilled` has no affordance yet; the state
+   exists but nothing in the UI reaches it.
+
+### WF-12 implementation constraints
+
+- **`weaves` targets the `FieldPulse` interface.** Connect many pulses with ONE
+  `connect` entry using `id_IN`; two or more entries make `@neo4j/graphql`
+  emit a duplicate Cypher variable and Neo4j rejects the mutation (`42N07`).
+  Full note in `kb/05-data-entities.md`.
+- **Status is lowercase and null means `active`,** never `proposed` — read it
+  through `normalizeWeaveStatus` (`src/lib/promise-weave.ts`).
+- Write logic lives in `src/hooks/usePromiseWeaves.ts` so the field-context
+  page and any later surface cannot drift on the connect/disconnect shapes.

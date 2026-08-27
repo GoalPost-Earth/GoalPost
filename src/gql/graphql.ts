@@ -719,9 +719,13 @@ export type CarePulseDocumentExtractedFromNodeAggregateSelection = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -803,6 +807,46 @@ export type CarePulseExtractedFromNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -858,6 +902,36 @@ export type CarePulseExtractedFromNodeAggregationWhereInput = {
   sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -1953,9 +2027,13 @@ export type CoreValuePulseDocumentExtractedFromNodeAggregateSelection = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -2037,6 +2115,46 @@ export type CoreValuePulseExtractedFromNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2092,6 +2210,36 @@ export type CoreValuePulseExtractedFromNodeAggregationWhereInput = {
   sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -2644,12 +2792,6 @@ export type CreateDocumentIngestThreadsMutationResponse = {
   info: CreateInfo
 }
 
-export type CreateDocumentsMutationResponse = {
-  __typename?: 'CreateDocumentsMutationResponse'
-  documents: Array<Document>
-  info: CreateInfo
-}
-
 export type CreateFieldContextsMutationResponse = {
   __typename?: 'CreateFieldContextsMutationResponse'
   fieldContexts: Array<FieldContext>
@@ -2831,6 +2973,12 @@ export type CreatePersonConnectionResponsesConnection = {
   edges: Array<CreatePersonConnectionResponseEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
+}
+
+export type CreatePromiseWeavesMutationResponse = {
+  __typename?: 'CreatePromiseWeavesMutationResponse'
+  info: CreateInfo
+  promiseWeaves: Array<PromiseWeave>
 }
 
 export type CreateRemoveSpaceMemberResponsesMutationResponse = {
@@ -3213,12 +3361,38 @@ export type Document = {
   fieldContextConnection: DocumentFieldContextConnection
   filename: Scalars['String']['output']
   id: Scalars['ID']['output']
+  /**
+   * Entities the ingest run wrote into the graph. Populated when `status`
+   * reaches COMPLETE; the upload UI reports it in the success toast.
+   */
+  ingestCreatedEntityCount?: Maybe<Scalars['Int']['output']>
+  /**
+   * Proposed entities whose write failed during the ingest run — partial
+   * success is normal and is detailed in the ingest thread.
+   */
+  ingestFailedEntityCount?: Maybe<Scalars['Int']['output']>
   /** Ingest threads spawned from this document — initial upload + every Re-extract attempt. Ordered newest first. */
   ingestThreads: Array<DocumentIngestThread>
   mimeType: Scalars['String']['output']
   /** Page count for paginated formats (.pdf). 1 for .txt/.md. Null when unknown (legacy uploads). */
   pageCount?: Maybe<Scalars['Int']['output']>
   sizeBytes: Scalars['Int']['output']
+  /**
+   * Ingest lifecycle (GOAL-292): PENDING → PROCESSING → COMPLETE / FAILED.
+   * The upload route anchors PENDING and returns 202; the
+   * /api/cron/process-document-ingestion worker transitions the rest. The upload
+   * UI polls this to show queued/processing/failed instead of blocking on a
+   * synchronous response. Documents uploaded before GOAL-292 have no stored value
+   * and read back as COMPLETE, so an old upload never looks stuck.
+   */
+  status?: Maybe<Scalars['String']['output']>
+  /**
+   * Member-safe explanation when `status` is FAILED — safe to render verbatim
+   * (kb/07 Rule 1: raw driver/model error text is logged server-side only). Null
+   * in every other state. The file and its Document row both survive a failure,
+   * so Re-extract stays the recovery path.
+   */
+  statusMessage?: Maybe<Scalars['String']['output']>
   /**
    * AI-generated 1-paragraph synopsis of the document content. Produced at
    * ingest time by a dedicated summarization call (independent of the entity
@@ -3462,9 +3636,13 @@ export type DocumentAggregateNode = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -3476,9 +3654,13 @@ export type DocumentAggregateSelection = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -4301,9 +4483,13 @@ export type DocumentSort = {
   blobUrl?: InputMaybe<SortDirection>
   filename?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
+  ingestCreatedEntityCount?: InputMaybe<SortDirection>
+  ingestFailedEntityCount?: InputMaybe<SortDirection>
   mimeType?: InputMaybe<SortDirection>
   pageCount?: InputMaybe<SortDirection>
   sizeBytes?: InputMaybe<SortDirection>
+  status?: InputMaybe<SortDirection>
+  statusMessage?: InputMaybe<SortDirection>
   summary?: InputMaybe<SortDirection>
   uploadedAt?: InputMaybe<SortDirection>
   userHint?: InputMaybe<SortDirection>
@@ -4658,6 +4844,22 @@ export type DocumentWhere = {
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_EQ?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_IN?: InputMaybe<
+    Array<InputMaybe<Scalars['Int']['input']>>
+  >
+  ingestCreatedEntityCount_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_EQ?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_IN?: InputMaybe<
+    Array<InputMaybe<Scalars['Int']['input']>>
+  >
+  ingestFailedEntityCount_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_LTE?: InputMaybe<Scalars['Int']['input']>
   ingestThreads?: InputMaybe<DocumentIngestThreadWhere>
   ingestThreads_ALL?: InputMaybe<DocumentIngestThreadWhere>
   ingestThreads_NONE?: InputMaybe<DocumentIngestThreadWhere>
@@ -4680,6 +4882,16 @@ export type DocumentWhere = {
   sizeBytes_IN?: InputMaybe<Array<Scalars['Int']['input']>>
   sizeBytes_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  statusMessage_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  statusMessage_EQ?: InputMaybe<Scalars['String']['input']>
+  statusMessage_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  statusMessage_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
+  status_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  status_EQ?: InputMaybe<Scalars['String']['input']>
+  status_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  status_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   summary_CONTAINS?: InputMaybe<Scalars['String']['input']>
   summary_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   summary_EQ?: InputMaybe<Scalars['String']['input']>
@@ -5421,7 +5633,6 @@ export type FieldContextConnectInput = {
   pulses?: InputMaybe<Array<FieldContextPulsesConnectFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesConnectFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceConnectFieldInput>>
-  weaves?: InputMaybe<Array<FieldContextWeavesConnectFieldInput>>
 }
 
 export type FieldContextConnectWhere = {
@@ -5438,7 +5649,6 @@ export type FieldContextCreateInput = {
   resonances?: InputMaybe<FieldContextResonancesFieldInput>
   title: Scalars['String']['input']
   weSpace?: InputMaybe<FieldContextWeSpaceFieldInput>
-  weaves?: InputMaybe<FieldContextWeavesFieldInput>
 }
 
 export type FieldContextCreatedByAggregateInput = {
@@ -5707,7 +5917,6 @@ export type FieldContextDeleteInput = {
   pulses?: InputMaybe<Array<FieldContextPulsesDeleteFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesDeleteFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceDeleteFieldInput>>
-  weaves?: InputMaybe<Array<FieldContextWeavesDeleteFieldInput>>
 }
 
 export type FieldContextDisconnectInput = {
@@ -5721,7 +5930,6 @@ export type FieldContextDisconnectInput = {
   pulses?: InputMaybe<Array<FieldContextPulsesDisconnectFieldInput>>
   resonances?: InputMaybe<Array<FieldContextResonancesDisconnectFieldInput>>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceDisconnectFieldInput>>
-  weaves?: InputMaybe<Array<FieldContextWeavesDisconnectFieldInput>>
 }
 
 export type FieldContextDocumentDocumentsAggregateSelection = {
@@ -5741,9 +5949,13 @@ export type FieldContextDocumentDocumentsNodeAggregateSelection = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -5848,6 +6060,46 @@ export type FieldContextDocumentsNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -5903,6 +6155,36 @@ export type FieldContextDocumentsNodeAggregationWhereInput = {
   sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -6848,8 +7130,11 @@ export type FieldContextPromiseWeaveWeavesAggregationSelection = {
 export type FieldContextPromiseWeaveWeavesNodeAggregateSelection = {
   __typename?: 'FieldContextPromiseWeaveWeavesNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  modifiedAt: DateTimeAggregateSelection
+  origin: StringAggregateSelection
   status: StringAggregateSelection
   title: StringAggregateSelection
 }
@@ -7360,7 +7645,6 @@ export type FieldContextUpdateInput = {
   resonances?: InputMaybe<Array<FieldContextResonancesUpdateFieldInput>>
   title_SET?: InputMaybe<Scalars['String']['input']>
   weSpace?: InputMaybe<Array<FieldContextWeSpaceUpdateFieldInput>>
-  weaves?: InputMaybe<Array<FieldContextWeavesUpdateFieldInput>>
 }
 
 export type FieldContextWeSpaceAggregateInput = {
@@ -7639,16 +7923,6 @@ export type FieldContextWeavesAggregateInput = {
   node?: InputMaybe<FieldContextWeavesNodeAggregationWhereInput>
 }
 
-export type FieldContextWeavesConnectFieldInput = {
-  connect?: InputMaybe<Array<PromiseWeaveConnectInput>>
-  /**
-   * Whether or not to overwrite any matching relationship with the new properties.
-   * @deprecated The overwrite argument is deprecated and will be removed
-   */
-  overwrite?: Scalars['Boolean']['input']
-  where?: InputMaybe<PromiseWeaveConnectWhere>
-}
-
 export type FieldContextWeavesConnection = {
   __typename?: 'FieldContextWeavesConnection'
   aggregate: FieldContextPromiseWeaveWeavesAggregateSelection
@@ -7668,25 +7942,6 @@ export type FieldContextWeavesConnectionWhere = {
   node?: InputMaybe<PromiseWeaveWhere>
 }
 
-export type FieldContextWeavesCreateFieldInput = {
-  node: PromiseWeaveCreateInput
-}
-
-export type FieldContextWeavesDeleteFieldInput = {
-  delete?: InputMaybe<PromiseWeaveDeleteInput>
-  where?: InputMaybe<FieldContextWeavesConnectionWhere>
-}
-
-export type FieldContextWeavesDisconnectFieldInput = {
-  disconnect?: InputMaybe<PromiseWeaveDisconnectInput>
-  where?: InputMaybe<FieldContextWeavesConnectionWhere>
-}
-
-export type FieldContextWeavesFieldInput = {
-  connect?: InputMaybe<Array<FieldContextWeavesConnectFieldInput>>
-  create?: InputMaybe<Array<FieldContextWeavesCreateFieldInput>>
-}
-
 export type FieldContextWeavesNodeAggregationWhereInput = {
   AND?: InputMaybe<Array<FieldContextWeavesNodeAggregationWhereInput>>
   NOT?: InputMaybe<FieldContextWeavesNodeAggregationWhereInput>
@@ -7701,6 +7956,21 @@ export type FieldContextWeavesNodeAggregationWhereInput = {
   createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
   createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  description_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  description_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  description_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  description_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MAX_EQUAL?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
@@ -7721,6 +7991,31 @@ export type FieldContextWeavesNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  modifiedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  origin_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  origin_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  origin_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  origin_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  origin_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  origin_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  origin_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  origin_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  origin_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  origin_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  origin_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  origin_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  origin_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  origin_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  origin_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -7757,21 +8052,6 @@ export type FieldContextWeavesRelationship = {
   __typename?: 'FieldContextWeavesRelationship'
   cursor: Scalars['String']['output']
   node: PromiseWeave
-}
-
-export type FieldContextWeavesUpdateConnectionInput = {
-  node?: InputMaybe<PromiseWeaveUpdateInput>
-  where?: InputMaybe<FieldContextWeavesConnectionWhere>
-}
-
-export type FieldContextWeavesUpdateFieldInput = {
-  connect?: InputMaybe<Array<FieldContextWeavesConnectFieldInput>>
-  create?: InputMaybe<Array<FieldContextWeavesCreateFieldInput>>
-  delete?: InputMaybe<Array<FieldContextWeavesDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<FieldContextWeavesDisconnectFieldInput>>
-  update?: InputMaybe<FieldContextWeavesUpdateConnectionInput>
-  /** @deprecated Please use field "where" inside "FieldContextWeavesUpdateConnectionInput" instead */
-  where?: InputMaybe<FieldContextWeavesConnectionWhere>
 }
 
 export type FieldContextWhere = {
@@ -8651,6 +8931,46 @@ export type FieldPulseExtractedFromNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -8706,6 +9026,36 @@ export type FieldPulseExtractedFromNodeAggregationWhereInput = {
   sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9785,9 +10135,13 @@ export type GoalPulseDocumentExtractedFromNodeAggregateSelection = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -9869,6 +10223,46 @@ export type GoalPulseExtractedFromNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -9924,6 +10318,36 @@ export type GoalPulseExtractedFromNodeAggregationWhereInput = {
   sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -11976,6 +12400,20 @@ export type LogUpdateInput = {
   resources?: InputMaybe<Array<LogResourcesUpdateFieldInput>>
 }
 
+/**
+ * A promise-weave activity. `pulseIds` is a list rather than a source/target pair
+ * because a weave holds 1..n pulses. `action` is one of `created`, `updated`,
+ * `confirmed`, `dissolved`, `fulfilled`, `deleted`.
+ */
+export type LogWeaveInput = {
+  action: Scalars['String']['input']
+  contextId: Scalars['ID']['input']
+  metadata?: InputMaybe<Scalars['String']['input']>
+  pulseIds: Array<Scalars['ID']['input']>
+  weaveId: Scalars['ID']['input']
+  weaveName: Scalars['String']['input']
+}
+
 export type LogWhere = {
   AND?: InputMaybe<Array<LogWhere>>
   NOT?: InputMaybe<LogWhere>
@@ -13044,7 +13482,6 @@ export type Mutation = {
   createDeleteFieldContextResponses: CreateDeleteFieldContextResponsesMutationResponse
   createDeletePersonConnectionResponses: CreateDeletePersonConnectionResponsesMutationResponse
   createDocumentIngestThreads: CreateDocumentIngestThreadsMutationResponse
-  createDocuments: CreateDocumentsMutationResponse
   createFieldContexts: CreateFieldContextsMutationResponse
   createGoalPulses: CreateGoalPulsesMutationResponse
   createIngestDocumentResponses: CreateIngestDocumentResponsesMutationResponse
@@ -13057,6 +13494,7 @@ export type Mutation = {
    */
   createPersonConnection: CreatePersonConnectionResponse
   createPersonConnectionEdges: CreatePersonConnectionEdgesMutationResponse
+  createPromiseWeaves: CreatePromiseWeavesMutationResponse
   createRemoveSpaceMemberResponses: CreateRemoveSpaceMemberResponsesMutationResponse
   createResonanceLinks: CreateResonanceLinksMutationResponse
   createResourcePulses: CreateResourcePulsesMutationResponse
@@ -13101,7 +13539,6 @@ export type Mutation = {
    */
   deleteDocument: DeleteDocumentResponse
   deleteDocumentIngestThreads: DeleteInfo
-  deleteDocuments: DeleteInfo
   /**
    * Delete a FieldContext and everything nested under it (GOAL-319). The
    * context, its sub-context subtree (GOAL-295), and their pulses are SOFT
@@ -13130,6 +13567,7 @@ export type Mutation = {
    */
   deletePersonConnection: DeletePersonConnectionResponse
   deletePersonConnectionEdges: DeleteInfo
+  deletePromiseWeaves: DeleteInfo
   deleteRemoveSpaceMemberResponses: DeleteInfo
   deleteResonanceLinks: DeleteInfo
   deleteResourcePulses: DeleteInfo
@@ -13196,6 +13634,12 @@ export type Mutation = {
    * Creates a Log node with description and metadata about the space operation.
    */
   logSpaceActivity: CreateLogResponse
+  /**
+   * Log a promise-weave activity (created, updated, confirmed, dissolved,
+   * fulfilled, deleted). Covers the runtime authoring path; migration-built
+   * weaves are Log-exempt like the other structural builds.
+   */
+  logWeaveActivity: CreateLogResponse
   /**
    * Mark all of the current user's notifications read. Recipient-scoped via the
    * JWT user id. Returns the new unread count (0).
@@ -13272,7 +13716,6 @@ export type Mutation = {
   updateDeleteFieldContextResponses: UpdateDeleteFieldContextResponsesMutationResponse
   updateDeletePersonConnectionResponses: UpdateDeletePersonConnectionResponsesMutationResponse
   updateDocumentIngestThreads: UpdateDocumentIngestThreadsMutationResponse
-  updateDocuments: UpdateDocumentsMutationResponse
   updateFieldContexts: UpdateFieldContextsMutationResponse
   updateGoalPulses: UpdateGoalPulsesMutationResponse
   updateIngestDocumentResponses: UpdateIngestDocumentResponsesMutationResponse
@@ -13301,6 +13744,7 @@ export type Mutation = {
    * CONNECTED_TO edge from the caller to the person (empty string clears the why).
    */
   updatePersonPulse: UpdatePersonPulseResponse
+  updatePromiseWeaves: UpdatePromiseWeavesMutationResponse
   updateRemoveSpaceMemberResponses: UpdateRemoveSpaceMemberResponsesMutationResponse
   updateResonanceLinks: UpdateResonanceLinksMutationResponse
   updateResourcePulses: UpdateResourcePulsesMutationResponse
@@ -13380,10 +13824,6 @@ export type MutationCreateDocumentIngestThreadsArgs = {
   input: Array<DocumentIngestThreadCreateInput>
 }
 
-export type MutationCreateDocumentsArgs = {
-  input: Array<DocumentCreateInput>
-}
-
 export type MutationCreateFieldContextsArgs = {
   input: Array<FieldContextCreateInput>
 }
@@ -13417,6 +13857,10 @@ export type MutationCreatePersonConnectionArgs = {
 
 export type MutationCreatePersonConnectionEdgesArgs = {
   input: Array<PersonConnectionEdgeCreateInput>
+}
+
+export type MutationCreatePromiseWeavesArgs = {
+  input: Array<PromiseWeaveCreateInput>
 }
 
 export type MutationCreateRemoveSpaceMemberResponsesArgs = {
@@ -13519,11 +13963,6 @@ export type MutationDeleteDocumentIngestThreadsArgs = {
   where?: InputMaybe<DocumentIngestThreadWhere>
 }
 
-export type MutationDeleteDocumentsArgs = {
-  delete?: InputMaybe<DocumentDeleteInput>
-  where?: InputMaybe<DocumentWhere>
-}
-
 export type MutationDeleteFieldContextArgs = {
   contextId: Scalars['ID']['input']
 }
@@ -13563,6 +14002,10 @@ export type MutationDeletePersonConnectionArgs = {
 
 export type MutationDeletePersonConnectionEdgesArgs = {
   where?: InputMaybe<PersonConnectionEdgeWhere>
+}
+
+export type MutationDeletePromiseWeavesArgs = {
+  where?: InputMaybe<PromiseWeaveWhere>
 }
 
 export type MutationDeleteRemoveSpaceMemberResponsesArgs = {
@@ -13649,6 +14092,10 @@ export type MutationLogSpaceActivityArgs = {
   input: LogSpaceInput
 }
 
+export type MutationLogWeaveActivityArgs = {
+  input: LogWeaveInput
+}
+
 export type MutationMarkNotificationReadArgs = {
   id: Scalars['ID']['input']
 }
@@ -13733,11 +14180,6 @@ export type MutationUpdateDocumentIngestThreadsArgs = {
   where?: InputMaybe<DocumentIngestThreadWhere>
 }
 
-export type MutationUpdateDocumentsArgs = {
-  update?: InputMaybe<DocumentUpdateInput>
-  where?: InputMaybe<DocumentWhere>
-}
-
 export type MutationUpdateFieldContextsArgs = {
   update?: InputMaybe<FieldContextUpdateInput>
   where?: InputMaybe<FieldContextWhere>
@@ -13791,6 +14233,11 @@ export type MutationUpdatePersonPulseArgs = {
   lastName?: InputMaybe<Scalars['String']['input']>
   personId: Scalars['ID']['input']
   relationshipWhy?: InputMaybe<Scalars['String']['input']>
+}
+
+export type MutationUpdatePromiseWeavesArgs = {
+  update?: InputMaybe<PromiseWeaveUpdateInput>
+  where?: InputMaybe<PromiseWeaveWhere>
 }
 
 export type MutationUpdateRemoveSpaceMemberResponsesArgs = {
@@ -15015,9 +15462,13 @@ export type OrganizationDocumentExtractedFromNodeAggregateSelection = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -15104,6 +15555,46 @@ export type OrganizationExtractedFromNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -15159,6 +15650,36 @@ export type OrganizationExtractedFromNodeAggregationWhereInput = {
   sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16444,9 +16965,13 @@ export type PersonDocumentExtractedFromNodeAggregateSelection = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -16557,6 +17082,46 @@ export type PersonExtractedFromNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -16612,6 +17177,36 @@ export type PersonExtractedFromNodeAggregationWhereInput = {
   sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -18434,24 +19029,69 @@ export type PersonWhere = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
 export type PromiseWeave = {
   __typename?: 'PromiseWeave'
+  /**
+   * The FieldContext this weave hangs off — the visibility anchor that EVERY
+   * @authorization rule on this type traverses (`context_SOME`).
+   *
+   * CONNECT-only, for two independent reasons:
+   *
+   * - `delete` here cascaded into the parent FieldContext, stranding every pulse
+   *   in that field with no HAS_PULSE anchor and no `deletedAt` stamp: invisible
+   *   to every read, undeletable, and never collected by the 90-day purge cron.
+   *   That is what GOAL-319 removed `deleteFieldContexts` to prevent.
+   * - `disconnect` is NOT covered by the type-level validate block below, which
+   *   enumerates CREATE/UPDATE/DELETE and so never sees DELETE_RELATIONSHIP.
+   *   Only the READ filter applied, and it admits any member — so a MEMBER could
+   *   sever this edge and leave the weave unreadable, unwritable and undeletable
+   *   by everyone including its own author. A permanent ghost.
+   *
+   * Root `deletePromiseWeaves(where:)` still removes the edge along with the
+   * node, so ordinary deletion is unaffected.
+   */
   context: Array<FieldContext>
   /** @deprecated Please use field "aggregate" inside "contextConnection" instead */
   contextAggregate?: Maybe<PromiseWeaveFieldContextContextAggregationSelection>
   contextConnection: PromiseWeaveContextConnection
   createdAt: Scalars['DateTime']['output']
+  /**
+   * The member who authored the weave. CONNECT-only, and the validate rule below
+   * pins the connected Person to the caller. Without it any MEMBER could point
+   * this edge at the Space owner, and the entity-info drawer renders it verbatim
+   * as "Woven by <name>" — forged authorship, straight onto a trusted surface.
+   * `_SINGLE` rather than `_SOME` so a second, forged edge cannot ride along
+   * beside the honest one.
+   */
   createdBy: Array<Person>
   /** @deprecated Please use field "aggregate" inside "createdByConnection" instead */
   createdByAggregate?: Maybe<PromiseWeavePersonCreatedByAggregationSelection>
   createdByConnection: PromiseWeaveCreatedByConnection
+  /**
+   * Why these things are woven together — a member's note, or the evidence AI
+   * discovery cited when it proposed the weave.
+   */
+  description?: Maybe<Scalars['String']['output']>
   id: Scalars['ID']['output']
+  modifiedAt?: Maybe<Scalars['DateTime']['output']>
+  /**
+   * Who authored the weave: `user` (a member, via the field context) or `ai`
+   * (discovery, awaiting confirmation). Null means migration-built.
+   */
+  origin?: Maybe<Scalars['String']['output']>
+  /**
+   * Lifecycle state, stored lowercase to match ResonanceLink's `status`:
+   * `proposed` | `active` | `fulfilled` | `dissolved`. See
+   * kb/04-state-machines.md. Null on the migration-built starting-point weaves
+   * that predate the lifecycle — readers treat null as `active`.
+   */
   status?: Maybe<Scalars['String']['output']>
   title?: Maybe<Scalars['String']['output']>
   weaves: Array<FieldPulse>
@@ -18477,9 +19117,10 @@ export type PromiseWeave = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18503,9 +19144,10 @@ export type PromiseWeaveContextArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18526,9 +19168,10 @@ export type PromiseWeaveContextAggregateArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18552,9 +19195,10 @@ export type PromiseWeaveContextConnectionArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18578,9 +19222,10 @@ export type PromiseWeaveCreatedByArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18601,9 +19246,10 @@ export type PromiseWeaveCreatedByAggregateArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18627,9 +19273,10 @@ export type PromiseWeaveCreatedByConnectionArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18653,9 +19300,10 @@ export type PromiseWeaveWeavesArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18676,9 +19324,10 @@ export type PromiseWeaveWeavesAggregateArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18702,9 +19351,10 @@ export type PromiseWeaveWeavesConnectionArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18728,9 +19378,10 @@ export type PromiseWeaveWovenForArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18751,9 +19402,10 @@ export type PromiseWeaveWovenForAggregateArgs = {
  * scoping. Originates in Steve's relational "map" (see
  * docs/promise-weave-design-spike.md, GOAL-266).
  *
- * Starting-point scope: created by the prod→dev migration to wrap each migrated
- * care point (WEAVES → the care point, WOVEN_FOR/CREATED_BY → its creator, anchored
- * in its FieldContext via HAS_WEAVE). User/AI authoring arrives in a later slice.
+ * Authoring: three origins now write weaves — the prod→dev migration (which wraps
+ * each migrated care point), a member authoring one from a FieldContext, and AI
+ * discovery. AI-discovered weaves land `proposed` and only become `active` once a
+ * member confirms them; see `status` below and kb/04-state-machines.md.
  *
  * Multi-label: ["PromiseWeave"]
  */
@@ -18773,8 +19425,11 @@ export type PromiseWeaveAggregate = {
 export type PromiseWeaveAggregateNode = {
   __typename?: 'PromiseWeaveAggregateNode'
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  modifiedAt: DateTimeAggregateSelection
+  origin: StringAggregateSelection
   status: StringAggregateSelection
   title: StringAggregateSelection
 }
@@ -18783,21 +19438,13 @@ export type PromiseWeaveAggregateSelection = {
   __typename?: 'PromiseWeaveAggregateSelection'
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
+  description: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  modifiedAt: DateTimeAggregateSelection
+  origin: StringAggregateSelection
   status: StringAggregateSelection
   title: StringAggregateSelection
-}
-
-export type PromiseWeaveConnectInput = {
-  context?: InputMaybe<Array<PromiseWeaveContextConnectFieldInput>>
-  createdBy?: InputMaybe<Array<PromiseWeaveCreatedByConnectFieldInput>>
-  weaves?: InputMaybe<Array<PromiseWeaveWeavesConnectFieldInput>>
-  wovenFor?: InputMaybe<Array<PromiseWeaveWovenForConnectFieldInput>>
-}
-
-export type PromiseWeaveConnectWhere = {
-  node: PromiseWeaveWhere
 }
 
 export type PromiseWeaveContextAggregateInput = {
@@ -18841,23 +19488,8 @@ export type PromiseWeaveContextConnectionWhere = {
   node?: InputMaybe<FieldContextWhere>
 }
 
-export type PromiseWeaveContextCreateFieldInput = {
-  node: FieldContextCreateInput
-}
-
-export type PromiseWeaveContextDeleteFieldInput = {
-  delete?: InputMaybe<FieldContextDeleteInput>
-  where?: InputMaybe<PromiseWeaveContextConnectionWhere>
-}
-
-export type PromiseWeaveContextDisconnectFieldInput = {
-  disconnect?: InputMaybe<FieldContextDisconnectInput>
-  where?: InputMaybe<PromiseWeaveContextConnectionWhere>
-}
-
 export type PromiseWeaveContextFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveContextConnectFieldInput>>
-  create?: InputMaybe<Array<PromiseWeaveContextCreateFieldInput>>
 }
 
 export type PromiseWeaveContextNodeAggregationWhereInput = {
@@ -18932,17 +19564,8 @@ export type PromiseWeaveContextRelationship = {
   node: FieldContext
 }
 
-export type PromiseWeaveContextUpdateConnectionInput = {
-  node?: InputMaybe<FieldContextUpdateInput>
-  where?: InputMaybe<PromiseWeaveContextConnectionWhere>
-}
-
 export type PromiseWeaveContextUpdateFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveContextConnectFieldInput>>
-  create?: InputMaybe<Array<PromiseWeaveContextCreateFieldInput>>
-  delete?: InputMaybe<Array<PromiseWeaveContextDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<PromiseWeaveContextDisconnectFieldInput>>
-  update?: InputMaybe<PromiseWeaveContextUpdateConnectionInput>
   /** @deprecated Please use field "where" inside "PromiseWeaveContextUpdateConnectionInput" instead */
   where?: InputMaybe<PromiseWeaveContextConnectionWhere>
 }
@@ -18951,6 +19574,9 @@ export type PromiseWeaveCreateInput = {
   context?: InputMaybe<PromiseWeaveContextFieldInput>
   createdAt: Scalars['DateTime']['input']
   createdBy?: InputMaybe<PromiseWeaveCreatedByFieldInput>
+  description?: InputMaybe<Scalars['String']['input']>
+  modifiedAt?: InputMaybe<Scalars['DateTime']['input']>
+  origin?: InputMaybe<Scalars['String']['input']>
   status?: InputMaybe<Scalars['String']['input']>
   title?: InputMaybe<Scalars['String']['input']>
   weaves?: InputMaybe<PromiseWeaveWeavesFieldInput>
@@ -18998,23 +19624,8 @@ export type PromiseWeaveCreatedByConnectionWhere = {
   node?: InputMaybe<PersonWhere>
 }
 
-export type PromiseWeaveCreatedByCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type PromiseWeaveCreatedByDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<PromiseWeaveCreatedByConnectionWhere>
-}
-
-export type PromiseWeaveCreatedByDisconnectFieldInput = {
-  disconnect?: InputMaybe<PersonDisconnectInput>
-  where?: InputMaybe<PromiseWeaveCreatedByConnectionWhere>
-}
-
 export type PromiseWeaveCreatedByFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveCreatedByConnectFieldInput>>
-  create?: InputMaybe<Array<PromiseWeaveCreatedByCreateFieldInput>>
 }
 
 export type PromiseWeaveCreatedByNodeAggregationWhereInput = {
@@ -19201,33 +19812,10 @@ export type PromiseWeaveCreatedByRelationship = {
   node: Person
 }
 
-export type PromiseWeaveCreatedByUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<PromiseWeaveCreatedByConnectionWhere>
-}
-
 export type PromiseWeaveCreatedByUpdateFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveCreatedByConnectFieldInput>>
-  create?: InputMaybe<Array<PromiseWeaveCreatedByCreateFieldInput>>
-  delete?: InputMaybe<Array<PromiseWeaveCreatedByDeleteFieldInput>>
-  disconnect?: InputMaybe<Array<PromiseWeaveCreatedByDisconnectFieldInput>>
-  update?: InputMaybe<PromiseWeaveCreatedByUpdateConnectionInput>
   /** @deprecated Please use field "where" inside "PromiseWeaveCreatedByUpdateConnectionInput" instead */
   where?: InputMaybe<PromiseWeaveCreatedByConnectionWhere>
-}
-
-export type PromiseWeaveDeleteInput = {
-  context?: InputMaybe<Array<PromiseWeaveContextDeleteFieldInput>>
-  createdBy?: InputMaybe<Array<PromiseWeaveCreatedByDeleteFieldInput>>
-  weaves?: InputMaybe<Array<PromiseWeaveWeavesDeleteFieldInput>>
-  wovenFor?: InputMaybe<Array<PromiseWeaveWovenForDeleteFieldInput>>
-}
-
-export type PromiseWeaveDisconnectInput = {
-  context?: InputMaybe<Array<PromiseWeaveContextDisconnectFieldInput>>
-  createdBy?: InputMaybe<Array<PromiseWeaveCreatedByDisconnectFieldInput>>
-  weaves?: InputMaybe<Array<PromiseWeaveWeavesDisconnectFieldInput>>
-  wovenFor?: InputMaybe<Array<PromiseWeaveWovenForDisconnectFieldInput>>
 }
 
 export type PromiseWeaveEdge = {
@@ -19340,7 +19928,10 @@ export type PromiseWeavePersonWovenForNodeAggregateSelection = {
 /** Fields to sort PromiseWeaves by. The order in which sorts are applied is not guaranteed when specifying many fields in one PromiseWeaveSort object. */
 export type PromiseWeaveSort = {
   createdAt?: InputMaybe<SortDirection>
+  description?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
+  modifiedAt?: InputMaybe<SortDirection>
+  origin?: InputMaybe<SortDirection>
   status?: InputMaybe<SortDirection>
   title?: InputMaybe<SortDirection>
 }
@@ -19349,6 +19940,9 @@ export type PromiseWeaveUpdateInput = {
   context?: InputMaybe<Array<PromiseWeaveContextUpdateFieldInput>>
   createdAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   createdBy?: InputMaybe<Array<PromiseWeaveCreatedByUpdateFieldInput>>
+  description_SET?: InputMaybe<Scalars['String']['input']>
+  modifiedAt_SET?: InputMaybe<Scalars['DateTime']['input']>
+  origin_SET?: InputMaybe<Scalars['String']['input']>
   status_SET?: InputMaybe<Scalars['String']['input']>
   title_SET?: InputMaybe<Scalars['String']['input']>
   weaves?: InputMaybe<Array<PromiseWeaveWeavesUpdateFieldInput>>
@@ -19391,15 +19985,6 @@ export type PromiseWeaveWeavesConnectionWhere = {
   node?: InputMaybe<FieldPulseWhere>
 }
 
-export type PromiseWeaveWeavesCreateFieldInput = {
-  node: FieldPulseCreateInput
-}
-
-export type PromiseWeaveWeavesDeleteFieldInput = {
-  delete?: InputMaybe<FieldPulseDeleteInput>
-  where?: InputMaybe<PromiseWeaveWeavesConnectionWhere>
-}
-
 export type PromiseWeaveWeavesDisconnectFieldInput = {
   disconnect?: InputMaybe<FieldPulseDisconnectInput>
   where?: InputMaybe<PromiseWeaveWeavesConnectionWhere>
@@ -19407,7 +19992,6 @@ export type PromiseWeaveWeavesDisconnectFieldInput = {
 
 export type PromiseWeaveWeavesFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveWeavesConnectFieldInput>>
-  create?: InputMaybe<Array<PromiseWeaveWeavesCreateFieldInput>>
 }
 
 export type PromiseWeaveWeavesNodeAggregationWhereInput = {
@@ -19502,17 +20086,9 @@ export type PromiseWeaveWeavesRelationship = {
   node: FieldPulse
 }
 
-export type PromiseWeaveWeavesUpdateConnectionInput = {
-  node?: InputMaybe<FieldPulseUpdateInput>
-  where?: InputMaybe<PromiseWeaveWeavesConnectionWhere>
-}
-
 export type PromiseWeaveWeavesUpdateFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveWeavesConnectFieldInput>>
-  create?: InputMaybe<Array<PromiseWeaveWeavesCreateFieldInput>>
-  delete?: InputMaybe<Array<PromiseWeaveWeavesDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveWeavesDisconnectFieldInput>>
-  update?: InputMaybe<PromiseWeaveWeavesUpdateConnectionInput>
   /** @deprecated Please use field "where" inside "PromiseWeaveWeavesUpdateConnectionInput" instead */
   where?: InputMaybe<PromiseWeaveWeavesConnectionWhere>
 }
@@ -19561,11 +20137,27 @@ export type PromiseWeaveWhere = {
   createdBy_SINGLE?: InputMaybe<PersonWhere>
   /** Return PromiseWeaves where some of the related People match this filter */
   createdBy_SOME?: InputMaybe<PersonWhere>
+  description_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  description_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  description_EQ?: InputMaybe<Scalars['String']['input']>
+  description_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  description_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
   id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
   id_EQ?: InputMaybe<Scalars['ID']['input']>
   id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
   id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  modifiedAt_EQ?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_GT?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_IN?: InputMaybe<Array<InputMaybe<Scalars['DateTime']['input']>>>
+  modifiedAt_LT?: InputMaybe<Scalars['DateTime']['input']>
+  modifiedAt_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  origin_CONTAINS?: InputMaybe<Scalars['String']['input']>
+  origin_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
+  origin_EQ?: InputMaybe<Scalars['String']['input']>
+  origin_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
+  origin_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
   status_CONTAINS?: InputMaybe<Scalars['String']['input']>
   status_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
   status_EQ?: InputMaybe<Scalars['String']['input']>
@@ -19653,15 +20245,6 @@ export type PromiseWeaveWovenForConnectionWhere = {
   node?: InputMaybe<PersonWhere>
 }
 
-export type PromiseWeaveWovenForCreateFieldInput = {
-  node: PersonCreateInput
-}
-
-export type PromiseWeaveWovenForDeleteFieldInput = {
-  delete?: InputMaybe<PersonDeleteInput>
-  where?: InputMaybe<PromiseWeaveWovenForConnectionWhere>
-}
-
 export type PromiseWeaveWovenForDisconnectFieldInput = {
   disconnect?: InputMaybe<PersonDisconnectInput>
   where?: InputMaybe<PromiseWeaveWovenForConnectionWhere>
@@ -19669,7 +20252,6 @@ export type PromiseWeaveWovenForDisconnectFieldInput = {
 
 export type PromiseWeaveWovenForFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveWovenForConnectFieldInput>>
-  create?: InputMaybe<Array<PromiseWeaveWovenForCreateFieldInput>>
 }
 
 export type PromiseWeaveWovenForNodeAggregationWhereInput = {
@@ -19856,17 +20438,9 @@ export type PromiseWeaveWovenForRelationship = {
   node: Person
 }
 
-export type PromiseWeaveWovenForUpdateConnectionInput = {
-  node?: InputMaybe<PersonUpdateInput>
-  where?: InputMaybe<PromiseWeaveWovenForConnectionWhere>
-}
-
 export type PromiseWeaveWovenForUpdateFieldInput = {
   connect?: InputMaybe<Array<PromiseWeaveWovenForConnectFieldInput>>
-  create?: InputMaybe<Array<PromiseWeaveWovenForCreateFieldInput>>
-  delete?: InputMaybe<Array<PromiseWeaveWovenForDeleteFieldInput>>
   disconnect?: InputMaybe<Array<PromiseWeaveWovenForDisconnectFieldInput>>
-  update?: InputMaybe<PromiseWeaveWovenForUpdateConnectionInput>
   /** @deprecated Please use field "where" inside "PromiseWeaveWovenForUpdateConnectionInput" instead */
   where?: InputMaybe<PromiseWeaveWovenForConnectionWhere>
 }
@@ -22541,9 +23115,13 @@ export type ResourcePulseDocumentExtractedFromNodeAggregateSelection = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -22625,6 +23203,46 @@ export type ResourcePulseExtractedFromNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -22680,6 +23298,36 @@ export type ResourcePulseExtractedFromNodeAggregationWhereInput = {
   sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -25425,9 +26073,13 @@ export type StoryPulseDocumentExtractedFromNodeAggregateSelection = {
   filename: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  ingestCreatedEntityCount: IntAggregateSelection
+  ingestFailedEntityCount: IntAggregateSelection
   mimeType: StringAggregateSelection
   pageCount: IntAggregateSelection
   sizeBytes: IntAggregateSelection
+  status: StringAggregateSelection
+  statusMessage: StringAggregateSelection
   summary: StringAggregateSelection
   uploadedAt: DateTimeAggregateSelection
   userHint: StringAggregateSelection
@@ -25509,6 +26161,46 @@ export type StoryPulseExtractedFromNodeAggregationWhereInput = {
   id_MIN_LT?: InputMaybe<Scalars['ID']['input']>
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id_MIN_LTE?: InputMaybe<Scalars['ID']['input']>
+  ingestCreatedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestCreatedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestCreatedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_AVERAGE_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  ingestFailedEntityCount_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  ingestFailedEntityCount_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
   mimeType_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   mimeType_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -25564,6 +26256,36 @@ export type StoryPulseExtractedFromNodeAggregationWhereInput = {
   sizeBytes_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LT?: InputMaybe<Scalars['Int']['input']>
   sizeBytes_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  statusMessage_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  statusMessage_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
   summary_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
   summary_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
@@ -26315,12 +27037,6 @@ export type UpdateDocumentIngestThreadsMutationResponse = {
   info: UpdateInfo
 }
 
-export type UpdateDocumentsMutationResponse = {
-  __typename?: 'UpdateDocumentsMutationResponse'
-  documents: Array<Document>
-  info: UpdateInfo
-}
-
 export type UpdateFieldContextsMutationResponse = {
   __typename?: 'UpdateFieldContextsMutationResponse'
   fieldContexts: Array<FieldContext>
@@ -26510,6 +27226,12 @@ export type UpdatePersonPulseResponsesConnection = {
   edges: Array<UpdatePersonPulseResponseEdge>
   pageInfo: PageInfo
   totalCount: Scalars['Int']['output']
+}
+
+export type UpdatePromiseWeavesMutationResponse = {
+  __typename?: 'UpdatePromiseWeavesMutationResponse'
+  info: UpdateInfo
+  promiseWeaves: Array<PromiseWeave>
 }
 
 export type UpdateRemoveSpaceMemberResponsesMutationResponse = {
@@ -28145,6 +28867,19 @@ export type LogResonanceActivityMutation = {
   }
 }
 
+export type LogWeaveActivityMutationVariables = Exact<{
+  input: LogWeaveInput
+}>
+
+export type LogWeaveActivityMutation = {
+  __typename?: 'Mutation'
+  logWeaveActivity: {
+    __typename?: 'CreateLogResponse'
+    success: boolean
+    message: string
+  }
+}
+
 export type SubmitAssistantFeedbackMutationVariables = Exact<{
   turnId: Scalars['ID']['input']
   rating: AssistantFeedbackRating
@@ -28607,6 +29342,114 @@ export type DeletePersonConnectionMutation = {
     __typename?: 'DeletePersonConnectionResponse'
     success: boolean
     message: string
+  }
+}
+
+export type CreatePromiseWeaveMutationVariables = Exact<{
+  input: Array<PromiseWeaveCreateInput> | PromiseWeaveCreateInput
+}>
+
+export type CreatePromiseWeaveMutation = {
+  __typename?: 'Mutation'
+  createPromiseWeaves: {
+    __typename?: 'CreatePromiseWeavesMutationResponse'
+    promiseWeaves: Array<{
+      __typename?: 'PromiseWeave'
+      id: string
+      title?: string | null
+      description?: string | null
+      status?: string | null
+      origin?: string | null
+      createdAt: any
+      weaves: Array<
+        | { __typename: 'CarePulse'; id: string; title: string }
+        | { __typename: 'CoreValuePulse'; id: string; title: string }
+        | { __typename: 'GoalPulse'; id: string; title: string }
+        | { __typename: 'ResourcePulse'; id: string; title: string }
+        | { __typename: 'StoryPulse'; id: string; title: string }
+      >
+      wovenFor: Array<{
+        __typename?: 'Person'
+        id: string
+        name: string
+        firstName: string
+        lastName: string
+      }>
+      createdBy: Array<{
+        __typename?: 'Person'
+        id: string
+        name: string
+        firstName: string
+        lastName: string
+      }>
+      context: Array<{ __typename?: 'FieldContext'; id: string }>
+    }>
+    info: {
+      __typename?: 'CreateInfo'
+      nodesCreated: number
+      relationshipsCreated: number
+    }
+  }
+}
+
+export type UpdatePromiseWeaveMutationVariables = Exact<{
+  where: PromiseWeaveWhere
+  update: PromiseWeaveUpdateInput
+}>
+
+export type UpdatePromiseWeaveMutation = {
+  __typename?: 'Mutation'
+  updatePromiseWeaves: {
+    __typename?: 'UpdatePromiseWeavesMutationResponse'
+    promiseWeaves: Array<{
+      __typename?: 'PromiseWeave'
+      id: string
+      title?: string | null
+      description?: string | null
+      status?: string | null
+      origin?: string | null
+      createdAt: any
+      modifiedAt?: any | null
+      weaves: Array<
+        | { __typename: 'CarePulse'; id: string; title: string }
+        | { __typename: 'CoreValuePulse'; id: string; title: string }
+        | { __typename: 'GoalPulse'; id: string; title: string }
+        | { __typename: 'ResourcePulse'; id: string; title: string }
+        | { __typename: 'StoryPulse'; id: string; title: string }
+      >
+      wovenFor: Array<{
+        __typename?: 'Person'
+        id: string
+        name: string
+        firstName: string
+        lastName: string
+      }>
+      createdBy: Array<{
+        __typename?: 'Person'
+        id: string
+        name: string
+        firstName: string
+        lastName: string
+      }>
+    }>
+    info: {
+      __typename?: 'UpdateInfo'
+      relationshipsCreated: number
+      relationshipsDeleted: number
+    }
+  }
+}
+
+export type DeletePromiseWeaveMutationVariables = Exact<{
+  id: Scalars['ID']['input']
+}>
+
+export type DeletePromiseWeaveMutation = {
+  __typename?: 'Mutation'
+  deletePromiseWeaves: {
+    __typename?: 'DeleteInfo'
+    nodesDeleted: number
+    relationshipsDeleted: number
   }
 }
 
@@ -29644,6 +30487,10 @@ export type DocumentsByFieldContextQuery = {
     summary?: string | null
     concepts?: Array<string> | null
     uploadedAt: any
+    status?: string | null
+    statusMessage?: string | null
+    ingestCreatedEntityCount?: number | null
+    ingestFailedEntityCount?: number | null
     extractedPeople: Array<{
       __typename?: 'Person'
       id: string
@@ -29661,6 +30508,27 @@ export type DocumentsByFieldContextQuery = {
       __typename?: 'DocumentIngestThread'
       id: string
       title: string
+      createdAt: string
+    }>
+  }>
+}
+
+export type DocumentIngestStatusQueryVariables = Exact<{
+  fieldContextId: Scalars['ID']['input']
+}>
+
+export type DocumentIngestStatusQuery = {
+  __typename?: 'Query'
+  documentsByFieldContext: Array<{
+    __typename?: 'Document'
+    id: string
+    status?: string | null
+    statusMessage?: string | null
+    ingestCreatedEntityCount?: number | null
+    ingestFailedEntityCount?: number | null
+    ingestThreads: Array<{
+      __typename?: 'DocumentIngestThread'
+      id: string
       createdAt: string
     }>
   }>
@@ -29895,7 +30763,9 @@ export type GetFieldContextDetailsQuery = {
       __typename?: 'PromiseWeave'
       id: string
       title?: string | null
+      description?: string | null
       status?: string | null
+      origin?: string | null
       createdAt: any
       weaves: Array<
         | { __typename: 'CarePulse'; id: string; title: string }
@@ -31100,8 +31970,11 @@ export type GetPromiseWeaveDetailsQuery = {
     __typename?: 'PromiseWeave'
     id: string
     title?: string | null
+    description?: string | null
     status?: string | null
+    origin?: string | null
     createdAt: any
+    modifiedAt?: any | null
     weaves: Array<
       | { __typename: 'CarePulse'; id: string; title: string; content: string }
       | {
@@ -31120,6 +31993,13 @@ export type GetPromiseWeaveDetailsQuery = {
       | { __typename: 'StoryPulse'; id: string; title: string; content: string }
     >
     wovenFor: Array<{
+      __typename?: 'Person'
+      id: string
+      name: string
+      firstName: string
+      lastName: string
+    }>
+    createdBy: Array<{
       __typename?: 'Person'
       id: string
       name: string
@@ -32811,6 +33691,61 @@ export const LogResonanceActivityDocument = {
 } as unknown as DocumentNode<
   LogResonanceActivityMutation,
   LogResonanceActivityMutationVariables
+>
+export const LogWeaveActivityDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'LogWeaveActivity' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'LogWeaveInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'logWeaveActivity' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  LogWeaveActivityMutation,
+  LogWeaveActivityMutationVariables
 >
 export const SubmitAssistantFeedbackDocument = {
   kind: 'Document',
@@ -35039,6 +35974,451 @@ export const DeletePersonConnectionDocument = {
 } as unknown as DocumentNode<
   DeletePersonConnectionMutation,
   DeletePersonConnectionMutationVariables
+>
+export const CreatePromiseWeaveDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'CreatePromiseWeave' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'input' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'ListType',
+              type: {
+                kind: 'NonNullType',
+                type: {
+                  kind: 'NamedType',
+                  name: { kind: 'Name', value: 'PromiseWeaveCreateInput' },
+                },
+              },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'createPromiseWeaves' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'input' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'input' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'promiseWeaves' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'origin' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'weaves' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'wovenFor' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'context' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'nodesCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  CreatePromiseWeaveMutation,
+  CreatePromiseWeaveMutationVariables
+>
+export const UpdatePromiseWeaveDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'UpdatePromiseWeave' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'where' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PromiseWeaveWhere' },
+            },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'update' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: {
+              kind: 'NamedType',
+              name: { kind: 'Name', value: 'PromiseWeaveUpdateInput' },
+            },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'updatePromiseWeaves' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'where' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'update' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'update' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'promiseWeaves' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'origin' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'modifiedAt' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'weaves' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: '__typename' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'title' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'wovenFor' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdBy' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'id' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'firstName' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'lastName' },
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'info' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsCreated' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'relationshipsDeleted' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  UpdatePromiseWeaveMutation,
+  UpdatePromiseWeaveMutationVariables
+>
+export const DeletePromiseWeaveDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeletePromiseWeave' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: { kind: 'Variable', name: { kind: 'Name', value: 'id' } },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deletePromiseWeaves' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'where' },
+                value: {
+                  kind: 'ObjectValue',
+                  fields: [
+                    {
+                      kind: 'ObjectField',
+                      name: { kind: 'Name', value: 'id_EQ' },
+                      value: {
+                        kind: 'Variable',
+                        name: { kind: 'Name', value: 'id' },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'nodesDeleted' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'relationshipsDeleted' },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeletePromiseWeaveMutation,
+  DeletePromiseWeaveMutationVariables
 >
 export const CreateGoalPulseDocument = {
   kind: 'Document',
@@ -39739,6 +41119,19 @@ export const DocumentsByFieldContextDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'summary' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'concepts' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'uploadedAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'statusMessage' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ingestCreatedEntityCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ingestFailedEntityCount' },
+                },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'extractedPeople' },
@@ -39797,6 +41190,84 @@ export const DocumentsByFieldContextDocument = {
 } as unknown as DocumentNode<
   DocumentsByFieldContextQuery,
   DocumentsByFieldContextQueryVariables
+>
+export const DocumentIngestStatusDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'query',
+      name: { kind: 'Name', value: 'DocumentIngestStatus' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'fieldContextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'documentsByFieldContext' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'fieldContextId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'fieldContextId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'statusMessage' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ingestCreatedEntityCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ingestFailedEntityCount' },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'ingestThreads' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'createdAt' },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DocumentIngestStatusQuery,
+  DocumentIngestStatusQueryVariables
 >
 export const GetFieldContextDetailsDocument = {
   kind: 'Document',
@@ -40695,7 +42166,15 @@ export const GetFieldContextDetailsDocument = {
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
                       {
                         kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      {
+                        kind: 'Field',
                         name: { kind: 'Name', value: 'status' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'origin' },
                       },
                       {
                         kind: 'Field',
@@ -45073,8 +46552,11 @@ export const GetPromiseWeaveDetailsDocument = {
               selections: [
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'title' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'description' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'origin' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'modifiedAt' } },
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'weaves' },
@@ -45097,6 +46579,25 @@ export const GetPromiseWeaveDetailsDocument = {
                 {
                   kind: 'Field',
                   name: { kind: 'Name', value: 'wovenFor' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'firstName' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'lastName' },
+                      },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'createdBy' },
                   selectionSet: {
                     kind: 'SelectionSet',
                     selections: [

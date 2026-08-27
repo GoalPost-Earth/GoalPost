@@ -70,6 +70,9 @@ import {
   REMOVE_PULSE_FROM_CONTEXT_MUTATION,
 } from '@/app/graphql/mutations'
 import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
+import { PromiseWeaveModal } from '@/components/fields/promise-weave-modal'
+import { usePromiseWeaves } from '@/hooks/usePromiseWeaves'
+import { WEAVE_STATUS } from '@/lib/promise-weave'
 import { cn } from '@/lib/utils'
 import {
   useApp,
@@ -477,18 +480,67 @@ export default function FieldContextDetailsPage() {
       setIsImportArticlesModalOpen(true)
     })
   }, [contextId, canEditContent])
-  const pulses = [
-    ...(data?.goalPulses || []),
-    ...(data?.resourcePulses || []),
-    ...(data?.storyPulses || []),
-    ...(data?.carePulses || []),
-    ...(data?.coreValuePulses || []),
-  ].sort(
-    (left, right) =>
-      new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+  // Memoized because `weavePulseOptions` derives from it — a fresh
+  // spread-and-sort literal every render would defeat that memo entirely.
+  const pulses = useMemo(
+    () =>
+      [
+        ...(data?.goalPulses || []),
+        ...(data?.resourcePulses || []),
+        ...(data?.storyPulses || []),
+        ...(data?.carePulses || []),
+        ...(data?.coreValuePulses || []),
+      ].sort(
+        (left, right) =>
+          new Date(right.createdAt).getTime() -
+          new Date(left.createdAt).getTime()
+      ),
+    [
+      data?.goalPulses,
+      data?.resourcePulses,
+      data?.storyPulses,
+      data?.carePulses,
+      data?.coreValuePulses,
+    ]
   )
   const resonances = context?.resonancesInContext || []
-  const weaves = context?.weaves || []
+  // Memoized because `weaveById` below derives from it — a fresh `[]` literal
+  // every render would rebuild that map on every render.
+  const weaves = useMemo(() => context?.weaves || [], [context?.weaves])
+
+  const promiseWeaves = usePromiseWeaves({
+    contextId,
+    currentUserId: user?.id,
+    refetch,
+  })
+
+  // Candidates the weave modal offers. Pulses are this field's own; people are
+  // the ones already attached to it, so a weave can only be woven for someone
+  // the member can already see here.
+  const weavePulseOptions = useMemo(
+    () =>
+      pulses.map((pulse) => ({
+        id: pulse.id,
+        __typename: pulse.__typename ?? '',
+        title: pulse.title ?? '',
+      })),
+    [pulses]
+  )
+  const weavePeopleOptions = useMemo(
+    () =>
+      people.map((person) => ({
+        id: person.id,
+        name:
+          person.name?.trim() ||
+          `${person.firstName} ${person.lastName}`.trim() ||
+          'Unnamed person',
+      })),
+    [people]
+  )
+  const weaveById = useMemo(
+    () => new Map(weaves.map((weave) => [weave.id, weave])),
+    [weaves]
+  )
 
   const handleEditStart = () => {
     setEditTitle(context?.title || '')
@@ -1522,6 +1574,37 @@ export default function FieldContextDetailsPage() {
                 id: weaveId,
               })
             }
+            onAddWeave={canEditContent ? promiseWeaves.openCreate : undefined}
+            onEditWeave={
+              canEditContent
+                ? (weaveId) => {
+                    const weave = weaveById.get(weaveId)
+                    if (weave) promiseWeaves.openEdit(weave)
+                  }
+                : undefined
+            }
+            onConfirmWeave={
+              canEditContent
+                ? (weaveId) => {
+                    const weave = weaveById.get(weaveId)
+                    if (weave)
+                      void promiseWeaves.setStatus(weave, WEAVE_STATUS.ACTIVE)
+                  }
+                : undefined
+            }
+            onDismissWeave={
+              canEditContent
+                ? (weaveId) => {
+                    const weave = weaveById.get(weaveId)
+                    if (weave)
+                      void promiseWeaves.setStatus(
+                        weave,
+                        WEAVE_STATUS.DISSOLVED
+                      )
+                  }
+                : undefined
+            }
+            pendingWeaveId={promiseWeaves.pendingWeaveId}
             onResonanceClick={(resonanceId) =>
               dispatchOpenInfoDrawer({
                 type: 'ResonanceLink',
@@ -1673,6 +1756,22 @@ export default function FieldContextDetailsPage() {
         onDelete={handleDeleteResonance}
         editingResonance={editingResonance}
       />
+
+      {canEditContent && promiseWeaves.isModalOpen && (
+        <PromiseWeaveModal
+          // Mount controls open/close, and the key makes each open a fresh
+          // instance — so an edit never shows the previous weave's values and a
+          // create never inherits the last edit's.
+          key={promiseWeaves.editingWeave?.id ?? 'new-weave'}
+          onClose={promiseWeaves.closeModal}
+          pulses={weavePulseOptions}
+          people={weavePeopleOptions}
+          editingWeave={promiseWeaves.editingWeave}
+          onSubmit={promiseWeaves.submit}
+          onDelete={promiseWeaves.remove}
+          isSubmitting={promiseWeaves.isSubmitting}
+        />
+      )}
 
       <BulkPulseShareModal
         isOpen={isBulkShareModalOpen}
