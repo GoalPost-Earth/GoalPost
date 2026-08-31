@@ -186,7 +186,7 @@ export function ImportArticlesModal({
         aria-modal="true"
         aria-labelledby="import-articles-title"
         tabIndex={-1}
-        className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-lg sm:max-w-2xl w-full max-h-[85vh] p-4 sm:p-6 flex flex-col gap-4 focus:outline-none"
+        className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-lg sm:max-w-2xl w-full max-h-[85vh] p-4 sm:p-6 flex flex-col gap-4 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gp-primary"
       >
         <div className="flex items-center justify-between shrink-0">
           <h3

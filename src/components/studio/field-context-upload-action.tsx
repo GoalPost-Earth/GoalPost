@@ -71,6 +71,10 @@ export const FieldContextUploadAction: FC = () => {
   // dismissing the menu with Escape or an outside click must still return
   // focus to the trigger.
   const restoreFocusOnCloseRef = useRef(true)
+  // Separately tracks whether *this* component launched the bulk import
+  // dialog. `restoreFocusOnCloseRef` cannot double as that flag: Radix resets
+  // it the moment the menu closes, long before the dialog does.
+  const awaitingImportCloseRef = useRef(false)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
   // Because that restore is suppressed, this component owns putting focus
@@ -84,7 +88,21 @@ export const FieldContextUploadAction: FC = () => {
   // The bulk import dialog is owned by the field-context page, so this is the
   // only way to learn it closed. Must sit above the early returns below —
   // hooks cannot be called conditionally.
-  useEffect(() => onImportArticlesModalClosed(refocusTrigger), [refocusTrigger])
+  //
+  // The page has its own in-page trigger for the same dialog, and this action
+  // bar is mounted alongside it on that route. Claiming every close would yank
+  // focus onto this button a frame after the dialog's own trap correctly
+  // restored it to whatever the member actually pressed — so only answer for
+  // the opens this component started.
+  useEffect(
+    () =>
+      onImportArticlesModalClosed(() => {
+        if (!awaitingImportCloseRef.current) return
+        awaitingImportCloseRef.current = false
+        refocusTrigger()
+      }),
+    [refocusTrigger]
+  )
 
   // Only treat the focal as a live FieldContext when it came from the
   // current route. A 'persisted' source means the user navigated away to
@@ -206,6 +224,7 @@ export const FieldContextUploadAction: FC = () => {
             onSelect={() => {
               if (!focalFieldContextId) return
               restoreFocusOnCloseRef.current = false
+              awaitingImportCloseRef.current = true
               emitOpenImportArticlesModal(focalFieldContextId)
             }}
             // `.gp-menu-item` owns the hover/focus highlight (per the design

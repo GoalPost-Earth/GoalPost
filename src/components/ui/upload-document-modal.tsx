@@ -168,7 +168,7 @@ export function UploadDocumentModal({
         aria-modal="true"
         aria-labelledby="upload-document-title"
         tabIndex={-1}
-        className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 focus:outline-none"
+        className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gp-primary"
       >
         <div className="flex items-center justify-between">
           <h3
