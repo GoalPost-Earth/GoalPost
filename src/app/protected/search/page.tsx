@@ -9,6 +9,12 @@ import { SEARCH_ALL } from '@/app/graphql/queries'
 import { useQuery } from '@apollo/client/react'
 import { capitalizeString } from '@/lib/utils'
 import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
+import {
+  PromiseWeaveResultCard,
+  toPromiseWeaveResults,
+  type PromiseWeaveResult,
+  type PromiseWeaveSearchRow,
+} from '@/components/search/promise-weave-result-card'
 
 type EntityType =
   | 'person'
@@ -19,6 +25,7 @@ type EntityType =
   | 'resourcePulse'
   | 'storyPulse'
   | 'coreValuePulse'
+  | 'promiseWeave'
 
 const PULSE_ENTITY_TYPES: ReadonlySet<EntityType> = new Set([
   'goalPulse',
@@ -40,6 +47,8 @@ type SearchEntity = {
   tags?: string[]
   /** null when the entity has no dedicated route (e.g. pulses, which only live in the EntityInfoDrawer). */
   href: string | null
+  /** Set only on `promiseWeave` rows — drives the weave's own result card. */
+  weave?: PromiseWeaveResult
 }
 
 interface GraphQLSearchResult {
@@ -92,6 +101,7 @@ interface GraphQLSearchResult {
       createdAt: string
       intensity: number
     }>
+    promiseWeaves: PromiseWeaveSearchRow[]
   }
 }
 
@@ -209,6 +219,21 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
     })
   })
 
+  // Transform promise weaves. Connector nodes, not pulses — they always
+  // render through PromiseWeaveResultCard, which builds its own body copy
+  // from `weave`, so `subtitle` / `description` / `tags` would be dead here.
+  // `title` is not: it is the label handed to the drawer on click.
+  toPromiseWeaveResults(data.searchAll.promiseWeaves).forEach((weave) => {
+    entities.push({
+      id: weave.id,
+      type: 'promiseWeave',
+      title: weave.title,
+      description: '',
+      href: null,
+      weave,
+    })
+  })
+
   return entities
 }
 
@@ -221,6 +246,7 @@ const typeLabel: Record<EntityType, string> = {
   resourcePulse: 'Resource',
   storyPulse: 'Story',
   coreValuePulse: 'Core Value',
+  promiseWeave: 'Promise Weave',
 }
 
 const typeAccentClass: Record<EntityType, string> = {
@@ -232,6 +258,7 @@ const typeAccentClass: Record<EntityType, string> = {
   resourcePulse: 'text-gp-resource',
   storyPulse: 'text-gp-story',
   coreValuePulse: 'text-gp-coreValue',
+  promiseWeave: 'text-gp-primary',
 }
 
 const typePillClass: Record<EntityType, string> = {
@@ -243,6 +270,7 @@ const typePillClass: Record<EntityType, string> = {
   resourcePulse: 'bg-gp-resource/10 text-gp-resource border-gp-resource/20',
   storyPulse: 'bg-gp-story/10 text-gp-story border-gp-story/20',
   coreValuePulse: 'bg-gp-coreValue/10 text-gp-coreValue border-gp-coreValue/20',
+  promiseWeave: 'bg-gp-primary/10 text-gp-primary border-gp-primary/20',
 }
 
 function EntityCardWrapper({
@@ -342,8 +370,10 @@ function SearchPageContent() {
     window.history.replaceState(null, '', url)
   }, [debouncedQuery])
 
-  const handleEntityClick = (entity: SearchEntity, e: React.MouseEvent) => {
-    e.preventDefault()
+  // `e` is absent for cards that render their own button (the weave card):
+  // there is no <Link> navigation to suppress in that path.
+  const handleEntityClick = (entity: SearchEntity, e?: React.MouseEvent) => {
+    e?.preventDefault()
     setPageTitle(entity.title)
     if (entity.type === 'meSpace' || entity.type === 'weSpace') {
       localStorage.setItem(`space_${entity.id}`, entity.title)
@@ -353,6 +383,15 @@ function SearchPageContent() {
     if (isPulseEntityType(entity.type)) {
       dispatchOpenInfoDrawer({
         type: 'Pulse',
+        id: entity.id,
+        label: entity.title,
+      })
+      return
+    }
+    // A weave is not a pulse — it opens the existing read-only weave drawer.
+    if (entity.type === 'promiseWeave') {
+      dispatchOpenInfoDrawer({
+        type: 'PromiseWeave',
         id: entity.id,
         label: entity.title,
       })
@@ -441,6 +480,7 @@ function SearchPageContent() {
                 { key: 'resourcePulse', label: 'Resources' },
                 { key: 'storyPulse', label: 'Stories' },
                 { key: 'coreValuePulse', label: 'Core Values' },
+                { key: 'promiseWeave', label: 'Promise Weaves' },
               ].map((option) => {
                 const isActive = activeType === option.key
                 return (
@@ -487,60 +527,69 @@ function SearchPageContent() {
               </div>
             )}
 
-            {filteredEntities.map((entity) => (
-              <EntityCardWrapper
-                key={entity.id}
-                entity={entity}
-                onClick={(e) => handleEntityClick(entity, e)}
-              >
-                <article
-                  className={`h-full rounded-2xl border border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-5 shadow-[0_20px_40px_-16px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_70px_-28px_rgba(0,0,0,0.6)] transition-all ${
-                    animationsEnabled
-                      ? 'group-hover:-translate-y-1 group-hover:shadow-[0_24px_48px_-18px_rgba(0,0,0,0.14)]'
-                      : ''
-                  }`}
+            {filteredEntities.map((entity) =>
+              entity.weave ? (
+                <PromiseWeaveResultCard
+                  key={entity.id}
+                  weave={entity.weave}
+                  animationsEnabled={animationsEnabled}
+                  onOpen={() => handleEntityClick(entity)}
+                />
+              ) : (
+                <EntityCardWrapper
+                  key={entity.id}
+                  entity={entity}
+                  onClick={(e) => handleEntityClick(entity, e)}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div
-                      className={`text-xs font-semibold uppercase tracking-[0.16em] ${typeAccentClass[entity.type]}`}
-                    >
-                      {typeLabel[entity.type]}
+                  <article
+                    className={`h-full rounded-2xl border border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-5 shadow-[0_20px_40px_-16px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_70px_-28px_rgba(0,0,0,0.6)] transition-all ${
+                      animationsEnabled
+                        ? 'group-hover:-translate-y-1 group-hover:shadow-[0_24px_48px_-18px_rgba(0,0,0,0.14)]'
+                        : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div
+                        className={`text-xs font-semibold uppercase tracking-[0.16em] ${typeAccentClass[entity.type]}`}
+                      >
+                        {typeLabel[entity.type]}
+                      </div>
+                      <span className="material-symbols-outlined text-gp-ink-soft dark:text-gp-ink-soft text-xl">
+                        arrow_outward
+                      </span>
                     </div>
-                    <span className="material-symbols-outlined text-gp-ink-soft dark:text-gp-ink-soft text-xl">
-                      arrow_outward
-                    </span>
-                  </div>
 
-                  <div className="mt-3 flex flex-col gap-1">
-                    <h3 className="text-lg font-semibold text-gp-ink-strong dark:text-gp-ink-strong leading-tight">
-                      {entity.title}
-                    </h3>
-                    {entity.subtitle && (
-                      <p className="text-xs font-medium text-gp-ink-muted dark:text-gp-ink-soft">
-                        {entity.subtitle}
-                      </p>
+                    <div className="mt-3 flex flex-col gap-1">
+                      <h3 className="text-lg font-semibold text-gp-ink-strong dark:text-gp-ink-strong leading-tight">
+                        {entity.title}
+                      </h3>
+                      {entity.subtitle && (
+                        <p className="text-xs font-medium text-gp-ink-muted dark:text-gp-ink-soft">
+                          {entity.subtitle}
+                        </p>
+                      )}
+                    </div>
+
+                    <p className="mt-3 text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed line-clamp-3">
+                      {entity.description}
+                    </p>
+
+                    {entity.tags && entity.tags.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {entity.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className={`px-2 py-1 rounded-full text-[11px] font-semibold border ${typePillClass[entity.type]}`}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     )}
-                  </div>
-
-                  <p className="mt-3 text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed line-clamp-3">
-                    {entity.description}
-                  </p>
-
-                  {entity.tags && entity.tags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {entity.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className={`px-2 py-1 rounded-full text-[11px] font-semibold border ${typePillClass[entity.type]}`}
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </article>
-              </EntityCardWrapper>
-            ))}
+                  </article>
+                </EntityCardWrapper>
+              )
+            )}
           </section>
         </main>
       </div>

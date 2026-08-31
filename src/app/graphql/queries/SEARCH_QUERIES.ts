@@ -3,7 +3,7 @@ import gql from 'graphql-tag'
 /**
  * Global search query across all entity types.
  * Searches for people, contexts, pulses (goal/resource/story/core-value),
- * and spaces (me/we).
+ * promise weaves, and spaces (me/we).
  *
  * @param query - Search term (case-insensitive substring match)
  * @returns SearchResults with up to 10 results of each entity type
@@ -54,6 +54,24 @@ export const SEARCH_ALL = gql`
         content
         createdAt
         intensity
+      }
+      promiseWeaves {
+        __typename
+        id
+        title
+        status
+        createdAt
+        wovenFor {
+          id
+          name
+        }
+        weaves {
+          id
+          title
+        }
+        context {
+          id
+        }
       }
       meSpaces {
         __typename
