@@ -2490,7 +2490,59 @@ MIGRATION: Log entries reference pulses that now live in FieldContexts.
 Logs maintain direct relationships to pulses for historical tracking,
 but pulse discovery should go through Space → FieldContext → Pulse path.
 """
-type Log @node(labels: ["Log"]) {
+type Log
+  @node(labels: ["Log"])
+  # Writes are server-side ONLY. Every real Log is written by raw Cypher
+  # (`createLog` in lib/activity-logs, or inline in a mutation's own statement)
+  # or by the `log*Activity` resolvers, which gate on `canEditContext`. NOTHING
+  # in the app used the generated `createLogs` / `updateLogs` / `deleteLogs`
+  # roots — and while they were open, ANY authenticated caller could forge an
+  # activity entry, rewrite someone else's, or delete one. An activity feed that
+  # can be rewritten by its subject is not an audit trail. (GOAL-342 review.)
+  @mutation(operations: [])
+  @authorization(
+    # READ — a Log is as visible as what it is ABOUT. Without this filter the
+    # generated `logs` root was a platform-wide read oracle: descriptions are
+    # assembled server-side from graph reads, so they carry pulse titles,
+    # people's names and field titles verbatim out of Spaces the caller cannot
+    # reach. `logs(where: { description_CONTAINS: "..." })` enumerated them.
+    #
+    # Two ways in, because neither alone is right:
+    # - `createdBy` — you can always see your own activity, including Logs that
+    #   are LOGGED_FOR nothing (membership and Space-level events).
+    # - `pulses_SOME` — anyone who can reach the Space of a pulse the Log is
+    #   about can see it, which is what makes it a shared activity feed rather
+    #   than a private one. Mirrors the PromiseWeave/ResonanceLink reach test.
+    #
+    # Fails closed: a Log about nothing, by someone else, is invisible here.
+    filter: [
+      { where: { node: { createdBy_SOME: { id_EQ: "$jwt.user.id" } } } }
+      {
+        where: {
+          node: {
+            pulses_SOME: {
+              context_SOME: {
+                OR: [
+                  { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                  {
+                    meSpace_SOME: {
+                      members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                    }
+                  }
+                  { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
+                  {
+                    weSpace_SOME: {
+                      members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    ]
+  ) {
   id: ID! @id
   description: String!
   createdAt: DateTime!
