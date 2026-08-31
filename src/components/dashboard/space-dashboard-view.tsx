@@ -373,7 +373,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         />
       </div>
 
-      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
+      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
         <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
           {/* Top bar — back to dashboard + (i) drawer for full details */}
           <div className="flex items-center justify-between gap-3">
@@ -689,7 +689,7 @@ const SpaceDashboardSkeleton: FC = () => (
     <div className="absolute inset-0 pointer-events-none z-0">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.8),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.03),transparent_70%)]" />
     </div>
-    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
+    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex flex-col items-center gap-3 mt-8">
           <div className="size-16 rounded-3xl bg-white/5 animate-pulse" />

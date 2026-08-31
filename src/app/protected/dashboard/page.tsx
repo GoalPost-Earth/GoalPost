@@ -55,7 +55,10 @@ export default function DashboardPage() {
       </div>
 
       <main
-        className="flex-1 relative z-10 overflow-y-auto scroller p-4 sm:p-8 pb-24"
+        // `pb-40` below `sm` (above it `sm:p-8` takes over): the gutter has to
+        // clear BOTH bottom-floating surfaces — the canvas action bar and, on
+        // phones, the chat pill stacked above it (GOAL-340).
+        className="flex-1 relative z-10 overflow-y-auto scroller p-4 sm:p-8 pb-40"
         data-tour="dashboard-overview"
       >
         <div className="max-w-6xl mx-auto">
