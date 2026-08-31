@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FC } from 'react'
+import { useCallback, useEffect, useRef, useState, type FC } from 'react'
 import { useApolloClient } from '@apollo/client/react'
 import { FileUp } from 'lucide-react'
 import { toast } from 'sonner'
@@ -16,7 +16,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useFieldContextCanEditContent } from '@/hooks/use-field-context-permissions'
-import { emitOpenImportArticlesModal } from '@/lib/simulation/pulse-creation-events'
+import {
+  emitOpenImportArticlesModal,
+  onImportArticlesModalClosed,
+} from '@/lib/simulation/pulse-creation-events'
 import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
 
 /**
@@ -60,6 +63,46 @@ export const FieldContextUploadAction: FC = () => {
   // which the queued-upload path deliberately bypasses (it releases the modal
   // directly), so without this the next open would show the previous file.
   const [uploadSessionKey, setUploadSessionKey] = useState(0)
+  // Both menu items open a modal that installs its own focus trap. Radix
+  // restores focus to this menu's trigger ~300ms after the item is chosen —
+  // i.e. *after* the dialog has already focused its first control — which
+  // dumps keyboard focus onto the button behind the overlay (GOAL-328).
+  // Suppress that restore, but only when an item was actually chosen:
+  // dismissing the menu with Escape or an outside click must still return
+  // focus to the trigger.
+  const restoreFocusOnCloseRef = useRef(true)
+  // Separately tracks whether *this* component launched the bulk import
+  // dialog. `restoreFocusOnCloseRef` cannot double as that flag: Radix resets
+  // it the moment the menu closes, long before the dialog does.
+  const awaitingImportCloseRef = useRef(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  // Because that restore is suppressed, this component owns putting focus
+  // back on the trigger once the dialog goes away — otherwise the dialog's
+  // trap has nothing live to restore to and focus lands on <body>. The rAF
+  // waits for the dialog's own cleanup to run first, so it can't be undone.
+  const refocusTrigger = useCallback(() => {
+    requestAnimationFrame(() => triggerRef.current?.focus())
+  }, [])
+
+  // The bulk import dialog is owned by the field-context page, so this is the
+  // only way to learn it closed. Must sit above the early returns below —
+  // hooks cannot be called conditionally.
+  //
+  // The page has its own in-page trigger for the same dialog, and this action
+  // bar is mounted alongside it on that route. Claiming every close would yank
+  // focus onto this button a frame after the dialog's own trap correctly
+  // restored it to whatever the member actually pressed — so only answer for
+  // the opens this component started.
+  useEffect(
+    () =>
+      onImportArticlesModalClosed(() => {
+        if (!awaitingImportCloseRef.current) return
+        awaitingImportCloseRef.current = false
+        refocusTrigger()
+      }),
+    [refocusTrigger]
+  )
 
   // Only treat the focal as a live FieldContext when it came from the
   // current route. A 'persisted' source means the user navigated away to
@@ -108,6 +151,9 @@ export const FieldContextUploadAction: FC = () => {
         onQueued: () => {
           setPinnedFieldContextId(null)
           setIsSubmitting(false)
+          // This path releases the modal directly rather than through its
+          // `onClose`, so it owes the trigger the same focus restore.
+          refocusTrigger()
         },
       })
     } finally {
@@ -117,9 +163,17 @@ export const FieldContextUploadAction: FC = () => {
 
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu
+        onOpenChange={(open) => {
+          // Re-arm on every open rather than relying on `onCloseAutoFocus`
+          // having fired to reset it — that would make the guard depend on
+          // Radix internals to stay in sync.
+          if (open) restoreFocusOnCloseRef.current = true
+        }}
+      >
         <DropdownMenuTrigger asChild>
           <button
+            ref={triggerRef}
             type="button"
             disabled={!focalFieldContextId}
             className="gp-glass-hover cursor-pointer flex items-center gap-1.5 md:gap-2 pl-3 pr-2 md:pl-5 md:pr-3 h-10 md:h-11 rounded-full gp-glass border border-gp-glass-border hover:border-gp-primary/40 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
@@ -142,9 +196,16 @@ export const FieldContextUploadAction: FC = () => {
           align="center"
           sideOffset={10}
           className="gp-glass w-56 rounded-xl border-gp-glass-border p-1.5"
+          onCloseAutoFocus={(event) => {
+            if (restoreFocusOnCloseRef.current) return
+            restoreFocusOnCloseRef.current = true
+            event.preventDefault()
+          }}
         >
           <DropdownMenuItem
             onSelect={() => {
+              if (!focalFieldContextId) return
+              restoreFocusOnCloseRef.current = false
               setUploadSessionKey((key) => key + 1)
               setPinnedFieldContextId(focalFieldContextId)
             }}
@@ -160,10 +221,12 @@ export const FieldContextUploadAction: FC = () => {
             <span className="text-sm font-medium">Upload document</span>
           </DropdownMenuItem>
           <DropdownMenuItem
-            onSelect={() =>
-              focalFieldContextId &&
+            onSelect={() => {
+              if (!focalFieldContextId) return
+              restoreFocusOnCloseRef.current = false
+              awaitingImportCloseRef.current = true
               emitOpenImportArticlesModal(focalFieldContextId)
-            }
+            }}
             // `.gp-menu-item` owns the hover/focus highlight (per the design
             // skill), so neutralise the primitive's own `focus:bg-accent` /
             // `focus:text-accent-foreground` — otherwise the label lands on
@@ -182,7 +245,10 @@ export const FieldContextUploadAction: FC = () => {
         key={uploadSessionKey}
         isOpen={pinnedFieldContextId !== null}
         isSubmitting={isSubmitting}
-        onClose={() => setPinnedFieldContextId(null)}
+        onClose={() => {
+          setPinnedFieldContextId(null)
+          refocusTrigger()
+        }}
         onSubmit={handleSubmit}
       />
     </>
