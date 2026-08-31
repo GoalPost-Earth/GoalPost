@@ -64,8 +64,6 @@ import {
   LOG_FIELD_ACTIVITY,
   LOG_PULSE_ACTIVITY,
   CREATE_RESONANCE_LINK_MUTATION,
-  UPDATE_RESONANCE_LINK_MUTATION,
-  DELETE_RESONANCE_LINK_MUTATION,
   SHARE_PULSE_WITH_CONTEXT_MUTATION,
   REMOVE_PULSE_FROM_CONTEXT_MUTATION,
 } from '@/app/graphql/mutations'
@@ -134,16 +132,6 @@ export default function FieldContextDetailsPage() {
   const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
     useState(false)
   const [isDiscoverModalOpen, setIsDiscoverModalOpen] = useState(false)
-  const [editingResonance, setEditingResonance] = useState<{
-    id: string
-    label: string
-    confidence: number
-    description: string
-    sourceId: string
-    targetId: string
-    sourceType: NodeType
-    targetType: NodeType
-  } | null>(null)
   const [isResonanceSubmitting, setIsResonanceSubmitting] = useState(false)
   const [resonanceSubmitError, setResonanceSubmitError] = useState<
     string | null
@@ -270,8 +258,6 @@ export default function FieldContextDetailsPage() {
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
   const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
   const [createResonanceLink] = useMutation(CREATE_RESONANCE_LINK_MUTATION)
-  const [updateResonanceLink] = useMutation(UPDATE_RESONANCE_LINK_MUTATION)
-  const [deleteResonanceLink] = useMutation(DELETE_RESONANCE_LINK_MUTATION)
   const [logResonanceActivity] = useMutation(LOG_RESONANCE_ACTIVITY)
   const [sharePulseWithContext] = useMutation(SHARE_PULSE_WITH_CONTEXT_MUTATION)
   const [removePulseFromContext] = useMutation(
@@ -911,132 +897,61 @@ export default function FieldContextDetailsPage() {
     targetId: string
     sourceType: NodeType
     targetType: NodeType
-    resonanceId?: string
   }) => {
     setIsResonanceSubmitting(true)
     setResonanceSubmitError(null)
 
     try {
-      if (data.resonanceId && editingResonance) {
-        // Update existing resonance
-        await updateResonanceLink({
-          variables: {
-            where: { id_EQ: data.resonanceId },
-            update: {
-              label_SET: data.label,
-              confidence_SET: data.confidence,
-              description_SET: data.description,
+      const response = await createResonanceLink({
+        variables: {
+          input: [
+            {
+              label: data.label,
+              confidence: data.confidence,
+              description: data.description,
+              createdAt: new Date().toISOString(),
+              source: {
+                connect: [{ where: { node: { id_EQ: data.sourceId } } }],
+              },
+              target: {
+                connect: [{ where: { node: { id_EQ: data.targetId } } }],
+              },
+              context: {
+                connect: [{ where: { node: { id_EQ: contextId } } }],
+              },
             },
-          },
-        })
+          ],
+        },
+      })
 
+      const createdResonanceId =
+        response.data?.createResonanceLinks?.resonanceLinks?.[0]?.id
+
+      if (createdResonanceId) {
         logResonanceActivity({
           variables: {
             input: {
-              action: 'updated',
-              resonanceId: data.resonanceId,
+              action: 'created',
+              resonanceId: createdResonanceId,
               sourceId: data.sourceId,
               targetId: data.targetId,
               label: data.label,
               contextId,
             },
           },
-        }).catch((err) => console.warn('Failed to log resonance update:', err))
-
-        toast.success('Resonance link updated successfully')
-      } else {
-        // Create new resonance
-        const response = await createResonanceLink({
-          variables: {
-            input: [
-              {
-                label: data.label,
-                confidence: data.confidence,
-                description: data.description,
-                createdAt: new Date().toISOString(),
-                source: {
-                  connect: [{ where: { node: { id_EQ: data.sourceId } } }],
-                },
-                target: {
-                  connect: [{ where: { node: { id_EQ: data.targetId } } }],
-                },
-                context: {
-                  connect: [{ where: { node: { id_EQ: contextId } } }],
-                },
-              },
-            ],
-          },
-        })
-
-        const createdResonanceId =
-          response.data?.createResonanceLinks?.resonanceLinks?.[0]?.id
-
-        if (createdResonanceId) {
-          logResonanceActivity({
-            variables: {
-              input: {
-                action: 'created',
-                resonanceId: createdResonanceId,
-                sourceId: data.sourceId,
-                targetId: data.targetId,
-                label: data.label,
-                contextId,
-              },
-            },
-          }).catch((err) =>
-            console.warn('Failed to log resonance creation:', err)
-          )
-        }
-
-        toast.success('Resonance link created successfully')
+        }).catch((err) =>
+          console.warn('Failed to log resonance creation:', err)
+        )
       }
 
+      toast.success('Resonance link created successfully')
+
       setIsResonanceLinkModalOpen(false)
-      setEditingResonance(null)
       await refetch()
     } catch (error) {
       console.error('Error with resonance link:', error)
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to process resonance'
-      setResonanceSubmitError(errorMessage)
-      toast.error(errorMessage)
-    } finally {
-      setIsResonanceSubmitting(false)
-    }
-  }
-
-  const handleDeleteResonance = async () => {
-    if (!editingResonance) return
-
-    setIsResonanceSubmitting(true)
-    setResonanceSubmitError(null)
-
-    try {
-      await deleteResonanceLink({
-        variables: { id: editingResonance.id },
-      })
-
-      logResonanceActivity({
-        variables: {
-          input: {
-            action: 'deleted',
-            resonanceId: editingResonance.id,
-            sourceId: editingResonance.sourceId,
-            targetId: editingResonance.targetId,
-            label: editingResonance.label,
-            contextId,
-          },
-        },
-      }).catch((err) => console.warn('Failed to log resonance deletion:', err))
-
-      toast.success('Resonance link deleted successfully')
-      setIsResonanceLinkModalOpen(false)
-      setEditingResonance(null)
-      await refetch()
-    } catch (error) {
-      console.error('Error deleting resonance:', error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to delete resonance'
+        error instanceof Error ? error.message : 'Failed to create resonance'
       setResonanceSubmitError(errorMessage)
       toast.error(errorMessage)
     } finally {
@@ -1739,7 +1654,6 @@ export default function FieldContextDetailsPage() {
         isOpen={isResonanceLinkModalOpen}
         onClose={() => {
           setIsResonanceLinkModalOpen(false)
-          setEditingResonance(null)
           setResonanceSubmitError(null)
         }}
         pulses={pulses.map((pulse) => ({
@@ -1753,8 +1667,6 @@ export default function FieldContextDetailsPage() {
         }))}
         onSubmit={handleResonanceLinkSubmit}
         isLoading={isResonanceSubmitting}
-        onDelete={handleDeleteResonance}
-        editingResonance={editingResonance}
       />
 
       {canEditContent && promiseWeaves.isModalOpen && (
