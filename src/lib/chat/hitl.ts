@@ -128,11 +128,11 @@ export function describeWriteAction(
     case 'delete_field_context': {
       // Rule 1: never surface the raw contextId — prefer the human title,
       // fall back to a generic phrase rather than an id. Deletion cascades
-      // over nested sub-fields (GOAL-295), so the approval copy says so.
+      // over nested fields (GOAL-295), so the approval copy says so.
       const title = String(args.contextTitle || args.currentTitle || '').trim()
       return title
-        ? `Delete field context "${title}" and its sub-fields and pulses`
-        : 'Delete the selected field context and its sub-fields and pulses'
+        ? `Delete field context "${title}" and its nested fields and pulses`
+        : 'Delete the selected field context and its nested fields and pulses'
     }
     case 'update_pulse': {
       const title = String(args.currentTitle || args.newTitle || '').trim()
@@ -938,9 +938,9 @@ async function deleteFieldContextAuthorized(
   if (!resolved.ok) return resolved.result
 
   const contextId = resolved.contextId
-  // GOAL-295: deletion cascades over the sub-field subtree, so the consent
+  // GOAL-295: deletion cascades over the nested field subtree, so the consent
   // gate must count pulses across the WHOLE live subtree — a parent with 0
-  // direct pulses can still take 40 sub-field pulses down with it.
+  // direct pulses can still take 40 nested field pulses down with it.
   const detailsQuery = `
     MATCH (context:FieldContext {id: $contextId})
     OPTIONAL MATCH (context)-[:HAS_SUBCONTEXT*0..10]->(sc:FieldContext)-[:HAS_PULSE]->(pulse:FieldPulse)
@@ -975,9 +975,9 @@ async function deleteFieldContextAuthorized(
       subContextCount > 0
         ? ` across it and its ${
             subContextCount === 1
-              ? 'sub-field'
-              : `${subContextCount} sub-fields`
-          } (deleting the field deletes its sub-fields too)`
+              ? 'nested field'
+              : `${subContextCount} nested fields`
+          } (deleting the field deletes its nested fields too)`
         : ''
     return {
       success: false,
@@ -1013,8 +1013,8 @@ async function deleteFieldContextAuthorized(
   const deletedParts = [
     deletedSubContextCount > 0
       ? deletedSubContextCount === 1
-        ? 'its sub-field'
-        : `its ${deletedSubContextCount} sub-fields`
+        ? 'its nested field'
+        : `its ${deletedSubContextCount} nested fields`
       : null,
     deletedPulseCount > 0
       ? deletedPulseCount === 1

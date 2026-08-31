@@ -18,13 +18,14 @@ import {
 import { useStudioCanvas, type CanvasView } from './studio-canvas-context'
 import { routeHasCanvasScope } from './canvas-scope'
 import { FieldContextUploadAction } from './field-context-upload-action'
+import { NestedFieldAction } from './nested-field-action'
 
 /**
  * Floating action bar pinned to the bottom-center of the canvas pane.
  *
  * The right-hand "create" cluster is contextual — it surfaces the
  * single action that makes sense at the user's current level:
- *  - Inside a FieldContext → Upload document + Add pulse
+ *  - Inside a FieldContext → Upload document + Add pulse + Add nested field
  *  - Inside a Space (MeSpace/WeSpace) → Add field context
  *  - Anywhere else → Create MeSpace / WeSpace
  *
@@ -65,21 +66,28 @@ export const StudioCanvasActionBar: FC = () => {
 
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center px-4">
-      <div className="pointer-events-auto flex items-center gap-3 md:gap-4">
+      <div className="pointer-events-auto flex items-center gap-2 md:gap-4">
         {inGraphSurface && (
           <div className="flex items-center gap-2 p-1.5 rounded-full gp-glass border border-gp-glass-border shadow-xl">
-            <ZoomButton
-              label="Zoom out"
-              icon="remove"
-              onClick={() => dispatchZoom('out')}
-            />
-            <Divider />
-            <ZoomButton
-              label="Zoom in"
-              icon="add"
-              onClick={() => dispatchZoom('in')}
-            />
-            <Divider />
+            {/* Zoom in/out are desktop affordances — on phones the canvas
+                gestures cover them, and the bar must fit 390px alongside
+                the in-field create cluster (GOAL-339). Fit-to-view stays:
+                it's the recovery control when a member pans the cluster
+                off-screen. */}
+            <div className="hidden sm:flex items-center gap-2">
+              <ZoomButton
+                label="Zoom out"
+                icon="remove"
+                onClick={() => dispatchZoom('out')}
+              />
+              <Divider />
+              <ZoomButton
+                label="Zoom in"
+                icon="add"
+                onClick={() => dispatchZoom('in')}
+              />
+              <Divider />
+            </div>
             <ZoomButton
               label="Fit to view"
               icon="fit_screen"
@@ -98,6 +106,11 @@ export const StudioCanvasActionBar: FC = () => {
             also keeps its own `pinnedFieldContextId` so an in-flight upload
             survives mid-flow navigation away from the FieldContext. */}
         <FieldContextUploadAction />
+
+        {/* Always mounted for the same reason — an open create dialog
+            survives mid-flow navigation via its pinned parent id
+            (GOAL-339). */}
+        <NestedFieldAction />
 
         {inFieldContext ? (
           <div className="flex items-center gap-2 md:gap-3">

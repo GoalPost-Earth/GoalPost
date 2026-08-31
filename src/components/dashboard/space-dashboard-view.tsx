@@ -56,6 +56,10 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  // Spans the WHOLE create flow (mutation + dashboard refetch), unlike the
+  // mutation's own loading flag — the modal's spinner must not drop while
+  // the stale card list is still on screen.
+  const [isFieldCreatePending, setIsFieldCreatePending] = useState(false)
   const [showPermissionsModal, setShowPermissionsModal] = useState(false)
 
   // `cache-and-network` — the dashboard cards and graph bubbles use
@@ -68,7 +72,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
     fetchPolicy: 'cache-and-network',
   })
 
-  const { createField, loading: isCreatingField } = useCreateField()
+  const { createField } = useCreateField()
   const [deleteMeSpace] = useMutation(DELETE_ME_SPACE_MUTATION)
   const [deleteWeSpace] = useMutation(DELETE_WE_SPACE_MUTATION)
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
@@ -85,10 +89,10 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         : null
   const contexts =
     (space && 'contexts' in space ? space.contexts : undefined) ?? []
-  // GOAL-295: nested sub-fields also carry a direct Space edge, so the raw
+  // GOAL-295: nested fields also carry a direct Space edge, so the raw
   // list contains the whole hierarchy. The Space page shows only the
   // top-level fields — children are reached by drilling into their parent
-  // (Sub-fields section on the field detail page).
+  // (Nested fields section on the field detail page).
   const rootContexts = contexts.filter(
     (ctx) => (ctx?.parentContext?.length ?? 0) === 0
   )
@@ -251,6 +255,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   const handleCreateField = async (description: string, name?: string) => {
     const title = name || description
     const spaceType = isMe ? 'meSpace' : 'weSpace'
+    setIsFieldCreatePending(true)
     try {
       const created = await createField(title, spaceId, spaceType, description)
       if (created?.id) {
@@ -266,11 +271,23 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
           },
         }).catch((err) => console.warn('Field log failed:', err))
       }
+      toast.success(`Field "${title}" created.`)
+      // Keep the modal's "Creating…" spinner up until the refreshed card
+      // list is actually on screen — closing first leaves a silent gap
+      // where the new field exists but the dashboard doesn't show it. A
+      // refetch failure is NOT a create failure, so it only warns.
+      await refetch().catch((err) =>
+        console.warn('Space refetch after field create failed:', err)
+      )
       setShowCreateFieldModal(false)
-      await refetch()
+      return true
     } catch (err) {
       console.error('Field create failed:', err)
       toast.error('Failed to create field context')
+      // `false` tells the modal to keep the typed draft for retry.
+      return false
+    } finally {
+      setIsFieldCreatePending(false)
     }
   }
 
@@ -495,9 +512,14 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
       {showCreateFieldModal && (
         <CreateFieldModal
           isOpen={showCreateFieldModal}
-          onClose={() => setShowCreateFieldModal(false)}
+          onClose={() => {
+            // All four close routes (Cancel, X, Escape, backdrop) funnel
+            // through here — none may drop the spinner mid-flight, matching
+            // the delete-confirm dialog's disabled-while-pending behavior.
+            if (!isFieldCreatePending) setShowCreateFieldModal(false)
+          }}
           onCreateField={handleCreateField}
-          isLoading={isCreatingField}
+          isLoading={isFieldCreatePending}
         />
       )}
 

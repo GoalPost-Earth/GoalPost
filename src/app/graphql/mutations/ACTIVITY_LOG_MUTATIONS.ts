@@ -44,3 +44,12 @@ export const LOG_RESONANCE_ACTIVITY = gql`
     }
   }
 `
+
+export const LOG_WEAVE_ACTIVITY = gql`
+  mutation LogWeaveActivity($input: LogWeaveInput!) {
+    logWeaveActivity(input: $input) {
+      success
+      message
+    }
+  }
+`

@@ -61,6 +61,39 @@ export async function canViewPulse(
 }
 
 /**
+ * Whether `userId` can EDIT content in the Space that owns `contextId` —
+ * owner, ADMIN or MEMBER, never GUEST. The write-side counterpart to
+ * `canViewContext`, which deliberately admits GUESTs.
+ *
+ * Activity-log mutations need this rather than `canViewContext`: a GUEST can
+ * read a field, so a view-level gate would let them inject attacker-chosen
+ * prose into that Space's activity feed (GOAL-341 review). Fails closed on
+ * missing inputs.
+ */
+export async function canEditContext(
+  graph: Neo4jGraph,
+  userId: string | null | undefined,
+  contextId: string | null | undefined
+): Promise<boolean> {
+  if (!userId || !contextId) return false
+  const rows = await graph.query<{ allowed: number }>(
+    `
+    MATCH (vspace:Space)-[:HAS_CONTEXT]->(:FieldContext { id: $contextId })
+    WITH vspace LIMIT 25
+    RETURN CASE WHEN any(s IN collect(vspace) WHERE
+        EXISTS { (s)<-[:OWNS]-(:Person { id: $currentUserId }) }
+        OR EXISTS {
+          (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(:Person { id: $currentUserId })
+          WHERE sm.role IN ['ADMIN', 'MEMBER']
+        }
+      ) THEN 1 ELSE 0 END AS allowed
+    `,
+    { contextId, currentUserId: userId }
+  )
+  return Number(rows?.[0]?.allowed || 0) === 1
+}
+
+/**
  * Whether `userId` can view content in the Space that owns `contextId`. Fails
  * closed on missing inputs.
  */

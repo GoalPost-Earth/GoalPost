@@ -14,7 +14,12 @@ import {
 interface CreateFieldModalProps {
   isOpen: boolean
   onClose: () => void
-  onCreateField?: (description: string, name?: string) => void | Promise<void>
+  /** Return `false` to signal the create failed — the form keeps its draft
+   *  for retry. Any other result (or void) clears the form as before. */
+  onCreateField?: (
+    description: string,
+    name?: string
+  ) => void | boolean | Promise<void | boolean>
   isLoading?: boolean
   isEditing?: boolean
   fieldId?: string
@@ -133,10 +138,14 @@ export function CreateFieldModal({
         setIsMutationLoading(false)
       }
     } else {
-      // Create mode: use the provided onCreate handler
-      await onCreateField?.(description.trim(), name.trim())
-      setName('')
-      setDescription('')
+      // Create mode: use the provided onCreate handler. A handler that
+      // reports failure (resolves `false`) keeps the draft so the user can
+      // retry in place instead of retyping.
+      const result = await onCreateField?.(description.trim(), name.trim())
+      if (result !== false) {
+        setName('')
+        setDescription('')
+      }
     }
   }
 

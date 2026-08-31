@@ -196,7 +196,14 @@ Standard shadcn library: `button`, `card`, `dialog`, `dropdown-menu`, `select`, 
 `Card` is bare (`rounded-xl border py-6 shadow-sm`). For the brand look, add `.gp-glass` or `.gp-card` instead of bare `Card` on landing/auth/dashboard surfaces.
 
 ### GoalPost-specific components — `src/components/ui/`
-`pulse-node`, `pulse-panel`, `pulse-edit-modal`, `resonance-node`, `resonance-panel`, `resonance-connections`, `person-node`, `person-panel`, `entity-bubble`, `field-bubble`, `connection-panel`, `space-wrapper`, `offering-input`, `offering-modal`, `ai-chat-panel`, `ai-assistant-panel`, `linkified-text`, `text-generate-effect`. Reach for these before building new ones.
+`pulse-node`, `pulse-panel`, `pulse-edit-modal`, `resonance-link-modal`, `person-node`, `person-panel`, `entity-bubble`, `field-bubble`, `connection-panel`, `space-wrapper`, `offering-input`, `offering-modal`, `ai-chat-panel`, `ai-assistant-panel`, `linkified-text`, `text-generate-effect`. Reach for these before building new ones.
+
+Graph/canvas rendering of resonances is **not** a component you compose by
+hand — Bloom (`studio/modes/graph-mode/bloom-view.tsx`) is the sole graph
+surface. The legacy `resonance-node` / `resonance-panel` /
+`resonance-connections` / `resonance-links-visualization` bubble-graph
+components belonged to the removed `/protected/spaces/{me,we}-space/*` routes
+and have been deleted; don't reintroduce them.
 
 ### Sidebar / nav pattern
 - Fixed left, `w-64`, `gp-glass` styling

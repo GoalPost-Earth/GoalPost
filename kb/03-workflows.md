@@ -16,6 +16,7 @@ WF-08: WeSpace Collaboration             (Owner invites members, shared pulse cr
 WF-09: Data Import                       (User imports CSV/XLSX data into the system)
 WF-10: Document Ingestion                (User uploads a file; a worker extracts entities from it)
 WF-11: Bulk Article Import               (User uploads a spreadsheet; a worker mints one pulse per row)
+WF-12: Promise Weave Authoring           (Member weaves pulses + a person into a navigable neighbourhood)
 ```
 
 ---
@@ -65,17 +66,20 @@ WF-11: Bulk Article Import               (User uploads a spreadsheet; a worker m
 
 **Actor:** Space Owner, ADMIN, or MEMBER (`canEditContent`)
 
-1. User opens a FieldContext detail page and uses "New sub-field" in the
-   Sub-fields section (custom `createSubFieldContext` mutation).
+1. User opens a FieldContext detail page and uses "New nested field" in the
+   Nested fields section, or — from either studio canvas view, including
+   Bloom — "Add nested field" in the canvas action bar (GOAL-339). Both
+   mount the shared `CreateNestedFieldModal` (custom
+   `createSubFieldContext` mutation).
 2. The child is created in the SAME Space as the parent — its own
    `HAS_CONTEXT` edge — plus a `HAS_SUBCONTEXT` overlay edge from the
    parent. Depth is capped at 5 levels.
 3. "Move" on the detail page re-parents a field under another same-Space
    field, or lifts it to the top level (custom `moveFieldContext` mutation;
    cycles and depth violations are rejected server-side).
-4. The Space page lists only TOP-LEVEL fields; nested sub-fields are
+4. The Space page lists only TOP-LEVEL fields; nested fields are
    reached by drilling into their parent (breadcrumb shows
-   Space → field → … → sub-field).
+   Space → field → … → nested field).
 5. Both mutations write an activity Log in the same transaction.
 6. Resonance discovery is NOT partitioned by nesting: the root field's
    whole subtree is one resonance scope (see ADR-017).
@@ -187,14 +191,22 @@ WF-11: Bulk Article Import               (User uploads a spreadsheet; a worker m
 See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage + `EXTRACTED_FROM` edges) in `kb/06-adr.md` for rationale.
 
 1. User picks a `.txt` / `.md` / `.pdf` from the studio with a
-   FieldContext focused — via the **bottom floating canvas action bar** →
-   the **Upload** dropdown → **Upload document**
-   (`field-context-upload-action.tsx`). Upload is *not* in the FieldContext
-   page header; it shares that one dropdown with **Import articles** (WF-11).
-   The browser POSTs to
+   FieldContext focused. **Two entry points open the same modal**, both
+   gated on `canEditContent`:
+   - The **bottom floating canvas action bar** → the **Upload** dropdown →
+     **Upload document** (`field-context-upload-action.tsx`). This is the
+     primary one; it shares that dropdown with **Import articles** (WF-11).
+     Upload is *not* in the FieldContext page header.
+   - The Pulses section's **empty-state secondary CTA** ("Upload a
+     document", `pulses-section.tsx`) on the FieldContext page — shown only
+     while the field has no pulses.
+
+   Both converge on one client flow
+   (`src/lib/ingest/upload-document-flow.ts`, GOAL-337 — the page briefly
+   carried a drifted pre-GOAL-292 copy): POST
    `/api/ingest/document/presign` to get a short-lived presigned PUT URL,
-   then uploads the file **directly to S3** (bytes never traverse our
-   server). It then POSTs `/api/ingest/document/process` to **enqueue**
+   then upload the file **directly to S3** (bytes never traverse our
+   server), then POST `/api/ingest/document/process` to **enqueue**
    extraction. (The legacy GraphQL `uploadDocument` mutation has been
    removed — see ADR-015.)
 2. The process endpoint gates on `canEditContent`, anchors a Document
@@ -211,10 +223,18 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
    `statusMessage`. A claim stranded by a killed worker is reclaimed after
    15 minutes and abandoned to `FAILED` after 3 attempts, so nothing spins
    forever. Status lifecycle: `kb/04-state-machines.md`.
-   The upload UI polls `Document.status` and shows Queued / Extracting /
-   Failed on the document row rather than blocking on the response.
-   This replaced the original synchronous orchestrator, which held the
-   whole LLM pipeline inside the request and was the source of every
+   Instead of blocking on the response, the upload flow follows the ingest
+   client-side (`src/lib/ingest/watch-document-ingest.ts`): a narrow
+   `Document.status` projection is polled every 3s for up to 8 minutes,
+   driving one evolving toast (uploaded → extracting → entity counts on
+   COMPLETE, member-safe `statusMessage` on FAILED) and opening the ingest
+   thread when the run lands. The Queued / Extracting / Failed chip on the
+   document row advances during the watch because both queries normalise
+   onto the same Apollo `Document:<id>` cache entry. There is **no standing
+   poll outside an active upload** — after a page reload mid-ingest, the
+   chip shows the status as of the last fetch and updates on the next
+   refetch. This replaced the original synchronous orchestrator, which held
+   the whole LLM pipeline inside the request and was the source of every
    observed 504 (`maxDuration = 300` was the stopgap).
 3. A dedicated extraction model (independent of the chat assistant; may
    be reasoning — `kb/07-ai-assistant-ux.md` Rule 6) reads the document
@@ -366,3 +386,50 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
 - **Retry is re-upload.** A `FAILED` job is terminal; re-uploading the same
   sheet is safe because rows that already landed come back as
   `skipped_existing` (having filled in any missing details).
+
+---
+
+## WF-12 — Promise Weave Authoring (GOAL-341)
+
+**Actor:** Space Owner, ADMIN, or MEMBER (`canEditContent`). GUESTs see weaves
+but get no write affordance, and the server refuses them anyway.
+
+A **PromiseWeave** is a reified connector node — not a pulse — that gathers the
+pulses and the person a promise implicates, so opening it is a starting point
+for exploration rather than a dead end (`kb/01-glossary.md`). Until GOAL-341
+weaves existed only where the prod→dev migration had built them.
+
+1. Member opens a FieldContext detail page and uses **"Weave"** in the Promise
+   weaves section (`PromiseWeavesSection`). The affordance is disabled while
+   the field has no pulses — a weave must hold at least one.
+2. The dialog (`PromiseWeaveModal`) takes a name, an optional "why", a
+   multi-select of the field's pulses, and optionally the Person it is
+   **woven for**. Candidates are scoped to that field, so a member can only
+   weave what they can already see there.
+3. `createPromiseWeaves` writes the node with `status: 'active'` and
+   `origin: 'user'`, connecting `WEAVES` → the chosen pulses, `WOVEN_FOR` → the
+   person, and `HAS_WEAVE` ← the FieldContext. **That context edge is the
+   visibility anchor and the path the `@authorization` filter traverses** — a
+   weave without it is both invisible and ungated.
+4. Editing re-drives the same dialog; the woven set is *reconnected*, not
+   appended, so unticking a pulse removes it. Deleting removes the connector
+   node and its edges only — the pulses and the person are untouched.
+5. Every runtime write logs an activity `Log` via `logWeaveActivity`
+   (created / updated / confirmed / dissolved / fulfilled / deleted).
+   Migration-built weaves stay Log-exempt, like the other Phase-5 structural
+   builds.
+6. Rows open the entity-info drawer; AI-proposed weaves (`proposed`) instead
+   render an inline **Confirm / Dismiss** gate — see `kb/04-state-machines.md`
+   and WF-13. Marking a weave `fulfilled` has no affordance yet; the state
+   exists but nothing in the UI reaches it.
+
+### WF-12 implementation constraints
+
+- **`weaves` targets the `FieldPulse` interface.** Connect many pulses with ONE
+  `connect` entry using `id_IN`; two or more entries make `@neo4j/graphql`
+  emit a duplicate Cypher variable and Neo4j rejects the mutation (`42N07`).
+  Full note in `kb/05-data-entities.md`.
+- **Status is lowercase and null means `active`,** never `proposed` — read it
+  through `normalizeWeaveStatus` (`src/lib/promise-weave.ts`).
+- Write logic lives in `src/hooks/usePromiseWeaves.ts` so the field-context
+  page and any later surface cannot drift on the connect/disconnect shapes.

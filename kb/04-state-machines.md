@@ -70,6 +70,60 @@ Pending → Rejected
 
 ---
 
+## PromiseWeave Status
+
+```
+Proposed → Active → Fulfilled
+Proposed → Dissolved
+Active   → Dissolved
+```
+
+| Status      | Description                                         | Who Triggers                          |
+| ----------- | --------------------------------------------------- | ------------------------------------- |
+| `proposed`  | AI-proposed, awaiting human confirmation            | Weave discovery (GOAL-342)            |
+| `active`    | Live — member-authored, or a confirmed proposal     | Member via the Promise weaves section |
+| `fulfilled` | The promise it holds has been kept                  | **No surface yet** — see the note below |
+| `dissolved` | Withdrawn, or a proposal the member declined        | Member via the Promise weaves section |
+
+Stored **lowercase**, matching `ResonanceLink.status` rather than the uppercase
+convention Document ingest uses.
+
+**`fulfilled` has no affordance yet (GOAL-341).** The value is defined in
+`src/lib/promise-weave.ts`, accepted by `setStatus`, and mapped in the activity
+log — but no button in the Promise weaves section or the drawer triggers it, so
+`active → fulfilled` is currently reachable only through the API. Do not read
+the table above as a description of shipped UI for that row.
+
+**Transitions are not enforced server-side.** `status` is a free String with an
+open `status_SET`, so the illegal moves this table omits (`fulfilled → proposed`,
+`dissolved → active`, or an arbitrary value) are refused only by the UI, which
+offers legal moves alone. `ResonanceLink.status` has the same shape. Anything
+reading a weave's status must go through `normalizeWeaveStatus`.
+
+**Legacy values exist — do not compare the raw string.** The starting-point
+weaves the prod→dev migration built (GOAL-266) predate this lifecycle and carry
+the legacy CarePoint status verbatim, casing and all. Dev holds `"Active"` (5),
+`"Inactive"` (3) and `"active"` (1) across its 9 weaves. So:
+
+- Comparison is **case-insensitive**, and `inactive` is a recognised legacy
+  alias classified as `dissolved`.
+- **Null reads as `active`, never as `proposed`** — treating a missing status as
+  proposed would park every migrated care point behind a confirmation gate it
+  was never meant to have.
+- An unrecognised value is **displayed verbatim** rather than renamed into a
+  lifecycle state it never meant; only `proposed` gates, so classifying it as
+  `active` for logic is safe.
+
+`normalizeWeaveStatus` (logic) and `getWeaveStatusLabel` (display) in
+`src/lib/promise-weave.ts` are the single place those rules live — read status
+through them rather than comparing the raw string.
+
+Only `proposed` is a gate: it is the human-in-the-loop step for AI-proposed
+weaves, and the section renders Confirm / Dismiss on exactly those rows.
+Member-authored weaves are born `active` — the member IS the human in the loop.
+
+---
+
 ## Space Visibility
 
 Not a state machine — a configuration setting:

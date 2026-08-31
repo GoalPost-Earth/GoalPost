@@ -453,15 +453,22 @@ navigable neighbourhood. Modelled as a reified connector node exactly like
 ResonanceLink — its own node type, **not** a pulse subtype — and surfaced
 within a FieldContext via a `HAS_WEAVE` context edge, directly analogous to how
 ResonanceLink is surfaced via `HAS_RESONANCE`. Originates in Steve's relational
-"map" (see `docs/promise-weave-design-spike.md`, GOAL-266). Starting-point
-scope: created by the prod→dev migration to wrap each migrated care point.
+"map" (see `docs/promise-weave-design-spike.md`, GOAL-266).
+
+Three things author weaves: the prod→dev migration (which wrapped each migrated
+care point — the starting point), a member from the field context's "Promise
+weaves" section (GOAL-341), and AI discovery (GOAL-342), whose proposals land
+`proposed` and need confirming.
 
 | Field      | Type     | Notes                                              |
 | ---------- | -------- | -------------------------------------------------- |
 | id         | string   | Unique, `weave_*` prefix                           |
 | title      | string   | Optional — human label (defaults to the woven pulse's title) |
-| status     | string   | Optional — `active` for migration-built weaves     |
+| description| string   | Optional — why these belong together; a member's note, or the evidence AI cited |
+| status     | string   | `proposed` / `active` / `fulfilled` / `dissolved` — see `kb/04-state-machines.md`. Migration-built weaves carry the legacy CarePoint value verbatim (dev has `"Active"`, `"Inactive"`, `"active"`); compare case-insensitively, never raw |
+| origin     | string   | `user` / `ai`. Null means migration-built           |
 | createdAt  | datetime |                                                    |
+| modifiedAt | datetime | Optional — stamped on every runtime edit            |
 
 **Relationships:**
 
@@ -470,11 +477,60 @@ scope: created by the prod→dev migration to wrap each migrated care point.
 - `CREATED_BY` → Person (authorship, for attribution)
 - `HAS_WEAVE` ← FieldContext (scope + visibility anchor)
 
-**Authorization:** Scoped to the parent FieldContext's Space — readable/writable
-by the Space owner or any member, mirroring ResonanceLink. Note: a single
-`HAS_WEAVE` context edge is the canonical anchor (the design spike's separate
-`WITHIN` edge was collapsed into it, since it would be a redundant anti-parallel
-edge — ResonanceLink likewise uses only `HAS_RESONANCE`).
+**Authorization:** Scoped to the parent FieldContext's Space — readable by the
+Space owner or any member, writable by OWNER / ADMIN / MEMBER (GUESTs excluded),
+mirroring ResonanceLink. Note: a single `HAS_WEAVE` context edge is the
+canonical anchor (the design spike's separate `WITHIN` edge was collapsed into
+it, since it would be a redundant anti-parallel edge — ResonanceLink likewise
+uses only `HAS_RESONANCE`). Because that edge is what the `@authorization`
+filter traverses, a weave created without it is not merely invisible — it is
+unreachable by the gate. **Never create a weave without connecting `context`.**
+
+**Writing a weave's pulses — interface gotcha.** `WEAVES` targets the
+`FieldPulse` *interface*, and `@neo4j/graphql` expands every `connect` entry
+across all five implementations. Two or more entries in one `connect` array
+make it emit the same Cypher variable twice and Neo4j rejects the whole
+mutation with `42N07` (variable shadowing). Connect many pulses with a **single
+entry using `id_IN`**, not one entry per id:
+
+```graphql
+weaves: { connect: [{ where: { node: { id_IN: $pulseIds } } }] }   # correct
+weaves: { connect: [{ where: { node: { id_EQ: $a } } },            # 42N07
+                    { where: { node: { id_EQ: $b } } }] }
+```
+
+On update, pair `disconnect: [{ where: {} }]` with that connect **inside one
+field entry** so pulses the member removed actually leave — otherwise the
+woven set only ever grows. See `src/hooks/usePromiseWeaves.ts`.
+
+**Opening `@mutation` also opens a nested-input tree — enumerate
+`nestedOperations` in the same change.** `@neo4j/graphql` generates nested
+`create` / `connect` / `disconnect` / `delete` inputs from every
+`@relationship` on a type, and a nested `delete` cascades a bare DETACH DELETE
+into the connected node. On `PromiseWeave` that meant a weave delete could take
+its parent FieldContext with it — stranding every pulse in the field with no
+`HAS_PULSE` anchor and no `deletedAt`, which is exactly what GOAL-319 removed
+`deleteFieldContexts` to prevent.
+
+Two rules fall out of the GOAL-341 review, and they apply to any type that
+opens `@mutation`:
+
+- **Enumerate `nestedOperations` per edge.** `weaves` / `wovenFor` take
+  `[CONNECT, DISCONNECT]`; `createdBy` / `context` take `[CONNECT]`. The
+  reverse edge needs it too — `FieldContext.weaves` is `nestedOperations: []`,
+  because it is a second, otherwise ungated door into the same input tree.
+- **A type-level `validate` block does NOT cover relationship operations.**
+  `operations: [CREATE, UPDATE, DELETE]` never matches `CREATE_RELATIONSHIP` or
+  `DELETE_RELATIONSHIP`, so only the READ `filter` applies to a connect or
+  disconnect — and a filter that admits any member admits any member to those.
+  Before the fix, a MEMBER could disconnect a weave's `context` edge and leave
+  it unreadable, unwritable and undeletable by everyone including its author.
+
+Authorship is pinned by a second validate rule,
+`{ operations: [CREATE], where: { node: { createdBy_SINGLE: { id_EQ: "$jwt.user.id" } } } }`.
+It cannot be a field-level directive — the library rejects `@authorization`
+alongside `@relationship` — and it must not use `CREATE_RELATIONSHIP`, which
+would also fire when a different member edits the weave and wrongly forbid it.
 
 ---
 
