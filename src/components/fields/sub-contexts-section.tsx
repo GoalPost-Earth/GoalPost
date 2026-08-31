@@ -2,10 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useMutation } from '@apollo/client/react'
-import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { CREATE_SUB_FIELD_CONTEXT_MUTATION } from '@/app/graphql/mutations/FIELD_CONTEXT_MUTATIONS'
+import { CreateNestedFieldModal } from '@/components/fields/create-nested-field-modal'
 
 export interface SubContextSummary {
   id: string
@@ -30,10 +28,11 @@ interface SubContextsSectionProps {
 /**
  * "Nested fields" section on the field-context detail page (GOAL-295).
  * Lists the direct nested sub-contexts as drill-down rows and offers a
- * "New nested field" dialog. The create mutation is the custom
- * `createSubFieldContext` — the server enforces canEditContent, the depth
- * cap, and writes the activity Log; the button here is only a "don't show
- * a control the user cannot use" gate, never a security boundary.
+ * "New nested field" dialog — the shared `CreateNestedFieldModal`, which is
+ * also mounted from the studio canvas action bar so the dashboard and graph
+ * canvas create flows cannot drift. The server enforces canEditContent, the
+ * depth cap, and writes the activity Log; the button here is only a "don't
+ * show a control the user cannot use" gate, never a security boundary.
  */
 export function SubContextsSection({
   parentContextId,
@@ -45,36 +44,12 @@ export function SubContextsSection({
 }: SubContextsSectionProps) {
   const router = useRouter()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
-  const [title, setTitle] = useState('')
-  const [isCreating, setIsCreating] = useState(false)
-  const [createSubFieldContext] = useMutation(CREATE_SUB_FIELD_CONTEXT_MUTATION)
 
   if (subContexts.length === 0 && !canEdit) return null
 
   const accentText = isMe
     ? 'text-amber-600 dark:text-amber-400'
     : 'text-teal-600 dark:text-teal-400'
-
-  const handleCreate = async () => {
-    const trimmed = title.trim()
-    if (!trimmed || isCreating) return
-    setIsCreating(true)
-    try {
-      await createSubFieldContext({
-        variables: { parentContextId, title: trimmed },
-      })
-      toast.success(`Nested field "${trimmed}" created.`)
-      setIsCreateOpen(false)
-      setTitle('')
-      await onChanged()
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Could not create nested field'
-      )
-    } finally {
-      setIsCreating(false)
-    }
-  }
 
   return (
     <div className="rounded-2xl border border-gp-glass-border bg-gp-glass-bg/40 p-4 sm:p-5">
@@ -171,52 +146,13 @@ export function SubContextsSection({
         </ul>
       )}
 
-      {isCreateOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-gp-glass-border bg-gp-surface-strong dark:bg-gp-surface-dark shadow-2xl p-5 sm:p-6 space-y-4">
-            <div>
-              <h3 className="text-base font-bold text-gp-ink-strong dark:text-white">
-                New nested field
-              </h3>
-              <p className="text-xs text-gp-ink-muted mt-1 truncate">
-                Nested inside &quot;{parentTitle}&quot;
-              </p>
-            </div>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') void handleCreate()
-              }}
-              placeholder="Nested field title"
-              autoFocus
-              className="w-full h-10 rounded-xl border border-gp-glass-border bg-gp-glass-bg px-3 text-sm text-gp-ink-strong dark:text-white placeholder:text-gp-ink-soft focus:outline-none focus:ring-2 focus:ring-gp-primary/50"
-            />
-            <div className="flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCreateOpen(false)
-                  setTitle('')
-                }}
-                disabled={isCreating}
-                className="px-4 h-9 rounded-full text-sm font-semibold text-gp-ink-muted hover:text-gp-ink-strong transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleCreate()}
-                disabled={!title.trim() || isCreating}
-                className="px-4 h-9 rounded-full bg-gp-primary hover:bg-gp-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-md shadow-gp-primary/20 transition-all cursor-pointer"
-              >
-                {isCreating ? 'Creating…' : 'Create'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <CreateNestedFieldModal
+        isOpen={isCreateOpen}
+        parentContextId={parentContextId}
+        parentTitle={parentTitle}
+        onClose={() => setIsCreateOpen(false)}
+        onCreated={onChanged}
+      />
     </div>
   )
 }

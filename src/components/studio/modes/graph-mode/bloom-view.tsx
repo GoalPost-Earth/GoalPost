@@ -241,6 +241,11 @@ const SPACE_SIZE = {
 
 const FIELD_SIZE = 36
 
+// The active field rendered as the hub its nested fields hang off in-field —
+// slightly larger than its children so the hierarchy reads at a glance
+// (GOAL-339).
+const FIELD_ANCHOR_SIZE = 42
+
 const PULSE_SIZE = 32
 
 const PERSON_SIZE = 30
@@ -282,6 +287,8 @@ interface FieldContextRecord {
   id: string
   name: string
   spaceKind: 'MeSpace' | 'WeSpace'
+  /** Direct parent context when this field is nested (GOAL-295). */
+  parentId: string | null
 }
 
 interface PulseRecord {
@@ -444,6 +451,7 @@ export const BloomView: FC = () => {
       id: ctx.id,
       name: ctx.title || 'Untitled field',
       spaceKind,
+      parentId: firstOf(ctx.parentContext)?.id ?? null,
     }))
   }, [inSpace, spaceDetailsData])
 
@@ -468,6 +476,45 @@ export const BloomView: FC = () => {
       ...make(fieldDetailsData.coreValuePulses, 'coreValue', 'CoreValuePulse'),
     ]
   }, [inField, fieldDetailsData])
+
+  // Nested fields (GOAL-295 / GOAL-339): the active field's direct
+  // sub-contexts, rendered in-field as field bubbles hanging off a field
+  // anchor so members can see and drill into nesting without leaving the
+  // canvas. Read off the same GET_FIELD_CONTEXT_DETAILS payload the
+  // dashboard page warmed — Bloom never fetches its own data (ADR-011).
+  const subContexts = useMemo<Array<{ id: string; name: string }>>(() => {
+    if (!inField || !fieldDetailsData) return []
+    const context = fieldDetailsData.fieldContexts?.[0]
+    const list = (context?.subContexts ?? []) as Array<{
+      id: string
+      title?: string | null
+    }>
+    return list.map((sub) => ({
+      id: sub.id,
+      name: sub.title || 'Untitled field',
+    }))
+  }, [inField, fieldDetailsData])
+
+  // The active field itself, rendered as the anchor its nested fields hang
+  // off. Only materialized when there is nesting to show — a field with no
+  // sub-contexts keeps the classic free-floating pulse cloud.
+  const fieldAnchor = useMemo(() => {
+    if (!inField || !activeFieldId || subContexts.length === 0) return null
+    const context = fieldDetailsData?.fieldContexts?.[0]
+    if (!context) return null
+    return { id: activeFieldId, name: context.title || 'Untitled field' }
+  }, [inField, activeFieldId, subContexts, fieldDetailsData])
+
+  // Which space kind tints the in-field field bubbles. A field belongs to
+  // exactly one space; default to MeSpace while the people query resolves.
+  const inFieldSpaceKind = useMemo<'MeSpace' | 'WeSpace'>(() => {
+    const fieldCtx = (
+      fieldPeopleData as
+        | { fieldContexts?: Array<{ weSpace?: Array<unknown> }> }
+        | undefined
+    )?.fieldContexts?.[0]
+    return fieldCtx?.weSpace?.[0] ? 'WeSpace' : 'MeSpace'
+  }, [fieldPeopleData])
 
   // People to render alongside the pulses in-field: the parent space's
   // owner + every member of that space + any Person attached to the field.
@@ -750,7 +797,35 @@ export const BloomView: FC = () => {
             size: PULSE_SIZE,
           }) as Node
       )
-      return [...pulseNodes, ...personNodes, ...weaveNodes]
+      // Nested fields hang off the field anchor (GOAL-339). Children reuse
+      // the in-space field tint so the existing "Field context" legend row
+      // decodes them without a palette change.
+      const anchorNodes: Node[] = fieldAnchor
+        ? [
+            {
+              id: fieldAnchor.id,
+              caption: fieldAnchor.name,
+              color: palette.field[inFieldSpaceKind],
+              size: FIELD_ANCHOR_SIZE,
+            } as Node,
+          ]
+        : []
+      const subContextNodes = subContexts.map(
+        (sub) =>
+          ({
+            id: sub.id,
+            caption: sub.name,
+            color: palette.field[inFieldSpaceKind],
+            size: FIELD_SIZE,
+          }) as Node
+      )
+      return [
+        ...pulseNodes,
+        ...personNodes,
+        ...weaveNodes,
+        ...anchorNodes,
+        ...subContextNodes,
+      ]
     }
     if (inSpace) {
       // Hub-and-spoke: the space anchors the cluster, its field contexts and
@@ -815,6 +890,9 @@ export const BloomView: FC = () => {
     pulses,
     persons,
     weaves,
+    subContexts,
+    fieldAnchor,
+    inFieldSpaceKind,
     inSpace,
     fieldContexts,
     spaces,
@@ -947,6 +1025,22 @@ export const BloomView: FC = () => {
         } as Relationship)
       }
 
+      // HAS_SUBCONTEXT — the field anchor out to each nested field
+      // (GOAL-339). Both endpoints are always rendered (the anchor only
+      // materializes when sub-contexts exist), so no visibility guard.
+      if (fieldAnchor) {
+        for (const sub of subContexts) {
+          edges.push({
+            id: `subcontext-${fieldAnchor.id}-${sub.id}`,
+            from: fieldAnchor.id,
+            to: sub.id,
+            caption: 'nested',
+            color: palette.structuralEdge,
+            width: 1.5,
+          } as Relationship)
+        }
+      }
+
       return dedupe(edges)
     }
     if (inSpace && spaceAnchor) {
@@ -957,15 +1051,33 @@ export const BloomView: FC = () => {
         ...inSpacePeople.map((p) => p.id),
       ])
       const edges: Relationship[] = []
+      // A nested field hangs off its parent field, not the space anchor, so
+      // the hierarchy reads correctly (GOAL-339 — previously every context
+      // rendered flat off the space even when nested). Falls back to the
+      // space edge if the parent isn't on canvas.
+      const contextIds = new Set(fieldContexts.map((f) => f.id))
       for (const ctx of fieldContexts) {
-        edges.push({
-          id: `has-${spaceAnchor.id}-${ctx.id}`,
-          from: spaceAnchor.id,
-          to: ctx.id,
-          caption: 'has',
-          color: palette.structuralEdge,
-          width: 1.5,
-        } as Relationship)
+        const nestedParentId =
+          ctx.parentId && contextIds.has(ctx.parentId) ? ctx.parentId : null
+        edges.push(
+          nestedParentId
+            ? ({
+                id: `subcontext-${nestedParentId}-${ctx.id}`,
+                from: nestedParentId,
+                to: ctx.id,
+                caption: 'nested',
+                color: palette.structuralEdge,
+                width: 1.5,
+              } as Relationship)
+            : ({
+                id: `has-${spaceAnchor.id}-${ctx.id}`,
+                from: spaceAnchor.id,
+                to: ctx.id,
+                caption: 'has',
+                color: palette.structuralEdge,
+                width: 1.5,
+              } as Relationship)
+        )
       }
       for (const p of inSpacePeople) {
         if (!visibleIds.has(p.id)) continue
@@ -1020,6 +1132,8 @@ export const BloomView: FC = () => {
     persons,
     weaves,
     connections,
+    subContexts,
+    fieldAnchor,
     fieldDetailsData,
     inSpace,
     spaceAnchor,
@@ -1069,6 +1183,13 @@ export const BloomView: FC = () => {
             type: p.focalType as VisibleEntity['type'],
             source: 'bloom' as const,
           })),
+          // Nested fields on canvas resolve by name too (GOAL-339).
+          ...subContexts.map((sub) => ({
+            id: sub.id,
+            name: sub.name,
+            type: 'FieldContext' as VisibleEntity['type'],
+            source: 'bloom' as const,
+          })),
         ]
       }
       if (inSpace) {
@@ -1092,6 +1213,7 @@ export const BloomView: FC = () => {
     inField,
     pulses,
     persons,
+    subContexts,
     inSpace,
     fieldContexts,
     spaces,
@@ -1153,6 +1275,25 @@ export const BloomView: FC = () => {
         const weave = weaves.find((w) => w.id === id)
         if (weave) {
           dispatchOpenInfoDrawer({ type: 'PromiseWeave', id: weave.id, label })
+          return
+        }
+        // Nested field bubble — open the FieldContext drawer (rename lives
+        // behind its Edit CTA), same treatment as an in-space field node.
+        const sub = subContexts.find((sc) => sc.id === id)
+        if (sub) {
+          setFocalEntity({
+            type: 'FieldContext',
+            id: sub.id,
+            focusedAt: new Date().toISOString(),
+            source: 'manual',
+          })
+          dispatchOpenInfoDrawer({ type: 'FieldContext', id: sub.id, label })
+          return
+        }
+        // The field anchor is the field the canvas is already scoped to —
+        // no focal change, just its drawer.
+        if (fieldAnchor && id === fieldAnchor.id) {
+          dispatchOpenInfoDrawer({ type: 'FieldContext', id, label })
         }
         return
       }
@@ -1214,6 +1355,8 @@ export const BloomView: FC = () => {
       pulses,
       persons,
       weaves,
+      subContexts,
+      fieldAnchor,
       inSpace,
       spaceAnchor,
       inSpacePeople,
@@ -1265,6 +1408,15 @@ export const BloomView: FC = () => {
         return
       }
       if (inField) {
+        // A nested field is a navigable entity — a single click drills into
+        // it, same as an in-space field click (GOAL-339). Everything else
+        // in-field keeps drawer-on-click.
+        const sub = subContexts.find((sc) => sc.id === id)
+        if (sub) {
+          dispatchCloseInfoDrawer()
+          router.push(`/protected/dashboard/field-context/${sub.id}`)
+          return
+        }
         handleNodeClick(node)
         return
       }
@@ -1291,6 +1443,7 @@ export const BloomView: FC = () => {
     [
       overlay,
       inField,
+      subContexts,
       inSpace,
       fieldContexts,
       spaces,
@@ -1458,11 +1611,16 @@ export const BloomView: FC = () => {
   // the user drags a node — `restart()` is what that drag implicitly does.
   const lastKickedScopeRef = useRef<string | null>(null)
   useEffect(() => {
-    if (lastKickedScopeRef.current === scopeKey) return
+    // Key on the node count as well as the scope: a node arriving in the
+    // SAME scope (e.g. a nested field created from the action bar landing
+    // via the background refetch) must also wake the simulation, or the
+    // new bubble sits wherever NVL dropped it without settling (GOAL-339).
+    const kickKey = `${scopeKey}|${nodes.length}`
+    if (lastKickedScopeRef.current === kickKey) return
     if (nodes.length === 0) return
     const ref = nvlRef.current
     if (!ref || typeof ref.restart !== 'function') return
-    lastKickedScopeRef.current = scopeKey
+    lastKickedScopeRef.current = kickKey
     // A short delay lets the NVL wrapper finish wiring up the new nodes
     // (`addAndUpdateElementsInGraph` happens in a separate effect) before
     // we restart the simulation against them. We retry with a longer
@@ -1616,10 +1774,10 @@ export const BloomView: FC = () => {
             label="Bloom is gathering"
             subtitle={
               inField
-                ? 'Native NVL view of this field’s pulses.'
+                ? 'A live canvas of this field’s pulses.'
                 : inSpace
-                  ? 'Native NVL view of this space’s field contexts.'
-                  : 'Native NVL view of your spaces.'
+                  ? 'A live canvas of this space’s field contexts.'
+                  : 'A live canvas of your spaces.'
             }
           />
         ) : isEmpty ? (
@@ -1629,10 +1787,10 @@ export const BloomView: FC = () => {
             </span>
             <p className="text-sm text-gp-ink-muted max-w-md">
               {inField
-                ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here as a native NVL node.'
+                ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here on the canvas.'
                 : inSpace
-                  ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here as a native NVL node.'
-                  : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here as native NVL nodes.'}
+                  ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here on the canvas.'
+                  : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here on the canvas.'}
             </p>
           </div>
         ) : (

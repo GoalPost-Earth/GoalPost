@@ -67,7 +67,10 @@ WF-12: Promise Weave Authoring           (Member weaves pulses + a person into a
 **Actor:** Space Owner, ADMIN, or MEMBER (`canEditContent`)
 
 1. User opens a FieldContext detail page and uses "New nested field" in the
-   Nested fields section (custom `createSubFieldContext` mutation).
+   Nested fields section, or — from either studio canvas view, including
+   Bloom — "Add nested field" in the canvas action bar (GOAL-339). Both
+   mount the shared `CreateNestedFieldModal` (custom
+   `createSubFieldContext` mutation).
 2. The child is created in the SAME Space as the parent — its own
    `HAS_CONTEXT` edge — plus a `HAS_SUBCONTEXT` overlay edge from the
    parent. Depth is capped at 5 levels.
