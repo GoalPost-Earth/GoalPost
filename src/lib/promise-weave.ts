@@ -65,6 +65,26 @@ export function normalizeWeaveStatus(status?: string | null): WeaveStatus {
   }
 }
 
+/**
+ * Raw status values (lowercased, trimmed) that `normalizeWeaveStatus` reads as
+ * `dissolved` — i.e. the ONLY ones that mean "not a live connection".
+ *
+ * Exported because raw Cypher cannot call `normalizeWeaveStatus`, and any
+ * server-side query that has to ask "does a live weave already exist?" would
+ * otherwise hand-roll its own status vocabulary. Two of them drifting apart is
+ * a silent bug: an allow-list of `['proposed','active']` looks equivalent but
+ * classifies an UNRECOGNISED legacy value as not-live, while every reader in
+ * the app treats an unknown value as `active`. Express the test as an
+ * EXCLUSION of this list so unknown-reads-as-active carries through.
+ *
+ * `weave-status-parity.test.ts` pins the agreement with `normalizeWeaveStatus`.
+ */
+export const NOT_LIVE_WEAVE_STATUSES: readonly string[] = [
+  WEAVE_STATUS.DISSOLVED,
+  // Legacy CarePoint value carried through by the prod→dev migration.
+  'inactive',
+]
+
 /** True when the weave is waiting on a member's confirm/dismiss decision. */
 export function isAwaitingReview(status?: string | null): boolean {
   return normalizeWeaveStatus(status) === WEAVE_STATUS.PROPOSED
@@ -97,14 +117,21 @@ export function getWeaveStatusLabel(status?: string | null): string {
 }
 
 /**
- * Badge classes per status. Tinted from `gp-*` tokens via `color-mix` in the
- * Tailwind arbitrary values so each one re-derives under every theme and in
- * both light and dark.
+ * Badge classes per status. Tinted from `gp-*` tokens so each one re-derives
+ * under every theme and in both light and dark.
+ *
+ * `proposed` carries a DASHED border on purpose. Colour alone does not survive
+ * every theme: in the default theme it reads green against `active`'s blue,
+ * but under `theme-purple` both `gp-accent-glow` and `gp-primary` resolve to
+ * lilac and the two pills converge (measured at 390px in the GOAL-342 parity
+ * pass). "A proposal is visibly distinct from an established weave" has to
+ * hold in every theme, so the distinction cannot rest on hue — a dashed edge
+ * reads as "not settled yet" regardless of palette, and costs nothing.
  */
 export function getWeaveStatusClass(status?: string | null): string {
   switch (normalizeWeaveStatus(status)) {
     case WEAVE_STATUS.PROPOSED:
-      return 'border-gp-accent-glow/40 bg-gp-accent-glow/10 text-gp-ink-strong dark:text-white'
+      return 'border-dashed border-gp-accent-glow/60 bg-gp-accent-glow/10 text-gp-ink-strong dark:text-white'
     case WEAVE_STATUS.FULFILLED:
       return 'border-gp-resource/40 bg-gp-resource/10 text-gp-ink-strong dark:text-white'
     case WEAVE_STATUS.DISSOLVED:

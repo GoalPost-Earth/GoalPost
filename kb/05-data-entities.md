@@ -457,8 +457,19 @@ ResonanceLink is surfaced via `HAS_RESONANCE`. Originates in Steve's relational
 
 Three things author weaves: the prod→dev migration (which wrapped each migrated
 care point — the starting point), a member from the field context's "Promise
-weaves" section (GOAL-341), and AI discovery (GOAL-342), whose proposals land
-`proposed` and need confirming.
+weaves" section (GOAL-341), and the assistant's `propose_promise_weave` tool
+(GOAL-342), whose proposals land `proposed` and need confirming.
+
+**The AI path does NOT go through `createPromiseWeaves`.** That mutation's
+CREATE rule requires a `createdBy` edge pointing at the caller, and an
+AI-proposed weave has no member author — so `proposePromiseWeaveAuthorized`
+(`src/lib/chat/hitl.ts`) writes the node in raw Cypher, the way the migration
+does. It re-derives authorization itself rather than inheriting the SDL's:
+`canEditContext` on the anchor field, and then every edge it creates is reached
+*through* that already-cleared context (`HAS_PULSE` for the woven pulses,
+`HAS_PERSON` for the person). A pulse id from another Space therefore matches
+nothing and is silently dropped, which is what makes a cross-Space weave
+unreachable rather than merely forbidden.
 
 | Field      | Type     | Notes                                              |
 | ---------- | -------- | -------------------------------------------------- |
@@ -474,7 +485,10 @@ weaves" section (GOAL-341), and AI discovery (GOAL-342), whose proposals land
 
 - `WEAVES` → FieldPulse (1..n — the care point(s) it connects)
 - `WOVEN_FOR` → Person (whose care point / who it concerns)
-- `CREATED_BY` → Person (authorship, for attribution)
+- `CREATED_BY` → Person (authorship, for attribution) — **absent on an
+  AI-proposed weave**, which has no member author. `origin: 'ai'` is what says
+  where it came from; the acting member appears on the activity `Log` instead.
+  Any query that reads authorship off this edge must tolerate an empty list.
 - `HAS_WEAVE` ← FieldContext (scope + visibility anchor)
 
 **Authorization:** Scoped to the parent FieldContext's Space — readable by the
@@ -680,6 +694,26 @@ existing exemption for `ConversationChunk` writes.
 
 - `CREATED_BY` → Person
 - `LOGGED_FOR` → GoalPulse / ResourcePulse / FieldPulse
+
+**Authorization (GOAL-342).** Writes are **server-side only** —
+`@mutation(operations: [])`. Every real Log is written by raw Cypher
+(`createLog`, or inline in a mutation's own statement) or by the `log*Activity`
+resolvers, which gate on `canEditContext`. The generated `createLogs` /
+`updateLogs` / `deleteLogs` roots were open to any authenticated caller, who
+could forge an activity entry, rewrite someone else's, or delete one. An
+activity feed its own subject can rewrite is not an audit trail.
+
+READ is filtered: a Log is as visible as what it is *about* — its author can
+always see it (`createdBy`), and anyone who can reach the Space of a pulse it
+is `LOGGED_FOR` can see it. This matters because **descriptions are assembled
+server-side from graph reads**, so they carry pulse titles, people's names and
+field titles verbatim; ungated, `logs(where: { description_CONTAINS: … })` was
+a platform-wide read oracle. Fails closed: a Log about nothing, by someone
+else, is invisible.
+
+**Writing a Log from new code:** set `metadata` only. `createLog` also writes a
+`metadataJson` twin, but nothing reads it — it is absent from the GraphQL type
+and from this table, and `@neo4j/graphql` can neither project nor filter on it.
 
 ### Notification
 

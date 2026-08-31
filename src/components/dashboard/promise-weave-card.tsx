@@ -3,6 +3,7 @@
 import { formatDistanceToNow } from 'date-fns'
 import { cn } from '@/lib/utils'
 import { weaveDisplayTitle, weavePersonName } from '@/lib/promise-weave-display'
+import { getWeaveStatusClass, getWeaveStatusLabel } from '@/lib/promise-weave'
 import { dispatchOpenInfoDrawer } from './entity-info-drawer'
 
 /** The `promiseWeaves` row shape (see PROMISE_WEAVE_SPACE_QUERIES.ts). */
@@ -30,8 +31,9 @@ export interface SpacePromiseWeave {
  * The whole "Promise Weaves" block on the space dashboard — heading, blurb and
  * card grid — so `<SpaceDashboardView />` (already past the 400-line ceiling)
  * gains a single element rather than a section body. Renders nothing when the
- * space holds no weaves; there is no empty state because there is no way to
- * author one yet.
+ * space holds no weaves; there is no empty state because weaves are authored
+ * from a field context, not from here (GOAL-341), so a dashboard-level "add
+ * one" prompt would point nowhere.
  */
 export function PromiseWeavesSection({
   weaves,
@@ -136,8 +138,20 @@ export function PromiseWeaveCard({ weave }: { weave: SpacePromiseWeave }) {
         </span>
         <div className="flex items-center gap-2 shrink-0">
           {weave.status && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border border-gp-primary/30 bg-gp-primary/10 text-gp-primary">
-              {weave.status}
+            // Through the shared helpers, never the raw string: a `proposed`
+            // weave is a PROPOSAL nobody has agreed to yet (GOAL-342), and
+            // hardcoding the gp-primary "established" badge here rendered it
+            // identically to a live one — the exact conflation the HITL gate
+            // exists to prevent. `getWeaveStatusClass` gives proposed its own
+            // accent-glow tint and dissolved a muted one, and the label shows a
+            // legacy migration value verbatim (kb/04-state-machines.md).
+            <span
+              className={cn(
+                'px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border',
+                getWeaveStatusClass(weave.status)
+              )}
+            >
+              {getWeaveStatusLabel(weave.status)}
             </span>
           )}
           <span className="material-symbols-outlined text-base text-gp-primary/80 transition-transform group-hover:translate-x-1">

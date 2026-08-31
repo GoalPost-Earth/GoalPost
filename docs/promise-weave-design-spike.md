@@ -237,14 +237,17 @@ later; these are forward-compatible, not final):
   into a single `HAS_WEAVE` context edge (the visibility anchor), since an
   anti-parallel `WITHIN`/`HAS_WEAVE` pair is redundant — `ResonanceLink` likewise
   uses only `HAS_RESONANCE`.
-- **§6.4 Lifecycle → stateless for now.** A free-text `status` (`active` on
-  migration-built weaves); no state machine, so no `kb/04` entry yet.
-  *(Superseded by §10 — the lifecycle landed with GOAL-341.)*
+- **§6.4 Lifecycle → ~~stateless for now~~ RESOLVED.** This slice shipped a
+  free-text `status` (`active` on migration-built weaves) and no `kb/04` entry.
+  *(Superseded — the lifecycle landed in §10 with GOAL-341, and §11's AI
+  proposal is what made `proposed` load-bearing rather than merely defined.)*
 - **§6.5 Authoring → migration-only.** Weaves are built by the prod→dev migration
   (additive Phase 5d). GraphQL mutations are locked off (`@mutation(operations:
   [])`) until the user/AI authoring + HITL slice; the Space-scoped
   `@authorization` validate rules are already in place for that path.
-  *(Superseded by §10 — member authoring landed with GOAL-341.)*
+  *(Superseded — member authoring landed in §10 with GOAL-341, AI proposal in
+  §11 with GOAL-342. Both halves of §6.5 are now answered: **both**, members
+  directly and AI behind a gate.)*
 - **Neighbourhood scope → minimal.** Each weave holds its care point (`WEAVES`),
   its creator (`WOVEN_FOR` + `CREATED_BY`), and its FieldContext (`HAS_WEAVE`).
 - **Activity Log.** Migration-built weaves are `:Log`-exempt, consistent with the
@@ -330,12 +333,161 @@ on `canEditContext`.
 the nested operations at the same time, and check what `delete` and
 `disconnect` reach through each edge.
 
-Still open: AI proposal itself (GOAL-342) and search / dashboard-card surfacing
-(GOAL-343). The `proposed` state and its gate are already in place for GOAL-342
-to write into — but note that an AI-proposed weave has no member author, so the
-discovery path must write its node server-side rather than through
-`createPromiseWeaves`, whose CREATE rule now requires `createdBy` to be the
-caller.
+Still open at the time: AI proposal itself (GOAL-342, now §11) and search /
+dashboard-card surfacing (GOAL-343). The `proposed` state and its gate were
+already in place for GOAL-342 to write into — with the caveat, which held, that
+an AI-proposed weave has no member author, so the discovery path must write its
+node server-side rather than through `createPromiseWeaves`, whose CREATE rule
+requires `createdBy` to be the caller.
+
+## 11. AI proposal shipped (2026-08-31, GOAL-342)
+
+The last of §6.5. The assistant can now propose a weave, and §6.4's `proposed`
+state stops being a definition and becomes the thing that carries the gate.
+
+### The shape decision (§6.4 / §6.5, recorded here as GOAL-342 required)
+
+**A proposal is a `PromiseWeave` node carrying `status: 'proposed'`, NOT a
+separate suggestion node.** This deliberately diverges from the
+`ResonanceSuggestion` / `ResonanceLink` split it was weighed against:
+
+- A `proposed` weave inherits the type's existing `HAS_WEAVE`-anchored
+  `@authorization` — READ filter, CREATE/UPDATE/DELETE validate rules — for
+  free. A separate label needs its own directive block written from scratch,
+  and every one of those is a place to get Space scoping subtly wrong.
+- It inherits soft-delete and purge for free too. `HAS_CONTEXT` →
+  `HAS_DELETED_CONTEXT` re-pointing already hides a deleted field's whole
+  subtree, and `purge-deleted-field-contexts.ts` already collects weaves. A
+  separate node would need explicit handling in both, exactly as
+  `soft-delete-field-context.ts` had to grow a hard-delete for
+  `ResonanceSuggestion`.
+- `kb/07` Rule 9 does not fire: no new label, no new edge, so
+  `schema-context.ts`, `ALLOWED_LABELS`, `NODE_STYLE`, `CONTENT_VIA_SPACE` and
+  `execute.ts`'s auth anchors all already know `:PromiseWeave` from GOAL-277.
+  A distinct proposal label would have needed all five updated in the same
+  change or `query_for_bloom` would return a silent `found: false`.
+- The cost accepted in exchange: **every surface that reads a weave must branch
+  on status.** Nothing structural stops a `proposed` row rendering as an
+  established one — only discipline does, funnelled through
+  `normalizeWeaveStatus` / `isAwaitingReview` / `getWeaveStatusClass` in
+  `src/lib/promise-weave.ts`. That cost was already being paid in drift when
+  this slice started: **three** surfaces rendered a proposal as agreed, and all
+  three were corrected here —
+
+  | Surface | Was | Now |
+  | --- | --- | --- |
+  | Space dashboard card (`dashboard/promise-weave-card.tsx`) | hardcoded gp-primary "active" badge for *any* status | `getWeaveStatusClass` / `getWeaveStatusLabel` |
+  | Search result card (`search/promise-weave-result-card.tsx`) | same hardcoded badge | same helpers |
+  | Bloom canvas (`studio/modes/graph-mode/bloom-view.tsx`) | `status` was in the query payload and discarded; a proposal drew as an ordinary teal hub | caption suffixed `(proposed)` via `isAwaitingReview` |
+
+  The field section and the entity-info drawer were already correct (GOAL-341).
+  **Any new weave surface must use those helpers, not the raw string** — and
+  "the drawer is one click away" is not a defence, because the surface itself
+  is what asserts the connection.
+
+- The same cost applies to raw **Cypher**, which cannot call
+  `normalizeWeaveStatus` at all. `NOT_LIVE_WEAVE_STATUSES` is exported for that
+  case and `src/lib/weave-status-parity.test.ts` pins the two together. State
+  such a test as an **exclusion** of the not-live values, never an allow-list of
+  the live ones: an allow-list looks equivalent but classifies an unrecognised
+  legacy value as not-live, while every reader in the app treats an unknown
+  value as `active`.
+
+`status` stays a free-text `String` rather than becoming an SDL enum, so the
+nine migration-built weaves' legacy values (`"Active"`, `"Inactive"`,
+`"active"`) keep resolving. They were not touched: no migration, no backfill.
+
+### The two gates
+
+An AI proposal passes two, and neither is redundant:
+
+1. **The HITL approval card.** `propose_promise_weave` is a `WriteToolName`
+   routed through `runWriteTool`, so nothing is written until the member
+   approves. The card's copy says it produces a *proposal* — describing it as
+   "Weave X" would misstate what the member is agreeing to.
+2. **The `proposed` status.** What approval creates is not an established
+   connection. It renders behind the inline Confirm / Dismiss gate GOAL-341
+   built, and only a member's Confirm promotes it to `active`.
+
+Collapsing them — writing `active` straight from the approved call — would make
+a proposal indistinguishable from an agreed weave, which is the whole point of
+the state.
+
+### Authorization, and why it is restated in Cypher
+
+`proposePromiseWeaveAuthorized` (`src/lib/chat/hitl.ts`) writes raw Cypher, so
+it inherits none of the SDL's rules and restates them:
+
+- `canEditContext` on the anchor field first — Owner / ADMIN / MEMBER, GUEST
+  refused, and a GUEST gets the same sentence a non-member does.
+- The anchor is `ctx.fieldContextId` from session state, **never** a
+  model-supplied id. The tool is registered only when a field is active
+  (`kb/07` Rule 4), so on a neutral surface it does not exist.
+- Every edge is reached *through* that cleared context — `HAS_PULSE` for the
+  woven pulses, `HAS_PERSON` for the person. An id from another Space matches
+  nothing and is dropped, so a cross-Space weave is **unreachable**, not merely
+  forbidden. Verified: handed a foreign pulse id alongside two valid ones, the
+  write wove exactly the two.
+- No `CREATED_BY` edge — there is no member author. `origin: 'ai'` records
+  provenance; the acting member is on the activity `Log`, which is written in
+  the same statement as the weave.
+- Idempotent: a live (`proposed` or `active`) weave in the field already
+  holding every one of those pulses is reported back instead of duplicated. A
+  `dissolved` one does not block a fresh proposal.
+
+Verified on dev with 28 live checks, each negative control paired with a
+positive one: an outsider can neither read, enumerate, confirm nor dissolve the
+proposal; a GUEST of the owning Space can read it but not confirm or dissolve
+it; the owner can. That last one matters — without it the negatives would also
+pass if the mutation were simply broken for everybody.
+
+### What the reviews changed
+
+Three findings were worth more than the slice itself.
+
+- **The Log type was ungated, and this change made it load-bearing.** With no
+  member `CREATED_BY` edge on an AI weave, the activity `Log` is the *only*
+  record of who caused it to exist — and `Log` carried neither
+  `@mutation(operations: [])` nor an `@authorization` filter. Any authenticated
+  caller could forge an entry, rewrite someone else's, or delete one; and
+  because descriptions are built from graph reads, a `description_CONTAINS`
+  query enumerated every proposal on the platform with its pulse titles and the
+  person it concerns — defeating "a caller who cannot read the field cannot
+  read the proposal" through a side channel. Both are closed on the type (see
+  `kb/05`). Pre-existing and platform-wide, not introduced here; GOAL-342 is
+  what made it unignorable.
+- **The approval card was described entirely by model-supplied strings.** The
+  summary was built from `pulseTitles` / `wovenForName` that nothing checked
+  against the ids being written, so injected text could have the member approve
+  a ten-pulse weave having been shown two. `resolveWeaveProposalDisplay` now
+  resolves both from the graph, gated on `canEditContext` first. **The card is
+  the gate; the model must not be able to write the card.**
+- **The dedup was a superset test.** Any live weave holding a superset blocked
+  a proposal — so a single-pulse proposal was refused by *any* weave touching
+  that pulse, and migration-built weaves wrap single care points. Now an exact
+  set match.
+
+Two notes from the Cypher review are folded in too: the entry match now seeks
+each id on `FieldPulse(id)` rather than expanding every `HAS_PULSE` in the
+field (that expansion was 92% of the statement's dbHits and cost the same
+whether the proposal named one id or ten), and a blank-but-present pulse title
+no longer becomes the weave's name.
+
+**A trap worth naming:** the Cypher lives in a JS template literal, so a
+backtick anywhere in it — including in a *comment* — terminates the string and
+500s every route that imports `hitl.ts`, surfacing as an unrelated TS parse
+error dozens of lines away. It happened twice while writing this. There is now
+a test asserting the emitted query contains no backtick.
+
+### Theme parity
+
+`getWeaveStatusClass` gives `proposed` a **dashed** border, not merely a
+different tint. Colour alone does not survive every theme: in the default
+theme proposed reads green against active's blue, but under `theme-purple`
+both `gp-accent-glow` and `gp-primary` resolve to lilac and the two pills
+converge. "Visibly distinct" has to hold in every theme, so the distinction
+cannot rest on hue. Verified at 390 x 844 in light, dark, and theme-purple
+across all four weave surfaces.
 
 ---
 

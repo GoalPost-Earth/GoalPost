@@ -80,7 +80,7 @@ Active   → Dissolved
 
 | Status      | Description                                         | Who Triggers                          |
 | ----------- | --------------------------------------------------- | ------------------------------------- |
-| `proposed`  | AI-proposed, awaiting human confirmation            | Weave discovery (GOAL-342)            |
+| `proposed`  | AI-proposed, awaiting human confirmation            | The assistant's `propose_promise_weave` tool (GOAL-342) |
 | `active`    | Live — member-authored, or a confirmed proposal     | Member via the Promise weaves section |
 | `fulfilled` | The promise it holds has been kept                  | **No surface yet** — see the note below |
 | `dissolved` | Withdrawn, or a proposal the member declined        | Member via the Promise weaves section |
@@ -121,6 +121,24 @@ through them rather than comparing the raw string.
 Only `proposed` is a gate: it is the human-in-the-loop step for AI-proposed
 weaves, and the section renders Confirm / Dismiss on exactly those rows.
 Member-authored weaves are born `active` — the member IS the human in the loop.
+
+**An AI proposal passes TWO gates, and both are load-bearing (GOAL-342).** The
+assistant's `propose_promise_weave` is a write tool, so the member first
+approves it on the HITL card (`kb/07` Rule 5) — nothing is written until they
+do. What that approval creates is a `proposed` weave, which is *not* an
+established connection: it must not be counted, aggregated or narrated as one,
+and only a member's Confirm in the field's "Promise weaves" section promotes it
+to `active`. Dismiss moves it to `dissolved`. Collapsing the two — writing
+`active` straight from the approved tool call — would leave a proposal
+indistinguishable from an agreed weave, which is the failure this whole state
+exists to prevent.
+
+Both transitions out of `proposed` re-authorize server-side on the acting
+member — Owner / ADMIN / MEMBER, the same rule `canEditContent` encodes
+elsewhere, though the confirm/dismiss path does not call that helper: it goes
+through `updatePromiseWeaves` and is gated by `PromiseWeave`'s own
+`@authorization` validate rules, not by anything the client asserts. A GUEST
+can read a proposal but can neither confirm nor dissolve it.
 
 ---
 

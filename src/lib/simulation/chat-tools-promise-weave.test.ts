@@ -163,3 +163,82 @@ describe('mode prompts route weave language to the weave tool', () => {
     }
   )
 })
+
+/**
+ * GOAL-342 — the proposal tool. Two properties are pinned here because both
+ * are invisible in the tool's own code and only observable from the outside:
+ * it must not exist on a surface with no field to anchor into (Rule 4), and it
+ * must reach the graph through the HITL gate rather than around it (Rule 5).
+ */
+describe('propose_promise_weave — registration (Rule 4)', () => {
+  it('is registered when a field context is active', async () => {
+    const tools = await buildTools()
+    expect(tools.propose_promise_weave).toBeDefined()
+  })
+
+  it('is ABSENT on a neutral surface — its anchor is the active field, so without one it has no useful path', async () => {
+    const tools = await buildTools({ spaceId: null, fieldContextId: null })
+    expect(tools.propose_promise_weave).toBeUndefined()
+  })
+
+  it('is absent when only the Space is known and no field is open', async () => {
+    const tools = await buildTools({ fieldContextId: null })
+    expect(tools.propose_promise_weave).toBeUndefined()
+  })
+})
+
+describe('propose_promise_weave — routes through the HITL gate (Rule 5)', () => {
+  const proposalArgs = {
+    title: 'Keeping the house while they travel',
+    why: 'Both promises are held by the same people.',
+    pulseIds: ['pulse_water', 'pulse_key'],
+    pulseTitles: ['Water the plants', 'Spare key with Tom'],
+  }
+
+  it('returns a pending approval instead of writing, when the action is not yet approved', async () => {
+    const tools = await buildTools()
+    const result = (await runTool(
+      tools.propose_promise_weave,
+      proposalArgs
+    )) as Record<string, unknown>
+
+    expect(result.approvalRequired).toBe(true)
+    expect(result.success).toBe(false)
+    expect(result.tool).toBe('propose_promise_weave')
+    expect(result.approvalHash).toEqual(expect.any(String))
+    // Rule 1: the summary the dialog renders carries names, never ids.
+    expect(String(result.summary)).toContain(
+      'Keeping the house while they travel'
+    )
+    expect(String(result.summary)).not.toContain('pulse_')
+  })
+
+  it('anchors the proposal to the SESSION field, ignoring any context the model tries to supply', async () => {
+    const tools = await buildTools()
+    const result = (await runTool(tools.propose_promise_weave, {
+      ...proposalArgs,
+      // The schema does not accept these, but a model can emit extra keys —
+      // the wrapper must overwrite rather than merge them in.
+      contextId: 'ctx_somewhere_else',
+      contextTitle: 'Another Field',
+    })) as { args: Record<string, unknown> }
+
+    expect(result.args.contextId).toBe(ACTIVE_FIELD)
+    expect(result.args.contextTitle).toBe('Active Field')
+  })
+})
+
+describe('mode prompts describe the proposal as a proposal', () => {
+  const modes = ['default', 'aiden', 'braider'] as const
+
+  it.each(modes)('%s names propose_promise_weave', (mode) => {
+    expect(SYSTEM_PROMPTS[mode]).toContain('propose_promise_weave')
+  })
+
+  it.each(modes)(
+    '%s tells the model a proposed weave is not an agreed one',
+    (mode) => {
+      expect(SYSTEM_PROMPTS[mode]).toContain('never as an established connection')
+    }
+  )
+})

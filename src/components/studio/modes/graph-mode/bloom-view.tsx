@@ -36,6 +36,7 @@ import { lightColorFor, UNKNOWN_NODE_STYLE } from '@/lib/cypher-generator/node-s
 import { GraphLoadingState } from './graph-loading-state'
 import { BloomLegend } from './bloom-legend'
 import { getBloomPalette } from './bloom-palette'
+import { isAwaitingReview } from '@/lib/promise-weave'
 import { useBloomOverlay, type BloomOverlay } from '../../bloom-overlay-context'
 import {
   useVisibleEntities,
@@ -312,6 +313,14 @@ interface WeaveRecord {
   id: string
   name: string
   wovenPulseIds: string[]
+  /**
+   * True for a `proposed` weave — one the assistant suggested that no member
+   * has confirmed yet (kb/04-state-machines.md). The canvas MUST NOT draw it
+   * identically to an agreed weave: every other weave surface distinguishes
+   * the two, and a hub that looks established is the canvas asserting a
+   * connection nobody made.
+   */
+  awaitingReview: boolean
 }
 
 interface PersonRecord {
@@ -670,12 +679,17 @@ export const BloomView: FC = () => {
     const list = (context?.weaves ?? []) as Array<{
       id: string
       title?: string | null
+      status?: string | null
       weaves?: Array<{ id?: string | null } | null> | null
     }>
     return list.map((w) => ({
       id: w.id,
       name: w.title || 'Promise weave',
       wovenPulseIds: (w.weaves ?? []).flatMap((p) => (p?.id ? [p.id] : [])),
+      // `status` was already in the GET_FIELD_CONTEXT_DETAILS payload and was
+      // being discarded here — read it through the shared helper rather than
+      // comparing the raw string (legacy migration values, null-reads-as-active).
+      awaitingReview: isAwaitingReview(w.status),
     }))
   }, [inField, fieldDetailsData])
 
@@ -788,11 +802,17 @@ export const BloomView: FC = () => {
             size: PERSON_SIZE,
           }) as Node
       )
+      // NVL renders `caption` and nothing else per node, so the proposed state
+      // rides in the caption. A separate colour would need its own palette
+      // entry AND a legend row to be decodable, where the suffix is legible in
+      // every theme and both modes for free.
       const weaveNodes = weaves.map(
         (weave) =>
           ({
             id: weave.id,
-            caption: weave.name,
+            caption: weave.awaitingReview
+              ? `${weave.name} (proposed)`
+              : weave.name,
             color: palette.weaveNode,
             size: PULSE_SIZE,
           }) as Node

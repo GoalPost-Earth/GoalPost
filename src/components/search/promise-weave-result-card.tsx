@@ -1,6 +1,8 @@
 'use client'
 
 import { weaveDisplayTitle, weavePersonName } from '@/lib/promise-weave-display'
+import { getWeaveStatusClass, getWeaveStatusLabel } from '@/lib/promise-weave'
+import { cn } from '@/lib/utils'
 
 /**
  * PromiseWeave result card for `/protected/search` (GOAL-343).
@@ -118,8 +120,16 @@ export function PromiseWeaveResultCard({
 
         {weave.status && (
           <div className="mt-4 flex flex-wrap gap-2">
-            <span className="px-2 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border bg-gp-primary/10 text-gp-primary border-gp-primary/20">
-              {weave.status}
+            {/* Shared helpers, not the raw string — see the note on the same
+                badge in dashboard/promise-weave-card.tsx. A search hit must not
+                present an unconfirmed proposal as an established weave. */}
+            <span
+              className={cn(
+                'px-2 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider border',
+                getWeaveStatusClass(weave.status)
+              )}
+            >
+              {getWeaveStatusLabel(weave.status)}
             </span>
           </div>
         )}
