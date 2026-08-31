@@ -6,6 +6,7 @@ import { createPersonSearchTool } from '@/modules/agent/tools/person-search.tool
 import { createSpaceSearchTool } from '@/modules/agent/tools/space/space-search.tool'
 import { searchFieldContexts } from '@/modules/agent/tools/field-context/field-context.service'
 import { searchPulses } from '@/modules/agent/tools/pulse/pulse.service'
+import { searchPromiseWeaves } from '@/modules/agent/tools/promise-weave/promise-weave.service'
 import { graphRagSearch } from '@/modules/agent/tools/rag/graph-rag.service'
 import { canViewContent } from '@/lib/permissions/space-permissions'
 import {
@@ -1260,6 +1261,89 @@ export async function buildSimulationChatTools(
           })
         } catch (error) {
           return toErrorResult('Failed to search pulse', error)
+        }
+      },
+    }),
+
+    search_promise_weave: tool({
+      description:
+        'Search OR list PROMISE WEAVES — the connective nodes that hold a pulse together with the people and field it implicates. THE ONLY TOOL THAT CAN SEE THEM: a weave is a connector node, not a pulse, so search_pulse and graph_rag_search are blind to it and searching pulse text for the words "promise weave" will always come back empty. Call this for any mention of a weave / promise weave / "woven" / "what is woven for <person>" / "weaves in this field", INCLUDING when the user only wants them named in chat rather than drawn on the canvas (use query_for_bloom when they want to SEE them). Two modes. (1) KEYWORD — pass a `query`; it matches the weave title, its note, the titles of the pulses it weaves, and the name of the person it is woven for. (2) ENUMERATE — leave `query` blank to list weaves; unlike search_pulse this needs NO scope, so answer "what promise weaves do I have?" with a bare call and add a scope only when the user restricts to one field or Space. Each result carries a human-readable title, the status label, the pulses it weaves, the person it is woven for, and its field and Space — relay those, never the id. `awaitingReview: true` marks a weave the assistant proposed that is still waiting on the member to confirm or dismiss it in the "Promise weaves" section of its field; mention that when it is true.',
+      inputSchema: z.object({
+        query: z
+          .string()
+          .optional()
+          .describe(
+            'Keyword for a KEYWORD search (weave title, its note, a woven pulse title, or the name of the person it is woven for). OMIT / leave blank to LIST weaves — no scope is required.'
+          ),
+        contextId: z
+          .string()
+          .optional()
+          .describe(
+            'Optional field context ID filter. OMIT for a general lookup (fans out across every field the member can access). To restrict to the field the user is currently viewing ("this field", "here"), pass the activeFieldContextId from SESSION CONTEXT.'
+          ),
+        contextTitle: z
+          .string()
+          .optional()
+          .describe('Optional field context title filter (fuzzy match).'),
+        spaceId: z
+          .string()
+          .optional()
+          .describe(
+            'Optional Space ID scope (e.g. an id from get_my_spaces). Use when the user names a Space ("in my Me Space").'
+          ),
+        spaceName: z
+          .string()
+          .optional()
+          .describe(
+            'Optional Space name scope (fuzzy match). Alternative to spaceId when only the Space name is known.'
+          ),
+        limit: z
+          .number()
+          .int()
+          .positive()
+          .max(25)
+          .optional()
+          .describe('Optional max result count.'),
+      }),
+      execute: async (input: {
+        query?: string
+        contextId?: string
+        contextTitle?: string
+        spaceId?: string
+        spaceName?: string
+        limit?: number
+      }) => {
+        // Same scoping discipline as search_pulse (GOAL-300): never silently
+        // inject the active field, so a general "what weaves do I have?" fans
+        // out across every accessible field instead of being confined to the
+        // one the member happens to be looking at.
+        const resolvedContextId = input.contextId?.trim() || undefined
+        const resolvedSpaceId = input.spaceId?.trim() || undefined
+        logToolDispatch('search_promise_weave', ctx, {
+          ...input,
+          resolvedContextId,
+          resolvedSpaceId,
+        })
+        // Defense in depth, mirroring search_pulse: an explicit Space ID gets a
+        // clear "no access" rather than a silent empty list. The PRIMARY
+        // guarantee stays the $currentUserId reach test inside
+        // searchPromiseWeaves, which gates every returned weave (fail closed).
+        if (resolvedSpaceId) {
+          const check = await assertCanViewSpace(ctx, resolvedSpaceId)
+          if (check !== true) return check
+        }
+        try {
+          const graph = await initGraph()
+          return await searchPromiseWeaves(graph, {
+            ...input,
+            contextId: resolvedContextId,
+            spaceId: resolvedSpaceId,
+            // Raw Cypher bypasses the GraphQL @authorization filter, so the
+            // caller's id is what scopes the read. Fails closed when absent.
+            userId: ctx.currentUserId,
+          })
+        } catch (error) {
+          return toErrorResult('Failed to search promise weaves', error)
         }
       },
     }),
