@@ -443,7 +443,43 @@ export async function generateAndRunForBloom(
       continue
     }
 
-    if (execResult.nodes.length === 0) {
+    // An all-OPTIONAL sweep always yields its driving row, so when the
+    // generator returns the `MATCH (user:Person {id: $userId})` auth anchor and
+    // every OPTIONAL branch misses, the executor hands back exactly one node —
+    // the asker — with no edges. That is an EMPTY result wearing a success
+    // costume: the canvas renders a lone "you" and the chat model, told
+    // `found: true`, narrates it as an answer (GOAL-333). Treat it as empty so
+    // the honest "nothing matched" copy is used instead.
+    //
+    // The discriminator is the SHAPE OF THE QUERY, not the wording of the
+    // intent. `isSelfReferential` cannot be used here: its FIRST_PERSON_RE
+    // matches the dative filler in "show ME all the core values" and the
+    // possessive in "all MY values" — the two headline enumeration phrasings in
+    // generate.ts's own Intent Glossary — so gating on it switched the guard
+    // off for exactly the requests it exists to catch.
+    //
+    // An `OPTIONAL MATCH` is what makes a miss survive as a row. A genuine
+    // self-portrait request ("show me on the graph") compiles to a required
+    // `MATCH (user:Person {id: $userId}) RETURN user`, so it has no OPTIONAL
+    // and still renders its single node. A self-referential co-visualization IS
+    // all-OPTIONAL, but treating it as empty routes it into
+    // tryCovisualizationFallback below, which re-anchors the user plus the named
+    // entities — the correct destination anyway.
+    //
+    // Known limit: this only catches the *lone* asker. If the model splits the
+    // sweep into separate OPTIONAL MATCHes, a run that finds Spaces but no
+    // pulses returns user + Space + FieldContext and reports success with a
+    // structural skeleton. Detecting that needs the intent's target type, which
+    // the orchestrator does not have; the canonical shape in generate.ts chains
+    // each branch into ONE OPTIONAL MATCH precisely so a miss nulls the whole
+    // branch.
+    const onlyNodeIsAsker =
+      execResult.nodes.length === 1 &&
+      execResult.nodes[0]?.id === args.userId &&
+      execResult.relationships.length === 0 &&
+      /\bOPTIONAL\s+MATCH\b/i.test(generated.cypher)
+
+    if (execResult.nodes.length === 0 || onlyNodeIsAsker) {
       // The generated query returned nothing. If the request names ≥2
       // canvas-visible entities, this is a co-visualization the generator
       // fumbled — rescue it deterministically so the user sees the nodes

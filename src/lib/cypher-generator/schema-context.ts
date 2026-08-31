@@ -40,6 +40,18 @@ export const ALLOWED_LABELS = [
   'StoryPulse',
   'CarePulse',
   'CoreValuePulse',
+  // Legacy / provenance marker carried by every MIGRATED core value (GOAL-287).
+  // Backfilled DBs hold `FieldPulse:CoreValuePulse:CoreValue`; an un-backfilled
+  // env (a demo box cloned before the backfill) still holds the pre-GOAL-287
+  // shape `FieldPulse:StoryPulse:CoreValue` — no `:CoreValuePulse` at all.
+  // Without `CoreValue` whitelisted here those values were DOUBLY invisible to
+  // query_for_bloom (the generator could not name the label, and a lucky guess
+  // was rejected by the validator), so "show me all core values" came back
+  // empty while `search_pulses` — which bridges the same label in
+  // pulse.service.ts `typeFilterCypher()` — found them. That divergence was
+  // GOAL-333. Whitelisting only lets the generator TRAVERSE the label; node
+  // visibility is still gated by the post-execute Space filter in execute.ts.
+  'CoreValue',
   // Relational discoveries
   'ResonanceLink',
   'FieldResonance',
@@ -193,18 +205,49 @@ FieldPulse { id, title, content, status, intensity, horizon, why, location, time
   - Always co-labeled with one specific pulse subtype:
     GoalPulse, ResourcePulse, StoryPulse, CarePulse, CoreValuePulse.
 
+CORE VALUES — read this before writing any query about values.
+  A "core value" / "value" is a pulse, but it does NOT always carry the
+  \`:CoreValuePulse\` label. Migrated values carry a \`:CoreValue\` provenance
+  marker, and in an environment that predates the relabel they carry ONLY
+  \`FieldPulse:StoryPulse:CoreValue\` — matching \`(:CoreValuePulse)\` there
+  returns NOTHING even though the person can plainly see their values.
+  So NEVER match a value as \`(v:CoreValuePulse)\` alone, and never anchor on
+  \`(v:CoreValue)\` either — only \`FieldPulse.id\` is indexed, so a bare
+  \`:CoreValue\` pattern forces a full label scan. ALWAYS match the base label
+  and test BOTH markers in a WHERE predicate. Keep the traversal ANCHORED on
+  the user — an unanchored \`MATCH (ctx:FieldContext)-[:HAS_PULSE]->(v)\` plans a
+  CartesianProduct against a label scan of EVERY tenant's values, then the
+  runtime's authorization filter discards nearly all of it, leaving the person
+  with an almost-empty canvas:
+
+      MATCH (user:Person {id: $userId})-[:OWNS]->(:Space)-[hc:HAS_CONTEXT]->(ctx:FieldContext)-[hp:HAS_PULSE]->(v:FieldPulse)
+      WHERE v:CoreValuePulse OR v:CoreValue
+
+  The same rule applies wherever you filter values — enumeration, keyword
+  lookup, or an expansive sweep. A \`:StoryPulse\` that also carries
+  \`:CoreValue\` IS a value, not a story.
+
 ResonanceLink { id, label, description, confidence, evidence, status }
   - Connects two FieldPulses via SOURCE / TARGET.
 
-PromiseWeave { id, title, status, createdAt }
+PromiseWeave { id, title, description, status, origin, createdAt, modifiedAt }
   - A connective CONTAINER node — its own type, NOT a pulse subtype (just like
-    ResonanceLink). Wraps a migrated care point so its neighbourhood is
-    navigable. Its human label is "title". Surfaced inside a FieldContext via a
-    HAS_WEAVE context edge (exactly as ResonanceLink is surfaced via
-    HAS_RESONANCE). When the user names a "promise weave" / "weave", or asks to
-    show a node whose title matches a PromiseWeave title, MATCH the
-    \`:PromiseWeave\` label — these nodes are invisible to any query that omits
-    it.
+    ResonanceLink). Gathers the pulses and the person a promise implicates so
+    its neighbourhood is navigable. Its human label is "title". Surfaced inside
+    a FieldContext via a HAS_WEAVE context edge (exactly as ResonanceLink is
+    surfaced via HAS_RESONANCE). When the user names a "promise weave" /
+    "weave", or asks to show a node whose title matches a PromiseWeave title,
+    MATCH the \`:PromiseWeave\` label — these nodes are invisible to any query
+    that omits it.
+  - "description" says why the woven things belong together.
+  - "status" is the lifecycle: proposed / active / fulfilled / dissolved. It is
+    NOT reliably cased or complete — weaves carried over from migrated care
+    points hold values like "Active" and "Inactive", and some hold nothing at
+    all (which means active). So filter it case-insensitively and tolerate
+    null, e.g. \`toLower(coalesce(w.status,'active')) = 'proposed'\`. Never
+    \`w.status = 'active'\`, which silently drops most weaves.
+  - "origin" is who authored it: "user" (a member), "ai" (proposed by
+    discovery, awaiting confirmation), or null (built by the migration).
 
 FieldResonance { label, description } — semantic theme node.
 

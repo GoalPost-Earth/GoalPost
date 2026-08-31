@@ -11,7 +11,7 @@ export interface FieldContextCardProps {
     emergentName?: string | null
     createdAt: string
     pulses?: Array<{ id: string }> | null
-    /** Direct nested sub-fields (GOAL-295); shown as a count chip. */
+    /** Direct nested fields (GOAL-295); shown as a count chip. */
     subContexts?: Array<{ id: string }> | null
   }
   /** Drives the accent palette so cards inherit their owning space's
@@ -134,7 +134,7 @@ export function FieldContextCard({
             </span>
             <span>
               {subContextCount}{' '}
-              {subContextCount === 1 ? 'sub-field' : 'sub-fields'}
+              {subContextCount === 1 ? 'nested field' : 'nested fields'}
             </span>
           </div>
         )}

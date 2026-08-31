@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
-import { useQuery, useMutation } from '@apollo/client/react'
+import { useApolloClient, useQuery, useMutation } from '@apollo/client/react'
 import { useEffect, useState, useMemo, type FC } from 'react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
@@ -64,12 +64,13 @@ import {
   LOG_FIELD_ACTIVITY,
   LOG_PULSE_ACTIVITY,
   CREATE_RESONANCE_LINK_MUTATION,
-  UPDATE_RESONANCE_LINK_MUTATION,
-  DELETE_RESONANCE_LINK_MUTATION,
   SHARE_PULSE_WITH_CONTEXT_MUTATION,
   REMOVE_PULSE_FROM_CONTEXT_MUTATION,
 } from '@/app/graphql/mutations'
 import { LOG_RESONANCE_ACTIVITY } from '@/app/graphql/mutations/ACTIVITY_LOG_MUTATIONS'
+import { PromiseWeaveModal } from '@/components/fields/promise-weave-modal'
+import { usePromiseWeaves } from '@/hooks/usePromiseWeaves'
+import { WEAVE_STATUS } from '@/lib/promise-weave'
 import { cn } from '@/lib/utils'
 import {
   useApp,
@@ -78,14 +79,14 @@ import {
 } from '@/contexts'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { FieldContextSections } from '@/components/fields/field-context-sections'
+import { ArticleImportStatusSection } from '@/components/fields/article-import-status-section'
 import {
   DocumentList,
   type DocumentRecord,
 } from '@/components/fields/document-list'
 import { SubContextsSection } from '@/components/fields/sub-contexts-section'
 import { MoveFieldModal } from '@/components/fields/move-field-modal'
-import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
-import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
+import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
 import {
   onOpenAddPulseModal,
   onOpenImportArticlesModal,
@@ -131,16 +132,6 @@ export default function FieldContextDetailsPage() {
   const [isResonanceLinkModalOpen, setIsResonanceLinkModalOpen] =
     useState(false)
   const [isDiscoverModalOpen, setIsDiscoverModalOpen] = useState(false)
-  const [editingResonance, setEditingResonance] = useState<{
-    id: string
-    label: string
-    confidence: number
-    description: string
-    sourceId: string
-    targetId: string
-    sourceType: NodeType
-    targetType: NodeType
-  } | null>(null)
   const [isResonanceSubmitting, setIsResonanceSubmitting] = useState(false)
   const [resonanceSubmitError, setResonanceSubmitError] = useState<
     string | null
@@ -156,10 +147,20 @@ export default function FieldContextDetailsPage() {
     useState(false)
   const [isUploadDocumentModalOpen, setIsUploadDocumentModalOpen] =
     useState(false)
+  // Bumped on every open so the modal remounts with clean state (GOAL-337).
+  // The shared upload flow releases the modal at the 202 while its ingest
+  // watch keeps the `onSubmit` promise pending for minutes, so the modal's
+  // own post-await reset can land long after — or into — the next upload.
+  // Mirrors the studio action bar's `uploadSessionKey`.
+  const [uploadSessionKey, setUploadSessionKey] = useState(0)
   const [isMoveFieldModalOpen, setIsMoveFieldModalOpen] = useState(false)
   const [isUploadingDocument, setIsUploadingDocument] = useState(false)
   const [isImportArticlesModalOpen, setIsImportArticlesModalOpen] =
     useState(false)
+  // Bumped when the import modal closes or reports landed rows, so the
+  // GOAL-336 status section refetches its job list immediately instead of
+  // waiting for its own poll.
+  const [importStatusVersion, setImportStatusVersion] = useState(0)
   const [isPersonPanelOpen, setIsPersonPanelOpen] = useState(false)
   const [selectedPerson, setSelectedPerson] = useState<{
     id: string
@@ -198,7 +199,7 @@ export default function FieldContextDetailsPage() {
       variables: { contextId },
       skip: !contextId,
       // cache-and-network (matching GET_SPACE_DETAILS): moving or deleting a
-      // sub-field only refetches the sub-field's own query, so the former
+      // nested field only refetches the nested field's own query, so the former
       // parent's cached subContexts would otherwise stay stale when the user
       // navigates back to it (GOAL-295).
       fetchPolicy: 'cache-and-network',
@@ -220,6 +221,10 @@ export default function FieldContextDetailsPage() {
       skip: !contextId,
     }
   )
+
+  // For the shared document-upload flow (GOAL-337), whose refetches and
+  // ingest watch run against the client directly rather than a single query.
+  const apolloClient = useApolloClient()
   const documents = useMemo<DocumentRecord[]>(() => {
     const raw = (
       documentsData as
@@ -253,8 +258,6 @@ export default function FieldContextDetailsPage() {
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
   const [logPulseActivity] = useMutation(LOG_PULSE_ACTIVITY)
   const [createResonanceLink] = useMutation(CREATE_RESONANCE_LINK_MUTATION)
-  const [updateResonanceLink] = useMutation(UPDATE_RESONANCE_LINK_MUTATION)
-  const [deleteResonanceLink] = useMutation(DELETE_RESONANCE_LINK_MUTATION)
   const [logResonanceActivity] = useMutation(LOG_RESONANCE_ACTIVITY)
   const [sharePulseWithContext] = useMutation(SHARE_PULSE_WITH_CONTEXT_MUTATION)
   const [removePulseFromContext] = useMutation(
@@ -302,7 +305,7 @@ export default function FieldContextDetailsPage() {
     setFocalLabel(context.id, context.title, 'FieldContext')
   }, [context?.id, context?.title, setFocalLabel])
 
-  // Declare the parent Space — and, for a nested sub-field (GOAL-295), the
+  // Declare the parent Space — and, for a nested field (GOAL-295), the
   // ancestor field chain (root → immediate parent) — for the breadcrumb.
   // `ancestorContexts` comes pre-ordered from the server; StudioBreadcrumb
   // already renders N parents and folds the middle ones on phones.
@@ -345,13 +348,19 @@ export default function FieldContextDetailsPage() {
               firstName?: string | null
               lastName?: string | null
               name?: string | null
-              email?: string | null
               photo?: string | null
-              description?: string | null
-              connectionEdges?: Array<{
-                connectedPersonId?: string | null
-                why?: string | null
-              }> | null
+              // GOAL-275: email / description / the connection graph read
+              // through the single type-level gate. Null when this caller is
+              // not authorized for that person — the roster then shows the
+              // open directory identity only.
+              privateProfile?: {
+                email?: string | null
+                description?: string | null
+                connectionEdges?: Array<{
+                  connectedPersonId?: string | null
+                  why?: string | null
+                }> | null
+              } | null
             }>
             meSpace?: Array<{
               owner?: Array<{ id: string }>
@@ -420,12 +429,12 @@ export default function FieldContextDetailsPage() {
       firstName: person.firstName || '',
       lastName: person.lastName || '',
       name: person.name || null,
-      email: person.email || null,
+      email: person.privateProfile?.email || null,
       photo: person.photo || null,
       role: roleById.get(person.id) || ('PERSON' as const),
-      description: person.description || null,
+      description: person.privateProfile?.description || null,
       relationshipWhy: resolveRelationshipWhy(
-        person.connectionEdges,
+        person.privateProfile?.connectionEdges,
         user?.id
       ),
     }))
@@ -434,7 +443,7 @@ export default function FieldContextDetailsPage() {
   // Slice 7 (GOAL-242) — UI permission gate for the upload control. We mirror
   // `canEditContent` from kb/02-user-roles.md: OWNER + ADMIN + MEMBER pass,
   // GUEST and non-members do not. The route boundary re-checks this server-side
-  // (see `handleIngestDocument`), so this is purely a "don't show a control
+  // (see `enqueueDocumentIngest`), so this is purely a "don't show a control
   // the user cannot use" measure — never a security boundary on its own.
   //
   // The rule itself lives in `deriveCanEditContent` so the floating canvas
@@ -457,18 +466,67 @@ export default function FieldContextDetailsPage() {
       setIsImportArticlesModalOpen(true)
     })
   }, [contextId, canEditContent])
-  const pulses = [
-    ...(data?.goalPulses || []),
-    ...(data?.resourcePulses || []),
-    ...(data?.storyPulses || []),
-    ...(data?.carePulses || []),
-    ...(data?.coreValuePulses || []),
-  ].sort(
-    (left, right) =>
-      new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+  // Memoized because `weavePulseOptions` derives from it — a fresh
+  // spread-and-sort literal every render would defeat that memo entirely.
+  const pulses = useMemo(
+    () =>
+      [
+        ...(data?.goalPulses || []),
+        ...(data?.resourcePulses || []),
+        ...(data?.storyPulses || []),
+        ...(data?.carePulses || []),
+        ...(data?.coreValuePulses || []),
+      ].sort(
+        (left, right) =>
+          new Date(right.createdAt).getTime() -
+          new Date(left.createdAt).getTime()
+      ),
+    [
+      data?.goalPulses,
+      data?.resourcePulses,
+      data?.storyPulses,
+      data?.carePulses,
+      data?.coreValuePulses,
+    ]
   )
   const resonances = context?.resonancesInContext || []
-  const weaves = context?.weaves || []
+  // Memoized because `weaveById` below derives from it — a fresh `[]` literal
+  // every render would rebuild that map on every render.
+  const weaves = useMemo(() => context?.weaves || [], [context?.weaves])
+
+  const promiseWeaves = usePromiseWeaves({
+    contextId,
+    currentUserId: user?.id,
+    refetch,
+  })
+
+  // Candidates the weave modal offers. Pulses are this field's own; people are
+  // the ones already attached to it, so a weave can only be woven for someone
+  // the member can already see here.
+  const weavePulseOptions = useMemo(
+    () =>
+      pulses.map((pulse) => ({
+        id: pulse.id,
+        __typename: pulse.__typename ?? '',
+        title: pulse.title ?? '',
+      })),
+    [pulses]
+  )
+  const weavePeopleOptions = useMemo(
+    () =>
+      people.map((person) => ({
+        id: person.id,
+        name:
+          person.name?.trim() ||
+          `${person.firstName} ${person.lastName}`.trim() ||
+          'Unnamed person',
+      })),
+    [people]
+  )
+  const weaveById = useMemo(
+    () => new Map(weaves.map((weave) => [weave.id, weave])),
+    [weaves]
+  )
 
   const handleEditStart = () => {
     setEditTitle(context?.title || '')
@@ -531,7 +589,7 @@ export default function FieldContextDetailsPage() {
       setIsDeleteLoading(true)
 
       // Deletion cascades server-side (GOAL-319 + GOAL-295): the field, its
-      // sub-fields, and all of their pulses are soft deleted together, and
+      // nested fields, and all of their pulses are soft deleted together, and
       // the server writes the activity Log in the same transaction — no
       // client-side log call here.
       const result = await deleteFieldContext({
@@ -542,10 +600,10 @@ export default function FieldContextDetailsPage() {
         result.data?.deleteFieldContext?.deletedSubContextCount ?? 0
       toast.success(
         deletedSubFields > 0
-          ? `Field deleted along with ${deletedSubFields} sub-field${deletedSubFields === 1 ? '' : 's'}`
+          ? `Field deleted along with ${deletedSubFields} nested field${deletedSubFields === 1 ? '' : 's'}`
           : 'Field deleted successfully'
       )
-      // Land on the parent field (for a nested sub-field) or the owning
+      // Land on the parent field (for a nested field) or the owning
       // Space — not the dashboard root.
       const parentFieldId = context.parentContext?.[0]?.id
       router.push(
@@ -839,132 +897,61 @@ export default function FieldContextDetailsPage() {
     targetId: string
     sourceType: NodeType
     targetType: NodeType
-    resonanceId?: string
   }) => {
     setIsResonanceSubmitting(true)
     setResonanceSubmitError(null)
 
     try {
-      if (data.resonanceId && editingResonance) {
-        // Update existing resonance
-        await updateResonanceLink({
-          variables: {
-            where: { id_EQ: data.resonanceId },
-            update: {
-              label_SET: data.label,
-              confidence_SET: data.confidence,
-              description_SET: data.description,
+      const response = await createResonanceLink({
+        variables: {
+          input: [
+            {
+              label: data.label,
+              confidence: data.confidence,
+              description: data.description,
+              createdAt: new Date().toISOString(),
+              source: {
+                connect: [{ where: { node: { id_EQ: data.sourceId } } }],
+              },
+              target: {
+                connect: [{ where: { node: { id_EQ: data.targetId } } }],
+              },
+              context: {
+                connect: [{ where: { node: { id_EQ: contextId } } }],
+              },
             },
-          },
-        })
+          ],
+        },
+      })
 
+      const createdResonanceId =
+        response.data?.createResonanceLinks?.resonanceLinks?.[0]?.id
+
+      if (createdResonanceId) {
         logResonanceActivity({
           variables: {
             input: {
-              action: 'updated',
-              resonanceId: data.resonanceId,
+              action: 'created',
+              resonanceId: createdResonanceId,
               sourceId: data.sourceId,
               targetId: data.targetId,
               label: data.label,
               contextId,
             },
           },
-        }).catch((err) => console.warn('Failed to log resonance update:', err))
-
-        toast.success('Resonance link updated successfully')
-      } else {
-        // Create new resonance
-        const response = await createResonanceLink({
-          variables: {
-            input: [
-              {
-                label: data.label,
-                confidence: data.confidence,
-                description: data.description,
-                createdAt: new Date().toISOString(),
-                source: {
-                  connect: [{ where: { node: { id_EQ: data.sourceId } } }],
-                },
-                target: {
-                  connect: [{ where: { node: { id_EQ: data.targetId } } }],
-                },
-                context: {
-                  connect: [{ where: { node: { id_EQ: contextId } } }],
-                },
-              },
-            ],
-          },
-        })
-
-        const createdResonanceId =
-          response.data?.createResonanceLinks?.resonanceLinks?.[0]?.id
-
-        if (createdResonanceId) {
-          logResonanceActivity({
-            variables: {
-              input: {
-                action: 'created',
-                resonanceId: createdResonanceId,
-                sourceId: data.sourceId,
-                targetId: data.targetId,
-                label: data.label,
-                contextId,
-              },
-            },
-          }).catch((err) =>
-            console.warn('Failed to log resonance creation:', err)
-          )
-        }
-
-        toast.success('Resonance link created successfully')
+        }).catch((err) =>
+          console.warn('Failed to log resonance creation:', err)
+        )
       }
 
+      toast.success('Resonance link created successfully')
+
       setIsResonanceLinkModalOpen(false)
-      setEditingResonance(null)
       await refetch()
     } catch (error) {
       console.error('Error with resonance link:', error)
       const errorMessage =
-        error instanceof Error ? error.message : 'Failed to process resonance'
-      setResonanceSubmitError(errorMessage)
-      toast.error(errorMessage)
-    } finally {
-      setIsResonanceSubmitting(false)
-    }
-  }
-
-  const handleDeleteResonance = async () => {
-    if (!editingResonance) return
-
-    setIsResonanceSubmitting(true)
-    setResonanceSubmitError(null)
-
-    try {
-      await deleteResonanceLink({
-        variables: { id: editingResonance.id },
-      })
-
-      logResonanceActivity({
-        variables: {
-          input: {
-            action: 'deleted',
-            resonanceId: editingResonance.id,
-            sourceId: editingResonance.sourceId,
-            targetId: editingResonance.targetId,
-            label: editingResonance.label,
-            contextId,
-          },
-        },
-      }).catch((err) => console.warn('Failed to log resonance deletion:', err))
-
-      toast.success('Resonance link deleted successfully')
-      setIsResonanceLinkModalOpen(false)
-      setEditingResonance(null)
-      await refetch()
-    } catch (error) {
-      console.error('Error deleting resonance:', error)
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to delete resonance'
+        error instanceof Error ? error.message : 'Failed to create resonance'
       setResonanceSubmitError(errorMessage)
       toast.error(errorMessage)
     } finally {
@@ -1042,77 +1029,20 @@ export default function FieldContextDetailsPage() {
   const handleUploadDocument = async (input: UploadDocumentSubmitInput) => {
     setIsUploadingDocument(true)
     try {
-      const authHeaders = await chatApiAuthHeaders()
-      // Step 1: presign PUT URL.
-      const presignRes = await fetch('/api/ingest/document/presign', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          fieldContextId: contextId,
-          filename: input.filename,
-          mimeType: input.mimeType,
-          sizeBytes: input.file.size,
-        }),
+      // Shared with the studio action-bar entry point (GOAL-337): presign →
+      // S3 PUT → enqueue, then follow the ingest to a terminal status with an
+      // evolving toast and open the ingest thread when it lands. The flow
+      // settles its own toasts (including errors) and rethrows, so the
+      // modal's catch renders the same message inline; this page's active
+      // documents/details/people queries are refreshed by its refetches.
+      await runDocumentUploadFlow(apolloClient, {
+        fieldContextId: contextId,
+        input,
+        onQueued: () => {
+          setIsUploadDocumentModalOpen(false)
+          setIsUploadingDocument(false)
+        },
       })
-      if (!presignRes.ok) {
-        const errorBody = await presignRes.json().catch(() => ({}))
-        throw new Error(errorBody.error ?? `Presign failed (${presignRes.status})`)
-      }
-      const presign = (await presignRes.json()) as {
-        documentId: string
-        blobKey: string
-        uploadUrl: string
-        contentType: string
-      }
-
-      // Step 2: PUT the file straight to S3.
-      const putRes = await fetch(presign.uploadUrl, {
-        method: 'PUT',
-        body: input.file,
-        headers: { 'Content-Type': presign.contentType },
-      })
-      if (!putRes.ok) {
-        throw new Error(`Upload to storage failed (${putRes.status}).`)
-      }
-
-      // Step 3: trigger extraction.
-      const processRes = await fetch('/api/ingest/document/process', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          documentId: presign.documentId,
-          blobKey: presign.blobKey,
-          fieldContextId: contextId,
-          filename: input.filename,
-          mimeType: input.mimeType,
-          sizeBytes: input.file.size,
-          hint: input.hint ?? null,
-        }),
-      })
-      if (!processRes.ok) {
-        const errorBody = await processRes.json().catch(() => ({}))
-        throw new Error(errorBody.error ?? `Extraction failed (${processRes.status})`)
-      }
-      const processResult = (await processRes.json()) as {
-        threadId?: string
-      }
-
-      // Slice 5 (GOAL-240) — fire-and-forget signal so the assistant panel
-      // auto-switches to the freshly created ingest thread. The studio shell
-      // listens for the same event to open the panel if it's currently closed.
-      if (processResult.threadId) emitOpenAssistantThread(processResult.threadId)
-      toast.success(
-        'Document uploaded. Review the extracted entities in the assistant.'
-      )
-      setIsUploadDocumentModalOpen(false)
-      await refetchDocuments()
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Upload failed'
-      toast.error(message)
-      throw error
     } finally {
       setIsUploadingDocument(false)
     }
@@ -1308,7 +1238,7 @@ export default function FieldContextDetailsPage() {
               )}
               {subContextCount > 0 && (
                 <span className="text-xs mt-2 block">
-                  This will also delete its {subContextCount} sub-field
+                  This will also delete its {subContextCount} nested field
                   {subContextCount !== 1 ? 's' : ''} and their pulses.
                 </span>
               )}
@@ -1501,6 +1431,18 @@ export default function FieldContextDetailsPage() {
             onRefetch={refetchDocuments}
           />
 
+          {/* GOAL-336 — server-driven import status. Renders nothing unless
+              this member has queued imports for this field, so it costs no
+              space for everyone else. */}
+          <ArticleImportStatusSection
+            fieldContextId={contextId}
+            refreshKey={importStatusVersion}
+            onRowsLanded={() => {
+              void refetch()
+              void refetchFieldPeople()
+            }}
+          />
+
           <FieldContextSections
             createdDate={createdDate}
             pulses={pulses}
@@ -1524,7 +1466,10 @@ export default function FieldContextDetailsPage() {
             }}
             onUploadDocument={
               canEditContent
-                ? () => setIsUploadDocumentModalOpen(true)
+                ? () => {
+                    setUploadSessionKey((key) => key + 1)
+                    setIsUploadDocumentModalOpen(true)
+                  }
                 : undefined
             }
             onImportArticles={
@@ -1544,6 +1489,37 @@ export default function FieldContextDetailsPage() {
                 id: weaveId,
               })
             }
+            onAddWeave={canEditContent ? promiseWeaves.openCreate : undefined}
+            onEditWeave={
+              canEditContent
+                ? (weaveId) => {
+                    const weave = weaveById.get(weaveId)
+                    if (weave) promiseWeaves.openEdit(weave)
+                  }
+                : undefined
+            }
+            onConfirmWeave={
+              canEditContent
+                ? (weaveId) => {
+                    const weave = weaveById.get(weaveId)
+                    if (weave)
+                      void promiseWeaves.setStatus(weave, WEAVE_STATUS.ACTIVE)
+                  }
+                : undefined
+            }
+            onDismissWeave={
+              canEditContent
+                ? (weaveId) => {
+                    const weave = weaveById.get(weaveId)
+                    if (weave)
+                      void promiseWeaves.setStatus(
+                        weave,
+                        WEAVE_STATUS.DISSOLVED
+                      )
+                  }
+                : undefined
+            }
+            pendingWeaveId={promiseWeaves.pendingWeaveId}
             onResonanceClick={(resonanceId) =>
               dispatchOpenInfoDrawer({
                 type: 'ResonanceLink',
@@ -1678,7 +1654,6 @@ export default function FieldContextDetailsPage() {
         isOpen={isResonanceLinkModalOpen}
         onClose={() => {
           setIsResonanceLinkModalOpen(false)
-          setEditingResonance(null)
           setResonanceSubmitError(null)
         }}
         pulses={pulses.map((pulse) => ({
@@ -1692,9 +1667,23 @@ export default function FieldContextDetailsPage() {
         }))}
         onSubmit={handleResonanceLinkSubmit}
         isLoading={isResonanceSubmitting}
-        onDelete={handleDeleteResonance}
-        editingResonance={editingResonance}
       />
+
+      {canEditContent && promiseWeaves.isModalOpen && (
+        <PromiseWeaveModal
+          // Mount controls open/close, and the key makes each open a fresh
+          // instance — so an edit never shows the previous weave's values and a
+          // create never inherits the last edit's.
+          key={promiseWeaves.editingWeave?.id ?? 'new-weave'}
+          onClose={promiseWeaves.closeModal}
+          pulses={weavePulseOptions}
+          people={weavePeopleOptions}
+          editingWeave={promiseWeaves.editingWeave}
+          onSubmit={promiseWeaves.submit}
+          onDelete={promiseWeaves.remove}
+          isSubmitting={promiseWeaves.isSubmitting}
+        />
+      )}
 
       <BulkPulseShareModal
         isOpen={isBulkShareModalOpen}
@@ -1745,6 +1734,7 @@ export default function FieldContextDetailsPage() {
       />
 
       <UploadDocumentModal
+        key={uploadSessionKey}
         isOpen={isUploadDocumentModalOpen}
         isSubmitting={isUploadingDocument}
         onClose={() => setIsUploadDocumentModalOpen(false)}
@@ -1766,12 +1756,18 @@ export default function FieldContextDetailsPage() {
         <ImportArticlesModal
           isOpen
           fieldContextId={contextId}
-          onClose={() => setIsImportArticlesModalOpen(false)}
+          onClose={() => {
+            setIsImportArticlesModalOpen(false)
+            // A just-queued job should appear in the status section the
+            // moment the modal hides, not a poll later.
+            setImportStatusVersion((version) => version + 1)
+          }}
           onImported={() => {
             // Imported pulses land in the Pulses section; new/matched authors
             // land in the People section.
             void refetch()
             void refetchFieldPeople()
+            setImportStatusVersion((version) => version + 1)
           }}
         />
       )}

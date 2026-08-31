@@ -3,10 +3,8 @@ import type { Neo4jGraph } from '@langchain/community/graphs/neo4j_graph'
 import { executeAuthorizedWriteTool } from '@/lib/chat/hitl'
 import { normalizeEmail } from '@/lib/auth/normalize-email'
 import {
-  type ArticleImportResult,
   type ArticleImportRowInput,
-  type ArticleImportSummary,
-  type ArticleRowOutcome,
+  type PersistedArticleRowOutcome,
   buildArticleRowContent,
   normalizeArticleDate,
   normalizeArticleUrl,
@@ -14,19 +12,62 @@ import {
 
 /**
  * GOAL-317 — server-side orchestration for the article import batch.
+ * GOAL-326 — now driven by `/api/cron/process-article-imports` rather than the
+ * request, so it also owns resume and yield.
  *
  * Every write goes through `executeAuthorizedWriteTool` (the same audited
  * path chat HITL and document ingestion use), so each row inherits the
  * canEditContext gate, the enrich-don't-duplicate idempotency, the
  * INITIATED_BY attribution guard, and per-entity activity Logs. Rows are
  * processed independently — one failing row never aborts the batch.
+ *
+ * The context gate is NOT run here: the worker resolves it once (and must
+ * re-validate it live at claim time regardless), then hands the title in.
  */
 
-interface ProcessArticleImportParams {
+export interface ProcessArticleImportParams {
   graph: Neo4jGraph
   currentUserId: string
   fieldContextId: string
+  /** Resolved by the caller via `loadEditableContext`. */
+  contextTitle: string
   rows: ArticleImportRowInput[]
+  /**
+   * Resume cursor: rows before this index already have durable outcomes and are
+   * skipped entirely. `size(rowOutcomes)` on the job node.
+   */
+  startIndex?: number
+  /**
+   * Persist one row's outcome before the next row is attempted. Awaited, so a
+   * worker killed mid-batch loses at most the row it was in the middle of.
+   *
+   * Returns false when the write did not land because this run no longer holds
+   * the job's claim (it was reclaimed as stalled and re-claimed elsewhere). The
+   * loop stops immediately on false: a zombie worker that kept minting pulses
+   * alongside the new claimant would double-write every remaining row.
+   */
+  onRowOutcome?: (outcome: PersistedArticleRowOutcome) => Promise<boolean>
+  /**
+   * Checked before each row. Returning true stops the run cleanly and leaves
+   * the remainder for the next tick — the run's time budget, not an error.
+   */
+  shouldYield?: () => boolean
+}
+
+export type ProcessArticleImportStop =
+  /** Every row from `startIndex` onward has an outcome. */
+  | 'complete'
+  /** Out of time; the remaining rows belong to the next tick. */
+  | 'yielded'
+  /** This run lost its claim mid-batch and must touch nothing further. */
+  | 'lost_claim'
+
+export interface ProcessArticleImportRun {
+  /** Outcomes produced by THIS run — earlier rows are already persisted. */
+  outcomes: PersistedArticleRowOutcome[]
+  /** Index of the next unprocessed row; `rows.length` when the batch finished. */
+  nextIndex: number
+  stopReason: ProcessArticleImportStop
 }
 
 interface ResolvedAuthor {
@@ -56,8 +97,13 @@ function buildImportLogMetadata(fieldContextId: string): string {
  * Resolve the context's title and whether the caller may contribute to it —
  * owner or ADMIN/MEMBER on the parent Space (GUEST is view-only). Same gate
  * shape as the ingest presign route.
+ *
+ * Exported because it is run twice (GOAL-326): once at enqueue, so a caller
+ * without permission never gets a job, and again by the worker at claim time —
+ * the gap can be minutes, and the requester may since have been removed from
+ * the Space or demoted to GUEST.
  */
-async function loadEditableContext(
+export async function loadEditableContext(
   graph: Neo4jGraph,
   currentUserId: string,
   fieldContextId: string
@@ -68,6 +114,12 @@ async function loadEditableContext(
   const rows = await graph.query<{ title: string | null; allowed: boolean }>(
     `
     MATCH (c:FieldContext {id: $fieldContextId})
+    // Soft-deleted contexts (GOAL-319) are unreachable by every transition
+    // path: the drain skips them, the in-flight cap skips them, and the
+    // stale-claim sweep only matches PROCESSING. A job enqueued into one would
+    // therefore sit PENDING forever and the modal would poll it forever. When
+    // the import was synchronous this was harmless; now it has to fail here.
+    WHERE c.deletedAt IS NULL
     RETURN c.title AS title,
       EXISTS {
         MATCH (space:Space)-[:HAS_CONTEXT]->(c)
@@ -151,6 +203,14 @@ async function matchAuthorByEmail(
     const attached = await graph.query<{ id: string }>(
       `
       MATCH (c:FieldContext {id: $fieldContextId})
+      // The target gate below is an ALL() over the Spaces that reach this
+      // context, and ALL() over an EMPTY list is TRUE — so on a context whose
+      // HAS_CONTEXT edge has been re-pointed by a soft delete (GOAL-319) the
+      // consent gate would open instead of closing. Anchoring on a live parent
+      // Space first makes the list non-empty by construction. The worker
+      // widened this window: enqueue and the row write are now minutes apart,
+      // so the context can be deleted in between.
+      MATCH (:Space)-[:HAS_CONTEXT]->(c)
       MATCH (u:Person {id: $currentUserId})
       MATCH (p:Person {id: $personId})
       // Target gate (mirrors addPersonToFieldContext): attaching unlocks the
@@ -303,183 +363,189 @@ function validateTypedRow(row: ArticleImportRowInput): string | null {
   return null
 }
 
-function buildResultMessage(summary: ArticleImportSummary): string {
-  const landed = summary.created + summary.skippedExisting
-  if (landed === 0) {
-    // People may still have been created/matched before their rows' pulse
-    // writes failed — acknowledge that instead of claiming nothing happened.
-    return summary.createdPeople > 0
-      ? `No pulses were imported, though ${summary.createdPeople} new ${summary.createdPeople === 1 ? 'person was' : 'people were'} added. Fix the errors below and upload again.`
-      : 'No rows were imported. Fix the errors below and upload again.'
+/**
+ * Resolve one row to its outcome. Never throws: a row's failure is a reported
+ * outcome, not an exception, so the caller can persist exactly one outcome per
+ * row without a second error path that could double-write.
+ */
+async function resolveRowOutcome({
+  graph,
+  currentUserId,
+  fieldContextId,
+  contextTitle,
+  row,
+  authorCache,
+}: {
+  graph: Neo4jGraph
+  currentUserId: string
+  fieldContextId: string
+  contextTitle: string
+  row: ArticleImportRowInput
+  authorCache: Map<string, ResolvedAuthor>
+}): Promise<PersistedArticleRowOutcome> {
+  const validationProblem = validateTypedRow(row)
+  if (validationProblem) {
+    return {
+      row: row.row,
+      title: row.title?.trim() ?? '',
+      status: 'failed',
+      message: validationProblem,
+    }
   }
-  const parts: string[] = [
-    `Imported ${summary.created} of ${summary.totalRows} row${summary.totalRows === 1 ? '' : 's'}`,
-  ]
-  if (summary.skippedExisting > 0) {
-    parts.push(`${summary.skippedExisting} already existed`)
-  }
-  if (summary.failed > 0) {
-    parts.push(`${summary.failed} failed`)
-  }
-  const peopleBits: string[] = []
-  if (summary.createdPeople > 0) {
-    peopleBits.push(
-      `${summary.createdPeople} new ${summary.createdPeople === 1 ? 'person' : 'people'} added`
+
+  try {
+    const author = await resolveRowAuthor(
+      graph,
+      currentUserId,
+      fieldContextId,
+      contextTitle,
+      row,
+      authorCache
     )
-  }
-  if (summary.matchedPeople > 0) {
-    peopleBits.push(
-      `${summary.matchedPeople} author${summary.matchedPeople === 1 ? '' : 's'} matched to existing people`
+    if (!author.ok) {
+      return {
+        row: row.row,
+        title: row.title.trim(),
+        status: 'failed',
+        message: author.failureMessage,
+      }
+    }
+    const personEvent = author.isNewPerson
+      ? ('created' as const)
+      : author.wasMatched
+        ? ('matched' as const)
+        : undefined
+
+    const pulseResult = await executeAuthorizedWriteTool(
+      graph,
+      currentUserId,
+      'create_pulse',
+      {
+        contextId: fieldContextId,
+        contextTitle,
+        title: row.title.trim(),
+        content: buildArticleRowContent(row),
+        pulseType: row.pulseType,
+        resourceType: row.pulseType === 'ResourcePulse' ? 'article' : undefined,
+        location: normalizeArticleUrl(row.url) ?? undefined,
+        time: normalizeArticleDate(row.date ?? '') || undefined,
+        attributedToPersonId: author.personId,
+        attributedToName: author.authorName,
+      }
     )
+
+    if (pulseResult.success === false) {
+      return {
+        row: row.row,
+        title: row.title.trim(),
+        status: 'failed',
+        message: pulseResult.message?.trim() || ROW_WRITE_FAILED_MESSAGE,
+        personEvent,
+      }
+    }
+
+    if (pulseResult.alreadyExisted === true) {
+      return {
+        row: row.row,
+        title: row.title.trim(),
+        status: 'skipped_existing',
+        message:
+          'A pulse with this title already exists in the field — kept it and filled in any missing details.',
+        authorName: author.authorName,
+        personEvent,
+      }
+    }
+
+    return {
+      row: row.row,
+      title: row.title.trim(),
+      status: 'created',
+      message: 'Created.',
+      authorName: author.authorName,
+      personEvent,
+    }
+  } catch (error) {
+    // Raw driver/Cypher error text never reaches the member — log it
+    // server-side for diagnosis and report fixed copy.
+    console.error(
+      `[article-import] row ${row.row} failed for context ${fieldContextId}:`,
+      error
+    )
+    return {
+      row: row.row,
+      title: row.title?.trim() ?? '',
+      status: 'failed',
+      message: ROW_WRITE_FAILED_MESSAGE,
+    }
   }
-  const head = parts.join(', ')
-  return peopleBits.length > 0 ? `${head}. ${peopleBits.join('; ')}.` : `${head}.`
 }
 
+/**
+ * Walk `rows` from `startIndex`, minting one pulse per row through the
+ * authorized write path and reporting each row's outcome as it lands.
+ *
+ * Resume semantics: rows before `startIndex` are not re-read, not re-validated,
+ * and not re-written. The per-author cache starts empty on a resumed run, so
+ * the first row for an already-created author reports `personEvent: 'matched'`
+ * rather than `'created'` — accurate for that run, since by then the person
+ * genuinely did already exist.
+ */
 export async function processArticleImport({
   graph,
   currentUserId,
   fieldContextId,
+  contextTitle,
   rows,
-}: ProcessArticleImportParams): Promise<ArticleImportResult> {
-  const summary: ArticleImportSummary = {
-    totalRows: rows.length,
-    created: 0,
-    skippedExisting: 0,
-    failed: 0,
-    createdPeople: 0,
-    matchedPeople: 0,
-  }
-  const outcomes: ArticleRowOutcome[] = []
-  const warnings: string[] = []
-
-  const context = await loadEditableContext(graph, currentUserId, fieldContextId)
-  if (!context.found || !context.allowed) {
-    // Same copy for missing and forbidden — do not leak context existence.
-    return {
-      success: false,
-      message: 'This field is not available, or you cannot add pulses to it.',
-      summary: { ...summary, failed: rows.length },
-      outcomes: rows.map((row) => ({
-        row: row.row,
-        title: row.title ?? '',
-        status: 'failed' as const,
-        message: 'Not imported — the target field was not available.',
-      })),
-      warnings,
-    }
-  }
-
+  startIndex = 0,
+  onRowOutcome,
+  shouldYield,
+}: ProcessArticleImportParams): Promise<ProcessArticleImportRun> {
+  const outcomes: PersistedArticleRowOutcome[] = []
   const authorCache = new Map<string, ResolvedAuthor>()
+  let index = startIndex
+  let claimHeld = true
 
-  for (const row of rows) {
-    const validationProblem = validateTypedRow(row)
-    if (validationProblem) {
-      summary.failed += 1
-      outcomes.push({
-        row: row.row,
-        title: row.title?.trim() ?? '',
-        status: 'failed',
-        message: validationProblem,
-      })
-      continue
+  const record = async (outcome: PersistedArticleRowOutcome) => {
+    outcomes.push(outcome)
+    // Awaited before the next row starts: the durable outcome is what makes a
+    // resume skip this row, so it has to be committed before more work runs.
+    if (onRowOutcome) claimHeld = await onRowOutcome(outcome)
+  }
+
+  for (; index < rows.length; index += 1) {
+    // Checked at the top of the next iteration rather than inline after
+    // `record`, so each condition has exactly one exit point. For 'lost_claim'
+    // `nextIndex` therefore points one past the row whose append was rejected;
+    // the worker doesn't use it in that branch (it re-reads the durable cursor).
+    if (!claimHeld) {
+      return { outcomes, nextIndex: index, stopReason: 'lost_claim' }
     }
-
-    try {
-      const author = await resolveRowAuthor(
-        graph,
-        currentUserId,
-        fieldContextId,
-        context.title,
-        row,
-        authorCache
-      )
-      if (!author.ok) {
-        summary.failed += 1
-        outcomes.push({
-          row: row.row,
-          title: row.title.trim(),
-          status: 'failed',
-          message: author.failureMessage,
-        })
-        continue
-      }
-      if (author.isNewPerson) summary.createdPeople += 1
-      if (author.wasMatched) summary.matchedPeople += 1
-
-      const pulseResult = await executeAuthorizedWriteTool(
-        graph,
-        currentUserId,
-        'create_pulse',
-        {
-          contextId: fieldContextId,
-          contextTitle: context.title,
-          title: row.title.trim(),
-          content: buildArticleRowContent(row),
-          pulseType: row.pulseType,
-          resourceType:
-            row.pulseType === 'ResourcePulse' ? 'article' : undefined,
-          location: normalizeArticleUrl(row.url) ?? undefined,
-          time: normalizeArticleDate(row.date ?? '') || undefined,
-          attributedToPersonId: author.personId,
-          attributedToName: author.authorName,
-        }
-      )
-
-      if (pulseResult.success === false) {
-        summary.failed += 1
-        outcomes.push({
-          row: row.row,
-          title: row.title.trim(),
-          status: 'failed',
-          message: pulseResult.message?.trim() || ROW_WRITE_FAILED_MESSAGE,
-        })
-        continue
-      }
-
-      if (pulseResult.alreadyExisted === true) {
-        summary.skippedExisting += 1
-        outcomes.push({
-          row: row.row,
-          title: row.title.trim(),
-          status: 'skipped_existing',
-          message:
-            'A pulse with this title already exists in the field — kept it and filled in any missing details.',
-          authorName: author.authorName,
-        })
-        continue
-      }
-
-      summary.created += 1
-      outcomes.push({
-        row: row.row,
-        title: row.title.trim(),
-        status: 'created',
-        message: 'Created.',
-        authorName: author.authorName,
-      })
-    } catch (error) {
-      // Raw driver/Cypher error text never reaches the member — log it
-      // server-side for diagnosis and return fixed copy.
-      console.error(
-        `[article-import] row ${row.row} failed for context ${fieldContextId}:`,
-        error
-      )
-      summary.failed += 1
-      outcomes.push({
-        row: row.row,
-        title: row.title?.trim() ?? '',
-        status: 'failed',
-        message: ROW_WRITE_FAILED_MESSAGE,
-      })
+    if (shouldYield?.()) {
+      return { outcomes, nextIndex: index, stopReason: 'yielded' }
     }
+    const row = rows[index]
+
+    // Resolve the outcome first, persist it second — deliberately NOT one
+    // `record()` call per branch inside the try/catch. If `record` itself
+    // throws (a driver blip on the append), a `catch` that also records would
+    // write a SECOND outcome for this row, and the invariant the whole resume
+    // design rests on is "exactly one outcome per processed row, so the list
+    // length IS the cursor". Two outcomes for one row silently skips an
+    // unprocessed row on the next tick.
+    const outcome = await resolveRowOutcome({
+      graph,
+      currentUserId,
+      fieldContextId,
+      contextTitle,
+      row,
+      authorCache,
+    })
+    await record(outcome)
   }
 
   return {
-    success: summary.failed === 0,
-    message: buildResultMessage(summary),
-    summary,
     outcomes,
-    warnings,
+    nextIndex: rows.length,
+    stopReason: claimHeld ? 'complete' : 'lost_claim',
   }
 }

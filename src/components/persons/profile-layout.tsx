@@ -8,12 +8,16 @@ type ProfileLayoutProps = {
 }
 
 export function ProfileLayout({ children, className }: ProfileLayoutProps) {
+  // `pb-28` clears the canvas action bar, which floats at `bottom-6` over the
+  // scroll container (canvas-action-bar.tsx) — without it the last section of
+  // the profile sits underneath the pill. Padding is authored mobile-first so
+  // 390px keeps its vertical real estate while the desktop rhythm is unchanged.
   return (
     <div
-      className={`relative w-full max-w-4xl mx-auto px-4 py-16 md:py-24 ${className || ''}`}
+      className={`relative w-full max-w-4xl mx-auto px-4 pt-8 sm:pt-16 md:pt-24 pb-28 sm:pb-32 ${className || ''}`}
     >
       {/* Main Profile Card */}
-      <div className="relative overflow-hidden rounded-[2.5rem] p-8 md:p-14 bg-gp-glass-bg border border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
+      <div className="relative overflow-hidden rounded-[2.5rem] p-5 sm:p-8 md:p-14 bg-gp-glass-bg border border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] backdrop-blur-2xl">
         <div className="relative z-10">{children}</div>
 
         {/* Decorative blobs inside card */}

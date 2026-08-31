@@ -237,14 +237,20 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     resourcePulses(where: { id_EQ: $pulseId }) {
@@ -265,14 +271,20 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     storyPulses(where: { id_EQ: $pulseId }) {
@@ -291,14 +303,20 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     carePulses(where: { id_EQ: $pulseId }) {
@@ -317,14 +335,20 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
     coreValuePulses(where: { id_EQ: $pulseId }) {
@@ -343,14 +367,20 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        email
+        privateProfile {
+          id
+          email
+        }
       }
     }
   }

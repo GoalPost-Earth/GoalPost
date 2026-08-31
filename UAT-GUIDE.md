@@ -83,7 +83,7 @@ Submit a **separate form entry for each issue** (don't batch several bugs into o
 | G | Canvas views | Dashboard / Graph / Bloom exploration |
 | H | WeSpace collaboration | Create WeSpace, invite member, roles, shared pulses |
 | I | Document ingestion | Upload `.txt`/`.md`/`.pdf` to a FieldContext, auto-extraction |
-| J | Data import | CSV / XLSX import |
+| J | Data import | CSV / XLSX import; bulk **Import articles** into a FieldContext (Upload dropdown) |
 | K | Resonance review | Run discovery (on upload / Discover button); accept/decline suggestions, incl. bulk accept-by-confidence |
 | L | Search | Semantic search across pulses, people, resonances |
 | M | Profile & Settings | Edit profile, settings dialog |
@@ -248,7 +248,9 @@ With focus outside any text field, press:
 ### UAT-D3 — Open a FieldContext
 1. Open the FieldContext you created.
 
-**Expected:** You're now "inside" it — the bottom action bar now offers **Upload document** and **Add pulse** (context-aware actions). The breadcrumb reflects Space → FieldContext.
+**Expected:** You're now "inside" it — the bottom floating (translucent) action bar now offers **Upload** and **Add pulse** (context-aware actions). **Upload** is a dropdown: opening it reveals **Upload document** and **Import articles**. The breadcrumb reflects Space → FieldContext.
+
+> **Note on where Upload lives.** Upload is in the **bottom floating action bar** over the canvas — *not* in the FieldContext page header. The dropdown opens **upward** because the bar is pinned to the bottom. On narrow screens the button collapses to its icon and the "Upload" text is hidden.
 
 ☐ Pass ☐ Fail — Notes:
 
@@ -452,7 +454,7 @@ The bottom-center action bar has a **view toggle**: **Dashboard view** (cards), 
 
 ### UAT-I1 — Upload a text/markdown file
 **Pre:** Inside a FieldContext (MeSpace or WeSpace you can edit).
-1. Action bar → **Upload document** → choose your `.txt` or `.md` file.
+1. Bottom action bar → **Upload** → **Upload document** → choose your `.txt` or `.md` file.
 
 **Expected:**
 - Upload succeeds; a Document is anchored to the FieldContext.
@@ -505,6 +507,13 @@ The bottom-center action bar has a **view toggle**: **Dashboard view** (cards), 
 
 ## J. Data Import
 
+> There are **two separate import surfaces** — don't confuse them:
+>
+> | Surface | Where | What it imports |
+> | ------- | ----- | --------------- |
+> | **General import page** | `/protected/dashboard/import` | Mixed CSV/XLSX → persons / pulses (§J1–J3) |
+> | **Import articles** | Inside a FieldContext → bottom action bar → **Upload** → **Import articles** | One spreadsheet row = one article pulse (§J4–J7) |
+
 ### UAT-J1 — CSV import
 1. Go to the import surface (`/protected/dashboard/import`).
 2. Upload your `.csv`.
@@ -524,6 +533,43 @@ The bottom-center action bar has a **view toggle**: **Dashboard view** (cards), 
 1. Upload a broken/empty file.
 
 **Expected:** Graceful error, no partial corruption, clear messaging.
+
+☐ Pass ☐ Fail — Notes:
+
+---
+
+> **§J4–J7 — Bulk article import into a FieldContext.**
+> **Pre:** Inside a FieldContext you can edit. Prepare a `.csv`/`.xlsx` where **each row is one article**, with columns **title**, **author**, **date**, **URL**, plus optional **`author_email`**, **`pulse_type`**, **`description`**. Max **300 rows** per sheet.
+>
+> **Importing is a background job.** Confirming does *not* import inline — the request is queued and a worker (running every minute) drains it. On environments where the scheduled worker does not run, a job can sit at **Queued** indefinitely; that is an environment gap, not a bug in this flow — note it and move on.
+
+### UAT-J4 — Find the Import articles entry point
+1. Open a FieldContext you can edit.
+2. In the **bottom floating action bar**, click **Upload**.
+
+**Expected:** The dropdown opens **upward** and contains exactly two items — **Upload document** and **Import articles**. Confirm **Import articles** is present. (There is a second entry point for the same modal: the **Pulses** section header inside the page also carries an **Import Articles** pill.)
+
+☐ Pass ☐ Fail — Notes:
+
+### UAT-J5 — Preview is the approval gate
+1. Click **Import articles** and choose your spreadsheet.
+
+**Expected:** The file is parsed **in the browser** and a preview appears showing the file name, the rows that will import, and the rows with problems. **Nothing has been written yet** — confirm the FieldContext's pulse count is unchanged behind the modal. Cancelling here imports nothing.
+
+☐ Pass ☐ Fail — Notes:
+
+### UAT-J6 — Confirm, then watch it drain
+1. Confirm the import.
+
+**Expected:** The modal moves through **Queued → Importing** (with a row-count meter) → a **per-row result summary**. Imported articles then appear as pulses in the field (`ResourcePulse` by default; `pulse_type` can select Goal/Story). The article's URL and date land on the pulse. Authors resolve to people — by `author_email` first, otherwise by name.
+
+☐ Pass ☐ Fail — Notes:
+
+### UAT-J7 — Closing the modal doesn't cancel; re-importing is safe
+1. Start an import, then **close the modal** while it is still running. Reopen **Import articles** for the same field.
+2. After it finishes, import the **same sheet again**.
+
+**Expected:** Step 1 — closing does not cancel the job; reopening returns you to the **running** import rather than starting a new one. Step 2 — rows that already landed come back as **skipped/existing** (filling in any missing details) rather than creating duplicate pulses.
 
 ☐ Pass ☐ Fail — Notes:
 

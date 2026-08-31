@@ -50,19 +50,33 @@ describe('rateLimit() — no Redis configured (fail-mode contract)', () => {
     expect(result.retryAfter).toBe(0)
   })
 
-  it('invite-blast: BYPASSES (allows) when no Redis is configured — interim, see TODO in rate-limit.ts', async () => {
-    // INTERIM behavior (deliberate, TODO to revert): a never-configured
-    // limiter would otherwise fail-CLOSED and deny 100% of invites, making
-    // invite-by-email / member-add unusable in any env without Upstash
-    // Redis. So the no-Redis-configured case now allows for every policy.
-    // NOTE: this is the "env vars absent" path only — a configured-but-
-    // erroring Redis still fails CLOSED for invite-blast (POLICY_FAILURE_MODE,
-    // exercised in the catch branch), preserving the prod-outage guarantee
-    // once Redis is provisioned. Restore fail-closed here when that lands.
+  it('invite-blast: fails CLOSED — a missing limiter must not allow email blasts', async () => {
+    // GOAL-326 restored this after Upstash Redis was provisioned for every
+    // environment. Rationale per POLICY_FAILURE_MODE: an env with no Redis
+    // configured must not let a compromised admin blast unlimited invites
+    // through info@goalpost.earth. A deny here in local dev means
+    // KV_REST_API_URL / KV_REST_API_TOKEN are missing from .env.local.
     const { rateLimit } = await import('./rate-limit')
     const result = await rateLimit({
       policy: 'invite-blast',
       key: 'invite-blast:1.2.3.4',
+    })
+    expect(result.allowed).toBe(false)
+    expect(result.retryAfter).toBe(60)
+  })
+
+  it('bulk-import: fails OPEN — a misconfigured env must not brick imports', async () => {
+    // bulk-import is the one fail-open policy that is authenticated and
+    // write-y, so it's easy to mis-read as "should be closed". It isn't:
+    // imports are size-capped at 300 rows, and /api/import/articles turns a
+    // deny into a hard 429, so flipping this to 'deny' would brick every
+    // spreadsheet import in any env missing Redis. Pinned as a test because
+    // before GOAL-326 all four policies collapsed to the same bypass and
+    // nothing would have caught the flip.
+    const { rateLimit } = await import('./rate-limit')
+    const result = await rateLimit({
+      policy: 'bulk-import',
+      key: 'user-1',
     })
     expect(result.allowed).toBe(true)
     expect(result.retryAfter).toBe(0)
@@ -173,12 +187,20 @@ describe('rateLimited()', () => {
 describe('rateLimit() — mocked Redis (burst-then-block, key isolation)', () => {
   const ORIGINAL_ENV = { ...process.env }
   let currentTime = 1_700_000_000_000 // arbitrary epoch ms; advance per test
+  // Every prefix the production code hands to the Ratelimit constructor, in
+  // construction order. Used by the env-isolation test below.
+  let constructedPrefixes: string[] = []
 
   beforeEach(() => {
     jest.resetModules()
     process.env.KV_REST_API_URL = 'https://fake-upstash.invalid'
     process.env.KV_REST_API_TOKEN = 'fake-token'
+    // ENV_PREFIX is read at module scope, so each test decides its own
+    // VERCEL_ENV. Cleared here so a leaked value can't silently change the
+    // key namespace another test asserts on.
+    delete process.env.VERCEL_ENV
     currentTime = 1_700_000_000_000
+    constructedPrefixes = []
 
     // Stub the Redis client so getRedis() returns a non-null instance.
     // We never call methods on it — the mocked Ratelimit does its own
@@ -216,6 +238,7 @@ describe('rateLimit() — mocked Redis (burst-then-block, key isolation)', () =>
         this.max = opts.limiter.__max
         this.windowMs = opts.limiter.__windowMs
         this.prefix = opts.prefix
+        constructedPrefixes.push(opts.prefix)
       }
       async limit(identifier: string) {
         const key = `${this.prefix}::${identifier}`
@@ -387,6 +410,39 @@ describe('rateLimit() — mocked Redis (burst-then-block, key isolation)', () =>
       key: `invite-blast:${ip}`,
     })
     expect(invite.allowed).toBe(true)
+  })
+
+  it('namespaces keys by environment so prod/preview/dev share no buckets', async () => {
+    // GOAL-326: one Upstash database serves production, preview, AND local
+    // dev, so the environment is baked into every key prefix. Without it, a
+    // tester bursting logins from their IP against a preview deploy would
+    // also throttle that same IP on production. Asserting the constructed
+    // prefix (not just behavior) because the bleed this prevents is
+    // cross-process — no single-process test could observe it.
+    process.env.VERCEL_ENV = 'preview'
+    const preview = await import('./rate-limit')
+    await preview.rateLimit({ policy: 'auth-burst', key: 'login:198.51.100.1' })
+    expect(constructedPrefixes).toEqual(['rl:preview:auth-burst'])
+
+    // Same policy, different environment → a different namespace.
+    jest.resetModules()
+    constructedPrefixes = []
+    process.env.VERCEL_ENV = 'production'
+    const production = await import('./rate-limit')
+    await production.rateLimit({
+      policy: 'auth-burst',
+      key: 'login:198.51.100.1',
+    })
+    expect(constructedPrefixes).toEqual(['rl:production:auth-burst'])
+
+    // Unset (a developer's laptop, where VERCEL_ENV doesn't exist) gets its
+    // own 'dev' namespace rather than colliding with a deployed environment.
+    jest.resetModules()
+    constructedPrefixes = []
+    delete process.env.VERCEL_ENV
+    const local = await import('./rate-limit')
+    await local.rateLimit({ policy: 'invite-blast', key: 'invite-blast:u1' })
+    expect(constructedPrefixes).toEqual(['rl:dev:invite-blast'])
   })
 
   it('returns a positive integer retryAfter (never 0, never a fraction)', async () => {

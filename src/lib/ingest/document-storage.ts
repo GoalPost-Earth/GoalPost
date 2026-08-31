@@ -1,5 +1,9 @@
 import type { Driver } from 'neo4j-driver'
 import type { BlobStore } from './blob-store'
+import {
+  DOCUMENT_INGEST_STATUS,
+  type DocumentIngestStatus,
+} from './document-ingest-queue'
 
 /**
  * Owns the lifecycle of `Document` nodes and their backing blob. v1 ships
@@ -98,12 +102,25 @@ export interface AnchorDocumentInput {
   userHint: string | null
   blobKey: string
   blobUrl: string
+  /**
+   * Initial ingest status (GOAL-292). The async upload path anchors PENDING so
+   * the cron worker picks the document up. Defaults to COMPLETE for callers
+   * that run the pipeline themselves and never enqueue — `uploadDocument`'s
+   * server-side path and tests — so those documents are not re-ingested.
+   */
+  status?: DocumentIngestStatus
 }
 
 /**
  * Graph-only anchor for a Document whose bytes already live in blob storage
  * (browser-direct-to-S3 upload). Single CREATE — no follow-up SET, because
  * the blob location is known up front.
+ *
+ * GOAL-292: the node is born with an ingest `status` (PENDING for the async
+ * upload path) so `/api/cron/process-document-ingestion` can find it. The
+ * `UPLOADED_BY` edge created here is also what captures the authorization
+ * decision — the worker runs under CRON_SECRET with no request context, so
+ * this uploader identity is who its entity writes are attributed to.
  *
  * Throws if FieldContext or uploader are missing; the caller surfaces this
  * as a 400/404 to the frontend so the user can retry. The blob is left in
@@ -117,19 +134,28 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
         `
         MATCH (c:FieldContext {id: $fieldContextId})
         MATCH (u:Person:User {id: $uploaderUserId})
-        CREATE (d:Document {
-          id: $documentId,
-          filename: $filename,
-          mimeType: $mimeType,
-          sizeBytes: $sizeBytes,
-          pageCount: $pageCount,
-          userHint: $userHint,
-          blobKey: $blobKey,
-          blobUrl: $blobUrl,
-          uploadedAt: datetime()
-        })
-        CREATE (c)-[:HAS_DOCUMENT]->(d)
-        CREATE (d)-[:UPLOADED_BY]->(u)
+        // MERGE, not CREATE: the document id is derived from the server-minted
+        // blob key, so a retried /process call must re-anchor the same document
+        // rather than create a second one over the same blob (GOAL-292). ON
+        // CREATE only, so a retry arriving after the worker has already started
+        // cannot reset the status machine or the attempt counter. The
+        // document_id uniqueness constraint makes this safe under concurrency.
+        MERGE (d:Document {id: $documentId})
+        ON CREATE SET
+          d.filename = $filename,
+          d.mimeType = $mimeType,
+          d.sizeBytes = toInteger($sizeBytes),
+          d.pageCount = $pageCount,
+          d.userHint = $userHint,
+          d.blobKey = $blobKey,
+          d.blobUrl = $blobUrl,
+          d.status = $status,
+          d.statusMessage = null,
+          d.statusUpdatedAt = datetime(),
+          d.ingestAttempts = 0,
+          d.uploadedAt = datetime()
+        MERGE (c)-[:HAS_DOCUMENT]->(d)
+        MERGE (d)-[:UPLOADED_BY]->(u)
         RETURN d.id AS id
         `,
         {
@@ -143,6 +169,7 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
           userHint: input.userHint?.trim() ? input.userHint.trim() : null,
           blobKey: input.blobKey,
           blobUrl: input.blobUrl,
+          status: input.status ?? DOCUMENT_INGEST_STATUS.complete,
         }
       )
     )
@@ -167,6 +194,12 @@ export interface DocumentRecord {
   userHint: string | null
   fieldContextId: string
   uploaderUserId: string
+  /**
+   * Ingest lifecycle status (GOAL-292). Documents uploaded before that story
+   * carry no `status` property; they read back as COMPLETE so the backlog is
+   * never re-ingested.
+   */
+  status: DocumentIngestStatus
 }
 
 /**
@@ -186,7 +219,12 @@ export async function loadDocumentRecord(
       tx.run(
         `
         MATCH (c:FieldContext)-[:HAS_DOCUMENT]->(d:Document {id: $documentId})
-        OPTIONAL MATCH (d)-[:UPLOADED_BY]->(u:Person:User)
+        // Collect uploaders rather than OPTIONAL MATCH + LIMIT 1. The cron
+        // worker runs AS this user (GOAL-292), so an anomalous document with two
+        // UPLOADED_BY edges must not resolve non-deterministically to whichever
+        // one the planner happens to return — the caller fails the run instead.
+        OPTIONAL MATCH (d)-[:UPLOADED_BY]->(uploader:Person:User)
+        WITH c, d, collect(DISTINCT uploader.id) AS uploaderIds
         RETURN
           d.id AS id,
           d.filename AS filename,
@@ -197,10 +235,11 @@ export async function loadDocumentRecord(
           d.blobUrl AS blobUrl,
           d.userHint AS userHint,
           c.id AS fieldContextId,
-          u.id AS uploaderUserId
+          uploaderIds,
+          coalesce(d.status, $completeStatus) AS status
         LIMIT 1
         `,
-        { documentId }
+        { documentId, completeStatus: DOCUMENT_INGEST_STATUS.complete }
       )
     )
     const record = result.records[0]
@@ -218,8 +257,44 @@ export async function loadDocumentRecord(
       blobUrl: (record.get('blobUrl') as string | null) ?? '',
       userHint: (record.get('userHint') as string | null) ?? null,
       fieldContextId: record.get('fieldContextId') as string,
-      uploaderUserId: (record.get('uploaderUserId') as string | null) ?? '',
+      // Exactly one uploader, or none. An ambiguous document yields '' so the
+      // caller treats it as un-attributable rather than guessing.
+      uploaderUserId: (() => {
+        const ids = (record.get('uploaderIds') as string[] | null) ?? []
+        return ids.length === 1 ? ids[0] : ''
+      })(),
+      status: record.get('status') as DocumentIngestStatus,
     }
+  } finally {
+    await session.close()
+  }
+}
+
+/**
+ * Records the page count discovered while preparing extraction inputs.
+ *
+ * Split out for GOAL-292: page count comes from reading the blob, which now
+ * happens in the background worker, while `anchorDocument` runs in the request
+ * before any blob has been read. Only paged sources produce a count, so a null
+ * simply leaves the property untouched-but-null rather than being an error.
+ */
+export async function setDocumentPageCount(input: {
+  driver: Driver
+  documentId: string
+  pageCount: number | null
+}): Promise<void> {
+  if (input.pageCount === null) return
+  const session = input.driver.session()
+  try {
+    await session.executeWrite((tx) =>
+      tx.run(
+        // toInteger: the driver encodes a plain JS number as a Float64, which
+        // would store 3.0 on an int-declared property and render as "3.0".
+        `MATCH (d:Document {id: $documentId})
+         SET d.pageCount = toInteger($pageCount)`,
+        { documentId: input.documentId, pageCount: input.pageCount }
+      )
+    )
   } finally {
     await session.close()
   }

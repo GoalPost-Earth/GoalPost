@@ -18,6 +18,45 @@ interface SearchResults {
   storyPulses: EntityRecord[]
   carePulses: EntityRecord[]
   coreValuePulses: EntityRecord[]
+  promiseWeaves: EntityRecord[]
+}
+
+/**
+ * Neo4j node shape as returned by the driver. The resolver hands raw node
+ * properties straight to GraphQL, so the nested `@relationship` fields a
+ * PromiseWeave selection asks for have to be materialized here — see
+ * ./relationship-fallbacks.ts for why a custom root resolver's rows carry
+ * no library projection.
+ */
+type Neo4jNode = { properties: EntityRecord; labels: string[] }
+
+// Label → concrete type, in resolution order. Mirrors the label arm of
+// `FieldPulse.__resolveType` (resolvers/index.ts) exactly, including the bare
+// `CoreValue` marker: an un-backfilled env still holds migrated values as
+// `:StoryPulse:CoreValue` (GOAL-287), and a value merged into story is still a
+// value — so `CoreValue` must be tested BEFORE `StoryPulse`, not just
+// `CoreValuePulse`.
+const PULSE_LABEL_TYPENAMES: ReadonlyArray<readonly [string, string]> = [
+  ['GoalPulse', 'GoalPulse'],
+  ['ResourcePulse', 'ResourcePulse'],
+  ['CarePulse', 'CarePulse'],
+  ['CoreValuePulse', 'CoreValuePulse'],
+  ['CoreValue', 'CoreValuePulse'],
+  ['StoryPulse', 'StoryPulse'],
+]
+
+/**
+ * Stamp the concrete pulse type from the node's labels so
+ * `FieldPulse.__resolveType` can answer without a per-row label lookup.
+ * Diverging from that resolver would type the same node differently here than
+ * everywhere else — and normalize it into the Apollo cache under a different
+ * key — so the order above is deliberately identical to its.
+ */
+function pulseTypename(labels: string[]): string {
+  return (
+    PULSE_LABEL_TYPENAMES.find(([label]) => labels.includes(label))?.[1] ??
+    'StoryPulse'
+  )
 }
 
 /**
@@ -36,6 +75,8 @@ interface SearchResults {
  * - ResourcePulses: content
  * - StoryPulses: content
  * - CoreValuePulses: content (GOAL-287 — migrated values are :CoreValuePulse)
+ * - PromiseWeaves: title (GOAL-343 — the connector node migrated care points
+ *   became; reached through its HAS_WEAVE FieldContext)
  */
 export const searchResolvers = {
   searchAll: async (
@@ -58,7 +99,7 @@ export const searchResolvers = {
     // A blank term would CONTAINS-match every node (`x CONTAINS ''` is always
     // true), returning 10 arbitrary rows per entity type. Short-circuit
     // BEFORE opening any driver session — an early return after the session
-    // block would leak all 8 sessions (the finally that closes them only
+    // block would leak all 9 sessions (the finally that closes them only
     // covers the try).
     if (!searchTerm) {
       return {
@@ -71,6 +112,7 @@ export const searchResolvers = {
         storyPulses: [],
         carePulses: [],
         coreValuePulses: [],
+        promiseWeaves: [],
       }
     }
 
@@ -83,6 +125,7 @@ export const searchResolvers = {
     const resourcePulsesSession = context.executionContext.session()
     const storyPulsesSession = context.executionContext.session()
     const coreValuePulsesSession = context.executionContext.session()
+    const promiseWeavesSession = context.executionContext.session()
 
     try {
       // Execute all searches in parallel using separate sessions
@@ -95,6 +138,7 @@ export const searchResolvers = {
         resourcePulsesResult,
         storyPulsesResult,
         coreValuePulsesResult,
+        promiseWeavesResult,
       ] = await Promise.all([
         // Search people by name only. GOAL-275: this custom resolver bypasses
         // the Person type's field-level @authorization, so it MUST NOT search
@@ -306,6 +350,65 @@ export const searchResolvers = {
             { searchTerm, userId: currentUserId }
           )
         ),
+
+        // Search PromiseWeaves by title - only in spaces user can access.
+        // GOAL-343: a weave is a reified connector node scoped through its
+        // HAS_WEAVE FieldContext, exactly as ResonanceLink is scoped through
+        // HAS_RESONANCE — so the same Space reach test as every branch above,
+        // restated here because @authorization does not reach raw Cypher.
+        // `title` is optional on PromiseWeave; `toLower(null)` is null and
+        // CONTAINS on null is null, so an untitled weave is simply filtered
+        // out rather than crashing the branch.
+        // The nested selection (wovenFor / context / weaves) is materialized
+        // below from these collects — a custom resolver's rows carry no
+        // library projection for `@relationship` fields.
+        promiseWeavesSession.executeRead((tx) =>
+          tx.run(
+            `
+            MATCH (w:PromiseWeave)<-[:HAS_WEAVE]-(f:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+            WHERE toLower(w.title) CONTAINS $searchTerm
+            AND (
+              EXISTS {
+                MATCH (owner)-[r:OWNS]->(s)
+                WHERE owner.id = $userId
+              }
+              OR
+              EXISTS {
+                MATCH (s)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(member)
+                WHERE member.id = $userId
+              }
+            )
+            WITH DISTINCT w, collect(DISTINCT f) AS contexts
+            OPTIONAL MATCH (w)-[:WOVEN_FOR]->(person:Person)
+            OPTIONAL MATCH (w)-[:WEAVES]->(pulse:FieldPulse)
+            // WEAVES routinely crosses Space boundaries, and the reach test
+            // above constrains the weave's own Space, not where its pulses
+            // live — so the pulse needs its own test. Every pulse type
+            // carries an authorization READ filter the library would apply
+            // here; raw Cypher does not inherit it, so restate it. Filtering
+            // the OPTIONAL MATCH rather than the row hides only the
+            // out-of-reach pulse, exactly as that filter would: a weave
+            // whose pulses are all unreachable still returns, with none.
+            WHERE pulse IS NULL OR EXISTS {
+              MATCH (pulse)<-[:HAS_PULSE]-(:FieldContext)<-[:HAS_CONTEXT]-(ps:Space)
+              WHERE EXISTS {
+                MATCH (pulseOwner)-[:OWNS]->(ps)
+                WHERE pulseOwner.id = $userId
+              }
+              OR EXISTS {
+                MATCH (ps)-[:HAS_MEMBER]->(psm:SpaceMembership)-[:IS_MEMBER]->(pmember)
+                WHERE pmember.id = $userId
+              }
+            }
+            RETURN w, contexts,
+                   collect(DISTINCT person) AS people,
+                   collect(DISTINCT pulse) AS wovenPulses
+            ORDER BY w.createdAt DESC, w.id
+            LIMIT 10
+            `,
+            { searchTerm, userId: currentUserId }
+          )
+        ),
       ])
 
       // Extract properties from Neo4j records
@@ -345,6 +448,40 @@ export const searchResolvers = {
         photo: record.get('photo'),
       }))
 
+      // A weave's nested fields are supplied by hand for the same reason the
+      // pulse branches supply `context`. `wovenFor` is projected to the same
+      // directory-safe columns the people branch uses — the custom resolver
+      // bypasses Person's field-level @authorization, so it must never hand
+      // back a whole Person node (GOAL-275). `Person.name` is a
+      // @customResolver over firstName + lastName, so those two are what the
+      // selection `wovenFor { name }` actually needs.
+      const promiseWeaves: EntityRecord[] = promiseWeavesResult.records.map(
+        (record) => {
+          const weave = (record.get('w') as Neo4jNode).properties
+          const contexts = (record.get('contexts') as Neo4jNode[]) ?? []
+          const wovenFor = (record.get('people') as Neo4jNode[]) ?? []
+          const wovenPulses = (record.get('wovenPulses') as Neo4jNode[]) ?? []
+          return {
+            ...weave,
+            context: contexts.map((ctx) => ({
+              ...ctx.properties,
+              __typename: 'FieldContext',
+            })),
+            wovenFor: wovenFor.map((person) => ({
+              id: person.properties.id,
+              firstName: person.properties.firstName ?? '',
+              lastName: person.properties.lastName ?? '',
+              photo: person.properties.photo ?? null,
+              __typename: 'Person',
+            })),
+            weaves: wovenPulses.map((pulse) => ({
+              ...pulse.properties,
+              __typename: pulseTypename(pulse.labels),
+            })),
+          }
+        }
+      )
+
       return {
         people,
         meSpaces: extractProperties(meSpacesResult.records, 's'),
@@ -371,6 +508,7 @@ export const searchResolvers = {
           'p',
           'contexts'
         ),
+        promiseWeaves,
       }
     } catch (error) {
       console.error('❌ Search error:', error)
@@ -386,6 +524,7 @@ export const searchResolvers = {
         resourcePulsesSession.close(),
         storyPulsesSession.close(),
         coreValuePulsesSession.close(),
+        promiseWeavesSession.close(),
       ])
     }
   },

@@ -37,7 +37,9 @@ export default function AuditLogPage() {
         />
       </div>
 
-      <main className="flex-1 relative z-10 overflow-y-auto scroller p-4 sm:p-8 pb-24">
+      {/* `pb-40` below `sm`: clears the canvas action bar and the chat pill
+          stacked above it on phones (GOAL-340). */}
+      <main className="flex-1 relative z-10 overflow-y-auto scroller p-4 sm:p-8 pb-40">
         <div className="max-w-3xl mx-auto space-y-5 sm:space-y-6">
           <header className="space-y-1">
             <h1 className="text-xl sm:text-3xl font-bold text-gp-ink-strong">

@@ -11,7 +11,7 @@ import { useApp } from '@/contexts'
  * Mirrors `canEditContent` from kb/02-user-roles.md — the parent Space's
  * OWNER, ADMIN and MEMBER pass; GUEST and non-members do not. This is purely
  * a "don't show a control the user cannot use" gate: the real boundary stays
- * server-side (`handleIngestDocument`, GraphQL `@authorization`).
+ * server-side (`enqueueDocumentIngest`, GraphQL `@authorization`).
  *
  * The derivation used to live inline on the field-context page. It now lives
  * here so the floating canvas action bar — which renders above the routed page

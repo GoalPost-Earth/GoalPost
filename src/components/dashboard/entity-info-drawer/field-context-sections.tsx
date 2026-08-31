@@ -33,12 +33,15 @@ export type FieldContextResonance = NonNullable<
   FieldContextQuery['fieldContexts'][number]['resonancesInContext']
 >[number]
 
+/**
+ * Open directory identity only. Email and the rest of the PII sit behind
+ * `privateProfile` (GOAL-275); this surface never reads them.
+ */
 export type FieldContextPerson = {
   id: string
   name: string | null
   firstName: string | null
   lastName: string | null
-  email: string | null
   photo: string | null
 }
 

@@ -57,7 +57,8 @@ export async function GET(request: NextRequest) {
         `[Purge Contexts Cron] ✓ Purged "${purged.title}" (${purged.pulseCount} pulses, ` +
           `${purged.chunkCount} chunks, ${purged.linkCount} links, ` +
           `${purged.suggestionCount} suggestions, ${purged.weaveCount} weaves, ` +
-          `${purged.documentCount} documents, ${purged.organizationCount} orphaned orgs)`
+          `${purged.documentCount} documents, ${purged.importJobCount} import jobs, ` +
+          `${purged.organizationCount} orphaned orgs)`
       )
     }
     console.log(

@@ -71,7 +71,11 @@ export async function POST(req: NextRequest) {
                     password: process.env.NEO4J_PASSWORD!,
                   })
 
-                  const personTool = createPersonSearchTool(graph)
+                  // This route is unauthenticated, so there is no caller
+                  // identity to scope the search to. Passing null makes the
+                  // tool refuse rather than serve Person PII to an anonymous
+                  // request.
+                  const personTool = createPersonSearchTool(graph, null)
                   const result = await personTool.invoke({ name })
                   const parsed = JSON.parse(result)
                   console.log('[Chat Test] Found person:', parsed.found)

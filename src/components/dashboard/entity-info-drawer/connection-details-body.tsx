@@ -42,8 +42,12 @@ type ConnectionEdge = {
 
 type PersonConnectionsRecord = {
   id: string
-  connections?: PersonLite[] | null
-  connectionEdges?: ConnectionEdge[] | null
+  // GOAL-275: the connection graph is PII — it reads through the single
+  // type-level gate, and is null for a caller not authorized for this person.
+  privateProfile?: {
+    connections?: PersonLite[] | null
+    connectionEdges?: ConnectionEdge[] | null
+  } | null
 }
 
 function displayName(p?: PersonLite | null): string {
@@ -79,12 +83,18 @@ export const ConnectionDetailsBody: FC<{
 
   // Each endpoint's display info comes from the *other* person's connections
   // list (the query doesn't return a person's own name fields directly).
-  const personA = bRecord?.connections?.find((c) => c.id === aId) ?? null
-  const personB = aRecord?.connections?.find((c) => c.id === bId) ?? null
+  const personA =
+    bRecord?.privateProfile?.connections?.find((c) => c.id === aId) ?? null
+  const personB =
+    aRecord?.privateProfile?.connections?.find((c) => c.id === bId) ?? null
 
   const edge =
-    aRecord?.connectionEdges?.find((e) => e.connectedPersonId === bId) ??
-    bRecord?.connectionEdges?.find((e) => e.connectedPersonId === aId) ??
+    aRecord?.privateProfile?.connectionEdges?.find(
+      (e) => e.connectedPersonId === bId
+    ) ??
+    bRecord?.privateProfile?.connectionEdges?.find(
+      (e) => e.connectedPersonId === aId
+    ) ??
     null
 
   if (!personA && !personB) {

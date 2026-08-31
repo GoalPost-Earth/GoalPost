@@ -14,6 +14,8 @@ import { createS3BlobStore } from '@/lib/ingest/s3-blob-store'
 import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
 import { handleDeleteDocument } from '@/lib/ingest/handle-delete-document'
 import { buildDocumentDownloadUrl } from '@/lib/ingest/document-download-url'
+import { DOCUMENT_INGEST_STATUS } from '@/lib/ingest/document-ingest-queue'
+import { projectedList } from './projection'
 
 /**
  * GraphQL surface for the doc-ingestion epic.
@@ -166,6 +168,12 @@ export const documentMutations = {
  * Each resolver re-derives state from the source document id; cost is one
  * Cypher round-trip per field per row, which is acceptable for the < 20
  * documents/list expected in v1.
+ *
+ * They must NOT run when the library resolved the parent itself (the
+ * `documents` root, `fieldContexts { documents { … } }`, …): there the
+ * projection is already on `source`, authorization-filtered and complete, and
+ * replacing it with these three-column re-queries drops every nested field the
+ * caller selected. `projectedList` is that guard — see ./projection.ts.
  */
 export const documentTypeResolvers = {
   /**
@@ -177,7 +185,9 @@ export const documentTypeResolvers = {
    */
   downloadUrl: (source: { id?: string }): string | null =>
     source?.id ? buildDocumentDownloadUrl(source.id) : null,
-  extractedPeople: async (source: { id?: string }) => {
+  extractedPeople: async (source: Record<string, unknown>) => {
+    const projected = projectedList(source, 'extractedPeople')
+    if (projected) return projected
     if (!source?.id) return []
     const session = driver.session()
     try {
@@ -201,7 +211,9 @@ export const documentTypeResolvers = {
       await session.close()
     }
   },
-  extractedPulses: async (source: { id?: string }) => {
+  extractedPulses: async (source: Record<string, unknown>) => {
+    const projected = projectedList(source, 'extractedPulses')
+    if (projected) return projected
     if (!source?.id) return []
     const session = driver.session()
     try {
@@ -231,7 +243,9 @@ export const documentTypeResolvers = {
       await session.close()
     }
   },
-  ingestThreads: async (source: { id?: string }) => {
+  ingestThreads: async (source: Record<string, unknown>) => {
+    const projected = projectedList(source, 'ingestThreads')
+    if (projected) return projected
     if (!source?.id) return []
     const session = driver.session()
     try {
@@ -270,6 +284,22 @@ interface DocumentRow {
   summary: string | null
   concepts: string[]
   uploadedAt: string
+  /** Ingest lifecycle (GOAL-292) — drives the upload UI's polling. */
+  status: string
+  statusMessage: string | null
+  ingestCreatedEntityCount: number | null
+  ingestFailedEntityCount: number | null
+}
+
+/**
+ * Neo4j integers arrive as bigint-like objects; a document that has not
+ * finished ingesting has no count at all. Normalise both to a plain number or
+ * null so the GraphQL Int field never receives an unserialisable value.
+ */
+function toCountOrNull(value: unknown): number | null {
+  if (value === null || value === undefined) return null
+  const asNumber = Number(value)
+  return Number.isFinite(asNumber) ? asNumber : null
 }
 
 export const documentQueries = {
@@ -300,10 +330,20 @@ export const documentQueries = {
             d.userHint AS userHint,
             d.summary AS summary,
             d.concepts AS concepts,
-            toString(d.uploadedAt) AS uploadedAt
+            toString(d.uploadedAt) AS uploadedAt,
+            // Documents predating GOAL-292 carry no status; they are finished
+            // uploads, so they read back COMPLETE rather than looking stuck.
+            coalesce(d.status, $completeStatus) AS status,
+            d.statusMessage AS statusMessage,
+            d.ingestCreatedEntityCount AS ingestCreatedEntityCount,
+            d.ingestFailedEntityCount AS ingestFailedEntityCount
           ORDER BY d.uploadedAt DESC
           `,
-          { fieldContextId: args.fieldContextId, userId }
+          {
+            fieldContextId: args.fieldContextId,
+            userId,
+            completeStatus: DOCUMENT_INGEST_STATUS.complete,
+          }
         )
       )
       return result.records.map((r): DocumentRow => {
@@ -319,6 +359,14 @@ export const documentQueries = {
           summary: (r.get('summary') as string | null) ?? null,
           concepts: Array.isArray(rawConcepts) ? rawConcepts : [],
           uploadedAt: (r.get('uploadedAt') as string) ?? '',
+          status: r.get('status') as string,
+          statusMessage: (r.get('statusMessage') as string | null) ?? null,
+          ingestCreatedEntityCount: toCountOrNull(
+            r.get('ingestCreatedEntityCount')
+          ),
+          ingestFailedEntityCount: toCountOrNull(
+            r.get('ingestFailedEntityCount')
+          ),
         }
       })
     } finally {

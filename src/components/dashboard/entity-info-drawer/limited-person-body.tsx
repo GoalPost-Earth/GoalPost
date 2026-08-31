@@ -4,20 +4,20 @@ import { type FC } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { saveFocusEntities } from '@/lib/simulation/focus-entities-storage'
+import { PrivateProfileNotice } from '@/components/persons/private-profile-notice'
 import { SecondaryCta } from './shared'
 
 /**
- * Graceful fallback for a Person the caller can SEE in a directory sense
- * (name / photo are ungated) but whose private profile is filtered out by the
- * GOAL-275 PII gate — i.e. a connection the caller neither created nor shares a
- * Space with (see PERSON_QUERIES → GET_PERSON_DIRECTORY). Rendering this instead
- * of the {@link NotFoundBody} "no longer available / you lost access" copy keeps
- * the affordance honest: the person is real and still in the caller's network,
- * their private details just aren't shared. The caller can still pivot to the
- * graph to explore the connection structurally.
+ * Graceful body for a Person the caller can see in a directory sense (name /
+ * photo are ungated, so people stay findable by name) but whose
+ * `privateProfile` came back null from the GOAL-275 gate. Rendering this
+ * instead of the {@link NotFoundBody} "no longer available / you lost access"
+ * copy keeps the affordance honest: the person is real, their private details
+ * just aren't shared with this caller. They can still pivot to the graph to
+ * explore the connection structurally.
  *
- * Purely presentational — the parent drawer body owns the directory query and
- * passes the resolved data down, so this component itself issues no fetch.
+ * Purely presentational — the parent drawer body owns the query and passes the
+ * resolved row down, so this component issues no fetch of its own.
  */
 export const LimitedPersonBody: FC<{
   person: { id: string; name: string; photo?: string | null }
@@ -58,27 +58,14 @@ export const LimitedPersonBody: FC<{
               {person.name}
             </h2>
             <p className="text-[11px] text-gp-ink-muted dark:text-white/50 mt-0.5">
-              In your network
+              Profile not shared
             </p>
           </div>
         </div>
       </section>
 
       <section className="px-6 py-5">
-        <div className="flex items-start gap-3 rounded-xl border border-gp-glass-border bg-black/[0.03] dark:bg-white/[0.03] px-4 py-3.5">
-          <span className="material-symbols-outlined shrink-0 text-[20px] text-gp-ink-muted dark:text-white/50">
-            lock
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-gp-ink-strong dark:text-white/90">
-              Private profile
-            </p>
-            <p className="mt-1 text-xs text-gp-ink-muted dark:text-white/55 leading-relaxed">
-              This person is in your network, but their profile details are
-              only shared with people they&apos;ve connected with in a Space.
-            </p>
-          </div>
-        </div>
+        <PrivateProfileNotice />
       </section>
 
       <footer className="mt-auto px-6 py-5 border-t border-gp-glass-border bg-black/[0.02] dark:bg-white/[0.02]">

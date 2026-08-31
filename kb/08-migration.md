@@ -441,9 +441,42 @@ npm run clone:dev-to-demo -- --confirm neo4j://3.213.48.7:7687
 # Dev → Prod (when ready — see caveats below)
 npm run clone:dev-to-prod -- --confirm neo4j://54.225.112.191:7687
 
+# Demo → Dev (refresh a hollowed-out dev box from the demo dataset)
+npm run clone:demo-to-dev -- --confirm neo4j+s://ee93871d.databases.neo4j.io
+
 # Any pair
 npm run clone:neo4j -- <source> <target> --confirm <targetUri>
 ```
+
+**`clone:demo-to-dev` vs `migrate:prod-to-dev`.** Both end with a repopulated dev
+DB, but they are not interchangeable. `migrate:prod-to-dev` *transforms* the
+legacy prod ontology and builds MeSpace/WeSpace anchors; use it when you want
+real prod content mapped onto the current schema. `clone:demo-to-dev` is a raw
+copy of whatever the demo box currently holds — already in the dev ontology,
+already anchored, and much faster — so it's the right choice when you just want
+dev to look like demo (reproducing a demo-only bug, refreshing after a wipe).
+
+Because the clone is faithful, **it also copies demo's defects**. The demo box
+has historically lagged on backfills, so check after cloning:
+
+```bash
+npx tsx scripts/backfill-corevalue-pulse-labels.ts          # dry run
+npx tsx scripts/backfill-corevalue-pulse-labels.ts --apply  # if it reports any
+```
+
+Cloned `Person.password` hashes stay valid only while the target's `PEPPER`
+matches the one the hashes were written under. `.env.local` and the demo box
+share a `PEPPER` today — a temporary convenience, not an invariant the clone
+flow may rely on; if the pepper is ever forked, re-run a password reset (see
+Phase 5b, or `npm run reset:dev-password` for one account) or nobody can log
+into the cloned DB.
+
+The flip side of that convenience: a faithful clone keeps **real demo users'
+credentials live on dev** — their password hashes and refresh tokens all still
+authenticate, and anyone holding the dev DB creds + pepper can attack the
+hashes offline. After cloning, reset the handful of accounts teammates actually
+need (`npm run reset:dev-password -- --email <email>`) and treat scrambling the
+remaining non-team credentials as part of the clone, not an optional cleanup.
 
 **Profiles.** `<source>`/`<target>` are profile names resolving to a gitignored
 `.env.<profile>` file that holds `NEO4J_URI` / `NEO4J_USERNAME` /
@@ -494,7 +527,7 @@ path, treat a prod clone as irreversible beyond the backup file.
 | Path | Purpose |
 |------|---------|
 | `scripts/migrate-prod-to-dev.ts` | Current prod→dev **transforming** migration. Run via `npm run migrate:prod-to-dev`. |
-| `scripts/clone-neo4j.ts` | Raw 1:1 **clone** of any Neo4j DB onto another (`clone:dev-to-demo`, `clone:dev-to-prod`, `clone:neo4j`). Schema + data + embeddings; backup + `--confirm` guard. |
+| `scripts/clone-neo4j.ts` | Raw 1:1 **clone** of any Neo4j DB onto another (`clone:dev-to-demo`, `clone:dev-to-prod`, `clone:demo-to-dev`, `clone:neo4j`). Schema + data + embeddings; backup + `--confirm` guard. |
 | `scripts/seed-build-space.ts` | Curated fictional WeSpace ("Maple Street Mutual Aid") + sample pulses + resonances, attached to the 4 member accounts. Run via `npm run seed:build-space` after migration. |
 | `scripts/migrate-reference-to-merged.ts` | Previous migration (transformative, doesn't preserve provenance). Kept for reference but not used. |
 | `scripts/init-db.js` | Schema + demo seed for fresh dev DBs. Destructive — do not chain after a migration. |

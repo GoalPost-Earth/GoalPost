@@ -10,6 +10,11 @@ import {
   type NodeType,
 } from '@/lib/pulse-type-config'
 import {
+  getWeaveOriginLabel,
+  getWeaveStatusClass,
+  getWeaveStatusLabel,
+} from '@/lib/promise-weave'
+import {
   BodySkeleton,
   ErrorBody,
   NotFoundBody,
@@ -38,10 +43,11 @@ function composePersonName(p: {
 }
 
 /**
- * Read-only details for a PromiseWeave — the connective node migrated care
- * points become (kb/05-data-entities.md). Mirrors ResonanceDetailsBody but
- * without edit/delete: the PromiseWeave type carries `@mutation(operations:
- * [])`, so there are no write paths yet (authoring is a later slice).
+ * Details for a PromiseWeave — the connective node migrated care points became
+ * and that members now author directly (kb/05-data-entities.md). Mirrors
+ * ResonanceDetailsBody. Editing lives on the field-context page's Promise
+ * weaves section, which owns the pulse/person pickers this drawer has no
+ * candidates for; the drawer stays a reading surface.
  */
 export const PromiseWeaveDetailsBody: FC<{
   weaveId: string
@@ -67,6 +73,13 @@ export const PromiseWeaveDetailsBody: FC<{
     (p): p is NonNullable<typeof p> => Boolean(p?.id)
   )
   const person = weave.wovenFor?.[0]
+  const author = weave.createdBy?.[0]
+  // Migrated weaves have modifiedAt mirrored from createdAt, so only show it
+  // once it actually differs — otherwise every one reads as freshly updated.
+  const updatedLabel =
+    weave.modifiedAt && weave.modifiedAt !== weave.createdAt
+      ? new Date(weave.modifiedAt).toLocaleDateString()
+      : null
 
   return (
     <div className="flex flex-col">
@@ -85,15 +98,35 @@ export const PromiseWeaveDetailsBody: FC<{
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] border bg-gp-primary/20 border-gp-primary/40 text-gp-primary">
                 Promise weave
               </span>
-              {weave.status && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] border border-gp-glass-border text-gp-ink-muted dark:text-white/60">
-                  {weave.status}
-                </span>
-              )}
+              <span
+                className={cn(
+                  'inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-[0.16em] border',
+                  getWeaveStatusClass(weave.status)
+                )}
+              >
+                {getWeaveStatusLabel(weave.status)}
+              </span>
             </div>
+            <p className="text-[11px] text-gp-ink-muted dark:text-white/60">
+              {/* Name the author when the CREATED_BY edge is there — `origin`
+                  alone only says *a* member wove it, never which one. */}
+              {author
+                ? `Woven by ${composePersonName(author)}`
+                : getWeaveOriginLabel(weave.origin)}
+              {updatedLabel ? ` · Updated ${updatedLabel}` : ''}
+            </p>
           </div>
         </div>
       </section>
+
+      {weave.description && (
+        <section className="px-6 py-5 border-b border-gp-glass-border">
+          <SectionHeader>Why</SectionHeader>
+          <p className="mt-2 text-sm text-gp-ink-strong dark:text-white/85 leading-relaxed">
+            {weave.description}
+          </p>
+        </section>
+      )}
 
       {person && (
         <section className="px-6 py-5 border-b border-gp-glass-border">

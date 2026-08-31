@@ -1,22 +1,28 @@
-import * as XLSX from 'xlsx'
-import {
-  getRowValue,
-  normalizeHeader,
-  workbookToNormalizedRows,
-} from './csv-import-utils'
+import { getRowValue, normalizeHeader } from './csv-import-utils'
 
 /**
  * GOAL-317 — spreadsheet-driven bulk upload of articles as pulses.
  *
- * Shared (client + server) parsing, mapping, and validation for the article
- * import flow. Each spreadsheet row describes one intended pulse: title,
- * author, date, and URL to the article, with optional type / email /
+ * Shared (client + server) mapping, validation, and job-status shapes for the
+ * article import flow. Each spreadsheet row describes one intended pulse:
+ * title, author, date, and URL to the article, with optional type / email /
  * description columns. The client uses these helpers to build the preview
  * step; the API route re-runs the same validation server-side so the two
  * can never drift.
+ *
+ * Deliberately dependency-free: the cron worker and the job-status route both
+ * import from here, and the `xlsx` parser lives in `article-sheet-parser.ts`
+ * so it never bundles into a serverless function that cannot reach it.
  */
 
-/** Hard cap per request — keeps the synchronous batch inside maxDuration. */
+/**
+ * Hard cap per sheet. Originally sized to keep the synchronous batch inside
+ * `maxDuration`; kept unchanged after GOAL-326 moved processing onto the
+ * queue, because it is also what bounds one job's share of the shared worker
+ * (and the size of the payload the job node carries). Larger backlogs are
+ * uploaded as several jobs, which now drain reliably instead of racing a
+ * request ceiling.
+ */
 export const MAX_ARTICLE_IMPORT_ROWS = 300
 
 /**
@@ -70,12 +76,173 @@ export interface ArticleImportSummary {
   matchedPeople: number
 }
 
-export interface ArticleImportResult {
+/**
+ * GOAL-326 — lifecycle of one queued bulk import. Mirrors the document ingest
+ * queue (`kb/04-state-machines.md`): the request enqueues and answers 202, and
+ * `/api/cron/process-article-imports` drives everything after.
+ */
+export const ARTICLE_IMPORT_STATUS = {
+  pending: 'PENDING',
+  processing: 'PROCESSING',
+  complete: 'COMPLETE',
+  failed: 'FAILED',
+} as const
+
+export type ArticleImportStatus =
+  (typeof ARTICLE_IMPORT_STATUS)[keyof typeof ARTICLE_IMPORT_STATUS]
+
+/**
+ * What the worker persists per row — the client-facing outcome plus the author
+ * resolution that produced it.
+ *
+ * `personEvent` is carried here rather than in a running counter on the job so
+ * the whole summary is *derivable* from the durable outcome list. A counter
+ * would have to be re-incremented correctly after a resume, and the two would
+ * silently drift the first time that went wrong.
+ */
+export interface PersistedArticleRowOutcome extends ArticleRowOutcome {
+  personEvent?: 'created' | 'matched'
+}
+
+/** Status payload for `GET /api/import/articles/<jobId>`. */
+export interface ArticleImportJobStatus {
+  jobId: string
+  status: ArticleImportStatus
+  /** Member-safe copy when `status` is FAILED; null in every other state. */
+  statusMessage: string | null
+  /** Rows the worker has landed an outcome for — drives the progress meter. */
+  processedRows: number
+  /** True only once the job finished AND every row landed. */
   success: boolean
   message: string
   summary: ArticleImportSummary
+  /**
+   * Per-row detail — **only populated once the job reaches a terminal status.**
+   * The progress panel reads `processedRows`/`summary` and nothing else, and
+   * the results view only renders when the job is finished, so shipping the
+   * whole list on every 2s poll was ~60KB × ~30/minute of pure waste for a
+   * 300-row import.
+   */
   outcomes: ArticleRowOutcome[]
-  warnings: string[]
+}
+
+/**
+ * How long a finished job survives (`purgeFinishedArticleImportJobs`). Lives
+ * here rather than in `article-import-queue.ts` because the client renders it
+ * in the status section's retention copy (GOAL-336), and this module is the
+ * deliberately dependency-free half the client may bundle.
+ */
+export const FINISHED_JOB_RETENTION_DAYS = 30
+
+/**
+ * One job in `GET /api/import/articles?fieldContextId=...` (GOAL-336) — the
+ * summary-only shape the field-context page lists. Deliberately carries no
+ * `outcomes`: the list is polled while imports run, and the full receipt is
+ * fetched per job from `GET /api/import/articles/<jobId>` once someone opens
+ * it (the same payload discipline that route applies while a job is in
+ * flight).
+ */
+export interface ArticleImportJobListItem {
+  jobId: string
+  status: ArticleImportStatus
+  /** Member-safe copy when `status` is FAILED; null in every other state. */
+  statusMessage: string | null
+  /** Rows the worker has landed an outcome for — drives the progress meter. */
+  processedRows: number
+  /** True only once the job finished AND every row landed. */
+  success: boolean
+  message: string
+  summary: ArticleImportSummary
+  /** Enqueue time as epoch millis — the client renders relative time from it. */
+  createdAtMs: number
+  /** When the status last changed (epoch millis) — a finished job's "when". */
+  statusUpdatedAtMs: number
+}
+
+export function isArticleImportInFlight(status: ArticleImportStatus): boolean {
+  return (
+    status === ARTICLE_IMPORT_STATUS.pending ||
+    status === ARTICLE_IMPORT_STATUS.processing
+  )
+}
+
+/**
+ * Recompute the batch summary from the durable per-row outcomes — the single
+ * source of truth for every count. `totalRows` is the only value that cannot be
+ * derived, and it is fixed at enqueue.
+ *
+ * **Row** counts (created / skippedExisting / failed) are stable across a
+ * resume: one outcome per row, appended in row order, so an interrupted job
+ * reports the same row numbers as a straight-through run.
+ *
+ * **People** counts are per-run and deliberately are not. The author cache is
+ * in-memory, so a resumed tick re-resolves the first row for an author an
+ * earlier tick created and reports `personEvent: 'matched'` rather than
+ * `'created'` — truthful for that run (the person did already exist), but it
+ * means one person can be counted once as new and once as matched across a
+ * resumed job. Making this exact would mean persisting an author identity on
+ * every row, which is more member PII in the job node than the count is worth.
+ */
+export function summarizeArticleOutcomes(
+  outcomes: PersistedArticleRowOutcome[],
+  totalRows: number
+): ArticleImportSummary {
+  const summary: ArticleImportSummary = {
+    totalRows,
+    created: 0,
+    skippedExisting: 0,
+    failed: 0,
+    createdPeople: 0,
+    matchedPeople: 0,
+  }
+  for (const outcome of outcomes) {
+    if (outcome.status === 'created') summary.created += 1
+    else if (outcome.status === 'skipped_existing') summary.skippedExisting += 1
+    else summary.failed += 1
+    if (outcome.personEvent === 'created') summary.createdPeople += 1
+    else if (outcome.personEvent === 'matched') summary.matchedPeople += 1
+  }
+  return summary
+}
+
+/**
+ * One-line human summary of a finished batch. Pure, and shared by the worker
+ * and the status endpoint so the copy a member sees never depends on which of
+ * them last touched the job.
+ */
+export function buildArticleImportMessage(
+  summary: ArticleImportSummary
+): string {
+  const landed = summary.created + summary.skippedExisting
+  if (landed === 0) {
+    // People may still have been created/matched before their rows' pulse
+    // writes failed — acknowledge that instead of claiming nothing happened.
+    return summary.createdPeople > 0
+      ? `No pulses were imported, though ${summary.createdPeople} new ${summary.createdPeople === 1 ? 'person was' : 'people were'} added. Fix the errors below and upload again.`
+      : 'No rows were imported. Fix the errors below and upload again.'
+  }
+  const parts: string[] = [
+    `Imported ${summary.created} of ${summary.totalRows} row${summary.totalRows === 1 ? '' : 's'}`,
+  ]
+  if (summary.skippedExisting > 0) {
+    parts.push(`${summary.skippedExisting} already existed`)
+  }
+  if (summary.failed > 0) {
+    parts.push(`${summary.failed} failed`)
+  }
+  const peopleBits: string[] = []
+  if (summary.createdPeople > 0) {
+    peopleBits.push(
+      `${summary.createdPeople} new ${summary.createdPeople === 1 ? 'person' : 'people'} added`
+    )
+  }
+  if (summary.matchedPeople > 0) {
+    peopleBits.push(
+      `${summary.matchedPeople} author${summary.matchedPeople === 1 ? '' : 's'} matched to existing people`
+    )
+  }
+  const head = parts.join(', ')
+  return peopleBits.length > 0 ? `${head}. ${peopleBits.join('; ')}.` : `${head}.`
 }
 
 type ArticleColumnKey =
@@ -174,40 +341,6 @@ const PULSE_TYPE_BY_KEYWORD: Record<string, ArticlePulseType> = {
   articles: 'ResourcePulse',
   story: 'StoryPulse',
   stories: 'StoryPulse',
-}
-
-/**
- * Parse the first worksheet of a CSV/XLSX file (browser ArrayBuffer) into
- * normalized-header string rows — the same row shape `parseXlsxBase64`
- * produces on the server for the legacy import path.
- */
-export function parseSpreadsheetArrayBuffer(data: ArrayBuffer): {
-  rows: Record<string, string>[]
-  parseErrors: string[]
-} {
-  try {
-    const workbook = XLSX.read(data, {
-      type: 'array',
-      cellDates: false,
-      raw: false,
-    })
-    const rows = workbookToNormalizedRows(workbook)
-    if (rows === null) {
-      return {
-        rows: [],
-        parseErrors: ['The uploaded file does not contain any worksheets.'],
-      }
-    }
-
-    return { rows, parseErrors: [] }
-  } catch {
-    return {
-      rows: [],
-      parseErrors: [
-        'The file could not be parsed. Upload a .csv or .xlsx file with a header row in the first sheet.',
-      ],
-    }
-  }
 }
 
 /**

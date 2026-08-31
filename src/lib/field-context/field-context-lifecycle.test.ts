@@ -459,7 +459,7 @@ describe('softDeleteFieldContext — HAS_SUBCONTEXT cascade (GOAL-295)', () => {
     }
     await expect(cascadePulseStamped(child.pulseIds[0])).resolves.toBe(true)
 
-    // One Log for the whole cascade, counting the sub-fields.
+    // One Log for the whole cascade, counting the nested fields.
     const logs = await runCypher(
       `
       MATCH (log:Log)-[:CREATED_BY]->(:Person {id: $userId})
@@ -470,7 +470,7 @@ describe('softDeleteFieldContext — HAS_SUBCONTEXT cascade (GOAL-295)', () => {
     )
     expect(logs.records).toHaveLength(1)
     const description = String(logs.records[0].get('description'))
-    expect(description).toContain('with 2 sub-fields')
+    expect(description).toContain('with 2 nested fields')
     expect(description).toContain('and 2 pulses')
   })
 

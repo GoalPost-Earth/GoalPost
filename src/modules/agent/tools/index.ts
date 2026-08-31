@@ -26,8 +26,11 @@ export default async function initTools(
   const cypherChain = await initCypherRetrievalChain(llm, graph)
   const retrievalChain = await initVectorRetrievalChain(llm, embeddings)
 
-  // Create entity-specific tools
-  const personSearchTool = createPersonSearchTool(graph)
+  // Create entity-specific tools.
+  // Same rationale as the search tools below: the legacy path carries no user
+  // identity, so we pass null and person search fails closed rather than
+  // serving every Person's PII to an unidentified caller.
+  const personSearchTool = createPersonSearchTool(graph, null)
   // Legacy agent path (chatbot-resolvers.ts) does not carry a user identity.
   // Passing null causes the tool to refuse rather than leak every Space in the
   // graph. The active chat surface (src/lib/simulation/chat-tools.ts) passes
