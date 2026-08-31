@@ -1,6 +1,6 @@
 'use client'
 
-import type { FC } from 'react'
+import { useMemo, type FC } from 'react'
 import Image from 'next/image'
 import { ArrowRight, Hash, Layers, Sparkles, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -195,9 +195,19 @@ export const PersonConnections: FC<{
   )
   // Map rather than a per-row `.find()`: once expanded this list is
   // unbounded, and the linear scan made rendering it O(n²).
-  const edges = new Map(
-    (connectionEdges ?? []).map((e: any) => [e.connectedPersonId, e])
-  )
+  //
+  // `connectionEdges` is an undirected match, so a reciprocal pair yields two
+  // rows for the same person carrying each side's own `why`. First one wins,
+  // matching the `.find()` this replaced.
+  const edges = useMemo(() => {
+    const byPerson = new Map<string, any>()
+    for (const edge of connectionEdges ?? []) {
+      if (!byPerson.has(edge.connectedPersonId)) {
+        byPerson.set(edge.connectedPersonId, edge)
+      }
+    }
+    return byPerson
+  }, [connectionEdges])
 
   if (connections.length === 0) return null
 
