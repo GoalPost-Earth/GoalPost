@@ -13,8 +13,8 @@ interface FloatingChatTriggerProps {
 }
 
 /**
- * Glass pill that summons the chat. Anchored to bottom-right on every
- * viewport.
+ * Glass pill that summons the chat. Anchored to the bottom-right corner on
+ * every viewport.
  *
  * Two callers, one affordance:
  *  - floating layout (desktop preference / mobile) — opens the slide-out panel
@@ -61,7 +61,15 @@ export const FloatingChatTrigger: FC<FloatingChatTriggerProps> = ({
   return (
     <div
       ref={groupRef}
-      className="fixed bottom-6 right-6 z-40 group flex flex-col items-end gap-2"
+      // Below `md` the pill stacks ABOVE the canvas action bar rather than
+      // sharing its band (GOAL-340): the bar is a `bottom-6` centred row at
+      // `z-30`, so on a narrow viewport it reaches into this corner and the
+      // pill — one layer higher — silently swallowed taps meant for the bar's
+      // last control. `md`, not the legend's `sm` (bloom-legend.tsx does the
+      // same thing on the opposite corner), because the bar gets WIDER at
+      // `sm`: every label in it is `hidden sm:inline`, so 640px is exactly
+      // where it grows back into the corner.
+      className="fixed bottom-20 right-6 z-40 group flex flex-col items-end gap-2 md:bottom-6"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >

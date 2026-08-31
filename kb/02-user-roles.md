@@ -12,7 +12,8 @@ GoalPost does not use traditional role-based access control with named user role
 | **WeSpace**          | Owner + Members (by membership role)       |
 | **FieldContext**     | Inherits from parent Space                 |
 | **Pulse**            | Inherits from parent FieldContext          |
-| **Person (profile)** | Any authenticated user (for search/lookup) |
+| **Person (identity)**| Any authenticated user — name + photo, so people stay findable |
+| **Person (PII)**     | Self, creator, Space-sharer, or context-viewer — via `privateProfile` |
 
 ---
 
@@ -88,8 +89,78 @@ All types use `@authorization` directives that filter data based on `$jwt.user.i
 - **FieldContext**: Returns if user owns/is member of the parent Space (checks both MeSpace and WeSpace paths)
 - **Pulse types**: Same as FieldContext (inherit from parent context's space)
 - **SpaceMembership**: Only returns if user is owner/member of the associated space
-- **Person**: Readable by any authenticated user (no filter)
+- **Person**: the open directory fields (`id`, `firstName`, `lastName`, `name`, `photo`) are readable by any authenticated user, so people stay findable by name across Spaces. All PII is gated — see below.
 - **Log**: Readable by any authenticated user
+
+### Person PII — the `privateProfile` gate (GOAL-275)
+
+Person PII is **not** readable from the `Person` type. It lives on
+`PersonPrivateProfile`, reached through `Person.privateProfile`, behind a
+single **type-level** `@authorization` filter. The gated set is `email`,
+`phone`, `pronouns`, `location`, `gender`, `description`, `careManual`,
+`favorites`, `passions`, `traits`, `fieldsOfCare`, `interests`, plus
+`connections` and `connectionEdges`.
+
+A caller may read it when **any** of these hold:
+
+| # | Branch          | Who that is                                                          |
+| - | --------------- | -------------------------------------------------------------------- |
+| 1 | self            | The person themselves (`id_EQ: $jwt.user.id`)                        |
+| 2 | `createdBy`     | Whoever created the node — their own imported / ingested contact      |
+| 3 | `ownsSpaces`    | A co-owner or co-member of any Space the person **owns**              |
+| 4 | `memberOf`      | The owner or a co-member of any Space the person **belongs to**       |
+| 5 | `contexts`      | Anyone who can view a FieldContext holding them (`HAS_PERSON`)        |
+
+Otherwise `privateProfile` resolves to **null**; the Person row itself still
+returns, so UI renders the directory identity (name + photo) with a "Private
+profile" notice rather than a not-found.
+
+Notes that trip people up:
+
+- **Role is not part of the test.** Branches 3–5 match *any* membership, so a
+  **GUEST** of a WeSpace reads every member's PII exactly like an ADMIN does.
+  That has always been true; the table above is a reach test, not a role test.
+- **`@authorization` covers the GraphQL read path only.** Server-side raw
+  Cypher runs underneath it, so any tool or resolver that reads `:Person`
+  properties directly has to **restate** this branch table or it bypasses the
+  gate entirely. The assistant's `person-search.tool.ts` used to do exactly
+  that — bare `(p:Person)`, no caller scoping, returning `email`, `pronouns`,
+  `location`, `passions`, `traits`, `interests`, `fieldsOfCare`, `favorites`
+  plus every `CONNECTED_TO` neighbour to anyone who asked. It now takes a
+  `userId` and carries a hand port of the filter (`CAN_READ_PII`), pinned by
+  `person-search-pii.integration.test.ts`; a null caller is refused outright.
+  **When you add a branch to the SDL filter, add it to that constant too** —
+  the SDL test does not see the Cypher copy. Treat the branch table as the
+  policy, and audit every new raw-Cypher Person read against it.
+- **`CONNECTED_TO` is not a branch.** An edge records a claim by its author,
+  never the far endpoint's consent. See `kb/03-workflows.md` and the
+  `addPersonToFieldContext` target gate.
+- **Branch 5 is privilege-granting.** Attaching a person to a context unlocks
+  their PII to everyone who can reach that context, which is why the attach
+  path is itself gated.
+- **Sub-contexts (GOAL-295) do unlock**, because every context — nested or not
+  — also hangs off its Space by its own `HAS_CONTEXT` edge.
+- **Soft-deleted contexts (GOAL-319) do not**, because the Space edge is
+  re-pointed to `HAS_DELETED_CONTEXT`. Deleting a field withdraws the PII reach
+  it granted.
+- Writes are unaffected — the fields are still ordinary node properties, only
+  the GraphQL read path moved.
+- **No PII scalar is filterable, `email` included.** `email` was the last one
+  left, for the `people(where: { email_EQ })` login bootstrap. @neo4j/graphql
+  generates the whole operator family or none, so that also shipped
+  `email_STARTS_WITH` — an account-enumeration oracle for any authenticated
+  caller, readable through `peopleAggregate { count }` without returning a
+  single row. An `@authorization` filter gates projections, not `where`
+  predicates, so nothing about the PII gate ever covered it. The bootstrap now
+  keys on `id_EQ` (the client already holds its own id, and it is the same
+  value as the JWT's `user.id`), and `email` carries
+  `@filterable(byValue: false)` on **both** `Person` and `User` — `User` too,
+  because `UserWhere` stays reachable via `updateUsers` / `deleteUsers`, where
+  a Forbidden-vs-success response is itself the oracle. The only by-email path
+  is the exact-match `findUserByEmail` resolver, for adding a Space member.
+- **Verify these things against the BUILT schema, never the directive list.**
+  `printSchema(await neoSchema.getSchema())` and grep it. That is how the
+  `UserWhere` half of the email surface was found.
 
 ### Cascading authorization — operation matrix
 

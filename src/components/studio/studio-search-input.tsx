@@ -88,7 +88,7 @@ export const StudioSearchInput: FC = () => {
     <>
       <Link
         href="/protected/search"
-        className="flex md:hidden size-10 shrink-0 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gp-primary/50 transition-all"
+        className="flex md:hidden size-9 sm:size-10 shrink-0 items-center justify-center rounded-full bg-gp-surface-strong/40 dark:bg-gp-surface-dark/40 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-gp-surface-strong/60 dark:hover:bg-gp-surface-dark/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gp-primary/50 transition-all"
         aria-label="Search"
       >
         <span

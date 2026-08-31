@@ -1,36 +1,31 @@
-import { after } from 'next/server'
 import { driver } from '@/lib/neo4j/driver'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
-import { handleIngestDocument } from '@/lib/ingest/handle-ingest-document'
-import { runContextResonanceDiscovery } from '@/lib/resonance/discovery/on-upload-discovery'
-import { createOpenAIExtractionModelClient } from '@/lib/ingest/openai-extraction-model-client'
-import { createGeminiExtractionModelClient } from '@/lib/ingest/gemini-extraction-model-client'
-import {
-  createOpenAIDocumentSummarizer,
-  createGeminiDocumentSummarizer,
-} from '@/lib/ingest/document-summarizer'
-import { createS3BlobStore } from '@/lib/ingest/s3-blob-store'
-import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
+import { enqueueDocumentIngest } from '@/lib/ingest/handle-ingest-document'
+import { DOCUMENT_INGEST_STATUS } from '@/lib/ingest/document-ingest-queue'
+import { kickQueueWorker } from '@/lib/jobs/kick-queue-worker'
 
 /**
  * Step 2 of the direct-to-S3 upload flow.
  *
  *   POST /api/ingest/document/process
- *   { documentId, blobKey, fieldContextId, filename, mimeType, sizeBytes, hint? }
+ *   { blobKey, fieldContextId, filename, mimeType, sizeBytes, hint? }
+ *   → 202 { documentId, status: 'PENDING' }
  *
- * Called once the browser has finished PUT-ing the file to S3 via the
- * URL handed back by `/presign`. The orchestrator anchors the Document
- * node, mints a fresh presigned GET URL, and routes to Gemini (PDF) or
- * OpenAI (text) for entity extraction + summarization.
+ * Called once the browser has finished PUT-ing the file to S3 via the URL
+ * handed back by `/presign`.
  *
- * The orchestrator never holds the file bytes. `maxDuration` is raised to the
- * Pro-plan ceiling (300s) as a stopgap for large documents whose Gemini/OpenAI
- * extraction + summarization was blowing past 60s and returning 504s. The
- * durable fix is to make ingestion asynchronous (enqueue + background job) so
- * the request no longer holds the full pipeline — tracked in GOAL-292.
+ * GOAL-292: this used to run the entire pipeline inline — fetch the blob back,
+ * LLM entity extraction, LLM summarization, Neo4j entity writes — which is
+ * where every observed 504 came from. `maxDuration = 300` was the stopgap; this
+ * is the durable fix. The request now only validates, enforces
+ * `canEditContent`, and anchors the Document as PENDING, then answers 202.
+ * `/api/cron/process-document-ingestion` does the heavy half and moves the
+ * document to COMPLETE / FAILED; the client polls `Document.status`.
+ *
+ * The route no longer needs a raised `maxDuration` (nothing here is slow) and no
+ * longer schedules resonance discovery via `after()` — the worker owns that as a
+ * durable step.
  */
-
-export const maxDuration = 300
 
 function unauthorized(message = 'Authentication required') {
   return Response.json({ error: message }, { status: 401 })
@@ -40,13 +35,6 @@ function badRequest(message: string, reason?: string) {
   return Response.json(reason ? { error: message, reason } : { error: message }, {
     status: 400,
   })
-}
-
-function resolveBlobStore() {
-  if (process.env.INGEST_BLOB_BACKEND === 'memory') {
-    return createMemoryBlobStore()
-  }
-  return createS3BlobStore()
 }
 
 // The presign step mints keys as `documents/document_<uuid>/<sanitized-name>`.
@@ -66,7 +54,8 @@ export async function POST(req: Request) {
   if (!currentUserId) return unauthorized()
 
   let body: {
-    documentId?: unknown
+    // No documentId — it is derived from the server-minted blobKey so a retried
+    // call re-anchors the same document instead of creating a second one.
     blobKey?: unknown
     fieldContextId?: unknown
     filename?: unknown
@@ -97,15 +86,8 @@ export async function POST(req: Request) {
     return badRequest('sizeBytes must be a positive number.')
   }
 
-  const result = await handleIngestDocument(
-    {
-      driver,
-      blobStore: resolveBlobStore(),
-      pdfExtractionClient: createGeminiExtractionModelClient(),
-      textExtractionClient: createOpenAIExtractionModelClient(),
-      pdfSummarizerClient: createGeminiDocumentSummarizer(),
-      textSummarizerClient: createOpenAIDocumentSummarizer(),
-    },
+  const result = await enqueueDocumentIngest(
+    { driver },
     {
       currentUserId,
       fieldContextId,
@@ -121,46 +103,31 @@ export async function POST(req: Request) {
     const status =
       result.reason === 'forbidden'
         ? 403
-        : result.reason === 'blob_missing'
-          ? 404
+        : // Too many of this account's documents are already queued. 429 so a
+          // client can back off rather than treating it as a bad request.
+          result.reason === 'queue_full'
+          ? 429
           : 400
-    return Response.json({ error: result.error, reason: result.reason }, { status })
+    return Response.json(
+      { error: result.error, reason: result.reason },
+      { status }
+    )
   }
 
-  const createdEntityCount = result.executedToolCalls.filter(
-    (c) => c.result.success !== false
-  ).length
-  const failedEntityCount = result.executedToolCalls.length - createdEntityCount
+  // The document is durable in the queue either way; the kick starts a worker
+  // sweep as soon as the 202 is on the wire instead of waiting for a
+  // scheduler tick, which on dev/demo can be the better part of an hour away.
+  kickQueueWorker(req, 'document-ingest')
 
-  // On-upload resonance discovery (GOAL-294). Trigger only when the upload
-  // actually created a pulse OR a person — discovery over a context with
-  // nothing new is wasted work. A new person triggers too (GOAL-318): an
-  // update-only run can still mint the document's author, and the discovery
-  // pass is what embeds that PersonPulse at upload time (Step 1b) instead of
-  // waiting for the nightly cron. Scheduled via `after()` so the (potentially
-  // minute-long) embed + LLM analysis runs AFTER the upload response is sent,
-  // without blocking the user and without the dropped-floating-promise risk
-  // of a bare fire-and-forget (the platform keeps the invocation alive up to
-  // `maxDuration`). `runContextResonanceDiscovery` never throws, is
-  // Space-scoped, and dedups so repeated uploads don't duplicate suggestions.
-  const createdAPulseOrPerson = result.executedToolCalls.some(
-    (c) =>
-      (c.tool === 'create_pulse' || c.tool === 'create_person') &&
-      c.result.success !== false
+  // 202 Accepted: the document is anchored and queued, nothing has been
+  // extracted yet. The client polls `Document.status` (PENDING → PROCESSING →
+  // COMPLETE / FAILED) rather than waiting on this response. No threadId or
+  // entity counts here — the worker creates the ingest thread.
+  return Response.json(
+    {
+      documentId: result.documentId,
+      status: DOCUMENT_INGEST_STATUS.pending,
+    },
+    { status: 202 }
   )
-  if (createdAPulseOrPerson) {
-    after(async () => {
-      await runContextResonanceDiscovery({
-        contextId: fieldContextId,
-        actorUserId: currentUserId,
-      })
-    })
-  }
-
-  return Response.json({
-    documentId: result.documentId,
-    threadId: result.threadId,
-    createdEntityCount,
-    failedEntityCount,
-  })
 }

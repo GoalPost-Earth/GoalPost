@@ -102,6 +102,26 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       emergentName
       createdAt
+      parentContext {
+        id
+        title
+      }
+      ancestorContexts {
+        id
+        title
+      }
+      subContexts {
+        id
+        title
+        emergentName
+        createdAt
+        pulses {
+          id
+        }
+        subContexts {
+          id
+        }
+      }
       resonancesInContext {
         id
         label
@@ -187,7 +207,9 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       weaves {
         id
         title
+        description
         status
+        origin
         createdAt
         weaves {
           id

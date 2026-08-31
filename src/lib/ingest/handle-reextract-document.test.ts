@@ -328,9 +328,12 @@ describe('handleReExtractDocument — slice 6', () => {
           { threadId: reExtract.threadId }
         )
         expect(turnRows.records).toHaveLength(1)
+        // Member-facing failure copy, not raw error text (b64856b6). Matched
+        // loosely on the same shape the upload-path test uses so a future
+        // wording tweak doesn't break both suites.
         expect(
           String(turnRows.records[0].get('content')).toLowerCase()
-        ).toContain('extraction failed')
+        ).toMatch(/couldn't read|something went wrong/)
         const parts = JSON.parse(
           turnRows.records[0].get('parts') as string
         ) as Array<{ type: string }>

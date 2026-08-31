@@ -1,14 +1,20 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAnimations } from '@/contexts/animation-context'
 import { usePageContext } from '@/contexts/PageContext'
 import { SEARCH_ALL } from '@/app/graphql/queries'
 import { useQuery } from '@apollo/client/react'
 import { capitalizeString } from '@/lib/utils'
 import { dispatchOpenInfoDrawer } from '@/components/dashboard/entity-info-drawer'
+import {
+  PromiseWeaveResultCard,
+  toPromiseWeaveResults,
+  type PromiseWeaveResult,
+  type PromiseWeaveSearchRow,
+} from '@/components/search/promise-weave-result-card'
 
 type EntityType =
   | 'person'
@@ -19,6 +25,7 @@ type EntityType =
   | 'resourcePulse'
   | 'storyPulse'
   | 'coreValuePulse'
+  | 'promiseWeave'
 
 const PULSE_ENTITY_TYPES: ReadonlySet<EntityType> = new Set([
   'goalPulse',
@@ -40,6 +47,8 @@ type SearchEntity = {
   tags?: string[]
   /** null when the entity has no dedicated route (e.g. pulses, which only live in the EntityInfoDrawer). */
   href: string | null
+  /** Set only on `promiseWeave` rows — drives the weave's own result card. */
+  weave?: PromiseWeaveResult
 }
 
 interface GraphQLSearchResult {
@@ -92,6 +101,7 @@ interface GraphQLSearchResult {
       createdAt: string
       intensity: number
     }>
+    promiseWeaves: PromiseWeaveSearchRow[]
   }
 }
 
@@ -209,6 +219,21 @@ const transformSearchResults = (data: GraphQLSearchResult): SearchEntity[] => {
     })
   })
 
+  // Transform promise weaves. Connector nodes, not pulses — they always
+  // render through PromiseWeaveResultCard, which builds its own body copy
+  // from `weave`, so `subtitle` / `description` / `tags` would be dead here.
+  // `title` is not: it is the label handed to the drawer on click.
+  toPromiseWeaveResults(data.searchAll.promiseWeaves).forEach((weave) => {
+    entities.push({
+      id: weave.id,
+      type: 'promiseWeave',
+      title: weave.title,
+      description: '',
+      href: null,
+      weave,
+    })
+  })
+
   return entities
 }
 
@@ -221,6 +246,7 @@ const typeLabel: Record<EntityType, string> = {
   resourcePulse: 'Resource',
   storyPulse: 'Story',
   coreValuePulse: 'Core Value',
+  promiseWeave: 'Promise Weave',
 }
 
 const typeAccentClass: Record<EntityType, string> = {
@@ -232,6 +258,7 @@ const typeAccentClass: Record<EntityType, string> = {
   resourcePulse: 'text-gp-resource',
   storyPulse: 'text-gp-story',
   coreValuePulse: 'text-gp-coreValue',
+  promiseWeave: 'text-gp-primary',
 }
 
 const typePillClass: Record<EntityType, string> = {
@@ -243,6 +270,7 @@ const typePillClass: Record<EntityType, string> = {
   resourcePulse: 'bg-gp-resource/10 text-gp-resource border-gp-resource/20',
   storyPulse: 'bg-gp-story/10 text-gp-story border-gp-story/20',
   coreValuePulse: 'bg-gp-coreValue/10 text-gp-coreValue border-gp-coreValue/20',
+  promiseWeave: 'bg-gp-primary/10 text-gp-primary border-gp-primary/20',
 }
 
 function EntityCardWrapper({
@@ -272,10 +300,16 @@ function EntityCardWrapper({
   )
 }
 
-export default function SearchPage() {
+function SearchPageContent() {
   const router = useRouter()
-  const [query, setQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const searchParams = useSearchParams()
+  // The studio header submits to `/protected/search?q=…`, so `?q=` — not this
+  // component's mount — is what says which search the user asked for. Seeding
+  // both the box and the debounced value from it means a query typed up in the
+  // header lands already run, and a refreshed or shared link reproduces it.
+  const queryParam = searchParams.get('q') ?? ''
+  const [query, setQuery] = useState(queryParam)
+  const [debouncedQuery, setDebouncedQuery] = useState(queryParam)
   const [activeType, setActiveType] = useState<EntityType | 'all'>('all')
   const { animationsEnabled } = useAnimations()
   const { setPageTitle } = usePageContext()
@@ -283,6 +317,32 @@ export default function SearchPage() {
     variables: { query: debouncedQuery },
     skip: debouncedQuery.length === 0,
   })
+
+  // `?q=` the box was last reconciled against. Comparing against it — rather
+  // than against `query` — is what tells an incoming search apart from the
+  // rewrite this page performs on itself as the user types.
+  const [syncedParam, setSyncedParam] = useState(queryParam)
+
+  // URL → box, adjusted during render (React's "changing state when props
+  // change" pattern) rather than in an effect, so the new query is rendered in
+  // one pass instead of a visible flash of the previous results.
+  //
+  // This is what makes the *second* search onwards work: searching again from
+  // the header while this page is already open is a `router.push` to the route
+  // we're on, which re-renders rather than remounts, so the `useState` seeds
+  // above never run again. Setting `debouncedQuery` here too skips the 400ms
+  // wait for a query the user already committed with Enter.
+  if (queryParam !== syncedParam) {
+    setSyncedParam(queryParam)
+    // Our own rewrite below always sets `?q=` to `debouncedQuery`, so a param
+    // that already matches it is this page's echo, not a new request — record
+    // it and leave the box alone. Adopting it here would clobber whatever the
+    // user has typed since the debounce last fired.
+    if (queryParam !== debouncedQuery) {
+      setQuery(queryParam)
+      setDebouncedQuery(queryParam)
+    }
+  }
 
   useEffect(() => {
     setPageTitle('Search')
@@ -297,8 +357,23 @@ export default function SearchPage() {
     return () => clearTimeout(timer)
   }, [query])
 
-  const handleEntityClick = (entity: SearchEntity, e: React.MouseEvent) => {
-    e.preventDefault()
+  // Box → URL, so edits made in this page's own input stay refreshable and
+  // shareable, and so a repeat search for the term already in `?q=` still
+  // registers as a change. `replaceState` rather than `router.replace` keeps
+  // it off the history stack and avoids an RSC round-trip per settled
+  // keystroke; reading the live URL keeps the write idempotent.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if ((url.searchParams.get('q') ?? '') === debouncedQuery) return
+    if (debouncedQuery) url.searchParams.set('q', debouncedQuery)
+    else url.searchParams.delete('q')
+    window.history.replaceState(null, '', url)
+  }, [debouncedQuery])
+
+  // `e` is absent for cards that render their own button (the weave card):
+  // there is no <Link> navigation to suppress in that path.
+  const handleEntityClick = (entity: SearchEntity, e?: React.MouseEvent) => {
+    e?.preventDefault()
     setPageTitle(entity.title)
     if (entity.type === 'meSpace' || entity.type === 'weSpace') {
       localStorage.setItem(`space_${entity.id}`, entity.title)
@@ -308,6 +383,15 @@ export default function SearchPage() {
     if (isPulseEntityType(entity.type)) {
       dispatchOpenInfoDrawer({
         type: 'Pulse',
+        id: entity.id,
+        label: entity.title,
+      })
+      return
+    }
+    // A weave is not a pulse — it opens the existing read-only weave drawer.
+    if (entity.type === 'promiseWeave') {
+      dispatchOpenInfoDrawer({
+        type: 'PromiseWeave',
         id: entity.id,
         label: entity.title,
       })
@@ -325,8 +409,17 @@ export default function SearchPage() {
   }, [data, activeType])
 
   return (
+    // Two boxes on purpose. The studio canvas mounts route children in an
+    // `absolute inset-0` box under an `overflow-hidden` pane, so this route has
+    // to own its scroll — but the gradient wash and the corner blobs are a
+    // *backdrop*, and an `absolute inset-0` layer inside a scroll container is
+    // positioned at the content origin, so it would slide away as you scroll.
+    // The outer box stays pinned to the pane and carries the decoration; the
+    // inner box does the scrolling. (`pt-20` used to sit on the root to clear a
+    // fixed navbar that no longer overlaps this surface — StudioChrome is a
+    // flow sibling above the canvas — so it was 80px of dead space.)
     <div
-      className="relative min-h-screen overflow-x-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors pt-20"
+      className="relative h-full w-full overflow-hidden bg-gp-surface dark:bg-gp-surface-dark transition-colors"
       style={{
         backgroundImage: `
 					radial-gradient(at 18% 18%, color-mix(in srgb, var(--gp-primary) 12%, transparent) 0, transparent 55%),
@@ -336,156 +429,191 @@ export default function SearchPage() {
 				`,
       }}
     >
-      <div className="absolute inset-0 pointer-events-none select-none">
+      <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
         <div className="absolute -top-40 -left-40 w-[320px] h-80 rounded-full bg-gp-primary/10 blur-[120px]" />
         <div className="absolute -bottom-40 -right-40 w-[320px] h-80 rounded-full bg-gp-accent-glow/10 blur-[120px]" />
       </div>
 
-      <main className="relative z-10 w-full max-w-6xl mx-auto px-4 py-10 sm:py-16 md:py-20 flex flex-col gap-6 sm:gap-10">
-        <header className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-4xl md:text-5xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong">
-              Discover people, spaces, and resonances
-            </h1>
-            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft max-w-2xl">
-              Search across the network. Filter by entity type and apply your
-              color theme for clarity in light or dark mode.
-            </p>
-          </div>
-        </header>
+      <div className="relative h-full w-full overflow-y-auto overflow-x-hidden scroller">
+        {/* The bottom gutter clears every surface that floats over this
+            scroll container: the canvas action bar at `bottom-6`
+            (canvas-action-bar.tsx) and, on phones, the chat pill stacked
+            above it at `bottom-20` (floating-chat-trigger.tsx, GOAL-340). */}
+        <main className="relative z-10 w-full max-w-6xl mx-auto px-4 pt-8 sm:pt-12 md:pt-16 pb-40 sm:pb-32 flex flex-col gap-6 sm:gap-10">
+          <header className="flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <h1 className="text-4xl md:text-5xl font-light tracking-tight text-gp-ink-strong dark:text-gp-ink-strong">
+                Discover people, spaces, and resonances
+              </h1>
+              <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft max-w-2xl">
+                Search across the network. Filter by entity type and apply your
+                color theme for clarity in light or dark mode.
+              </p>
+            </div>
+          </header>
 
-        <div className="sticky top-10 z-20 flex flex-col gap-4 md:gap-6 rounded-3xl p-4 sm:p-6 md:p-8 bg-gp-glass-bg border border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] backdrop-blur-2xl dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] ">
-          <div className="flex flex-col gap-3">
-            <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft">
-              Search query
-            </label>
-            <div className="flex items-center gap-3 rounded-2xl border border-gp-glass-border bg-white/70 dark:bg-white/5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] px-4 py-3">
-              <span className="material-symbols-outlined text-gp-ink-soft text-xl">
-                search
-              </span>
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Explore resonances, people, and pulses..."
-                className="w-full bg-transparent focus:outline-none text-base text-gp-ink-strong dark:text-gp-ink-strong placeholder:text-gp-ink-soft"
-              />
+          <div className="sticky top-10 z-20 flex flex-col gap-4 md:gap-6 rounded-3xl p-4 sm:p-6 md:p-8 bg-gp-glass-bg border border-gp-glass-border shadow-[0_30px_60px_-12px_rgba(0,0,0,0.08)] backdrop-blur-2xl dark:shadow-[0_40px_100px_-20px_rgba(0,0,0,0.5)] ">
+            <div className="flex flex-col gap-3">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft">
+                Search query
+              </label>
+              <div className="flex items-center gap-3 rounded-2xl border border-gp-glass-border bg-white/70 dark:bg-white/5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.3)] px-4 py-3">
+                <span className="material-symbols-outlined text-gp-ink-soft text-xl">
+                  search
+                </span>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Explore resonances, people, and pulses..."
+                  className="w-full bg-transparent focus:outline-none text-base text-gp-ink-strong dark:text-gp-ink-strong placeholder:text-gp-ink-soft"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              {[
+                { key: 'all', label: 'All' },
+                { key: 'person', label: 'People' },
+                { key: 'meSpace', label: 'Me Spaces' },
+                { key: 'weSpace', label: 'We Spaces' },
+                { key: 'context', label: 'Contexts' },
+                { key: 'goalPulse', label: 'Goals' },
+                { key: 'resourcePulse', label: 'Resources' },
+                { key: 'storyPulse', label: 'Stories' },
+                { key: 'coreValuePulse', label: 'Core Values' },
+                { key: 'promiseWeave', label: 'Promise Weaves' },
+              ].map((option) => {
+                const isActive = activeType === option.key
+                return (
+                  <button
+                    key={option.key}
+                    onClick={() =>
+                      setActiveType(option.key as EntityType | 'all')
+                    }
+                    className={`px-4 py-2 rounded-full text-sm font-medium border transition-all cursor-pointer ${
+                      isActive
+                        ? 'bg-gp-primary/10 border-gp-primary/30 text-gp-ink-strong dark:text-gp-ink-strong'
+                        : 'bg-white/50 dark:bg-white/5 border-gp-glass-border text-gp-ink-muted dark:text-gp-ink-soft hover:border-gp-primary/30'
+                    } ${animationsEnabled ? 'hover:-translate-y-0.5' : ''}`}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {[
-              { key: 'all', label: 'All' },
-              { key: 'person', label: 'People' },
-              { key: 'meSpace', label: 'Me Spaces' },
-              { key: 'weSpace', label: 'We Spaces' },
-              { key: 'context', label: 'Contexts' },
-              { key: 'goalPulse', label: 'Goals' },
-              { key: 'resourcePulse', label: 'Resources' },
-              { key: 'storyPulse', label: 'Stories' },
-              { key: 'coreValuePulse', label: 'Core Values' },
-            ].map((option) => {
-              const isActive = activeType === option.key
-              return (
-                <button
-                  key={option.key}
-                  onClick={() =>
-                    setActiveType(option.key as EntityType | 'all')
-                  }
-                  className={`px-4 py-2 rounded-full text-sm font-medium border transition-all cursor-pointer ${
-                    isActive
-                      ? 'bg-gp-primary/10 border-gp-primary/30 text-gp-ink-strong dark:text-gp-ink-strong'
-                      : 'bg-white/50 dark:bg-white/5 border-gp-glass-border text-gp-ink-muted dark:text-gp-ink-soft hover:border-gp-primary/30'
-                  } ${animationsEnabled ? 'hover:-translate-y-0.5' : ''}`}
+          <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {loading && debouncedQuery.length > 0 && (
+              <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-6 sm:p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
+                Searching...
+              </div>
+            )}
+
+            {error && (
+              <div className="col-span-full rounded-2xl border border-dashed border-red-300 bg-red-50 dark:bg-red-900/20 backdrop-blur-xl p-6 sm:p-10 text-center text-red-600 dark:text-red-400">
+                Error searching: {error.message}
+              </div>
+            )}
+
+            {query.length === 0 && (
+              <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-6 sm:p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
+                Enter a search term to explore people, spaces, and pulses.
+              </div>
+            )}
+
+            {filteredEntities.length === 0 && query.length > 0 && !loading && (
+              <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-6 sm:p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
+                No results found. Try another query or filter.
+              </div>
+            )}
+
+            {filteredEntities.map((entity) =>
+              entity.weave ? (
+                <PromiseWeaveResultCard
+                  key={entity.id}
+                  weave={entity.weave}
+                  animationsEnabled={animationsEnabled}
+                  onOpen={() => handleEntityClick(entity)}
+                />
+              ) : (
+                <EntityCardWrapper
+                  key={entity.id}
+                  entity={entity}
+                  onClick={(e) => handleEntityClick(entity, e)}
                 >
-                  {option.label}
-                </button>
+                  <article
+                    className={`h-full rounded-2xl border border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-5 shadow-[0_20px_40px_-16px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_70px_-28px_rgba(0,0,0,0.6)] transition-all ${
+                      animationsEnabled
+                        ? 'group-hover:-translate-y-1 group-hover:shadow-[0_24px_48px_-18px_rgba(0,0,0,0.14)]'
+                        : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div
+                        className={`text-xs font-semibold uppercase tracking-[0.16em] ${typeAccentClass[entity.type]}`}
+                      >
+                        {typeLabel[entity.type]}
+                      </div>
+                      <span className="material-symbols-outlined text-gp-ink-soft dark:text-gp-ink-soft text-xl">
+                        arrow_outward
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex flex-col gap-1">
+                      <h3 className="text-lg font-semibold text-gp-ink-strong dark:text-gp-ink-strong leading-tight">
+                        {entity.title}
+                      </h3>
+                      {entity.subtitle && (
+                        <p className="text-xs font-medium text-gp-ink-muted dark:text-gp-ink-soft">
+                          {entity.subtitle}
+                        </p>
+                      )}
+                    </div>
+
+                    <p className="mt-3 text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed line-clamp-3">
+                      {entity.description}
+                    </p>
+
+                    {entity.tags && entity.tags.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {entity.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className={`px-2 py-1 rounded-full text-[11px] font-semibold border ${typePillClass[entity.type]}`}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                </EntityCardWrapper>
               )
-            })}
+            )}
+          </section>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+// `useSearchParams` opts a client page into dynamic rendering, which Next
+// requires a Suspense boundary to isolate. Without it the whole route falls
+// back to client-side rendering at build time.
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="relative h-full w-full overflow-y-auto overflow-x-hidden scroller bg-gp-surface dark:bg-gp-surface-dark transition-colors">
+          <div className="w-full max-w-6xl mx-auto px-4 pt-8 sm:pt-12 md:pt-16 pb-40 sm:pb-32 text-sm text-gp-ink-muted dark:text-gp-ink-soft">
+            Loading search…
           </div>
         </div>
-
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {loading && debouncedQuery.length > 0 && (
-            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-6 sm:p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
-              Searching...
-            </div>
-          )}
-
-          {error && (
-            <div className="col-span-full rounded-2xl border border-dashed border-red-300 bg-red-50 dark:bg-red-900/20 backdrop-blur-xl p-6 sm:p-10 text-center text-red-600 dark:text-red-400">
-              Error searching: {error.message}
-            </div>
-          )}
-
-          {query.length === 0 && (
-            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-6 sm:p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
-              Enter a search term to explore people, spaces, and pulses.
-            </div>
-          )}
-
-          {filteredEntities.length === 0 && query.length > 0 && !loading && (
-            <div className="col-span-full rounded-2xl border border-dashed border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-6 sm:p-10 text-center text-gp-ink-muted dark:text-gp-ink-soft">
-              No results found. Try another query or filter.
-            </div>
-          )}
-
-          {filteredEntities.map((entity) => (
-            <EntityCardWrapper
-              key={entity.id}
-              entity={entity}
-              onClick={(e) => handleEntityClick(entity, e)}
-            >
-              <article
-                className={`h-full rounded-2xl border border-gp-glass-border bg-gp-glass-bg backdrop-blur-xl p-5 shadow-[0_20px_40px_-16px_rgba(0,0,0,0.12)] dark:shadow-[0_30px_70px_-28px_rgba(0,0,0,0.6)] transition-all ${
-                  animationsEnabled
-                    ? 'group-hover:-translate-y-1 group-hover:shadow-[0_24px_48px_-18px_rgba(0,0,0,0.14)]'
-                    : ''
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div
-                    className={`text-xs font-semibold uppercase tracking-[0.16em] ${typeAccentClass[entity.type]}`}
-                  >
-                    {typeLabel[entity.type]}
-                  </div>
-                  <span className="material-symbols-outlined text-gp-ink-soft dark:text-gp-ink-soft text-xl">
-                    arrow_outward
-                  </span>
-                </div>
-
-                <div className="mt-3 flex flex-col gap-1">
-                  <h3 className="text-lg font-semibold text-gp-ink-strong dark:text-gp-ink-strong leading-tight">
-                    {entity.title}
-                  </h3>
-                  {entity.subtitle && (
-                    <p className="text-xs font-medium text-gp-ink-muted dark:text-gp-ink-soft">
-                      {entity.subtitle}
-                    </p>
-                  )}
-                </div>
-
-                <p className="mt-3 text-sm text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed line-clamp-3">
-                  {entity.description}
-                </p>
-
-                {entity.tags && entity.tags.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {entity.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className={`px-2 py-1 rounded-full text-[11px] font-semibold border ${typePillClass[entity.type]}`}
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </article>
-            </EntityCardWrapper>
-          ))}
-        </section>
-      </main>
-    </div>
+      }
+    >
+      <SearchPageContent />
+    </Suspense>
   )
 }

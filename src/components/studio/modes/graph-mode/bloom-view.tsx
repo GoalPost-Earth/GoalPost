@@ -28,24 +28,14 @@ import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { useFocalEntity } from '@/contexts'
-import { useNvlTouchGestures } from '@/hooks'
+import { useIsDarkMode, useNvlTouchGestures } from '@/hooks'
 import { useRouteFocalScope } from '@/lib/focal-entity/use-route-focal-scope'
 import type { FocalEntityType } from '@/lib/focal-entity/types'
 import type { NvlRefHandle } from '@/components/graph/visualizer'
+import { lightColorFor, UNKNOWN_NODE_STYLE } from '@/lib/cypher-generator/node-style'
 import { GraphLoadingState } from './graph-loading-state'
 import { BloomLegend } from './bloom-legend'
-import {
-  SPACE_COLOR,
-  FIELD_COLOR,
-  PULSE_COLOR,
-  PERSON_COLOR,
-  STRUCTURAL_EDGE_COLOR,
-  RESONANCE_EDGE_COLOR,
-  INITIATED_EDGE_COLOR,
-  WEAVE_NODE_COLOR,
-  WEAVE_EDGE_COLOR,
-  CONNECTED_EDGE_COLOR,
-} from './bloom-palette'
+import { getBloomPalette } from './bloom-palette'
 import { useBloomOverlay, type BloomOverlay } from '../../bloom-overlay-context'
 import {
   useVisibleEntities,
@@ -83,7 +73,7 @@ const GraphVisualizer = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="relative w-full h-full bg-slate-950">
+      <div className="relative w-full h-full bg-gp-surface dark:bg-gp-surface-dark">
         <GraphLoadingState label="Preparing canvas" />
       </div>
     ),
@@ -251,6 +241,11 @@ const SPACE_SIZE = {
 
 const FIELD_SIZE = 36
 
+// The active field rendered as the hub its nested fields hang off in-field —
+// slightly larger than its children so the hierarchy reads at a glance
+// (GOAL-339).
+const FIELD_ANCHOR_SIZE = 42
+
 const PULSE_SIZE = 32
 
 const PERSON_SIZE = 30
@@ -292,6 +287,8 @@ interface FieldContextRecord {
   id: string
   name: string
   spaceKind: 'MeSpace' | 'WeSpace'
+  /** Direct parent context when this field is nested (GOAL-295). */
+  parentId: string | null
 }
 
 interface PulseRecord {
@@ -335,6 +332,12 @@ interface SpacePersonRecord {
 
 export const BloomView: FC = () => {
   const { setFocalEntity } = useFocalEntity()
+  // NVL paints to a <canvas> from resolved color strings, so it can't consume
+  // the `--gp-*` tokens every other surface themes with — the canvas palette
+  // is the documented exception that has to be picked in JS. Everything else
+  // in this component (backdrop, empty state, panels) uses tokens.
+  const isDark = useIsDarkMode()
+  const palette = getBloomPalette(isDark)
   const { overlay, clearOverlay } = useBloomOverlay()
   const { publish: publishVisibleEntities } = useVisibleEntities()
   const nvlRef = useRef<NvlRefHandle | null>(null)
@@ -448,6 +451,7 @@ export const BloomView: FC = () => {
       id: ctx.id,
       name: ctx.title || 'Untitled field',
       spaceKind,
+      parentId: firstOf(ctx.parentContext)?.id ?? null,
     }))
   }, [inSpace, spaceDetailsData])
 
@@ -472,6 +476,45 @@ export const BloomView: FC = () => {
       ...make(fieldDetailsData.coreValuePulses, 'coreValue', 'CoreValuePulse'),
     ]
   }, [inField, fieldDetailsData])
+
+  // Nested fields (GOAL-295 / GOAL-339): the active field's direct
+  // sub-contexts, rendered in-field as field bubbles hanging off a field
+  // anchor so members can see and drill into nesting without leaving the
+  // canvas. Read off the same GET_FIELD_CONTEXT_DETAILS payload the
+  // dashboard page warmed — Bloom never fetches its own data (ADR-011).
+  const subContexts = useMemo<Array<{ id: string; name: string }>>(() => {
+    if (!inField || !fieldDetailsData) return []
+    const context = fieldDetailsData.fieldContexts?.[0]
+    const list = (context?.subContexts ?? []) as Array<{
+      id: string
+      title?: string | null
+    }>
+    return list.map((sub) => ({
+      id: sub.id,
+      name: sub.title || 'Untitled field',
+    }))
+  }, [inField, fieldDetailsData])
+
+  // The active field itself, rendered as the anchor its nested fields hang
+  // off. Only materialized when there is nesting to show — a field with no
+  // sub-contexts keeps the classic free-floating pulse cloud.
+  const fieldAnchor = useMemo(() => {
+    if (!inField || !activeFieldId || subContexts.length === 0) return null
+    const context = fieldDetailsData?.fieldContexts?.[0]
+    if (!context) return null
+    return { id: activeFieldId, name: context.title || 'Untitled field' }
+  }, [inField, activeFieldId, subContexts, fieldDetailsData])
+
+  // Which space kind tints the in-field field bubbles. A field belongs to
+  // exactly one space; default to MeSpace while the people query resolves.
+  const inFieldSpaceKind = useMemo<'MeSpace' | 'WeSpace'>(() => {
+    const fieldCtx = (
+      fieldPeopleData as
+        | { fieldContexts?: Array<{ weSpace?: Array<unknown> }> }
+        | undefined
+    )?.fieldContexts?.[0]
+    return fieldCtx?.weSpace?.[0] ? 'WeSpace' : 'MeSpace'
+  }, [fieldPeopleData])
 
   // People to render alongside the pulses in-field: the parent space's
   // owner + every member of that space + any Person attached to the field.
@@ -555,10 +598,15 @@ export const BloomView: FC = () => {
               fieldContexts?: Array<{
                 people?: Array<{
                   id: string
-                  connectionEdges?: Array<{
-                    connectedPersonId?: string | null
-                    why?: string | null
-                  }> | null
+                  // GOAL-275: the connection graph reads through the single
+                  // type-level gate; null when this caller isn't authorized
+                  // for that person, in which case they contribute no edges.
+                  privateProfile?: {
+                    connectionEdges?: Array<{
+                      connectedPersonId?: string | null
+                      why?: string | null
+                    }> | null
+                  } | null
                 }>
               }>
             }
@@ -569,7 +617,7 @@ export const BloomView: FC = () => {
       const out: Array<{ fromId: string; toId: string; why: string | null }> = []
       for (const p of fieldCtx.people) {
         if (!p?.id) continue
-        for (const edge of p.connectionEdges ?? []) {
+        for (const edge of p.privateProfile?.connectionEdges ?? []) {
           const other = edge?.connectedPersonId
           if (!other || other === p.id) continue
           // CONNECTED_TO is undirected — key on the sorted id-pair so the same
@@ -703,14 +751,22 @@ export const BloomView: FC = () => {
   //   4. Default — the user's MeSpace + WeSpace cluster.
   const nodes: Node[] = useMemo(() => {
     if (overlay) {
+      // The overlay payload is styled server-side (cypher-generator/execute.ts)
+      // with the dark pastel palette — the executor can't know the viewer's
+      // theme. Remap to the light counterparts here so a chat "custom view"
+      // doesn't dissolve into a light backdrop. Only the *painted* color is
+      // remapped; `overlay.nodes[].color` keeps its original value, which is
+      // what `colorToInfoEntityType` resolves clicks against.
       return overlay.nodes.map(
-        (n) =>
-          ({
+        (n) => {
+          const color = n.color ?? UNKNOWN_NODE_STYLE.color
+          return {
             id: n.id,
             caption: n.caption ?? n.id,
-            color: n.color ?? '#cbd5e1',
+            color: isDark ? color : lightColorFor(color),
             size: n.size ?? 30,
-          }) as Node
+          } as Node
+        }
       )
     }
     if (inField) {
@@ -719,7 +775,7 @@ export const BloomView: FC = () => {
           ({
             id: pulse.id,
             caption: pulse.name,
-            color: PULSE_COLOR[pulse.pulseType],
+            color: palette.pulse[pulse.pulseType],
             size: PULSE_SIZE,
           }) as Node
       )
@@ -728,7 +784,7 @@ export const BloomView: FC = () => {
           ({
             id: person.id,
             caption: person.name,
-            color: PERSON_COLOR,
+            color: palette.person,
             size: PERSON_SIZE,
           }) as Node
       )
@@ -737,11 +793,39 @@ export const BloomView: FC = () => {
           ({
             id: weave.id,
             caption: weave.name,
-            color: WEAVE_NODE_COLOR,
+            color: palette.weaveNode,
             size: PULSE_SIZE,
           }) as Node
       )
-      return [...pulseNodes, ...personNodes, ...weaveNodes]
+      // Nested fields hang off the field anchor (GOAL-339). Children reuse
+      // the in-space field tint so the existing "Field context" legend row
+      // decodes them without a palette change.
+      const anchorNodes: Node[] = fieldAnchor
+        ? [
+            {
+              id: fieldAnchor.id,
+              caption: fieldAnchor.name,
+              color: palette.field[inFieldSpaceKind],
+              size: FIELD_ANCHOR_SIZE,
+            } as Node,
+          ]
+        : []
+      const subContextNodes = subContexts.map(
+        (sub) =>
+          ({
+            id: sub.id,
+            caption: sub.name,
+            color: palette.field[inFieldSpaceKind],
+            size: FIELD_SIZE,
+          }) as Node
+      )
+      return [
+        ...pulseNodes,
+        ...personNodes,
+        ...weaveNodes,
+        ...anchorNodes,
+        ...subContextNodes,
+      ]
     }
     if (inSpace) {
       // Hub-and-spoke: the space anchors the cluster, its field contexts and
@@ -751,7 +835,7 @@ export const BloomView: FC = () => {
             {
               id: spaceAnchor.id,
               caption: spaceAnchor.name,
-              color: SPACE_COLOR[spaceAnchor.kind],
+              color: palette.space[spaceAnchor.kind],
               size: SPACE_SIZE[spaceAnchor.kind],
             } as Node,
           ]
@@ -761,7 +845,7 @@ export const BloomView: FC = () => {
           ({
             id: ctx.id,
             caption: ctx.name,
-            color: FIELD_COLOR[ctx.spaceKind],
+            color: palette.field[ctx.spaceKind],
             size: FIELD_SIZE,
           }) as Node
       )
@@ -770,7 +854,7 @@ export const BloomView: FC = () => {
           ({
             id: p.id,
             caption: p.name,
-            color: PERSON_COLOR,
+            color: palette.person,
             size: PERSON_SIZE,
           }) as Node
       )
@@ -782,7 +866,7 @@ export const BloomView: FC = () => {
         ({
           id: space.id,
           caption: space.name,
-          color: SPACE_COLOR[space.type],
+          color: palette.space[space.type],
           size: SPACE_SIZE[space.type],
         }) as Node
     )
@@ -792,7 +876,7 @@ export const BloomView: FC = () => {
             {
               id: currentUserId,
               caption: 'You',
-              color: PERSON_COLOR,
+              color: palette.person,
               size: YOU_SIZE,
             } as Node,
           ]
@@ -800,10 +884,15 @@ export const BloomView: FC = () => {
     return [...youNode, ...spaceNodes]
   }, [
     overlay,
+    isDark,
+    palette,
     inField,
     pulses,
     persons,
     weaves,
+    subContexts,
+    fieldAnchor,
+    inFieldSpaceKind,
     inSpace,
     fieldContexts,
     spaces,
@@ -862,7 +951,7 @@ export const BloomView: FC = () => {
           from: r.sourceId,
           to: r.targetId,
           caption: r.label,
-          color: RESONANCE_EDGE_COLOR,
+          color: palette.resonanceEdge,
           width: 2,
         } as Relationship)
       }
@@ -898,7 +987,7 @@ export const BloomView: FC = () => {
           from: pulse.id,
           to: initiatorId,
           caption: 'initiated',
-          color: INITIATED_EDGE_COLOR,
+          color: palette.initiatedEdge,
           width: 1.5,
         } as Relationship)
       }
@@ -914,7 +1003,7 @@ export const BloomView: FC = () => {
             from: w.id,
             to: pid,
             caption: 'weaves',
-            color: WEAVE_EDGE_COLOR,
+            color: palette.weaveEdge,
             width: 1.5,
           } as Relationship)
         }
@@ -931,9 +1020,25 @@ export const BloomView: FC = () => {
           from: c.fromId,
           to: c.toId,
           caption: 'connected',
-          color: CONNECTED_EDGE_COLOR,
+          color: palette.connectedEdge,
           width: 1.5,
         } as Relationship)
+      }
+
+      // HAS_SUBCONTEXT — the field anchor out to each nested field
+      // (GOAL-339). Both endpoints are always rendered (the anchor only
+      // materializes when sub-contexts exist), so no visibility guard.
+      if (fieldAnchor) {
+        for (const sub of subContexts) {
+          edges.push({
+            id: `subcontext-${fieldAnchor.id}-${sub.id}`,
+            from: fieldAnchor.id,
+            to: sub.id,
+            caption: 'nested',
+            color: palette.structuralEdge,
+            width: 1.5,
+          } as Relationship)
+        }
       }
 
       return dedupe(edges)
@@ -946,15 +1051,33 @@ export const BloomView: FC = () => {
         ...inSpacePeople.map((p) => p.id),
       ])
       const edges: Relationship[] = []
+      // A nested field hangs off its parent field, not the space anchor, so
+      // the hierarchy reads correctly (GOAL-339 — previously every context
+      // rendered flat off the space even when nested). Falls back to the
+      // space edge if the parent isn't on canvas.
+      const contextIds = new Set(fieldContexts.map((f) => f.id))
       for (const ctx of fieldContexts) {
-        edges.push({
-          id: `has-${spaceAnchor.id}-${ctx.id}`,
-          from: spaceAnchor.id,
-          to: ctx.id,
-          caption: 'has',
-          color: STRUCTURAL_EDGE_COLOR,
-          width: 1.5,
-        } as Relationship)
+        const nestedParentId =
+          ctx.parentId && contextIds.has(ctx.parentId) ? ctx.parentId : null
+        edges.push(
+          nestedParentId
+            ? ({
+                id: `subcontext-${nestedParentId}-${ctx.id}`,
+                from: nestedParentId,
+                to: ctx.id,
+                caption: 'nested',
+                color: palette.structuralEdge,
+                width: 1.5,
+              } as Relationship)
+            : ({
+                id: `has-${spaceAnchor.id}-${ctx.id}`,
+                from: spaceAnchor.id,
+                to: ctx.id,
+                caption: 'has',
+                color: palette.structuralEdge,
+                width: 1.5,
+              } as Relationship)
+        )
       }
       for (const p of inSpacePeople) {
         if (!visibleIds.has(p.id)) continue
@@ -964,7 +1087,7 @@ export const BloomView: FC = () => {
           from: p.id,
           to: spaceAnchor.id,
           caption: owns ? 'owns' : 'member',
-          color: STRUCTURAL_EDGE_COLOR,
+          color: palette.structuralEdge,
           width: 1.5,
         } as Relationship)
       }
@@ -993,7 +1116,7 @@ export const BloomView: FC = () => {
           from: currentUserId,
           to: space.id,
           caption: owns ? 'owns' : 'member',
-          color: STRUCTURAL_EDGE_COLOR,
+          color: palette.structuralEdge,
           width: 1.5,
         } as Relationship
       })
@@ -1002,12 +1125,15 @@ export const BloomView: FC = () => {
     return EMPTY_RELATIONSHIPS
   }, [
     overlay,
+    palette,
     inField,
     resonances,
     pulses,
     persons,
     weaves,
     connections,
+    subContexts,
+    fieldAnchor,
     fieldDetailsData,
     inSpace,
     spaceAnchor,
@@ -1057,6 +1183,13 @@ export const BloomView: FC = () => {
             type: p.focalType as VisibleEntity['type'],
             source: 'bloom' as const,
           })),
+          // Nested fields on canvas resolve by name too (GOAL-339).
+          ...subContexts.map((sub) => ({
+            id: sub.id,
+            name: sub.name,
+            type: 'FieldContext' as VisibleEntity['type'],
+            source: 'bloom' as const,
+          })),
         ]
       }
       if (inSpace) {
@@ -1080,6 +1213,7 @@ export const BloomView: FC = () => {
     inField,
     pulses,
     persons,
+    subContexts,
     inSpace,
     fieldContexts,
     spaces,
@@ -1141,6 +1275,25 @@ export const BloomView: FC = () => {
         const weave = weaves.find((w) => w.id === id)
         if (weave) {
           dispatchOpenInfoDrawer({ type: 'PromiseWeave', id: weave.id, label })
+          return
+        }
+        // Nested field bubble — open the FieldContext drawer (rename lives
+        // behind its Edit CTA), same treatment as an in-space field node.
+        const sub = subContexts.find((sc) => sc.id === id)
+        if (sub) {
+          setFocalEntity({
+            type: 'FieldContext',
+            id: sub.id,
+            focusedAt: new Date().toISOString(),
+            source: 'manual',
+          })
+          dispatchOpenInfoDrawer({ type: 'FieldContext', id: sub.id, label })
+          return
+        }
+        // The field anchor is the field the canvas is already scoped to —
+        // no focal change, just its drawer.
+        if (fieldAnchor && id === fieldAnchor.id) {
+          dispatchOpenInfoDrawer({ type: 'FieldContext', id, label })
         }
         return
       }
@@ -1202,6 +1355,8 @@ export const BloomView: FC = () => {
       pulses,
       persons,
       weaves,
+      subContexts,
+      fieldAnchor,
       inSpace,
       spaceAnchor,
       inSpacePeople,
@@ -1253,6 +1408,15 @@ export const BloomView: FC = () => {
         return
       }
       if (inField) {
+        // A nested field is a navigable entity — a single click drills into
+        // it, same as an in-space field click (GOAL-339). Everything else
+        // in-field keeps drawer-on-click.
+        const sub = subContexts.find((sc) => sc.id === id)
+        if (sub) {
+          dispatchCloseInfoDrawer()
+          router.push(`/protected/dashboard/field-context/${sub.id}`)
+          return
+        }
         handleNodeClick(node)
         return
       }
@@ -1279,6 +1443,7 @@ export const BloomView: FC = () => {
     [
       overlay,
       inField,
+      subContexts,
       inSpace,
       fieldContexts,
       spaces,
@@ -1446,11 +1611,16 @@ export const BloomView: FC = () => {
   // the user drags a node — `restart()` is what that drag implicitly does.
   const lastKickedScopeRef = useRef<string | null>(null)
   useEffect(() => {
-    if (lastKickedScopeRef.current === scopeKey) return
+    // Key on the node count as well as the scope: a node arriving in the
+    // SAME scope (e.g. a nested field created from the action bar landing
+    // via the background refetch) must also wake the simulation, or the
+    // new bubble sits wherever NVL dropped it without settling (GOAL-339).
+    const kickKey = `${scopeKey}|${nodes.length}`
+    if (lastKickedScopeRef.current === kickKey) return
     if (nodes.length === 0) return
     const ref = nvlRef.current
     if (!ref || typeof ref.restart !== 'function') return
-    lastKickedScopeRef.current = scopeKey
+    lastKickedScopeRef.current = kickKey
     // A short delay lets the NVL wrapper finish wiring up the new nodes
     // (`addAndUpdateElementsInGraph` happens in a separate effect) before
     // we restart the simulation against them. We retry with a longer
@@ -1574,30 +1744,53 @@ export const BloomView: FC = () => {
         : spaces.length === 0)
 
   return (
-    <div className="relative w-full h-full bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 flex">
+    <div className="relative w-full h-full bg-gp-surface dark:bg-gp-surface-dark flex">
+      {/* Themed canvas backdrop. NVL renders on a transparent canvas, so this
+          is what the graph floats over. Built from `gp-*` tokens via
+          color-mix so it re-tints with light/dark AND with every theme
+          variant — it used to be a hardcoded slate-950 gradient, which is why
+          Bloom stayed night-dark while the rest of the app was in light mode.
+          Absolutely positioned, so it takes no part in the flex row. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 gp-dot-grid opacity-40 dark:opacity-20"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `
+            radial-gradient(at 18% 20%, color-mix(in srgb, var(--gp-primary) 10%, transparent) 0, transparent 55%),
+            radial-gradient(at 82% 16%, color-mix(in srgb, var(--gp-accent-glow) 10%, transparent) 0, transparent 55%),
+            radial-gradient(at 78% 84%, color-mix(in srgb, var(--gp-goal) 9%, transparent) 0, transparent 55%),
+            radial-gradient(at 16% 86%, color-mix(in srgb, var(--gp-resource) 10%, transparent) 0, transparent 55%)
+          `,
+        }}
+      />
+
       <div ref={canvasWrapperRef} className="flex-1 relative">
         {!overlay && loading && nodes.length === 0 ? (
           <GraphLoadingState
             label="Bloom is gathering"
             subtitle={
               inField
-                ? 'Native NVL view of this field’s pulses.'
+                ? 'A live canvas of this field’s pulses.'
                 : inSpace
-                  ? 'Native NVL view of this space’s field contexts.'
-                  : 'Native NVL view of your spaces.'
+                  ? 'A live canvas of this space’s field contexts.'
+                  : 'A live canvas of your spaces.'
             }
           />
         ) : isEmpty ? (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
-            <span className="material-symbols-outlined text-5xl text-white/20 mb-3">
+            <span className="material-symbols-outlined text-5xl text-gp-ink-soft/70 mb-3">
               {inField ? 'graphic_eq' : inSpace ? 'category' : 'hub'}
             </span>
-            <p className="text-sm text-white/55 max-w-md">
+            <p className="text-sm text-gp-ink-muted max-w-md">
               {inField
-                ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here as a native NVL node.'
+                ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here on the canvas.'
                 : inSpace
-                  ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here as a native NVL node.'
-                  : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here as native NVL nodes.'}
+                  ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here on the canvas.'
+                  : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here on the canvas.'}
             </p>
           </div>
         ) : (
@@ -1630,19 +1823,19 @@ export const BloomView: FC = () => {
           persisted entity behind them). Real node clicks open the
           unified EntityInfoDrawer mounted in CanvasHost. */}
       {selectedNode && overlay && (
-        <div className="w-80 h-full bg-slate-900/85 backdrop-blur-xl border-l border-white/10 overflow-y-auto z-20 p-5">
+        <div className="w-80 h-full bg-gp-glass-bg backdrop-blur-xl border-l border-gp-glass-border overflow-y-auto z-20 p-5">
           <div className="flex items-start justify-between mb-3">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/45">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted">
                 Node
               </p>
-              <h3 className="mt-1 text-xl font-bold text-white">
+              <h3 className="mt-1 text-xl font-bold text-gp-ink-strong">
                 {selectedNode.caption}
               </h3>
             </div>
             <button
               onClick={() => setSelectedNode(null)}
-              className="text-white/40 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors cursor-pointer"
+              className="gp-menu-item shrink-0 p-1 rounded-full cursor-pointer"
               aria-label="Close details"
             >
               <span className="material-symbols-outlined text-lg leading-none">
@@ -1650,13 +1843,13 @@ export const BloomView: FC = () => {
               </span>
             </button>
           </div>
-          <div className="flex items-center gap-2 text-sm text-white/70 mb-4">
+          <div className="flex items-center gap-2 mb-4">
             <span
               className="inline-block h-3 w-3 rounded-full"
               style={{ backgroundColor: selectedNode.color }}
               aria-hidden="true"
             />
-            <span className="text-xs text-white/60 uppercase tracking-wider">
+            <span className="text-xs text-gp-ink-muted uppercase tracking-wider">
               From chat
             </span>
           </div>

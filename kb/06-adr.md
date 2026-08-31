@@ -142,6 +142,23 @@
 - Filters check ownership (`OWNS` relationship) and/or membership (`HAS_MEMBER` chain)
 - `@private` fields (password, tokens) are excluded from all queries
 - Computed fields use `@cypher` directives for complex access patterns
+- **Prefer a TYPE-level filter over a field-level one.** `@neo4j/graphql` v6
+  expands a field-level `@authorization` filter once per gated field **in the
+  selection set**, with no deduplication, and Neo4j's planning cost is
+  super-linear in the resulting predicate count. The GOAL-275 Person PII rule,
+  copied onto 14 fields, compiled to 348 `EXISTS` and took ~31 s to *plan* —
+  past the 60 s `maxDuration` on `/api/graphql`. A type-level filter is emitted
+  exactly once no matter how many fields are selected. When a subset of a
+  node's fields needs gating, put that subset on its own type over the same
+  `@node(labels:)` (locked down with `@query(read: false, aggregate: false)` and
+  `@mutation(operations: [])`) and reach it from the open type via a `@cypher`
+  field — see `Person.privateProfile` → `PersonPrivateProfile`.
+- **Do not put a `@cypher` field inside an `@authorization` filter.** The
+  library emits it as `MATCH (n) CALL { … } WITH * WHERE <your where>`, and
+  Neo4j will not push a predicate below a `CALL` subquery, so the gate runs for
+  every node of that label instead of the one the caller asked for (measured:
+  168 → 146,453 dbHits on a single-row lookup). Declarative filters inline into
+  the `WHERE` and keep the index seek.
 
 **Why:** Declarative authorization at the schema level is harder to bypass than middleware. The `@neo4j/graphql` library automatically applies filters to every query, making it impossible to accidentally return unauthorized data.
 
@@ -211,6 +228,10 @@
 
 ## ADR-014: Doc Ingestion Uses a Dedicated Extraction Endpoint, Not the Chat Route
 
+> **Superseded in part by ADR-018 (GOAL-292):** the endpoint no longer runs the
+> pipeline inline — it enqueues, and a cron worker extracts. The "dedicated
+> endpoint, not the chat route" decision below still holds.
+
 **Decision:** Document ingestion runs through `POST /api/ingest/document/{presign,process}` — not through the existing `/api/chat/simulation` route. The process endpoint loads the blob + the FieldContext roster, invokes its own extraction model, and auto-executes the proposed write tool calls in a fresh ingest `ConversationThread`.
 
 **Why:**
@@ -242,7 +263,7 @@
 - Blob storage is now a first-class dependency in an otherwise Neo4j-only stack: new env vars (`AWS_*`, `INGEST_BLOB_BACKEND`), new failure modes, user-driven cleanup.
 - `Document` has an `@authorization` directive that inherits from the parent Space — same pattern as `FieldContext`.
 - `EXTRACTED_FROM` is load-bearing: removing or renaming it is a graph migration.
-- Documents are **never auto-deleted**, even on full-rejection of extracted entities. Cleanup is user-driven via `deleteDocument`; the Document node and its blob drop together, but previously approved Persons and FieldPulses survive (their `EXTRACTED_FROM` edges drop with the Document).
+- Documents are **never auto-deleted**, even on full-rejection of extracted entities. Cleanup is user-driven via `deleteDocument`; the Document node and its blob drop together, but previously approved Persons and FieldPulses survive (their `EXTRACTED_FROM` edges drop with the Document). Because surviving pulses carry the document's durable download locator in `location` (GOAL-283/316), the delete transaction also nulls exactly those `location` values that parse to the deleted document's id and logs the clearing (GOAL-321); the download route sends browser navigations for an unresolvable document to `/document-unavailable` instead of a raw JSON 404.
 
 ## ADR-016: Extracted Organizations Are First-Class; Related People/Orgs Link via MENTIONED_IN (GOAL-298)
 
@@ -260,3 +281,180 @@
 - New write tools `create_organization` + `link_entity_to_pulse` in `lib/chat/hitl.ts`; the ingest orchestrator resolves each link's endpoints by name/title from entities created earlier in the same run.
 - The assistant's cypher-generator vocab (`schema-context.ts`) and the Bloom anchor/style map (`execute.ts`) learned `Organization` / `HAS_ORGANIZATION` / `MENTIONED_IN` — a new label/edge is invisible to the assistant until whitelisted (kb/07 Rule 9).
 - **Deferred:** organizations carry no embedding / vector index yet (resonance is pulse↔pulse today), so semantic org discovery is a follow-up. Person embeddings for extracted non-author people are covered by the existing `discover-resonances` backfill.
+
+## ADR-017: Nested FieldContexts Are a Pure Overlay; the Root Field Is the Resonance Scope (GOAL-295)
+
+**Decision:** FieldContexts can nest via a `HAS_SUBCONTEXT` self-relationship
+(`(parent)-[:HAS_SUBCONTEXT]->(child)`), capped at 5 levels. The hierarchy is
+a **pure overlay**: every context — nested or not — keeps its own direct
+`(Space)-[:HAS_CONTEXT]->` edge. And resonance discovery treats the **root
+field's whole subtree as one scope**: sub-contexts organize a growing field,
+they never partition its resonance.
+
+**Why:**
+
+- **`HAS_CONTEXT` is the universal visibility anchor.** 40+ call sites —
+  every `@authorization` filter, `viewablePulsePredicate`,
+  `accessible-contexts`, resonance sweeps, the bloom generator's fail-closed
+  Space anchoring, and the GOAL-319 soft-delete edge re-point — assume
+  `(Space)-[:HAS_CONTEXT]->(FieldContext)` is one hop. Keeping the edge on
+  children means none of them change: a sub-context is readable/writable
+  exactly like its parent by construction, and soft delete keeps hiding a
+  context by re-pointing that one edge.
+- **The field stays the resonance boundary.** The motivating case (several
+  hundred documents in one "AI adoption" field) needs *navigation* to split,
+  not *meaning*: a pulse filed under a sub-context must still resonate with
+  the rest of the field. So `findSimilarPulsesInContext` searches the scoped
+  context's subtree, per-pulse discovery climbs to the root context first,
+  and the space sweep enumerates only root contexts (children would be
+  double-processed otherwise). `resonancesInContext` likewise rolls up the
+  subtree.
+- **Invariants need a custom write path.** Single parent, same Space, no
+  cycles, depth cap — none are expressible through generated nested-connect
+  mutations, so the SDL declares `parentContext`/`subContexts` with
+  `nestedOperations: []` and all writes flow through `createSubFieldContext`
+  / `moveFieldContext` (`src/lib/field-context/sub-context.ts`), which gate
+  on `canEditContent` and write the activity Log atomically.
+
+**Consequences:**
+
+- Space-level listings now contain the whole hierarchy; surfaces that want
+  top-level fields must filter on "no incoming `HAS_SUBCONTEXT`" (the Space
+  dashboard does this client-side via `parentContext`).
+- Subtree traversals (`HAS_SUBCONTEXT*0..N`) must filter
+  `deletedAt IS NULL`: soft delete cascades downward (GOAL-319 parity), but
+  a child soft-deleted on its own remains reachable through the surviving
+  overlay edge.
+- `HAS_SUBCONTEXT` is whitelisted in the cypher-generator vocabulary
+  (kb/07 Rule 9); no new auth anchor is needed in `execute.ts` because every
+  context still anchors through `HAS_CONTEXT`.
+- Depth cap 5 keeps every variable-length traversal bounded (`*0..10` in
+  queries for headroom).
+
+---
+
+## ADR-018: Document Ingestion Is Asynchronous, With `Document.status` As the Queue (GOAL-292)
+
+**Context:** ADR-014 gave ingestion its own endpoint, and that endpoint ran the
+whole pipeline inline: fetch the blob back, LLM entity extraction, LLM
+summarization, Neo4j entity writes. Every 504 observed in the prototype traced
+to it. Raising `maxDuration` 60 → 300 bought headroom but a slow enough
+extraction still blows the ceiling, and a 300-second synchronous request is a
+poor experience regardless.
+
+**Decision:** the request enqueues; a Vercel Cron worker extracts.
+`POST /api/ingest/document/process` gates on `canEditContent`, anchors the
+`Document` as `PENDING`, and returns **202** (measured warm median ~1.4 s).
+`/api/cron/process-document-ingestion` runs every minute, claims PENDING
+documents, and runs the pipeline. The UI polls `Document.status`.
+
+**The queue is `Document.status` — there is no job node.** The document already
+carries everything a worker needs (`blobKey`, `mimeType`, `userHint`, parent
+FieldContext, uploader), so a separate node would duplicate that state and
+invite the two to drift. Considered and rejected: the provisioned Upstash Redis
+(job state would live apart from the graph data it mutates, complicating
+resumability and the `:Log` audit trail) and the dormant BullMQ setup in
+`src/lib/jobs/` (needs a long-lived worker process, which serverless has no
+place to host).
+
+**Authorization crosses the queue boundary via the `UPLOADED_BY` edge.** The
+worker holds no JWT, so the enqueue-time decision is persisted as that edge and
+the worker acts as the uploader. It is **re-validated live at claim time** — the
+gap can be minutes, and the uploader may have been removed from the Space or
+demoted to GUEST — and every individual entity write re-gates itself inside
+`executeAuthorizedWriteTool` regardless.
+
+**Consequences:**
+
+- Claiming needs a lock-forcing write before its status guard. Neo4j is
+  read-committed, and an index seek only becomes `Locking` when a write follows,
+  so the obvious `MATCH (d {status:'PENDING'}) SET d.status='PROCESSING'` loses
+  updates and *every* overlapping run wins (measured 11/12 trials). See
+  `kb/04-state-machines.md`.
+- A worker killed at the function ceiling leaves a claim behind, so stalled
+  claims are reclaimed after 15 minutes and abandoned to `FAILED` after 3
+  attempts. Nothing may spin forever.
+- Enqueue got cheap, which removed the synchronous design's accidental
+  self-throttle: one account may now hold at most 20 documents in flight (429
+  `queue_full` beyond that), and the worker drains 4 per tick.
+- Failures are surfaced through `Document.status = FAILED` + a member-safe
+  `statusMessage`, not an HTTP error, because the member is no longer waiting on
+  a response. Re-extract (GOAL-241) remains the recovery path.
+- `Document` lost its generated GraphQL CRUD (`@mutation(operations: [])`):
+  with `status` writable, any Space member could re-queue ingestion at will.
+- Documents predating this story have no `status`; every read coalesces the
+  absence to `COMPLETE` so the backlog is never re-ingested.
+
+---
+
+## ADR-019: Bulk Article Import Is Asynchronous, With a Job Node As the Queue (GOAL-326)
+
+**Context:** `POST /api/import/articles` (GOAL-317) walked all 300 rows inside
+the request under `maxDuration = 300`, and scheduled the embedding/resonance
+sweep in a fire-and-forget `after()` callback. A large sheet, a slow batch, or
+several concurrent field imports pushed the request toward the serverless
+ceiling; the sweep — real OpenAI spend — was neither durable, retried, nor
+observable. Identical failure mode to the one ADR-018 fixed for document
+ingestion, so this is the same fix: the request enqueues, a Vercel Cron worker
+processes.
+
+**Decision:** `POST /api/import/articles` authenticates, rate-limits, validates,
+gates on `canEditContent`, anchors an `:ArticleImportJob` as `PENDING`, and
+returns **202** with a job id. `/api/cron/process-article-imports` runs every
+minute, claims jobs, mints one pulse per row through
+`executeAuthorizedWriteTool`, and lands them in `COMPLETE`/`FAILED`. The modal
+polls `GET /api/import/articles/<jobId>`.
+
+**The queue is a job node, unlike ADR-018.** Document ingestion had no job node
+because the `Document` already carried everything a worker needed. A bulk import
+has no such entity — the rows exist only in the request — so something has to
+hold them. Considered and rejected: the provisioned Upstash Redis (a 300-row
+payload can exceed its per-record ceiling at the field caps we accept, and job
+state living apart from the graph it mutates would split the resume cursor from
+the `:Log` audit trail it has to stay consistent with) and reusing `FieldPulse`
+rows as their own queue (a half-imported sheet would be indistinguishable from
+real content, and a failed row has no node to record itself on).
+
+**The job node is deliberately absent from the GraphQL schema**, like
+`:LlmUsage`. Generated CRUD roots over a status machine are exactly the hole
+ADR-018 had to close on `Document` with `@mutation(operations: [])`; not opening
+it is cheaper than closing it. Status is read through a requester-scoped REST
+GET beside the POST that creates the job.
+
+**Authorization crosses the queue boundary via the `REQUESTED_BY` edge**, and is
+re-validated live at claim time — the requester may have been removed from the
+Space or demoted to GUEST in the minutes since. Every row write re-gates itself
+inside `executeAuthorizedWriteTool` regardless, and writes its `:Log` attributed
+to the requester, so moving work off the request path does not weaken the audit
+trail.
+
+**Consequences:**
+
+- Claiming reuses the document queue's lock-forcing write before its status
+  guard, for the same read-committed reason. See `kb/04-state-machines.md`.
+- Resume is a first-class path, not an error path: per-row outcomes are appended
+  before the next row starts, `size(rowOutcomes)` is the cursor, and a run that
+  is out of time requeues itself rather than being killed at the ceiling. The
+  summary is recomputed from those outcomes on every read, so an interrupted job
+  reports the same ROW counts as a straight-through run. People counts are
+  per-run by design — the author cache starts cold on a resume, and making them
+  exact would mean persisting an author identity on every row.
+- Every outcome append is fenced on the claim, and a rejected append stops the
+  run — otherwise a zombie worker would double-write alongside the new claimant.
+- Enqueue got cheap, which removed the synchronous design's accidental
+  self-throttle: one account may hold 5 jobs in flight (429 `queue_full`) on top
+  of the 10/hour `bulk-import` rate limit. The in-flight cap lives in the graph
+  precisely because that limiter fails OPEN when Redis is unreachable.
+- Failures surface as `status = FAILED` plus member-safe `statusMessage`, not an
+  HTTP error, because the member is no longer waiting on a response. Retry is
+  re-uploading the sheet, which is safe: the write tools enrich rather than
+  duplicate.
+- The stored payload is dropped at every terminal status — the outcomes are what
+  the member reads from then on, and a second copy of their spreadsheet in the
+  graph buys nothing. The outcomes still hold the member's article titles, so a
+  finished job is itself dropped 30 days after it lands; jobs are also
+  hard-deleted with their FieldContext at the 90-day purge.
+- The in-flight cap is enforced *inside* the enqueue write, not by a read before
+  it. A count-then-create is a check-then-act, and it is precisely the bound
+  that has to survive a Redis outage (`bulk-import` fails open), so it must not
+  evaporate under concurrency.

@@ -8,7 +8,10 @@ export const CREATE_PEOPLE_MUTATION = graphql(`
       people {
         id
         name
-        email
+        privateProfile {
+          id
+          email
+        }
         ownsSpaces {
           id
           name
@@ -25,16 +28,23 @@ export const UPDATE_PERSON_MUTATION = graphql(`
       people {
         id
         name
-        email
         firstName
         lastName
-        phone
-        pronouns
-        traits
         photo
-        location
-        passions
-        fieldsOfCare
+        # The PII write path is unchanged — these stay settable properties on
+        # Person; only the READ moves behind the single GOAL-275 gate. This
+        # mutation is self-gated to the caller's own node, so privateProfile
+        # always resolves here.
+        privateProfile {
+          id
+          email
+          phone
+          pronouns
+          traits
+          location
+          passions
+          fieldsOfCare
+        }
         ownsSpaces {
           id
           name
@@ -69,12 +79,16 @@ export const UPDATE_PERSON_PULSE_MUTATION = graphql(`
     ) {
       success
       message
+      # This person comes from a custom resolver (person-pulse-resolver.ts),
+      # which returns a plain object rather than going through Cypher
+      # translation — so it exposes only the plain scalars. The caller reads
+      # success/message and refetches; the updated description arrives with
+      # that refetch through the gated privateProfile.
       person {
         id
         firstName
         lastName
         name
-        description
       }
     }
   }

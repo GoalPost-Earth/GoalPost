@@ -205,15 +205,30 @@ async function getFocalRecord(
       return rows?.[0]?.record ?? null
     }
     case 'FieldContext': {
+      // GOAL-295: contexts can be nested. Surface the parent chain and the
+      // live sub-contexts (titles included — kb/07 Rule 3) so the assistant
+      // describes a nested field as sitting inside its parent field, not as
+      // hanging directly off the Space.
       const cypher = `
         MATCH (c:FieldContext {id: $id})
         OPTIONAL MATCH (s:Space)-[:HAS_CONTEXT]->(c)
         WITH c, head(collect(s)) AS s
+        OPTIONAL MATCH (parent:FieldContext)-[:HAS_SUBCONTEXT]->(c)
+        WITH c, s, head(collect(parent)) AS parent
+        OPTIONAL MATCH (c)-[:HAS_SUBCONTEXT]->(child:FieldContext)
+        WHERE child.deletedAt IS NULL
+        WITH c, s, parent,
+             [ch IN collect(DISTINCT child) | { id: ch.id, title: ch.title }] AS subContexts
         RETURN {
           id: c.id,
           title: c.title,
           emergentName: c.emergentName,
           createdAt: c.createdAt,
+          parentContext: CASE WHEN parent IS NULL THEN null ELSE {
+            id: parent.id,
+            title: parent.title
+          } END,
+          subContexts: subContexts,
           space: CASE WHEN s IS NULL THEN null ELSE {
             id: s.id,
             name: s.name,
@@ -807,7 +822,7 @@ export async function buildSimulationChatTools(
         logToolDispatch('search_person', ctx, { name })
         try {
           const graph = await initGraph()
-          const personTool = createPersonSearchTool(graph)
+          const personTool = createPersonSearchTool(graph, ctx.currentUserId)
           const result = await personTool.invoke({ name })
           return JSON.parse(result)
         } catch (error) {
@@ -1407,7 +1422,7 @@ export async function buildSimulationChatTools(
 
     query_for_bloom: tool({
       description:
-        'Pull specific graph entities (spaces, field contexts, pulses, people, resonances) into the Bloom canvas so the user can SEE them. Use whenever the user wants to visualize, show, bring up, pull up, or see something in the graph — especially when the conversation has drifted to an entity that is not currently on the canvas. Provide a precise natural-language intent that names entity types and any names, titles, or keywords from the conversation. The tool generates safe read-only Cypher under the hood, runs it scoped to the current user, and returns NVL-shaped nodes and relationships. When this returns found=true the canvas renders the graph AUTOMATICALLY from the tool result — do NOT copy the nodes/relationships into your reply or emit any JSON/marker; just narrate in plain English what was pulled up, by name. Never paste the Cypher. Never mention raw ids.',
+        'Pull specific graph entities (spaces, field contexts, pulses, people, resonances) into the Bloom canvas so the user can SEE them. Use whenever the user wants to visualize, show, bring up, pull up, or see something in the graph — especially when the conversation has drifted to an entity that is not currently on the canvas. Provide a precise natural-language intent that names entity types and any names, titles, or keywords from the conversation. The tool generates safe read-only Cypher under the hood, runs it scoped to the current user, and returns canvas-ready nodes and relationships. When this returns found=true the canvas renders the graph AUTOMATICALLY from the tool result — do NOT copy the nodes/relationships into your reply or emit any JSON/marker; just narrate in plain English what was pulled up, by name. Never paste the Cypher. Never mention raw ids.',
       inputSchema: z.object({
         intent: z
           .string()

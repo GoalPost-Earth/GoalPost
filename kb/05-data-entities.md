@@ -15,6 +15,7 @@ All entities in GoalPost — their fields, relationships, and storage details. D
 Person ──OWNS──▶ Space (MeSpace / WeSpace)
 Space ──HAS_MEMBER──▶ SpaceMembership ──IS_MEMBER──▶ Person
 Space ──HAS_CONTEXT──▶ FieldContext
+FieldContext ──HAS_SUBCONTEXT──▶ FieldContext   (GOAL-295; nested sub-context — pure hierarchy overlay, the child ALSO keeps its own Space HAS_CONTEXT edge)
 FieldContext ──HAS_PULSE──▶ FieldPulse (GoalPulse / ResourcePulse / StoryPulse / CarePulse / CoreValuePulse)
 FieldContext ──HAS_RESONANCE──▶ ResonanceLink
 ResonanceLink ──SOURCE──▶ FieldPulse
@@ -79,6 +80,45 @@ The `Person` node is the single entity for all humans in the system. Adjacent la
 | signupDate   | datetime | When they registered                   |
 
 **Auth fields (private):** `password`, `refreshToken`, `refreshTokenExp`, `refreshTokenRevoked`, `authId`, `inviteTokenHash`, `inviteTokenExpires`, `resetTokenHash`, `resetTokenExpires` — the two single-use token fields store sha256(rawToken); the raw token only ever lives in the outgoing email URL.
+
+**Reading PII — go through `privateProfile` (GOAL-275).** In GraphQL, the
+`Person` type exposes the open directory identity — `id`, `firstName`,
+`lastName`, `name`, `photo`, `avatar`, `status` — which any authenticated user
+may read so people stay findable by name across Spaces (it also still exposes
+onboarding state, timestamps, and the relationship fields, each auth-filtered
+by its own target type). Every PII / narrative scalar (`email`, `phone`, `pronouns`, `location`, `gender`, `description`,
+`careManual`, `favorites`, `passions`, `traits`, `fieldsOfCare`, `interests`)
+plus `connections` / `connectionEdges` is readable **only** through
+`Person.privateProfile`, which resolves to a `PersonPrivateProfile` over the
+same node behind a single type-level `@authorization` filter:
+
+```graphql
+people(where: { id_EQ: $id }) {
+  id  name  photo              # always readable
+  privateProfile {             # null when the caller is not authorized
+    email  description  traits
+  }
+}
+```
+
+A caller is authorized when they are the person, created them (`CREATED_BY`),
+share a Space with them, or can view a FieldContext holding them
+(`HAS_PERSON`). Otherwise `privateProfile` comes back **null** — the Person row
+itself still resolves, so surfaces render the directory identity rather than a
+not-found. See `kb/02-user-roles.md` for the branch list.
+
+These scalars are still ordinary node properties: writes (`updatePeople`,
+`updatePersonPulse`) are unchanged, and server-side Cypher reads them directly.
+Only the GraphQL read path moved. None of them is **filterable**, `email`
+included — the login bootstrap that needed `email_EQ` now keys on `id_EQ`,
+because the generated `email_STARTS_WITH` sibling was an account-enumeration
+oracle (see `kb/02-user-roles.md`). Raw-Cypher readers get no gate at all and
+must restate the branch table themselves; `person-search.tool.ts` is the worked
+example. Do **not** re-add a field-level `@authorization` to `Person` for a
+new sensitive field — add it to `PersonPrivateProfile` instead; the type-level
+rule compiles once, while a field-level rule is re-expanded per selected field
+and blew the 60 s `/api/graphql` ceiling (guarded by
+`person-pii-gate-plan-size.test.ts`).
 
 **Onboarding fields:** `onboardingCurrentStepIndex`, `onboardingCompletedSteps`, `onboardingIsCompleted`, `onboardingSkipped`
 
@@ -176,7 +216,21 @@ Same fields as MeSpace.
 
 **Relationships:**
 
-- `HAS_CONTEXT` ← Space (MeSpace or WeSpace) — live contexts only
+- `HAS_CONTEXT` ← Space (MeSpace or WeSpace) — live contexts only. **Every**
+  context carries this edge, including nested sub-contexts (GOAL-295): the
+  hierarchy is an overlay, never a replacement for the Space anchor that all
+  auth / read / soft-delete / discovery surfaces traverse.
+- `HAS_SUBCONTEXT` → FieldContext — nested sub-context (GOAL-295). Invariants
+  (enforced only by the custom `createSubFieldContext` / `moveFieldContext`
+  mutations via `src/lib/field-context/sub-context.ts` — the SDL declares
+  `parentContext`/`subContexts` with `nestedOperations: []` so generated
+  mutations cannot write the edge): at most ONE parent per context; parent and
+  child in the SAME Space; no cycles; depth capped at `MAX_SUBCONTEXT_DEPTH`
+  (5, root = depth 0). Resonance discovery treats the ROOT field's subtree as
+  one scope — sub-contexts organize, they do not partition resonance
+  (ADR-017). Subtree traversals must filter `deletedAt IS NULL` (a child can
+  be soft-deleted on its own while the parent lives, and the overlay edge
+  survives soft delete).
 - `HAS_DELETED_CONTEXT` ← Space — a soft-deleted context (GOAL-319). Replaces
   `HAS_CONTEXT` in the delete transaction. Because every read surface (GraphQL
   `@authorization` filters, `viewablePulsePredicate`, resonance discovery, the
@@ -199,10 +253,12 @@ Same fields as MeSpace.
 SOFT delete — one transaction (shared orchestrator
 `src/lib/field-context/soft-delete-field-context.ts`, used by both the
 custom GraphQL `deleteFieldContext` mutation and the assistant's
-`delete_field_context` HITL tool) that stamps `deletedAt` on the context and
-its pulses, hard-deletes ResonanceSuggestions touching them (the suggestion
-inbox is Space-anchored and regenerable), re-points `HAS_CONTEXT` →
-`HAS_DELETED_CONTEXT`, and writes the activity Log. **Shared pulses are
+`delete_field_context` HITL tool) that collects the context's whole
+sub-context subtree (`HAS_SUBCONTEXT*`, GOAL-295), stamps `deletedAt` on
+every subtree context and their pulses, hard-deletes ResonanceSuggestions
+touching them (the suggestion inbox is Space-anchored and regenerable),
+re-points each subtree member's `HAS_CONTEXT` → `HAS_DELETED_CONTEXT`, and
+writes the activity Log. **Shared pulses are
 protected:** a pulse `HAS_PULSE`-attached to another LIVE context is neither
 stamped nor purged — it stays fully live there and is hard-deleted only with
 its LAST holding context (the same exclusive-holder rule as Organizations). Requires Space owner or
@@ -334,6 +390,29 @@ production also retain `:CoreValue` for traceability — see
 
 Minimal additional fields beyond the base FieldPulse interface.
 
+> **Any query that filters for values MUST test BOTH markers** —
+> `WHERE p:CoreValuePulse OR p:CoreValue` — and must never match
+> `(:CoreValuePulse)` alone. An environment that predates the GOAL-287 relabel
+> holds `["FieldPulse", "StoryPulse", "CoreValue"]` with **no**
+> `:CoreValuePulse` at all, so a single-label match returns nothing there while
+> the member can plainly see their values. Two live implementations to keep in
+> step: `typeFilterCypher()` / `pulseProjectionCypher()` in
+> `src/modules/agent/tools/pulse/pulse.service.ts` (the `search_pulses` path),
+> and `SCHEMA_DOC` + `ALLOWED_LABELS` in
+> `src/lib/cypher-generator/schema-context.ts` (the `query_for_bloom` path).
+> The two drifting apart — text search finding values the graph canvas swore
+> did not exist — was GOAL-333.
+>
+> Do not *anchor* on `(:CoreValue)`: only `FieldPulse.id` carries a uniqueness
+> constraint (`scripts/init-db.js`), so a bare `:CoreValue` pattern is a label
+> scan. Match `(:FieldPulse)` and filter with the label predicate.
+>
+> Because the subtype label present on a legacy value is `:StoryPulse`, any
+> code deriving a display type or colour from labels must check the value
+> marker **before** `:StoryPulse` (see `styleFor` in
+> `src/lib/cypher-generator/node-style.ts`). Neo4j gives no ordering guarantee
+> on `labels`, so never rely on `labels[0]`.
+
 ---
 
 ### ResonanceLink
@@ -374,15 +453,22 @@ navigable neighbourhood. Modelled as a reified connector node exactly like
 ResonanceLink — its own node type, **not** a pulse subtype — and surfaced
 within a FieldContext via a `HAS_WEAVE` context edge, directly analogous to how
 ResonanceLink is surfaced via `HAS_RESONANCE`. Originates in Steve's relational
-"map" (see `docs/promise-weave-design-spike.md`, GOAL-266). Starting-point
-scope: created by the prod→dev migration to wrap each migrated care point.
+"map" (see `docs/promise-weave-design-spike.md`, GOAL-266).
+
+Three things author weaves: the prod→dev migration (which wrapped each migrated
+care point — the starting point), a member from the field context's "Promise
+weaves" section (GOAL-341), and AI discovery (GOAL-342), whose proposals land
+`proposed` and need confirming.
 
 | Field      | Type     | Notes                                              |
 | ---------- | -------- | -------------------------------------------------- |
 | id         | string   | Unique, `weave_*` prefix                           |
 | title      | string   | Optional — human label (defaults to the woven pulse's title) |
-| status     | string   | Optional — `active` for migration-built weaves     |
+| description| string   | Optional — why these belong together; a member's note, or the evidence AI cited |
+| status     | string   | `proposed` / `active` / `fulfilled` / `dissolved` — see `kb/04-state-machines.md`. Migration-built weaves carry the legacy CarePoint value verbatim (dev has `"Active"`, `"Inactive"`, `"active"`); compare case-insensitively, never raw |
+| origin     | string   | `user` / `ai`. Null means migration-built           |
 | createdAt  | datetime |                                                    |
+| modifiedAt | datetime | Optional — stamped on every runtime edit            |
 
 **Relationships:**
 
@@ -391,11 +477,60 @@ scope: created by the prod→dev migration to wrap each migrated care point.
 - `CREATED_BY` → Person (authorship, for attribution)
 - `HAS_WEAVE` ← FieldContext (scope + visibility anchor)
 
-**Authorization:** Scoped to the parent FieldContext's Space — readable/writable
-by the Space owner or any member, mirroring ResonanceLink. Note: a single
-`HAS_WEAVE` context edge is the canonical anchor (the design spike's separate
-`WITHIN` edge was collapsed into it, since it would be a redundant anti-parallel
-edge — ResonanceLink likewise uses only `HAS_RESONANCE`).
+**Authorization:** Scoped to the parent FieldContext's Space — readable by the
+Space owner or any member, writable by OWNER / ADMIN / MEMBER (GUESTs excluded),
+mirroring ResonanceLink. Note: a single `HAS_WEAVE` context edge is the
+canonical anchor (the design spike's separate `WITHIN` edge was collapsed into
+it, since it would be a redundant anti-parallel edge — ResonanceLink likewise
+uses only `HAS_RESONANCE`). Because that edge is what the `@authorization`
+filter traverses, a weave created without it is not merely invisible — it is
+unreachable by the gate. **Never create a weave without connecting `context`.**
+
+**Writing a weave's pulses — interface gotcha.** `WEAVES` targets the
+`FieldPulse` *interface*, and `@neo4j/graphql` expands every `connect` entry
+across all five implementations. Two or more entries in one `connect` array
+make it emit the same Cypher variable twice and Neo4j rejects the whole
+mutation with `42N07` (variable shadowing). Connect many pulses with a **single
+entry using `id_IN`**, not one entry per id:
+
+```graphql
+weaves: { connect: [{ where: { node: { id_IN: $pulseIds } } }] }   # correct
+weaves: { connect: [{ where: { node: { id_EQ: $a } } },            # 42N07
+                    { where: { node: { id_EQ: $b } } }] }
+```
+
+On update, pair `disconnect: [{ where: {} }]` with that connect **inside one
+field entry** so pulses the member removed actually leave — otherwise the
+woven set only ever grows. See `src/hooks/usePromiseWeaves.ts`.
+
+**Opening `@mutation` also opens a nested-input tree — enumerate
+`nestedOperations` in the same change.** `@neo4j/graphql` generates nested
+`create` / `connect` / `disconnect` / `delete` inputs from every
+`@relationship` on a type, and a nested `delete` cascades a bare DETACH DELETE
+into the connected node. On `PromiseWeave` that meant a weave delete could take
+its parent FieldContext with it — stranding every pulse in the field with no
+`HAS_PULSE` anchor and no `deletedAt`, which is exactly what GOAL-319 removed
+`deleteFieldContexts` to prevent.
+
+Two rules fall out of the GOAL-341 review, and they apply to any type that
+opens `@mutation`:
+
+- **Enumerate `nestedOperations` per edge.** `weaves` / `wovenFor` take
+  `[CONNECT, DISCONNECT]`; `createdBy` / `context` take `[CONNECT]`. The
+  reverse edge needs it too — `FieldContext.weaves` is `nestedOperations: []`,
+  because it is a second, otherwise ungated door into the same input tree.
+- **A type-level `validate` block does NOT cover relationship operations.**
+  `operations: [CREATE, UPDATE, DELETE]` never matches `CREATE_RELATIONSHIP` or
+  `DELETE_RELATIONSHIP`, so only the READ `filter` applies to a connect or
+  disconnect — and a filter that admits any member admits any member to those.
+  Before the fix, a MEMBER could disconnect a weave's `context` edge and leave
+  it unreadable, unwritable and undeletable by everyone including its author.
+
+Authorship is pinned by a second validate rule,
+`{ operations: [CREATE], where: { node: { createdBy_SINGLE: { id_EQ: "$jwt.user.id" } } } }`.
+It cannot be a field-level directive — the library rejects `@authorization`
+alongside `@relationship` — and it must not use `CREATE_RELATIONSHIP`, which
+would also fire when a different member edits the weave and wrongly forbid it.
 
 ---
 
@@ -603,25 +738,40 @@ production caller until a mention-authoring surface exists.
 Uploaded source document attached to a FieldContext. Created by the
 direct-to-S3 ingestion flow: `POST /api/ingest/document/presign` mints a
 short-lived presigned PUT URL; the browser uploads straight to S3; `POST
-/api/ingest/document/process` then anchors the Document node and triggers
-extraction (Gemini multimodal for PDFs, OpenAI for text/markdown). The
+/api/ingest/document/process` then anchors the Document node as `PENDING` and
+returns **202** — extraction itself (Gemini multimodal for PDFs, OpenAI for
+text/markdown) runs in `/api/cron/process-document-ingestion` (GOAL-292). The
 original file lives in AWS S3 (memory store for dev/tests); the graph node
 carries metadata and provenance edges. See WF-10 in `kb/03-workflows.md`
 and ADR-014 / ADR-015 in `kb/06-adr.md`.
 
-| Field      | Type     | Notes                                                                                  |
-| ---------- | -------- | -------------------------------------------------------------------------------------- |
-| id         | string   | Required, unique                                                                       |
-| filename   | string   | Required                                                                               |
-| mimeType   | string   | v1: `text/plain`, `text/markdown`, `application/pdf`                                   |
-| sizeBytes  | int      | Required                                                                               |
-| pageCount  | int      | `1` for .txt/.md; real page count for .pdf; null when unknown                          |
-| blobKey    | string   | Internal — UI surfaces filename instead                                                |
-| blobUrl    | string   | Provider-issued URL for the blob (may be private/expiring; treat as opaque)            |
-| userHint   | string   | Optional one-line "What is this?" hint; reused on re-extract                           |
-| summary    | string   | AI-generated 1-paragraph synopsis; refreshed on re-extract; null on summarizer failure |
-| concepts   | string[] | Up to 5 short concept phrases the AI surfaced as top-level themes; empty on failure    |
-| uploadedAt | datetime | Immutable, set on create                                                               |
+| Field                    | Type     | Notes                                                                                  |
+| ------------------------ | -------- | -------------------------------------------------------------------------------------- |
+| id                       | string   | Required, unique                                                                       |
+| filename                 | string   | Required                                                                               |
+| mimeType                 | string   | v1: `text/plain`, `text/markdown`, `application/pdf`                                   |
+| sizeBytes                | int      | Required                                                                               |
+| pageCount                | int      | `1` for .txt/.md; real page count for .pdf; null until the worker reads the blob        |
+| blobKey                  | string   | Internal — UI surfaces filename instead                                                |
+| blobUrl                  | string   | Provider-issued URL for the blob (may be private/expiring; treat as opaque)            |
+| userHint                 | string   | Optional one-line "What is this?" hint; reused on re-extract                           |
+| summary                  | string   | AI-generated 1-paragraph synopsis; refreshed on re-extract; null on summarizer failure |
+| concepts                 | string[] | Up to 5 short concept phrases the AI surfaced as top-level themes; empty on failure    |
+| status                   | string   | *GraphQL-exposed.* Ingest lifecycle (GOAL-292): `PENDING` → `PROCESSING` → `COMPLETE` / `FAILED`. **Absent on pre-GOAL-292 documents — every read coalesces missing to `COMPLETE`.** See `kb/04-state-machines.md` |
+| statusMessage            | string   | *GraphQL-exposed.* Member-safe failure copy, safe to render verbatim; null unless `status = FAILED`        |
+| statusUpdatedAt          | datetime | *Internal (not in the GraphQL schema).* When `status` last changed; also the staleness clock for reclaiming dead claims         |
+| ingestAttempts           | int      | *Internal.* Times this document has been claimed; at 3 a stalled claim is abandoned to `FAILED`     |
+| ingestClaimedBy          | string   | *Internal.* Worker run id holding the claim; null when not `PROCESSING`. Only the winning claimant writes it, so it is a truthful owner — the terminal writes fence on it |
+| ingestLockToken          | string   | *Internal.* Throwaway value written to force Neo4j's write lock during a claim. Never read — its only job is making the status guard evaluate post-lock |
+| ingestCreatedEntityCount | int      | *GraphQL-exposed.* Tool calls the ingest run landed, set when `status` reaches `COMPLETE`. Counts `MENTIONED_IN` links as well as entities, so it slightly over-reads as "entities" in the UI copy |
+| ingestFailedEntityCount  | int      | *GraphQL-exposed.* Proposed entities whose write failed (partial success is normal)                       |
+| uploadedAt               | datetime | Immutable, set on create                                                               |
+
+**Ingest throughput limits (GOAL-292):** one account may hold at most **20**
+documents in `PENDING`/`PROCESSING` at a time; `POST /api/ingest/document/process`
+refuses beyond that with **429** and `reason: 'queue_full'`. The worker drains
+**4** documents per one-minute tick, oldest upload first, with no per-user
+interleaving — so the cap is what stops one member starving every other Space.
 
 **Relationships:**
 
@@ -688,6 +838,62 @@ previously approved Persons and FieldPulses extracted from the document
 survive (their `EXTRACTED_FROM` edges drop with the Document). v1 has no
 file-versioning; uploading a new revision of a source creates a new
 Document node with its own ingest thread.
+
+---
+
+### ArticleImportJob
+
+**Neo4j Labels:** `["ArticleImportJob"]`
+
+One queued bulk spreadsheet import (GOAL-326). `POST /api/import/articles`
+validates the rows, gates on `canEditContent`, anchors this node as `PENDING`
+and returns **202**; `/api/cron/process-article-imports` mints one pulse per row
+through the authorized write path and drives the status machine. The member
+polls `GET /api/import/articles/<jobId>`. See WF-11 in `kb/03-workflows.md`,
+the status machine in `kb/04-state-machines.md`, and ADR-019 in `kb/06-adr.md`.
+
+**Not in the GraphQL schema** — this is queue infrastructure, not domain data
+(same class as `LlmUsage`). Exposing it would generate CRUD roots over its own
+status machine, exactly the hole `Document` had to close with
+`@mutation(operations: [])`.
+
+| Field           | Type     | Notes                                                                                     |
+| --------------- | -------- | ----------------------------------------------------------------------------------------- |
+| id              | string   | Required, unique (`article_import_job_id` constraint). `import_<uuid>` — the handle the client polls with. Every hot path matches by it: the claim, each of up to 300 per-row outcome appends, all three terminal writes, the load, and the member's 2-second poll |
+| status          | string   | `PENDING` → `PROCESSING` → `COMPLETE` / `FAILED`. See `kb/04-state-machines.md`            |
+| statusMessage   | string   | Member-safe failure copy, safe to render verbatim; null unless `status = FAILED`           |
+| statusUpdatedAt | datetime | When `status` last changed; also the staleness clock, refreshed by every per-row outcome    |
+| createdAt       | datetime | Enqueue time; the queue drains oldest-first on this                                        |
+| totalRows       | int      | Row count at enqueue — the one summary value that cannot be derived from the outcomes      |
+| rowsJson        | string   | The validated payload, JSON. Written once at enqueue, **nulled at every terminal status** — the outcomes are what the member reads from then on |
+| rowOutcomes     | string[] | One JSON outcome per processed row, in row order. `size()` is the resume cursor, and the whole summary is recomputed from it |
+| attempts        | int      | Times claimed; at 3 a stalled claim is abandoned to `FAILED`. Reset to 0 by a voluntary requeue, which proves progress |
+| claimedBy       | string   | Worker run id holding the claim; null when not `PROCESSING`. Only the winning claimant writes it, so it is a truthful owner — every outcome append and terminal write fences on it |
+| lockToken       | string   | Throwaway value written to force Neo4j's write lock during a claim. Never read           |
+
+**Import throughput limits:** a single sheet is capped at **300** rows
+(`MAX_ARTICLE_IMPORT_ROWS`), one account may hold **5** jobs in
+`PENDING`/`PROCESSING` at once (**429** `reason: 'queue_full'` beyond that), and
+the `bulk-import` rate limit allows **10 imports/hour/account**. The in-flight
+cap is enforced in the graph specifically because the rate limiter fails OPEN
+when Redis is unreachable. The worker claims at most **2** jobs per one-minute
+tick and stops starting rows at ~220s, handing the rest back to the queue.
+
+**Relationships:**
+
+- `HAS_IMPORT_JOB` ← FieldContext (the target field; purged with it)
+- `REQUESTED_BY` → Person:User (the member who submitted the sheet)
+
+**Authorization:** `canEditContent` on the parent Space is checked at enqueue
+*and* re-checked by the worker at claim time, since the gap can be minutes. The
+`REQUESTED_BY` edge is how that decision crosses the queue boundary — the worker
+holds no JWT and attributes every write, and every activity `Log`, to that
+person. Reads are scoped to the requester alone: a job belonging to someone else
+is indistinguishable from one that does not exist.
+
+**Lifecycle:** jobs are not user-deletable and have no restore. They are hard-
+deleted with their FieldContext at the 90-day purge — an unfinished one still
+holds the member's uploaded rows, so it must not outlive the context.
 
 ---
 
@@ -838,6 +1044,11 @@ spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
 | `person_invite_token_hash`         | Person.inviteTokenHash          |
 | `person_reset_token_hash`          | Person.resetTokenHash           |
 | `llm_usage_createdAt`              | LlmUsage.createdAt              |
+| `document_status`                  | Document.status — the ingest queue; the one-minute cron seeks it twice per tick (measured 53 dbHits with it vs 10,101 without, at 5k documents) |
+| `article_import_job_status`        | ArticleImportJob.status — the bulk-import queue; the one-minute cron seeks it twice per tick and every enqueue seeks it twice more for the in-flight cap. **The drain query must anchor on this seek, not on `(c:FieldContext)-[:HAS_IMPORT_JOB]->(j)`** — the context-anchored form never touches the index and label-scans instead (measured 1,501 dbHits vs 1 at a 1,500-job backlog). It plans as a seek against an EMPTY label, so only a seeded profile proves anything |
+| `context_deletedAt`                | FieldContext.deletedAt — the daily purge sweep (GOAL-319) |
+| `notification_createdAt`           | Notification.createdAt |
+| `notification_read`                | Notification.read      |
 
 Uniqueness constraints also carry backing RANGE indexes — notably `pulse_id`
 on `FieldPulse.id` (`scripts/init-db.js`), which is what makes by-id pulse

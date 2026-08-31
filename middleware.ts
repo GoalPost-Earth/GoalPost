@@ -36,10 +36,34 @@ export function middleware(request: NextRequest) {
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
+    frame-src 'self' https://vercel.live;
     connect-src 'self' https://*.s3.amazonaws.com https://*.s3.us-east-1.amazonaws.com;
   `
     .replace(/\s{2,}/g, ' ')
     .trim()
+
+  // The nonce has to travel on the REQUEST, not just the response: `headers()`
+  // in a Server Component reads request headers, and that is the only way the
+  // root layout can stamp its inline <script> tags with the matching nonce.
+  // Because `script-src` carries 'strict-dynamic', browsers ignore 'self' —
+  // an un-nonced inline script (the theme bootstrappers) is simply blocked.
+  const withNonce = (response: NextResponse) => {
+    response.headers.set('Content-Security-Policy', cspHeader)
+    response.headers.set('x-nonce', nonce)
+    return response
+  }
+  // `set` (not `append`) so a client-supplied `x-nonce` is always overwritten
+  // rather than trusted — nothing downstream should ever read an attacker's
+  // value. Applied on every path for that reason, not just rendered routes.
+  const forwardNonce = () => {
+    const requestHeaders = new Headers(request.headers)
+    requestHeaders.set('x-nonce', nonce)
+    // Next derives the nonce for its OWN framework <script> tags from the
+    // request-side CSP header (app-render's getScriptNonceFromHeader), so set
+    // it here too — this is the shape the Next.js CSP guide documents.
+    requestHeaders.set('Content-Security-Policy', cspHeader)
+    return NextResponse.next({ request: { headers: requestHeaders } })
+  }
 
   // Auth logic
   // const isProtectedRoute = protectedRoutes.some((route) =>
@@ -52,10 +76,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.includes('.')
   ) {
-    const response = NextResponse.next()
-    response.headers.set('Content-Security-Policy', cspHeader)
-    response.headers.set('x-nonce', nonce)
-    return response
+    return withNonce(forwardNonce())
   }
 
   // Public sign up is hidden (invite-only onboarding). Block the page route so
@@ -65,12 +86,7 @@ export function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_DISABLE_SIGNUP === 'true' &&
     pathname.startsWith('/auth/signup')
   ) {
-    const response = NextResponse.redirect(
-      new URL('/auth/login', request.url)
-    )
-    response.headers.set('Content-Security-Policy', cspHeader)
-    response.headers.set('x-nonce', nonce)
-    return response
+    return withNonce(NextResponse.redirect(new URL('/auth/login', request.url)))
   }
 
   // Protected routes without token → redirect to login
@@ -92,10 +108,7 @@ export function middleware(request: NextRequest) {
   // }
 
   // Normal request
-  const response = NextResponse.next()
-  response.headers.set('Content-Security-Policy', cspHeader)
-  response.headers.set('x-nonce', nonce)
-  return response
+  return withNonce(forwardNonce())
 }
 
 export const config = {

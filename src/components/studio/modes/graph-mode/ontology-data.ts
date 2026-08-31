@@ -41,6 +41,8 @@ export const ONTOLOGY_RELATIONSHIPS: Relationship[] = [
   { id: 'r17', from: 'ResonanceLink', to: 'GoalPulse', caption: 'SOURCE' },
   { id: 'r18', from: 'ResonanceLink', to: 'ResourcePulse', caption: 'TARGET' },
   { id: 'r19', from: 'ResonanceLink', to: 'FieldResonance', caption: 'RESONATES_AS' },
+  // Nested sub-contexts (GOAL-295) — self-edge on FieldContext
+  { id: 'r20', from: 'FieldContext', to: 'FieldContext', caption: 'HAS_SUBCONTEXT' },
 ]
 
 /**

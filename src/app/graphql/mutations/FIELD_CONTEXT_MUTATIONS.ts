@@ -92,11 +92,12 @@ export const UPDATE_FIELD_CONTEXT_MUTATION = graphql(`
 /**
  * Delete a FieldContext by ID (GOAL-319).
  *
- * Cascades: the context and ALL of its pulses are soft deleted together
- * (hidden everywhere immediately, hard-purged with every nested entity by
- * the daily cron after 90 days). The server writes the activity Log inside
- * the same transaction — callers must NOT also fire logFieldActivity for
- * the deletion. Requires Space owner or ADMIN.
+ * Cascades: the context, its nested sub-contexts (GOAL-295), and ALL of
+ * their pulses are soft deleted together (hidden everywhere immediately,
+ * hard-purged with every nested entity by the daily cron after 90 days).
+ * The server writes the activity Log inside the same transaction — callers
+ * must NOT also fire logFieldActivity for the deletion. Requires Space
+ * owner or ADMIN.
  */
 export const DELETE_FIELD_CONTEXT_MUTATION = graphql(`
   mutation DeleteFieldContext($id: ID!) {
@@ -104,6 +105,52 @@ export const DELETE_FIELD_CONTEXT_MUTATION = graphql(`
       contextId
       deleted
       deletedPulseCount
+      deletedSubContextCount
+    }
+  }
+`)
+
+/**
+ * Create a sub-context nested under an existing FieldContext (GOAL-295).
+ *
+ * The child lands in the SAME Space as the parent (its own HAS_CONTEXT
+ * edge) plus the HAS_SUBCONTEXT overlay edge. Server enforces
+ * canEditContent, the depth cap, and writes the activity Log in the same
+ * transaction — callers must NOT also fire logFieldActivity.
+ */
+export const CREATE_SUB_FIELD_CONTEXT_MUTATION = graphql(`
+  mutation CreateSubFieldContext(
+    $parentContextId: ID!
+    $title: String!
+    $emergentName: String
+  ) {
+    createSubFieldContext(
+      parentContextId: $parentContextId
+      title: $title
+      emergentName: $emergentName
+    ) {
+      contextId
+      title
+      parentContextId
+    }
+  }
+`)
+
+/**
+ * Move a FieldContext under a new parent, or to the top level of its Space
+ * when newParentContextId is null (GOAL-295). Same-Space, cycle, and depth
+ * invariants are enforced server-side; the activity Log is written in the
+ * same transaction.
+ */
+export const MOVE_FIELD_CONTEXT_MUTATION = graphql(`
+  mutation MoveFieldContext($contextId: ID!, $newParentContextId: ID) {
+    moveFieldContext(
+      contextId: $contextId
+      newParentContextId: $newParentContextId
+    ) {
+      contextId
+      newParentContextId
+      moved
     }
   }
 `)

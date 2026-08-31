@@ -10,6 +10,11 @@
  * to an identical 404 for missing-or-forbidden with no presigned URL minted.
  * (executeRead is stubbed here — this suite pins the route's handling of the
  * gate's verdict, not the Cypher gate query itself.)
+ *
+ * GOAL-321 adds the authenticated-browser half: an empty read-gate verdict on
+ * a `text/html` navigation 302s to /document-unavailable (carrying no document
+ * id) instead of dead-ending on the raw JSON 404 — which programmatic callers
+ * keep.
  */
 import { NextRequest } from 'next/server'
 import { sanitizeReturnTo } from '@/lib/auth/safe-return-to'
@@ -119,13 +124,49 @@ describe('GET /api/ingest/document/[documentId]/download — auth flow (GOAL-316
     expect(res.headers.get('cache-control')).toBe('private, no-store')
   })
 
-  it('404s a caller without Space access and never mints a presigned URL', async () => {
-    ;(resolveAuthenticatedUserId as jest.Mock).mockReturnValue('user_intruder')
+  it('keeps the JSON 404 for authenticated programmatic callers of a missing document', async () => {
+    ;(resolveAuthenticatedUserId as jest.Mock).mockReturnValue('user_1')
     stubBlobKeyLookup(null) // missing OR forbidden — same empty result
+
+    const res = await GET(
+      makeRequest({ accept: 'application/json' }),
+      makeParams()
+    )
+
+    expect(res.status).toBe(404)
+    expect(res.headers.get('location')).toBeNull()
+    expect(presignGet).not.toHaveBeenCalled()
+  })
+
+  // GOAL-321: an authorized member clicking "Open document" on a pulse whose
+  // source document was deleted must land on a human-readable page, not a raw
+  // JSON body.
+  it('302s an authenticated browser navigation for a missing document to /document-unavailable', async () => {
+    ;(resolveAuthenticatedUserId as jest.Mock).mockReturnValue('user_1')
+    stubBlobKeyLookup(null)
 
     const res = await GET(makeRequest({ accept: 'text/html' }), makeParams())
 
-    expect(res.status).toBe(404)
+    expect(res.status).toBe(302)
+    const location = new URL(res.headers.get('location')!)
+    expect(location.pathname).toBe('/document-unavailable')
+    // No document id may leak into the dead-end URL — the redirect must be
+    // identical for missing and forbidden documents alike.
+    expect(location.search).toBe('')
+    expect(res.headers.get('location')).not.toContain('doc_42')
+    expect(presignGet).not.toHaveBeenCalled()
+  })
+
+  it('sends a browser caller without Space access to the SAME dead-end as a missing document', async () => {
+    ;(resolveAuthenticatedUserId as jest.Mock).mockReturnValue('user_intruder')
+    stubBlobKeyLookup(null) // the gate collapses missing and forbidden upstream
+
+    const res = await GET(makeRequest({ accept: 'text/html' }), makeParams())
+
+    expect(res.status).toBe(302)
+    expect(new URL(res.headers.get('location')!).pathname).toBe(
+      '/document-unavailable'
+    )
     expect(presignGet).not.toHaveBeenCalled()
   })
 })

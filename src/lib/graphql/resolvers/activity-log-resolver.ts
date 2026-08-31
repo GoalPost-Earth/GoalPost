@@ -7,6 +7,7 @@ import {
 } from '@/lib/activity-logs/create-log'
 import { initGraph } from '@/modules/graph'
 import {
+  canEditContext,
   canViewContext,
   viewablePulsePredicate,
 } from '@/lib/permissions/pulse-visibility'
@@ -56,6 +57,15 @@ interface LogResonanceInput {
   sourceName: string
   targetId: string
   targetName: string
+  contextId: string
+  metadata?: string
+}
+
+interface LogWeaveInput {
+  action: string
+  weaveId: string
+  weaveName: string
+  pulseIds: string[]
   contextId: string
   metadata?: string
 }
@@ -129,6 +139,50 @@ async function getContextAndSpaceDetails(
     spaceType,
     ownerName: record.get('ownerName') || undefined,
   }
+}
+
+/**
+ * A weave holds 1..n pulses, so a log entry for one describes a LIST where
+ * `getPulseTitles` describes a source/target pair. Guard rails:
+ *
+ * - The list is capped. `logResonanceActivity` is structurally limited to two
+ *   ids; this input is client-supplied and unbounded, and a description does
+ *   not get better past a handful of names.
+ * - `UNWIND` + `MATCH (pulse:FieldPulse {id: pid})` seeks per id rather than
+ *   leaning on `IN` over a label scan.
+ * - Only pulses the actor can actually view come back — both for the
+ *   description (never leak a title, let alone an id — Rule 1) and for the ids
+ *   the caller then hangs `LOGGED_FOR` edges off, so the graph and the prose
+ *   honour the same visibility.
+ */
+const MAX_LOGGED_WEAVE_PULSES = 50
+
+async function getViewableWovenPulses(
+  session: Session,
+  pulseIds: string[],
+  userId: string
+): Promise<{ ids: string[]; titles: string[] }> {
+  if (pulseIds.length === 0) return { ids: [], titles: [] }
+
+  const result = await session.run(
+    `
+    UNWIND $pulseIds AS pid
+    MATCH (pulse:FieldPulse {id: pid})
+    WHERE ${viewablePulsePredicate('pulse', 'userId')}
+    RETURN pulse.id AS id, coalesce(pulse.title, pulse.name) AS title
+    `,
+    { pulseIds: pulseIds.slice(0, MAX_LOGGED_WEAVE_PULSES), userId }
+  )
+
+  const ids: string[] = []
+  const titles: string[] = []
+  for (const record of result.records) {
+    const id = record.get('id')
+    if (id) ids.push(id)
+    const title = record.get('title')
+    if (title) titles.push(title)
+  }
+  return { ids, titles }
 }
 
 async function getPulseTitles(
@@ -717,6 +771,168 @@ export const activityLogMutations = {
       }
     } catch (error) {
       console.error('Error logging resonance activity:', error)
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        log: null,
+      }
+    }
+  },
+
+  /**
+   * Log promise-weave activities (created, updated, confirmed, dissolved,
+   * fulfilled, deleted). Migration-built weaves stay Log-exempt like the other
+   * Phase-5 structural builds — this covers the runtime authoring path only
+   * (docs/promise-weave-design-spike.md §4).
+   */
+  logWeaveActivity: async (
+    _parent: never,
+    args: { input: LogWeaveInput },
+    context: Context
+  ) => {
+    const userId = context.jwt?.user?.id
+
+    if (!userId) {
+      return {
+        success: false,
+        message: 'User not authenticated',
+        log: null,
+      }
+    }
+
+    const { action, weaveId, weaveName, pulseIds, contextId, metadata } =
+      args.input
+
+    if (!action || !weaveId || !contextId) {
+      return {
+        success: false,
+        message: 'Missing required fields',
+        log: null,
+      }
+    }
+
+    // Authorization, not just authentication (GOAL-341 review). Two distinct
+    // holes close here, and both need a gate on the CALLER's relationship to
+    // `contextId` rather than on the payload:
+    //
+    // - `getContextAndSpaceDetails` below looks the context up by id with no
+    //   caller in its query, and its result is folded into `description`,
+    //   which this mutation returns. Ungated, that echoes any field's title
+    //   and its owning Space's name to any authenticated caller — and the ids
+    //   are guessable, a MeSpace context being `context_mespace_` plus a
+    //   publicly readable Person id.
+    // - `weaveName` and `metadata` are client-supplied and land verbatim in
+    //   that description, so a view-level gate would let a GUEST inject prose
+    //   into a Space's activity feed. Hence canEditContext, not canViewContext.
+    //
+    // The five sibling log resolvers in this file share the same gap; they are
+    // pre-existing and tracked separately rather than widened here.
+    if (!(await canEditContext(await initGraph(), userId, contextId))) {
+      return {
+        success: false,
+        message: 'You do not have permission to log activity in this field',
+        log: null,
+      }
+    }
+
+    try {
+      const session = context.executionContext.session()
+
+      const actionMap: Record<string, string> = {
+        created: 'Wove',
+        updated: 'Updated',
+        confirmed: 'Confirmed',
+        dissolved: 'Dissolved',
+        fulfilled: 'Marked fulfilled',
+        deleted: 'Removed',
+      }
+
+      const actionVerb = actionMap[action] || action
+      // Both the description AND the LOGGED_FOR edges below use the viewable
+      // subset, so the log never records a link to a pulse the actor could not
+      // see.
+      const { ids: wovenPulseIds, titles } = await getViewableWovenPulses(
+        session,
+        pulseIds ?? [],
+        userId
+      )
+      const contextDetails = await getContextAndSpaceDetails(session, contextId)
+      const contextLabel = contextDetails.contextName
+        ? `"${contextDetails.contextName}"`
+        : undefined
+      const spaceDisplay = formatSpaceDisplay(contextDetails)
+      const locationSuffix = spaceDisplay ? ` in ${spaceDisplay}` : ''
+      const weaveLabel = weaveName || 'a promise weave'
+      // The prose names a few pulses; the LOGGED_FOR edges below still get the
+      // full viewable set. Without this the description ran to ~2,500 chars at
+      // the 50-pulse cap, which is stored on the node and rendered verbatim in
+      // the activity feed.
+      const NAMED_IN_DESCRIPTION = 3
+      const namedTitles = titles.slice(0, NAMED_IN_DESCRIPTION)
+      const unnamedCount = titles.length - namedTitles.length
+      const wovenSuffix =
+        titles.length > 0
+          ? ` holding ${namedTitles.map((t) => `"${t}"`).join(', ')}${
+              unnamedCount > 0 ? ` and ${unnamedCount} more` : ''
+            }`
+          : ''
+      const baseDescription =
+        action === 'created'
+          ? `Wove "${weaveLabel}"${wovenSuffix}`
+          : `${actionVerb} promise weave "${weaveLabel}"`
+      const description = contextLabel
+        ? `${baseDescription} in ${contextLabel}${locationSuffix}`
+        : `${baseDescription}${locationSuffix}`
+
+      const parsedMetadata =
+        typeof metadata === 'string' ? JSON.parse(metadata) : metadata
+
+      const logId = await createLog({
+        userId,
+        description,
+        pulseIds: wovenPulseIds,
+        contextId,
+        metadata: {
+          ...parsedMetadata,
+          weaveId,
+        },
+      })
+
+      const result = await session.run(
+        `
+        MATCH (log:Log {id: $logId})-[:CREATED_BY]->(creator:Person)
+        RETURN log, creator
+        `,
+        { logId }
+      )
+
+      if (result.records.length === 0) {
+        return {
+          success: false,
+          message: 'Failed to retrieve created log',
+          log: null,
+        }
+      }
+
+      const logNode = result.records[0].get('log').properties
+      const creatorNode = result.records[0].get('creator').properties
+
+      return {
+        success: true,
+        message: `Logged weave ${action}`,
+        log: {
+          ...logNode,
+          __typename: 'Log',
+          createdBy: [
+            {
+              ...creatorNode,
+              __typename: 'Person',
+            },
+          ],
+        },
+      }
+    } catch (error) {
+      console.error('Error logging weave activity:', error)
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error',

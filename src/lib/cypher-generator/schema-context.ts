@@ -40,6 +40,18 @@ export const ALLOWED_LABELS = [
   'StoryPulse',
   'CarePulse',
   'CoreValuePulse',
+  // Legacy / provenance marker carried by every MIGRATED core value (GOAL-287).
+  // Backfilled DBs hold `FieldPulse:CoreValuePulse:CoreValue`; an un-backfilled
+  // env (a demo box cloned before the backfill) still holds the pre-GOAL-287
+  // shape `FieldPulse:StoryPulse:CoreValue` — no `:CoreValuePulse` at all.
+  // Without `CoreValue` whitelisted here those values were DOUBLY invisible to
+  // query_for_bloom (the generator could not name the label, and a lucky guess
+  // was rejected by the validator), so "show me all core values" came back
+  // empty while `search_pulses` — which bridges the same label in
+  // pulse.service.ts `typeFilterCypher()` — found them. That divergence was
+  // GOAL-333. Whitelisting only lets the generator TRAVERSE the label; node
+  // visibility is still gated by the post-execute Space filter in execute.ts.
+  'CoreValue',
   // Relational discoveries
   'ResonanceLink',
   'FieldResonance',
@@ -62,6 +74,11 @@ export const ALLOWED_RELATIONSHIPS = [
   'HAS_MEMBER',
   'IS_MEMBER',
   'HAS_CONTEXT',
+  // Nested sub-contexts (GOAL-295): (parent:FieldContext)-[:HAS_SUBCONTEXT]->
+  // (child:FieldContext). A pure hierarchy overlay — every context, nested or
+  // not, ALSO keeps its own (Space)-[:HAS_CONTEXT] edge, so the post-execute
+  // Space anchor in execute.ts keeps working for children unchanged.
+  'HAS_SUBCONTEXT',
   'HAS_PULSE',
   // A FieldContext surfaces the people in its relational world via HAS_PERSON
   // → (:Person). The target is USUALLY a non-member (:Person:PersonPulse) but
@@ -177,24 +194,60 @@ Organization { id, name, description, createdAt }
   - An organization / group / company / cooperative / institution named in an uploaded document (e.g. "Artisan Cooperative"). Its own type — NOT a Person and NOT a pulse. Nodes carry ["Organization","LifeSensor","RelationalEntity"]; match the \`:Organization\` label. Attached to a FieldContext via HAS_ORGANIZATION and linked to the pulses it relates to via MENTIONED_IN. When the user names an organization (or asks to show one), MATCH \`:Organization\` — these nodes are invisible to any query that omits the label.
 
 FieldContext { id, title, emergentName, createdAt }
-  - Belongs to exactly one Space.
+  - Belongs to exactly one Space (every context — nested or not — has its own
+    direct HAS_CONTEXT edge from that Space).
+  - Contexts can be NESTED (GOAL-295): a parent field holds sub-fields via
+    (parent)-[:HAS_SUBCONTEXT]->(child), up to 5 levels deep. When the user
+    asks about "sub-fields" / "sub-contexts" / what's "inside" or "under" a
+    field, traverse HAS_SUBCONTEXT.
 
 FieldPulse { id, title, content, status, intensity, horizon, why, location, time, createdAt }
   - Always co-labeled with one specific pulse subtype:
     GoalPulse, ResourcePulse, StoryPulse, CarePulse, CoreValuePulse.
 
+CORE VALUES — read this before writing any query about values.
+  A "core value" / "value" is a pulse, but it does NOT always carry the
+  \`:CoreValuePulse\` label. Migrated values carry a \`:CoreValue\` provenance
+  marker, and in an environment that predates the relabel they carry ONLY
+  \`FieldPulse:StoryPulse:CoreValue\` — matching \`(:CoreValuePulse)\` there
+  returns NOTHING even though the person can plainly see their values.
+  So NEVER match a value as \`(v:CoreValuePulse)\` alone, and never anchor on
+  \`(v:CoreValue)\` either — only \`FieldPulse.id\` is indexed, so a bare
+  \`:CoreValue\` pattern forces a full label scan. ALWAYS match the base label
+  and test BOTH markers in a WHERE predicate. Keep the traversal ANCHORED on
+  the user — an unanchored \`MATCH (ctx:FieldContext)-[:HAS_PULSE]->(v)\` plans a
+  CartesianProduct against a label scan of EVERY tenant's values, then the
+  runtime's authorization filter discards nearly all of it, leaving the person
+  with an almost-empty canvas:
+
+      MATCH (user:Person {id: $userId})-[:OWNS]->(:Space)-[hc:HAS_CONTEXT]->(ctx:FieldContext)-[hp:HAS_PULSE]->(v:FieldPulse)
+      WHERE v:CoreValuePulse OR v:CoreValue
+
+  The same rule applies wherever you filter values — enumeration, keyword
+  lookup, or an expansive sweep. A \`:StoryPulse\` that also carries
+  \`:CoreValue\` IS a value, not a story.
+
 ResonanceLink { id, label, description, confidence, evidence, status }
   - Connects two FieldPulses via SOURCE / TARGET.
 
-PromiseWeave { id, title, status, createdAt }
+PromiseWeave { id, title, description, status, origin, createdAt, modifiedAt }
   - A connective CONTAINER node — its own type, NOT a pulse subtype (just like
-    ResonanceLink). Wraps a migrated care point so its neighbourhood is
-    navigable. Its human label is "title". Surfaced inside a FieldContext via a
-    HAS_WEAVE context edge (exactly as ResonanceLink is surfaced via
-    HAS_RESONANCE). When the user names a "promise weave" / "weave", or asks to
-    show a node whose title matches a PromiseWeave title, MATCH the
-    \`:PromiseWeave\` label — these nodes are invisible to any query that omits
-    it.
+    ResonanceLink). Gathers the pulses and the person a promise implicates so
+    its neighbourhood is navigable. Its human label is "title". Surfaced inside
+    a FieldContext via a HAS_WEAVE context edge (exactly as ResonanceLink is
+    surfaced via HAS_RESONANCE). When the user names a "promise weave" /
+    "weave", or asks to show a node whose title matches a PromiseWeave title,
+    MATCH the \`:PromiseWeave\` label — these nodes are invisible to any query
+    that omits it.
+  - "description" says why the woven things belong together.
+  - "status" is the lifecycle: proposed / active / fulfilled / dissolved. It is
+    NOT reliably cased or complete — weaves carried over from migrated care
+    points hold values like "Active" and "Inactive", and some hold nothing at
+    all (which means active). So filter it case-insensitively and tolerate
+    null, e.g. \`toLower(coalesce(w.status,'active')) = 'proposed'\`. Never
+    \`w.status = 'active'\`, which silently drops most weaves.
+  - "origin" is who authored it: "user" (a member), "ai" (proposed by
+    discovery, awaiting confirmation), or null (built by the migration).
 
 FieldResonance { label, description } — semantic theme node.
 
@@ -216,6 +269,7 @@ Document { id, filename, mimeType, summary, concepts, uploadedAt }
 (Space)-[:HAS_MEMBER]->(SpaceMembership)
 (SpaceMembership)-[:IS_MEMBER]->(Person)
 (Space)-[:HAS_CONTEXT]->(FieldContext)
+(FieldContext)-[:HAS_SUBCONTEXT]->(FieldContext)   // nested sub-field (GOAL-295). Hierarchy overlay only — the child ALSO has its own HAS_CONTEXT edge from the same Space.
 (FieldContext)-[:HAS_PULSE]->(FieldPulse)
 (FieldContext)-[:HAS_PERSON]->(Person)   // people attached to a field's relational world — usually a non-member (:Person:PersonPulse), but occasionally the :Person:User uploader who self-linked. Match base :Person and filter membership by the :User label.
 (FieldContext)-[:HAS_ORGANIZATION]->(Organization)   // organizations attached to a field's relational world (GOAL-298). Parallels HAS_PERSON.

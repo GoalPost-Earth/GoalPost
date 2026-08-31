@@ -1,18 +1,20 @@
 import { graphql } from '@/gql'
 
 /**
- * Get a PromiseWeave's details — title, status, the pulses it weaves, and the
- * person it concerns. Mirrors GET_RESONANCE_LINK_DETAILS; weaves are read-only
- * (the PromiseWeave type has `@mutation(operations: [])`), so the drawer that
- * consumes this has no edit/delete path yet.
+ * Get a PromiseWeave's details — title, description, lifecycle state, the
+ * pulses it weaves, and the person it concerns. Mirrors
+ * GET_RESONANCE_LINK_DETAILS.
  */
 export const GET_PROMISE_WEAVE_DETAILS = graphql(`
   query GetPromiseWeaveDetails($weaveId: ID!) {
     promiseWeaves(where: { id_EQ: $weaveId }) {
       id
       title
+      description
       status
+      origin
       createdAt
+      modifiedAt
       weaves {
         id
         __typename
@@ -20,6 +22,12 @@ export const GET_PROMISE_WEAVE_DETAILS = graphql(`
         content
       }
       wovenFor {
+        id
+        name
+        firstName
+        lastName
+      }
+      createdBy {
         id
         name
         firstName

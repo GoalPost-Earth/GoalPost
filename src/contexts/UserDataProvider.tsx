@@ -12,14 +12,14 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
   // This allows us to extract and store meSpaceId for direct navigation
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { refetch } = useQuery<any>(GET_LOGGED_IN_USER as any, {
-    variables: { email: user?.email ?? '' },
-    skip: !user?.email || !!localStorage.getItem('meSpaceId'),
+    variables: { id: user?.id ?? '' },
+    skip: !user?.id || !!localStorage.getItem('meSpaceId'),
     fetchPolicy: 'network-only', // Fetch fresh data to ensure we have ownsSpaces
   })
 
   // On app init, fetch user data if we don't have meSpaceId yet
   useEffect(() => {
-    if (user?.email && !localStorage.getItem('meSpaceId')) {
+    if (user?.id && !localStorage.getItem('meSpaceId')) {
       refetch().then((result) => {
         if (result.data?.people?.[0]) {
           const personData = result.data.people[0]
@@ -34,7 +34,7 @@ export const UserDataProvider = ({ children }: { children: ReactNode }) => {
         }
       })
     }
-  }, [user?.email, refetch])
+  }, [user?.id, refetch])
 
   return <>{children}</>
 }

@@ -16,13 +16,12 @@ import { LEGEND_NODES } from './bloom-legend'
 import {
   NODE_STYLE,
   UNKNOWN_NODE_STYLE,
+  lightColorFor,
 } from '@/lib/cypher-generator/node-style'
 import {
-  SPACE_COLOR,
-  FIELD_COLOR,
-  PULSE_COLOR,
-  PERSON_COLOR,
-  WEAVE_NODE_COLOR,
+  BLOOM_PALETTE_DARK,
+  BLOOM_PALETTE_LIGHT,
+  type BloomPalette,
 } from './bloom-palette'
 
 /** Mirrors the component's own `norm` — legend matching is done on this. */
@@ -45,6 +44,26 @@ function expectDecodable(source: string, color: string): void {
   }
 }
 
+/** Every node color one palette can paint, labelled by where it comes from. */
+function nodeCasesFor(
+  mode: string,
+  palette: BloomPalette
+): Array<[source: string, color: string]> {
+  return [
+    ...Object.entries(palette.space).map(
+      ([k, v]): [string, string] => [`${mode}.space.${k}`, v]
+    ),
+    ...Object.entries(palette.field).map(
+      ([k, v]): [string, string] => [`${mode}.field.${k}`, v]
+    ),
+    ...Object.entries(palette.pulse).map(
+      ([k, v]): [string, string] => [`${mode}.pulse.${k}`, v]
+    ),
+    [`${mode}.person`, palette.person],
+    [`${mode}.weaveNode`, palette.weaveNode],
+  ]
+}
+
 describe('Bloom legend decodes every paintable node color (GOAL-288 drift guard)', () => {
   describe('overlay palette (cypher-generator node-style)', () => {
     it.each(Object.entries(NODE_STYLE))(
@@ -57,24 +76,34 @@ describe('Bloom legend decodes every paintable node color (GOAL-288 drift guard)
     it('UNKNOWN_NODE_STYLE fallback color has a legend row', () => {
       expectDecodable('UNKNOWN_NODE_STYLE', UNKNOWN_NODE_STYLE.color)
     })
+
+    // The canvas repaints overlay nodes with their light-mode counterparts
+    // (bloom-view.tsx), so the legend has to decode those too — otherwise the
+    // whole legend empties out the moment a chat custom view is viewed in
+    // light mode.
+    it.each(Object.entries(NODE_STYLE))(
+      'NODE_STYLE.%s light-mode repaint has a legend row',
+      (label, style) => {
+        expectDecodable(
+          `lightColorFor(NODE_STYLE.${label})`,
+          lightColorFor(style.color)
+        )
+      }
+    )
+
+    it('UNKNOWN_NODE_STYLE light-mode repaint has a legend row', () => {
+      expectDecodable(
+        'lightColorFor(UNKNOWN_NODE_STYLE)',
+        lightColorFor(UNKNOWN_NODE_STYLE.color)
+      )
+    })
   })
 
   describe('native Bloom palette (bloom-palette)', () => {
-    const nativeCases: Array<[source: string, color: string]> = [
-      ...Object.entries(SPACE_COLOR).map(
-        ([k, v]): [string, string] => [`SPACE_COLOR.${k}`, v]
-      ),
-      ...Object.entries(FIELD_COLOR).map(
-        ([k, v]): [string, string] => [`FIELD_COLOR.${k}`, v]
-      ),
-      ...Object.entries(PULSE_COLOR).map(
-        ([k, v]): [string, string] => [`PULSE_COLOR.${k}`, v]
-      ),
-      ['PERSON_COLOR', PERSON_COLOR],
-      ['WEAVE_NODE_COLOR', WEAVE_NODE_COLOR],
-    ]
-
-    it.each(nativeCases)('%s has a legend row', (source, color) => {
+    it.each([
+      ...nodeCasesFor('BLOOM_PALETTE_DARK', BLOOM_PALETTE_DARK),
+      ...nodeCasesFor('BLOOM_PALETTE_LIGHT', BLOOM_PALETTE_LIGHT),
+    ])('%s has a legend row', (source, color) => {
       expectDecodable(source, color)
     })
   })

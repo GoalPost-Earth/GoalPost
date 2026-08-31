@@ -217,23 +217,44 @@ export function FocalEntityProvider({ children }: { children: ReactNode }) {
     []
   )
 
+  // The entity the current URL resolves to, used to seed the label cache for
+  // callers that cannot narrow the type themselves (see `setFocalLabel`).
+  // Derived from the route rather than from `focalIdentity` so it is available
+  // above, and so it never picks up a manually-focused node from Bloom/Graph.
+  const routeSeed = useMemo(
+    () => focalEntityFromRoute(pathname, hints),
+    [pathname, hints]
+  )
+
   const setFocalLabel = useCallback(
     (id: string, label: string, refinedType?: FocalEntityType) => {
       if (!id || !label) return
       setLabelCache((prev) => {
         const next = { ...prev }
+        let seeded = false
         for (const key of Object.keys(prev)) {
           if (key.endsWith(`:${id}`)) {
             next[key] = { label, type: refinedType ?? prev[key].type }
+            seeded = true
           }
         }
         if (refinedType) {
           next[`${refinedType}:${id}`] = { label, type: refinedType }
+          return next
+        }
+        // First visit to an entity, with no refined type available: seed the
+        // cache under the type the route already resolved. Without this the
+        // cache stays empty and the breadcrumb falls back to the generic type
+        // label ("Person") forever — callers that cannot narrow `__typename`
+        // (every `people(...)` read returns the concrete type `Person`) never
+        // wrote an entry at all.
+        if (!seeded && routeSeed && routeSeed.id === id) {
+          next[`${routeSeed.type}:${id}`] = { label, type: routeSeed.type }
         }
         return next
       })
     },
-    []
+    [routeSeed]
   )
 
   const setFocalEntity = useCallback((entity: FocalEntity | null) => {

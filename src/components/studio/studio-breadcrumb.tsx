@@ -139,7 +139,7 @@ export const StudioBreadcrumb: FC = () => {
   if (!isMounted) {
     return (
       <div
-        className="flex items-center gap-2 rounded-full border border-gp-glass-border bg-gp-ink-strong/5 dark:bg-white/5 px-3 py-1.5 text-xs text-gp-ink-muted dark:text-gp-ink-soft backdrop-blur"
+        className="flex items-center gap-1.5 sm:gap-2 rounded-full border border-gp-glass-border bg-gp-ink-strong/5 dark:bg-white/5 px-2 sm:px-3 py-1.5 text-xs text-gp-ink-muted dark:text-gp-ink-soft backdrop-blur"
         aria-hidden="true"
       >
         <span className="material-symbols-outlined text-[14px] leading-none">
@@ -156,19 +156,26 @@ export const StudioBreadcrumb: FC = () => {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-full border border-gp-glass-border bg-gp-ink-strong/5 dark:bg-white/10 px-2 py-1 backdrop-blur-xl shadow-md"
+      className="flex min-w-0 max-w-full items-center gap-0.5 sm:gap-1 overflow-hidden rounded-full border border-gp-glass-border bg-gp-ink-strong/5 dark:bg-white/10 px-1.5 sm:px-2 py-1 backdrop-blur-xl shadow-md"
     >
       {crumbs.map((crumb, idx) => {
         const isFirst = idx === 0
         const isLastInList = idx === crumbs.length - 1
         const isLast = crumb.isCurrent
+        // At 390px this nav gets ~120px — room for exactly one label. Keep the
+        // crumb that says where you are plus its immediate parent (the "up one
+        // level" tap target) and fold older ancestors away until `sm`. Folding
+        // in CSS rather than JS keeps SSR and the first client render
+        // identical, and caps the fixed chrome so a four-deep chain costs the
+        // same on a phone as a two-deep one.
+        const isFoldedAncestor = idx < crumbs.length - 2
         const style =
           crumb.type === 'Dashboard'
             ? null
             : styleFor(crumb.type as FocalEntityType)
 
         const chipInner = (
-          <span className="flex min-w-0 items-center gap-1.5 px-2 py-1 rounded-full">
+          <span className="flex min-w-0 items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 py-1 rounded-full">
             {isFirst ? (
               <span
                 className="material-symbols-outlined shrink-0 text-[14px] leading-none text-gp-ink-muted dark:text-gp-ink-soft"
@@ -185,23 +192,55 @@ export const StudioBreadcrumb: FC = () => {
               )
             )}
             {isLast ? (
-              <>
+              // The type tag (10px caps) and the entity name (14px) sit on one
+              // line at different sizes. They must NOT share a baseline: caps
+              // of different sizes on one baseline have different cap-band
+              // centres, so the 10px tag's ink centre lands ~1.5px BELOW the
+              // 14px name's — measurably out of line with the dot, the chevrons
+              // and every other crumb, which all centre on the row.
+              //
+              // `items-center` is right here, and robustly so: half-leading
+              // splits evenly, so a span's ink centre sits at its box centre
+              // offset by a term that depends on the FONT and SIZE only, never
+              // on the line-height — which matters because the tag's `text-
+              // [10px]` sets no line-height and inherits whatever the shell
+              // provides. Measured in-browser for the current Inter/10px +
+              // Inter/14px pairing, that offset is ≈0 for both, and every ink
+              // centre in the nav (home glyph, labels, chevrons, dot, tag) lands
+              // on the row centre. Re-measure if the tag's size/weight or the UI
+              // font changes; the conclusion is empirical, not universal.
+              <span className="flex min-w-0 items-center gap-1 sm:gap-1.5">
                 {style && (
-                  <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft sm:inline">
+                  <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-gp-ink-muted dark:text-gp-ink-soft sm:block">
                     {style.label}
                   </span>
                 )}
-                <span className="max-w-[12ch] truncate text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong sm:max-w-[22ch]">
+                <span className="max-w-[18ch] truncate text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong sm:max-w-[22ch]">
                   {crumb.label}
                 </span>
-              </>
+              </span>
             ) : (
               <span
                 className={cn(
-                  'max-w-[10ch] sm:max-w-[16ch] truncate font-medium',
+                  // Every crumb label is `text-sm`. A smaller ancestor size
+                  // looked tidy in isolation but shortened its line box, and
+                  // the row's `items-center` then parked its baseline ~1.3px
+                  // above the Dashboard and current crumbs. One size across
+                  // the trail makes every baseline line up by construction;
+                  // the hierarchy is carried by weight and ink colour instead.
+                  // `sm:max-w` drops from 16ch to 14ch so the wider glyphs
+                  // don't cost the trail any horizontal budget.
+                  'max-w-[10ch] sm:max-w-[14ch] truncate text-sm font-medium',
+                  // Ancestor labels would be squeezed to zero width on a phone
+                  // anyway — drop them so their space goes to the crumb that
+                  // names the current location. The dot/home icon still carries
+                  // the type, and the chip stays tappable. The final crumb
+                  // always keeps its label: on routes with no focal entity
+                  // (search, profile, audit) it is the only crumb there is.
+                  !isLastInList && 'hidden sm:block',
                   isFirst
-                    ? 'text-sm text-gp-ink-strong dark:text-gp-ink-strong'
-                    : 'text-xs text-gp-ink-muted dark:text-gp-ink-soft'
+                    ? 'text-gp-ink-strong dark:text-gp-ink-strong'
+                    : 'text-gp-ink-muted dark:text-gp-ink-soft'
                 )}
               >
                 {crumb.label}
@@ -213,7 +252,11 @@ export const StudioBreadcrumb: FC = () => {
         return (
           <span
             key={crumb.key}
-            className={cn('flex min-w-0 items-center', isLast && 'shrink')}
+            className={cn(
+              'flex min-w-0 items-center',
+              isFoldedAncestor && 'hidden sm:flex',
+              isLast && 'shrink'
+            )}
           >
             {isLast ? (
               <span
@@ -228,6 +271,9 @@ export const StudioBreadcrumb: FC = () => {
                 type="button"
                 onClick={() => crumb.href && router.push(crumb.href)}
                 title={`Go to ${crumb.label}`}
+                // The visible label is hidden below `sm`, so name the control
+                // explicitly rather than leaning on its text content.
+                aria-label={`Go to ${crumb.label}`}
                 className="min-w-0 rounded-full hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 transition-colors cursor-pointer"
               >
                 {chipInner}
@@ -239,7 +285,7 @@ export const StudioBreadcrumb: FC = () => {
             )}
             {!isLastInList && (
               <span
-                className="material-symbols-outlined shrink-0 text-[14px] leading-none text-gp-ink-muted/60 dark:text-gp-ink-soft/60"
+                className="material-symbols-outlined shrink-0 text-[12px] sm:text-[14px] leading-none text-gp-ink-muted/60 dark:text-gp-ink-soft/60"
                 aria-hidden="true"
               >
                 chevron_right

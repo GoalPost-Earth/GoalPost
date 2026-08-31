@@ -27,11 +27,13 @@ const DOWNLOAD_TTL_SECONDS = 60 * 5
 
 /**
  * A top-level browser navigation (clicking/sharing the durable link) sends an
- * `Accept: text/html` request. When such a request is unauthenticated — a
+ * `Accept: text/html` request. For such a request a raw JSON body is a dead
+ * end, so the route redirects instead: an unauthenticated visitor — a
  * logged-out recipient, or a member whose short-lived accessToken cookie has
- * lapsed — a raw JSON 401 is a dead end. Detect the browser case so we can
- * redirect to the login page instead. Programmatic/API callers (fetch/XHR,
- * which don't ask for HTML) still get the JSON envelope.
+ * lapsed — goes to login (GOAL-316); an authenticated caller whose document
+ * can't be resolved goes to /document-unavailable (GOAL-321).
+ * Programmatic/API callers (fetch/XHR, which don't ask for HTML) still get
+ * the JSON envelope.
  */
 function prefersHtml(req: NextRequest): boolean {
   return (req.headers.get('accept') || '').includes('text/html')
@@ -104,7 +106,25 @@ export async function GET(
   const blobKey = await resolveAuthorizedBlobKey(userId, documentId)
   if (!blobKey) {
     // Missing document OR no access — same response, no existence leak.
-    return NextResponse.json({ error: 'Document not found.' }, { status: 404 })
+    // A browser navigation (a member clicking "Open document" on a pulse
+    // whose source document was deleted — GOAL-321) gets a human-readable
+    // dead-end instead of a raw JSON body, mirroring the unauthenticated
+    // login redirect above. The target page carries no document id, so the
+    // redirect stays identical for missing and forbidden alike.
+    // Never cacheable: a replayed dead-end 302/404 would outlive a later
+    // access grant (defense in depth — these are dynamic responses anyway).
+    if (prefersHtml(req)) {
+      const res = NextResponse.redirect(
+        new URL('/document-unavailable', req.url),
+        { status: 302 }
+      )
+      res.headers.set('Cache-Control', 'private, no-store')
+      return res
+    }
+    return NextResponse.json(
+      { error: 'Document not found.' },
+      { status: 404, headers: { 'Cache-Control': 'private, no-store' } }
+    )
   }
 
   let downloadUrl: string

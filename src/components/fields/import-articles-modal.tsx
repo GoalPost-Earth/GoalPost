@@ -3,33 +3,40 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
-import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 import {
-  ARTICLE_TEMPLATE_COLUMNS,
-  ARTICLE_TEMPLATE_SAMPLE_ROW,
+  ARTICLE_IMPORT_STATUS,
   MAX_ARTICLE_IMPORT_ROWS,
+  isArticleImportInFlight,
   parseArticleRows,
-  parseSpreadsheetArrayBuffer,
   validateArticleTemplateHeaders,
-  type ArticleImportResult,
   type ArticleImportRowInput,
   type ArticleRowError,
 } from '@/lib/imports/article-import'
+import { parseSpreadsheetArrayBuffer } from '@/lib/imports/article-sheet-parser'
 import {
   ImportSummaryChips,
   OutcomeRow,
   PreviewRowCard,
   RowIssueCard,
 } from './import-articles-preview'
+import { ImportArticlesPicker } from './import-articles-picker'
+import { ImportArticlesProgress } from './import-articles-progress'
+import { useArticleImportJob } from './use-article-import-job'
 
 /**
  * GOAL-317 — spreadsheet-driven bulk upload of articles as pulses.
  *
- * Three steps: pick a .csv/.xlsx → preview parsed rows + validation issues
- * (the human-in-the-loop gate — nothing is written until the member
- * confirms) → per-row results. Parsing happens client-side; the confirm
- * step POSTs typed rows to /api/import/articles, which re-validates and
- * writes through the authorized tool path.
+ * Four steps: pick a .csv/.xlsx → preview parsed rows + validation issues (the
+ * human-in-the-loop gate — nothing is written until the member confirms) →
+ * queued/importing progress → per-row results. Parsing happens client-side;
+ * the confirm step POSTs typed rows to /api/import/articles.
+ *
+ * GOAL-326 made the import asynchronous: that POST answers 202 with a job id
+ * and a cron worker mints the pulses, so the last two steps are driven by
+ * polling the job rather than by one long-blocked request. Which step shows is
+ * derived from the job, not stored — that way a member who closed the modal
+ * mid-import reopens straight into their progress (the hook recovers the job
+ * id) instead of a fresh drop zone.
  *
  * Rendered through a portal to `document.body` (GOAL-327). The field-context
  * page that owns this modal is mounted inside `CanvasHost`'s per-view
@@ -44,31 +51,12 @@ import {
 /** Client-side sanity cap on the sheet itself — rows are capped separately. */
 const MAX_SHEET_BYTES = 5 * 1024 * 1024
 
-type Step = 'pick' | 'preview' | 'results'
-
 interface ImportArticlesModalProps {
   isOpen: boolean
   fieldContextId: string
   onClose: () => void
-  /** Called after a batch that landed anything — parent refetches pulses/people. */
+  /** Called as rows land — parent refetches pulses/people. */
   onImported: () => void
-}
-
-function csvCell(value: string): string {
-  return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
-}
-
-function downloadCsvTemplate() {
-  const csv = [
-    ARTICLE_TEMPLATE_COLUMNS.join(','),
-    ARTICLE_TEMPLATE_SAMPLE_ROW.map(csvCell).join(','),
-  ].join('\n')
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = 'article-import-template.csv'
-  anchor.click()
-  URL.revokeObjectURL(url)
 }
 
 export function ImportArticlesModal({
@@ -77,14 +65,11 @@ export function ImportArticlesModal({
   onClose,
   onImported,
 }: ImportArticlesModalProps) {
-  const [step, setStep] = useState<Step>('pick')
+  const [hasPreview, setHasPreview] = useState(false)
   const [fileName, setFileName] = useState('')
   const [validRows, setValidRows] = useState<ArticleImportRowInput[]>([])
   const [rowErrors, setRowErrors] = useState<ArticleRowError[]>([])
-  const [result, setResult] = useState<ArticleImportResult | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pickError, setPickError] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
 
   // Keep Tab / Shift+Tab inside the dialog and move focus into it on open —
@@ -93,32 +78,41 @@ export function ImportArticlesModal({
   // without a trap Tab walks straight into the field-context page behind it.
   useFocusTrap(dialogRef, isOpen)
 
+  const { job, isSubmitting, error, submit, clear } = useArticleImportJob({
+    fieldContextId,
+    onRowsLanded: onImported,
+  })
+
+  const inFlight = job !== null && isArticleImportInFlight(job.status)
+  const step = job ? (inFlight ? 'progress' : 'results') : hasPreview ? 'preview' : 'pick'
+
   const reset = useCallback(() => {
-    setStep('pick')
+    setHasPreview(false)
     setFileName('')
     setValidRows([])
     setRowErrors([])
-    setResult(null)
-    setError(null)
-    setIsDragging(false)
-  }, [])
+    setPickError(null)
+    clear()
+  }, [clear])
 
   const handleClose = useCallback(() => {
     if (isSubmitting) return
-    reset()
+    // A finished import is dismissed for good; one still running is only
+    // hidden, so reopening returns to its progress.
+    if (!inFlight) reset()
     onClose()
-  }, [isSubmitting, onClose, reset])
+  }, [inFlight, isSubmitting, onClose, reset])
 
   const handleFileSelected = useCallback(async (picked: File | null) => {
     if (!picked) return
-    setError(null)
+    setPickError(null)
 
     if (!/\.(csv|xlsx)$/i.test(picked.name)) {
-      setError('Upload a .csv or .xlsx file.')
+      setPickError('Upload a .csv or .xlsx file.')
       return
     }
     if (picked.size > MAX_SHEET_BYTES) {
-      setError('This file is too large — the limit is 5 MB.')
+      setPickError('This file is too large — the limit is 5 MB.')
       return
     }
 
@@ -126,26 +120,26 @@ export function ImportArticlesModal({
     try {
       buffer = await picked.arrayBuffer()
     } catch {
-      setError('The file could not be read — pick it again and retry.')
+      setPickError('The file could not be read — pick it again and retry.')
       return
     }
     const { rows: sheetRows, parseErrors } = parseSpreadsheetArrayBuffer(buffer)
     if (parseErrors.length > 0) {
-      setError(parseErrors.join(' '))
+      setPickError(parseErrors.join(' '))
       return
     }
     if (sheetRows.length === 0) {
-      setError('The file has a header row but no data rows.')
+      setPickError('The file has a header row but no data rows.')
       return
     }
     const headerErrors = validateArticleTemplateHeaders(sheetRows)
     if (headerErrors.length > 0) {
-      setError(headerErrors.join(' '))
+      setPickError(headerErrors.join(' '))
       return
     }
     const parsed = parseArticleRows(sheetRows)
     if (parsed.rows.length > MAX_ARTICLE_IMPORT_ROWS) {
-      setError(
+      setPickError(
         `This sheet has ${parsed.rows.length} valid rows — a single import is capped at ${MAX_ARTICLE_IMPORT_ROWS}. Split it and upload in batches.`
       )
       return
@@ -154,47 +148,8 @@ export function ImportArticlesModal({
     setFileName(picked.name)
     setValidRows(parsed.rows)
     setRowErrors(parsed.errors)
-    setStep('preview')
+    setHasPreview(true)
   }, [])
-
-  const handleImport = useCallback(async () => {
-    if (validRows.length === 0) return
-    setIsSubmitting(true)
-    setError(null)
-    try {
-      const authHeaders = await chatApiAuthHeaders()
-      const res = await fetch('/api/import/articles', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({ fieldContextId, rows: validRows }),
-      })
-      const body = (await res.json().catch(() => null)) as
-        | (ArticleImportResult & { error?: string })
-        | null
-
-      // 200 / 207 / 400 can all carry a per-row result body — render it.
-      if (body && Array.isArray(body.outcomes) && body.summary) {
-        setResult(body)
-        setStep('results')
-        // skipped_existing rows may still have enriched an existing pulse
-        // (filled content/location/time), so they warrant a refetch too.
-        if (
-          body.summary.created > 0 ||
-          body.summary.createdPeople > 0 ||
-          body.summary.skippedExisting > 0
-        ) {
-          onImported()
-        }
-        return
-      }
-      throw new Error(body?.error ?? `Import failed (${res.status}).`)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Import failed.')
-    } finally {
-      setIsSubmitting(false)
-    }
-  }, [fieldContextId, onImported, validRows])
 
   // Esc closes — `handleClose` already no-ops mid-import, so an in-flight
   // batch can't be dismissed out from under the user.
@@ -219,6 +174,9 @@ export function ImportArticlesModal({
   // `dynamic(..., { ssr: false })` means this only ever runs in the browser,
   // but guard anyway so the component stays safe to mount eagerly.
   if (typeof document === 'undefined') return null
+
+  const failed = job?.status === ARTICLE_IMPORT_STATUS.failed
+  const visibleError = pickError ?? error
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -249,78 +207,7 @@ export function ImportArticlesModal({
         </div>
 
         {step === 'pick' && (
-          <>
-            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
-              Upload a spreadsheet where each row is an article — title,
-              author, date, and URL. Each row becomes a pulse in this field,
-              attributed to its author.
-            </p>
-
-            <label
-              htmlFor="import-articles-file"
-              onDragEnter={(event) => {
-                event.preventDefault()
-                setIsDragging(true)
-              }}
-              onDragOver={(event) => {
-                event.preventDefault()
-                setIsDragging(true)
-              }}
-              onDragLeave={(event) => {
-                if (event.currentTarget.contains(event.relatedTarget as Node))
-                  return
-                setIsDragging(false)
-              }}
-              onDrop={(event) => {
-                event.preventDefault()
-                setIsDragging(false)
-                void handleFileSelected(event.dataTransfer.files?.[0] ?? null)
-              }}
-              className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors cursor-pointer hover:border-gp-primary ${
-                isDragging
-                  ? 'border-gp-primary bg-gp-primary/10 dark:bg-gp-primary/15'
-                  : 'border-gp-glass-border bg-gp-glass-bg/40'
-              }`}
-            >
-              <span
-                className={`material-symbols-outlined text-3xl transition-colors ${
-                  isDragging ? 'text-gp-primary' : 'text-gp-ink-muted'
-                }`}
-              >
-                newspaper
-              </span>
-              <span className="text-sm text-gp-ink-strong dark:text-white font-medium">
-                {isDragging
-                  ? 'Drop to preview'
-                  : 'Drag a spreadsheet here, or click to choose'}
-              </span>
-              <span className="text-xs text-gp-ink-muted">
-                Accepts .csv and .xlsx — up to {MAX_ARTICLE_IMPORT_ROWS} rows
-                per import
-              </span>
-              <input
-                id="import-articles-file"
-                type="file"
-                accept=".csv,.xlsx"
-                className="sr-only"
-                onChange={(event) => {
-                  void handleFileSelected(event.target.files?.[0] ?? null)
-                  event.target.value = ''
-                }}
-              />
-            </label>
-
-            <button
-              type="button"
-              onClick={downloadCsvTemplate}
-              className="inline-flex items-center gap-1.5 self-start text-xs font-medium text-gp-primary hover:underline cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[14px]">
-                download
-              </span>
-              Download the CSV template
-            </button>
-          </>
+          <ImportArticlesPicker onFileSelected={handleFileSelected} />
         )}
 
         {step === 'preview' && (
@@ -361,14 +248,25 @@ export function ImportArticlesModal({
           </>
         )}
 
-        {step === 'results' && result && (
+        {step === 'progress' && job && <ImportArticlesProgress job={job} />}
+
+        {step === 'results' && job && (
           <>
-            <ImportSummaryChips summary={result.summary} />
+            {failed && (
+              <div
+                role="alert"
+                className="shrink-0 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              >
+                {job.statusMessage ??
+                  'This import could not be finished. Upload the remaining rows again.'}
+              </div>
+            )}
+            <ImportSummaryChips summary={job.summary} />
             <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
-              {result.message}
+              {job.message}
             </p>
             <div className="overflow-y-auto min-h-0 space-y-2 pr-1">
-              {[...result.outcomes]
+              {[...job.outcomes]
                 .sort(
                   (a, b) =>
                     (a.status === 'failed' ? 0 : 1) -
@@ -381,23 +279,23 @@ export function ImportArticlesModal({
           </>
         )}
 
-        {error && (
+        {visibleError && (
           <div
             role="alert"
             className="shrink-0 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
           >
-            {error}
+            {visibleError}
           </div>
         )}
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1 shrink-0">
-          {step === 'pick' && (
+          {(step === 'pick' || step === 'progress') && (
             <button
               type="button"
               onClick={handleClose}
               className="px-5 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors cursor-pointer"
             >
-              Cancel
+              {step === 'progress' ? 'Close' : 'Cancel'}
             </button>
           )}
           {step === 'preview' && (
@@ -406,8 +304,8 @@ export function ImportArticlesModal({
                 type="button"
                 onClick={() => {
                   if (isSubmitting) return
-                  setError(null)
-                  setStep('pick')
+                  setPickError(null)
+                  setHasPreview(false)
                 }}
                 disabled={isSubmitting}
                 className="px-5 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
@@ -416,7 +314,7 @@ export function ImportArticlesModal({
               </button>
               <button
                 type="button"
-                onClick={() => void handleImport()}
+                onClick={() => void submit(validRows)}
                 disabled={isSubmitting || validRows.length === 0}
                 className="px-5 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
@@ -426,7 +324,7 @@ export function ImportArticlesModal({
                   </span>
                 )}
                 {isSubmitting
-                  ? 'Importing…'
+                  ? 'Queueing…'
                   : `Import ${validRows.length} row${validRows.length === 1 ? '' : 's'}`}
               </button>
             </>

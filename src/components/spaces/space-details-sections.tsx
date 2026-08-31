@@ -116,13 +116,13 @@ export function SpaceDetailsSections({
                 {owner?.name}
               </p>
             </div>
-            {owner?.__typename === 'Person' && owner?.email && (
+            {owner?.__typename === 'Person' && owner?.privateProfile?.email && (
               <div>
                 <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
                   Email
                 </span>
                 <p className="text-xs text-gp-ink-soft dark:text-gp-ink-soft truncate">
-                  {owner.email}
+                  {owner.privateProfile.email}
                 </p>
               </div>
             )}
@@ -185,9 +185,9 @@ export function SpaceDetailsSections({
                             {memberData.name}
                           </h4>
                           {memberData.__typename === 'Person' &&
-                            memberData.email && (
+                            memberData.privateProfile?.email && (
                               <p className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft">
-                                {memberData.email}
+                                {memberData.privateProfile.email}
                               </p>
                             )}
                         </div>

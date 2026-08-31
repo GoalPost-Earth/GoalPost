@@ -11,6 +11,8 @@ export interface FieldContextCardProps {
     emergentName?: string | null
     createdAt: string
     pulses?: Array<{ id: string }> | null
+    /** Direct nested fields (GOAL-295); shown as a count chip. */
+    subContexts?: Array<{ id: string }> | null
   }
   /** Drives the accent palette so cards inherit their owning space's
    *  warm (Me) vs cool (We) treatment. */
@@ -35,6 +37,7 @@ export function FieldContextCard({
   const openPage = () =>
     router.push(`/protected/dashboard/field-context/${context.id}`)
   const pulseCount = context.pulses?.length ?? 0
+  const subContextCount = context.subContexts?.length ?? 0
   const timeAgo = (() => {
     const d = new Date(context.createdAt)
     return Number.isNaN(d.getTime())
@@ -124,6 +127,17 @@ export function FieldContextCard({
             {pulseCount} {pulseCount === 1 ? 'pulse' : 'pulses'}
           </span>
         </div>
+        {subContextCount > 0 && (
+          <div className="flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-base">
+              account_tree
+            </span>
+            <span>
+              {subContextCount}{' '}
+              {subContextCount === 1 ? 'nested field' : 'nested fields'}
+            </span>
+          </div>
+        )}
         <div className="ml-auto text-[10px] text-slate-400 dark:text-white/40">
           {timeAgo}
         </div>

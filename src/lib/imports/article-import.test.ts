@@ -1,14 +1,18 @@
 import * as XLSX from 'xlsx'
 import {
+  buildArticleImportMessage,
   buildArticleRowContent,
   normalizeArticleDate,
   normalizeArticleUrl,
   parseArticleRows,
-  parseSpreadsheetArrayBuffer,
   resolveArticlePulseType,
+  summarizeArticleOutcomes,
   validateArticleTemplateHeaders,
   type ArticleImportRowInput,
+  type ArticleImportSummary,
+  type PersistedArticleRowOutcome,
 } from './article-import'
+import { parseSpreadsheetArrayBuffer } from './article-sheet-parser'
 
 /**
  * GOAL-317 — unit tests for the shared article-import parsing/validation
@@ -469,5 +473,153 @@ describe('parseSpreadsheetArrayBuffer', () => {
         url: 'https://example.org/b',
       },
     ])
+  })
+})
+
+/**
+ * GOAL-326 — the summary is no longer accumulated as the batch runs; it is
+ * recomputed from the durable per-row outcomes every time it is read, so a job
+ * that was interrupted and resumed reports the same numbers as one that ran
+ * straight through. These tests pin that derivation.
+ */
+describe('summarizeArticleOutcomes', () => {
+  const outcome = (
+    overrides: Partial<PersistedArticleRowOutcome> = {}
+  ): PersistedArticleRowOutcome => ({
+    row: 2,
+    title: 'A row',
+    status: 'created',
+    message: 'Created.',
+    ...overrides,
+  })
+
+  it('counts each outcome status into its own bucket', () => {
+    const summary = summarizeArticleOutcomes(
+      [
+        outcome({ row: 2, status: 'created' }),
+        outcome({ row: 3, status: 'skipped_existing' }),
+        outcome({ row: 4, status: 'failed' }),
+        outcome({ row: 5, status: 'created' }),
+      ],
+      10
+    )
+
+    expect(summary).toEqual({
+      totalRows: 10,
+      created: 2,
+      skippedExisting: 1,
+      failed: 1,
+      createdPeople: 0,
+      matchedPeople: 0,
+    })
+  })
+
+  it('counts people from personEvent, not from the row status', () => {
+    const summary = summarizeArticleOutcomes(
+      [
+        outcome({ row: 2, personEvent: 'created' }),
+        // A row whose pulse write failed can still have created its author.
+        outcome({ row: 3, status: 'failed', personEvent: 'created' }),
+        outcome({ row: 4, personEvent: 'matched' }),
+        // Cached author on a later row for the same person — counted once.
+        outcome({ row: 5 }),
+      ],
+      4
+    )
+
+    expect(summary.createdPeople).toBe(2)
+    expect(summary.matchedPeople).toBe(1)
+  })
+
+  it('reports totalRows even when nothing has been processed yet', () => {
+    expect(summarizeArticleOutcomes([], 300)).toEqual({
+      totalRows: 300,
+      created: 0,
+      skippedExisting: 0,
+      failed: 0,
+      createdPeople: 0,
+      matchedPeople: 0,
+    })
+  })
+
+  it('keeps every ROW count stable across a resume', () => {
+    // Three rows by one author. Straight through, the author is resolved once
+    // and cached, so rows 3 and 4 carry no personEvent.
+    const straightThrough: PersistedArticleRowOutcome[] = [
+      outcome({ row: 2, personEvent: 'created' }),
+      outcome({ row: 3 }),
+      outcome({ row: 4, status: 'failed' }),
+    ]
+    // Crash after row 2. The resumed tick starts with a COLD author cache, so
+    // it re-resolves the same author and sees them already existing.
+    const resumed: PersistedArticleRowOutcome[] = [
+      outcome({ row: 2, personEvent: 'created' }),
+      outcome({ row: 3, personEvent: 'matched' }),
+      outcome({ row: 4, status: 'failed' }),
+    ]
+
+    const a = summarizeArticleOutcomes(straightThrough, 3)
+    const b = summarizeArticleOutcomes(resumed, 3)
+    expect(b.created).toBe(a.created)
+    expect(b.skippedExisting).toBe(a.skippedExisting)
+    expect(b.failed).toBe(a.failed)
+    expect(b.totalRows).toBe(a.totalRows)
+  })
+
+  it('reports PEOPLE counts per run, so a resume can double-count one author', () => {
+    // The documented trade-off (see summarizeArticleOutcomes): making this
+    // exact would mean persisting an author identity on every row, which is
+    // more member PII in the job node than the count is worth. Pinned so the
+    // behaviour is a decision rather than a surprise.
+    const resumed: PersistedArticleRowOutcome[] = [
+      outcome({ row: 2, personEvent: 'created' }),
+      outcome({ row: 3, personEvent: 'matched' }),
+    ]
+    const summary = summarizeArticleOutcomes(resumed, 2)
+
+    expect(summary.createdPeople).toBe(1)
+    expect(summary.matchedPeople).toBe(1)
+  })
+})
+
+describe('buildArticleImportMessage', () => {
+  const summary = (
+    overrides: Partial<ArticleImportSummary> = {}
+  ): ArticleImportSummary => ({
+    totalRows: 3,
+    created: 3,
+    skippedExisting: 0,
+    failed: 0,
+    createdPeople: 0,
+    matchedPeople: 0,
+    ...overrides,
+  })
+
+  it('leads with what landed', () => {
+    expect(buildArticleImportMessage(summary())).toBe('Imported 3 of 3 rows.')
+  })
+
+  it('names skipped and failed rows when there are any', () => {
+    expect(
+      buildArticleImportMessage(
+        summary({ created: 1, skippedExisting: 1, failed: 1 })
+      )
+    ).toBe('Imported 1 of 3 rows, 1 already existed, 1 failed.')
+  })
+
+  it('acknowledges people created even when no pulse landed', () => {
+    expect(
+      buildArticleImportMessage(
+        summary({ created: 0, failed: 3, createdPeople: 1 })
+      )
+    ).toBe(
+      'No pulses were imported, though 1 new person was added. Fix the errors below and upload again.'
+    )
+  })
+
+  it('falls back to the bare failure line when nothing at all happened', () => {
+    expect(buildArticleImportMessage(summary({ created: 0, failed: 3 }))).toBe(
+      'No rows were imported. Fix the errors below and upload again.'
+    )
   })
 })

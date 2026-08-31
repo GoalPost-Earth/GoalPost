@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
+import { INVITE_INVALID_MESSAGE } from '@/constants'
 
 /**
  * Landing page for the email-invite flow. The recipient arrives with a
@@ -26,13 +27,26 @@ function AcceptInvitePage() {
     formState: { errors },
     setError: setFormError,
   } = useForm({
-    defaultValues: { password: '', confirmPassword: '' },
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      password: '',
+      confirmPassword: '',
+    },
   })
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
   const [success, setSuccess] = useState('')
 
+  // The API collapses every failed redemption (expired / already used /
+  // rate-limited / unknown token) into this one message — when we see it,
+  // the actionable next step is a fresh invite, so surface that guidance
+  // instead of leaving the user at a dead end (GOAL-329).
+  const inviteDead = errorMsg === INVITE_INVALID_MESSAGE
+
   const onSubmit = async (values: {
+    firstName: string
+    lastName: string
     password: string
     confirmPassword: string
   }) => {
@@ -52,7 +66,12 @@ function AcceptInvitePage() {
       const res = await fetch('/api/auth/accept-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password: values.password }),
+        body: JSON.stringify({
+          token,
+          password: values.password,
+          firstName: values.firstName.trim(),
+          lastName: values.lastName.trim() || undefined,
+        }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -120,6 +139,39 @@ function AcceptInvitePage() {
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="relative min-w-0">
+                  <input
+                    {...register('firstName', {
+                      required: 'First name is required',
+                      validate: (v) =>
+                        v.trim().length > 0 || 'First name is required',
+                    })}
+                    type="text"
+                    placeholder="First name"
+                    autoComplete="given-name"
+                    disabled={loading}
+                    className="w-full rounded-2xl px-5 py-3.5 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none text-sm font-light transition-all duration-300 bg-white/55 backdrop-blur-[10px] border border-gp-glass-border dark:bg-white/[0.04] dark:border-white/10 focus:bg-white/85 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
+                  />
+                  {errors.firstName && (
+                    <p className="text-red-500 text-xs mt-1 ml-2">
+                      {errors.firstName.message}
+                    </p>
+                  )}
+                </div>
+
+                <div className="relative min-w-0">
+                  <input
+                    {...register('lastName')}
+                    type="text"
+                    placeholder="Last name"
+                    autoComplete="family-name"
+                    disabled={loading}
+                    className="w-full rounded-2xl px-5 py-3.5 text-gp-ink-strong dark:text-gp-ink-strong placeholder-gp-ink-soft/70 dark:placeholder-gp-ink-soft/70 focus:outline-none text-sm font-light transition-all duration-300 bg-white/55 backdrop-blur-[10px] border border-gp-glass-border dark:bg-white/[0.04] dark:border-white/10 focus:bg-white/85 focus:border-[color-mix(in_srgb,var(--gp-primary)_75%,transparent)] focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_25%,transparent)] dark:focus:bg-white/10 dark:focus:border-[color-mix(in_srgb,var(--gp-primary)_80%,transparent)] dark:focus:shadow-[0_0_0_4px_color-mix(in_srgb,var(--gp-primary)_30%,transparent)]"
+                  />
+                </div>
+              </div>
+
               <div className="relative">
                 <input
                   {...register('password', {
@@ -161,9 +213,17 @@ function AcceptInvitePage() {
               </div>
 
               {errorMsg && (
-                <p className="text-red-500 text-sm text-center font-medium">
-                  {errorMsg}
-                </p>
+                <div className="space-y-1.5">
+                  <p className="text-red-500 text-sm text-center font-medium">
+                    {errorMsg}
+                  </p>
+                  {inviteDead && (
+                    <p className="text-gp-ink-muted dark:text-gp-ink-soft text-xs text-center">
+                      Ask the person who invited you to send the invite again
+                      — you&apos;ll get a fresh link by email.
+                    </p>
+                  )}
+                </div>
               )}
 
               {success && (

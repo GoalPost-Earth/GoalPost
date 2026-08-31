@@ -2,18 +2,19 @@ import type { Driver } from 'neo4j-driver'
 import type { BlobStore } from './blob-store'
 import type { ExtractionModelClient } from './extraction-model-invoker'
 import type { ExecutedToolCallRecord } from './synthesized-turn-appender'
-import { loadDocumentRecord, setDocumentSummary } from './document-storage'
+import { loadDocumentRecord } from './document-storage'
+import type { DocumentSummarizerClient } from './document-summarizer'
 import {
-  summarizeDocument,
-  type DocumentSummarizerClient,
-} from './document-summarizer'
-import { prepareExtractionInputs } from './extraction-input-preparer'
-import { loadFieldContextRoster } from './field-context-roster'
-import { extractEntities } from './extraction-model-invoker'
+  countExecutedToolCalls,
+  runDocumentIngestPipeline,
+  type DocumentIngestPipelineFailureReason,
+} from './run-document-ingest-pipeline'
 import {
-  appendSynthesizedIngestTurns,
-  createIngestThread,
-} from './handle-ingest-document'
+  DOCUMENT_INGEST_STATUS,
+  markDocumentIngestComplete,
+  markDocumentIngestFailed,
+  memberSafeIngestFailureMessage,
+} from './document-ingest-queue'
 
 /**
  * Slice 6 — Re-extract an existing Document.
@@ -47,14 +48,15 @@ export interface ReExtractDocumentInput {
   documentId: string
 }
 
+/**
+ * Derived from the pipeline's own reasons plus the two this entry point adds, so
+ * a new pipeline reason is a compile error here rather than something a cast
+ * silently swallows.
+ */
 export type ReExtractFailureReason =
+  | DocumentIngestPipelineFailureReason
   | 'forbidden'
-  | 'not_found'
-  | 'blob_missing'
-  | 'parse_failure'
-  | 'unsupported_mime'
-  | 'oversize_pages'
-  | 'oversize_chars'
+  | 'in_progress'
 
 export interface ReExtractSuccess {
   ok: true
@@ -99,24 +101,6 @@ async function userCanEditContext(
       )
     )
     return Boolean(result.records[0]?.get('allowed'))
-  } finally {
-    await session.close()
-  }
-}
-
-async function getFieldContextTitle(
-  driver: Driver,
-  fieldContextId: string
-): Promise<string> {
-  const session = driver.session()
-  try {
-    const result = await session.executeRead(async (tx) =>
-      tx.run(
-        `MATCH (c:FieldContext {id: $fieldContextId}) RETURN c.title AS title LIMIT 1`,
-        { fieldContextId }
-      )
-    )
-    return (result.records[0]?.get('title') as string | null) ?? ''
   } finally {
     await session.close()
   }
@@ -191,6 +175,33 @@ export async function handleReExtractDocument(
     }
   }
 
+  // 2b) Refuse while the FIRST ingest pass is still queued or running
+  //     (GOAL-292). Re-extract does not go through the worker's claim, so
+  //     without this check a direct GraphQL call — or a stale browser tab whose
+  //     client-side guard is out of date — starts a second full pipeline on a
+  //     document the worker is holding in PROCESSING: duplicate entity writes,
+  //     two ingest threads, two summary writes and doubled model spend, with
+  //     the worker's terminal write then overwriting whatever this run left.
+  //
+  //     KNOWN GAP (pre-existing, unchanged by this story): this does NOT make
+  //     two concurrent RE-EXTRACTS mutually exclusive, because a re-extract
+  //     leaves the document COMPLETE/FAILED while it runs rather than claiming
+  //     it. Only the per-row client guard stops that, and only per tab. Fixing
+  //     it needs a claim that fences on `ingestClaimedBy` WITHOUT entering the
+  //     drainable PENDING/PROCESSING states, or the reclaim path would hand the
+  //     document to the cron as a fresh upload.
+  if (
+    record.status === DOCUMENT_INGEST_STATUS.pending ||
+    record.status === DOCUMENT_INGEST_STATUS.processing
+  ) {
+    return {
+      ok: false,
+      reason: 'in_progress',
+      error:
+        'This document is still being read. Wait for it to finish before re-extracting.',
+    }
+  }
+
   // 3) Verify the original blob still exists. A missing blob is a hard
   //    failure — the Document row persists; the user will see the
   //    "blob_missing" message and can decide whether to re-upload.
@@ -202,107 +213,60 @@ export async function handleReExtractDocument(
     }
   }
 
-  // 4) Prepare extractor + summarizer inputs by route — shared verbatim with
-  //    the initial-upload path so re-extract handles every supported type
-  //    (PDF/images via Gemini, docx/xlsx/pptx via in-process text, plain
-  //    text decoded) identically. See extraction-input-preparer.ts.
-  const prepared = await prepareExtractionInputs(deps, {
-    mimeType: record.mimeType,
-    blobKey: record.blobKey,
-    filename: record.filename,
+  // 4) Run the shared pipeline — prepare inputs by route, extract + summarize,
+  //    refresh the stored summary, then open a fresh thread and auto-execute
+  //    the proposals. Identical code to the initial-upload worker (GOAL-292),
+  //    so the two entry points can no longer drift the way they did before
+  //    extraction-input-preparer.ts was factored out. The thread-title suffix
+  //    makes the re-extract origin obvious in the thread switcher.
+  const run = await runDocumentIngestPipeline(deps, {
+    documentId: record.id,
+    actingUserId: input.currentUserId,
+    userTurnVerb: 'Re-extracted',
+    threadTitleSuffix: ' (re-extracted)',
+    record,
   })
-  if (!prepared.ok) {
-    return { ok: false, reason: prepared.reason, error: prepared.error }
+  if (!run.ok) {
+    // Record the failure on the document so the row reflects reality rather
+    // than keeping whatever status the previous pass left.
+    await markDocumentIngestFailed({
+      driver: deps.driver,
+      documentId: record.id,
+      statusMessage: memberSafeIngestFailureMessage(run.reason, run.error),
+    })
+    return { ok: false, reason: run.reason, error: run.error }
   }
-  const {
-    extractionModelInputExtras: extractionExtras,
-    summarizerExtras,
-    modelClient,
-    summarizerClient,
-  } = prepared
 
-  const fieldContextTitle = await getFieldContextTitle(
-    deps.driver,
-    record.fieldContextId
-  )
-
-  const roster = await loadFieldContextRoster({
-    driver: deps.driver,
-    fieldContextId: record.fieldContextId,
-  })
-
-  const [extraction, summary] = await Promise.all([
-    extractEntities(
-      {
-        ...extractionExtras,
-        filename: record.filename,
-        hint: record.userHint,
-        roster,
-        fieldContextId: record.fieldContextId,
-        fieldContextTitle,
-        documentId: record.id,
-        userId: input.currentUserId,
-      },
-      modelClient
-    ),
-    summarizeDocument(summarizerClient, {
-      ...summarizerExtras,
-      filename: record.filename,
-      hint: record.userHint,
-      fieldContextTitle,
-      userId: input.currentUserId,
-    }),
-  ])
-
-  // Re-extract refreshes the summary too so the Document card always
-  // reflects the latest pass.
-  await setDocumentSummary({
+  // Re-extract is the documented recovery path for a FAILED document, so a
+  // successful pass must clear that state. Without this the row keeps showing
+  // the old Failed chip and stale error copy to every member of the Space —
+  // beside the entities this run just created.
+  await markDocumentIngestComplete({
     driver: deps.driver,
     documentId: record.id,
-    summary: summary.summary,
-    concepts: summary.concepts,
+    ...countExecutedToolCalls(run.executedToolCalls),
   })
 
-  // 5) Fresh ConversationThread + synthesized assistant turn. Title makes
-  //    the re-extract origin obvious in the thread switcher.
-  const threadId = await createIngestThread(
-    deps.driver,
-    input.currentUserId,
-    record.id,
-    `Ingest: ${record.filename} (re-extracted)`
-  )
-
-  const userTurnContent = record.userHint
-    ? `Re-extracted ${record.filename}. Hint: ${record.userHint}`
-    : `Re-extracted ${record.filename}`
-  const executedToolCalls = await appendSynthesizedIngestTurns(
-    input.currentUserId,
-    threadId,
-    userTurnContent,
-    extraction
-  )
-
-  const outcome: 'success' | 'failure' | 'empty' =
-    extraction.kind === 'failure'
-      ? 'failure'
-      : executedToolCalls.length === 0
-        ? 'empty'
-        : 'success'
+  const outcome: 'success' | 'failure' | 'empty' = run.extractionFailed
+    ? 'failure'
+    : run.executedToolCalls.length === 0
+      ? 'empty'
+      : 'success'
   await writeReExtractLog(
     deps.driver,
     input.currentUserId,
     record.filename,
     record.id,
-    threadId,
-    executedToolCalls.length,
+    run.threadId,
+    run.executedToolCalls.length,
     outcome
   )
 
   return {
     ok: true,
     documentId: record.id,
-    threadId,
+    threadId: run.threadId,
     fieldContextId: record.fieldContextId,
-    executedToolCalls,
+    executedToolCalls: run.executedToolCalls,
   }
 }

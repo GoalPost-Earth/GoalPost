@@ -17,6 +17,7 @@ import { createNotification } from '@/lib/notifications/create-notification'
 import { hashAuthToken } from '@/lib/auth/token-hash'
 import { rateLimit } from '@/lib/auth/rate-limit'
 import { GraphQLError } from 'graphql'
+import { INVITE_RESENT_MESSAGE } from '@/constants'
 
 interface AddSpaceMemberInput {
   spaceId: string
@@ -116,6 +117,80 @@ async function enforceInviteBlastLimit(
   }
 }
 
+// Invite links stay valid for 7 days (GOAL-329). The original 48h window
+// proved shorter than real-world invite latency (invitees often open the
+// email days later), and an expired link used to be a dead end because
+// re-inviting short-circuited on "already part of the space". Keep this in
+// sync with the "expires in 7 days" copy in sendSpaceInviteEmail.
+const INVITE_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000
+
+/**
+ * Mint a fresh single-use invite token for a not-yet-registered Person,
+ * stamp its hash + expiry on the node, and email the accept link.
+ *
+ * Token format is `${spaceId}.${uuid}`: the spaceId prefix is what the
+ * accept handler uses to redirect the user to the right space, so two
+ * pending invites to the same Person for different spaces don't silently
+ * land on whichever was minted last. The Person node only ever carries one
+ * pending invite hash at a time (latest write wins) — each emailed link
+ * self-describes the space it's for via the prefix.
+ *
+ * Storage shape: we persist sha256(rawToken) as inviteTokenHash, never the
+ * raw token. The raw token only lives in the outgoing email URL; on accept
+ * we re-hash the URL-bound token and look up by the indexed hash field.
+ * This defends against database-read compromise (leaked backup,
+ * misconfigured Browser, log channel) since the stored value alone can't
+ * be redeemed.
+ *
+ * Shared by the first-invite path and the re-invite path (GOAL-329) so the
+ * two stay in lockstep.
+ */
+async function mintAndSendInvite(
+  session: Session,
+  args: {
+    memberId: string
+    memberEmail: string
+    spaceId: string
+    spaceName: string
+    inviterName: string
+  }
+): Promise<{ minted: boolean; emailOk: boolean }> {
+  const inviteToken = `${args.spaceId}.${crypto.randomUUID()}`
+  const inviteTokenHash = hashAuthToken(inviteToken)
+  const inviteExpires = new Date(
+    Date.now() + INVITE_TOKEN_TTL_MS
+  ).toISOString()
+
+  // `NOT p:User` mirrors the accept route's redemption guard: if the
+  // Person registered between the caller's preflight read and this write
+  // (e.g. they just redeemed a still-valid older link), don't stamp a
+  // dormant token onto a live account or email a link that could never
+  // be redeemed.
+  const write = await session.executeWrite((tx) =>
+    tx.run(
+      `
+      MATCH (p:Person {id: $memberId})
+      WHERE NOT p:User
+      SET p.inviteTokenHash = $inviteTokenHash,
+          p.inviteTokenExpires = datetime($inviteExpires)
+      RETURN p.id AS id
+      `,
+      { memberId: args.memberId, inviteTokenHash, inviteExpires }
+    )
+  )
+  if (write.records.length === 0) {
+    return { minted: false, emailOk: false }
+  }
+
+  const result = await sendSpaceInviteEmail({
+    to: args.memberEmail,
+    inviteToken,
+    spaceName: args.spaceName,
+    inviterName: args.inviterName,
+  })
+  return { minted: true, emailOk: result.ok }
+}
+
 /**
  * Shared core for adding an already-resolved Person to a space. The caller is
  * responsible for (a) authenticating, (b) the invite-blast rate limit, (c)
@@ -123,7 +198,9 @@ async function enforceInviteBlastLimit(
  * gate. Given those preconditions, this creates the SpaceMembership, converts
  * a MeSpace to a WeSpace on first non-owner add, and fires the appropriate
  * email: a no-token "you've been added" notice for an existing :User, or a
- * single-use 48h invite token for a Person that hasn't registered yet.
+ * single-use 7-day invite token for a Person that hasn't registered yet.
+ * Re-adding a Person whose invite is still pending re-mints and re-sends the
+ * invite link instead of failing (GOAL-329).
  */
 async function addPersonToSpace(
   session: Session,
@@ -132,20 +209,12 @@ async function addPersonToSpace(
   memberId: string,
   role: SpaceRole
 ): Promise<AddSpaceMemberResponse> {
-  // Check if member already exists in space
-  const alreadyExists = await memberExistsInSpace(session, memberId, spaceId)
-  if (alreadyExists) {
-    return {
-      success: false,
-      message: 'This member is already part of the space.',
-    }
-  }
-
   // Pre-flight: fetch the Person's email + :User label status + space
   // name + inviter name in one read so we can (a) block adds for people
   // with no email on file (the UI promises an email invite goes out),
   // and (b) have everything we need for the post-create email without
-  // a second round trip.
+  // a second round trip. Runs before the already-a-member check so the
+  // re-invite branch below has everything it needs.
   const preflight = await session.executeRead((tx) =>
     tx.run(
       `
@@ -155,6 +224,8 @@ async function addPersonToSpace(
       RETURN
         member.email AS memberEmail,
         'User' IN labels(member) AS isExistingUser,
+        coalesce(nullif(member.name, ''), nullif(member.firstName, ''),
+          'a new member') AS memberName,
         space.name AS spaceName,
         coalesce(inviter.name, inviter.firstName, 'A GoalPost member')
           AS inviterName
@@ -174,6 +245,8 @@ async function addPersonToSpace(
   const isExistingUser = preflight.records[0].get('isExistingUser') as
     | boolean
     | null
+  const memberName =
+    (preflight.records[0].get('memberName') as string | null) || 'a new member'
   const spaceName =
     (preflight.records[0].get('spaceName') as string | null) ?? 'this space'
   const inviterName =
@@ -185,6 +258,112 @@ async function addPersonToSpace(
       success: false,
       message:
         'Cannot add this person without an email on file. Update their profile first.',
+    }
+  }
+
+  // Check if member already exists in space
+  const alreadyExists = await memberExistsInSpace(session, memberId, spaceId)
+  if (alreadyExists) {
+    if (isExistingUser) {
+      return {
+        success: false,
+        message: 'This member is already part of the space.',
+      }
+    }
+
+    // GOAL-329: the membership exists but the Person never registered —
+    // their invite is pending. The previously emailed link may be expired
+    // (TTL), overwritten by a later invite to another space, or destroyed
+    // by a failed accept attempt. Without this branch "already part of the
+    // space" was a dead end with no way to ever get them a working link
+    // again. Re-mint + re-send instead of failing. The caller's
+    // invite-blast rate limit and canManageMembers gate both cover this
+    // path, so a fresh token can't be blasted or minted by a non-admin.
+    // Fetch the existing membership: the response surfaces it so
+    // consumers (e.g. the permissions modal's activity logger) see the
+    // real member instead of synthesizing an id, and the audit log below
+    // records the role the membership actually holds — a
+    // differently-requested `role` argument is NOT applied on re-invite.
+    const existingMembership = await session.executeRead((tx) =>
+      tx.run(
+        `
+        MATCH (space:Space {id: $spaceId})-[:HAS_MEMBER]->
+              (sm:SpaceMembership)-[:IS_MEMBER]->
+              (person:Person {id: $memberId})
+        RETURN
+          sm.id as id,
+          sm.role as role,
+          sm.addedAt as addedAt,
+          person.id as personId,
+          person.name as name,
+          person.email as email,
+          labels(person) as personLabels
+        LIMIT 1
+        `,
+        { spaceId, memberId }
+      )
+    )
+    const membershipRecord = existingMembership.records[0]
+
+    const { minted, emailOk } = await mintAndSendInvite(session, {
+      memberId,
+      memberEmail,
+      spaceId,
+      spaceName,
+      inviterName,
+    })
+
+    // The token rotation is a state mutation in its own right — it
+    // invalidates whatever link was emailed before — so it must be logged
+    // even when the follow-up email fails.
+    if (minted) {
+      createLog({
+        userId: currentUserId,
+        description: `Re-sent the invite to ${memberName} for "${spaceName}"`,
+        spaceId,
+        metadata: {
+          event: 'space_invite_resent',
+          memberId,
+          emailOk,
+          ...(membershipRecord
+            ? { role: membershipRecord.get('role') as string }
+            : {}),
+        },
+      }).catch((err) => console.warn('Failed to log invite resend:', err))
+    }
+
+    if (!minted || !emailOk) {
+      return {
+        success: false,
+        message:
+          'This person has a pending invite, but a new invite email could not be sent. Please try again.',
+      }
+    }
+
+    return {
+      success: true,
+      message: INVITE_RESENT_MESSAGE,
+      ...(membershipRecord
+        ? {
+            membership: {
+              id: membershipRecord.get('id'),
+              role: membershipRecord.get('role'),
+              addedAt: membershipRecord.get('addedAt')?.toString() ?? '',
+              member: [
+                {
+                  __typename: (
+                    membershipRecord.get('personLabels') as string[]
+                  ).includes('Person')
+                    ? ('Person' as const)
+                    : ('Community' as const),
+                  id: membershipRecord.get('personId'),
+                  name: membershipRecord.get('name'),
+                  email: membershipRecord.get('email'),
+                },
+              ],
+            },
+          }
+        : {}),
     }
   }
 
@@ -301,44 +480,17 @@ async function addPersonToSpace(
           ' Member added, but the notification email failed to send.'
       }
     } else {
-      // Mint a single-use invite token. Format is `${spaceId}.${uuid}`:
-      // the spaceId prefix is what the accept handler uses to redirect
-      // the user to the right space, so two pending invites to the same
-      // Person for different spaces don't silently land on whichever
-      // was minted last. The Person node only ever carries one pending
-      // invite hash at a time (latest write wins) — each emailed link
-      // self-describes the space it's for via the prefix. 48h expiry.
-      //
-      // Storage shape: we persist sha256(rawToken) as inviteTokenHash,
-      // never the raw token. The raw token only lives in the outgoing
-      // email URL; on accept we re-hash the URL-bound token and look up
-      // by the indexed hash field. This defends against database-read
-      // compromise (leaked backup, misconfigured Browser, log channel)
-      // since the stored value alone can't be redeemed.
-      const inviteToken = `${spaceId}.${crypto.randomUUID()}`
-      const inviteTokenHash = hashAuthToken(inviteToken)
-      const inviteExpires = new Date(
-        Date.now() + 48 * 60 * 60 * 1000
-      ).toISOString()
-
-      await session.executeWrite((tx) =>
-        tx.run(
-          `
-          MATCH (p:Person {id: $memberId})
-          SET p.inviteTokenHash = $inviteTokenHash,
-              p.inviteTokenExpires = datetime($inviteExpires)
-          `,
-          { memberId, inviteTokenHash, inviteExpires }
-        )
-      )
-
-      const result = await sendSpaceInviteEmail({
-        to: memberEmail,
-        inviteToken,
+      // Mint + email a single-use invite token (7-day TTL). Token format,
+      // hash-only storage, and the latest-write-wins overwrite rule are
+      // documented on mintAndSendInvite.
+      const { emailOk } = await mintAndSendInvite(session, {
+        memberId,
+        memberEmail,
+        spaceId,
         spaceName,
         inviterName,
       })
-      if (!result.ok) {
+      if (!emailOk) {
         emailMessageSuffix =
           ' Member added, but the invite email failed to send.'
       }

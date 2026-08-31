@@ -31,7 +31,8 @@
       "Bash(NODE_OPTIONS=--max-http-header-size=32768 nohup ./node_modules/.bin/next dev)",
       "Bash(disown)",
       "Bash(echo \"started pid $!\")",
-      "Bash(cd *)"
+      "Bash(cd *)",
+      "Bash(git *)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -15,16 +15,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { GET_DOCUMENTS_BY_FIELD_CONTEXT } from '@/app/graphql/queries/DOCUMENT_QUERIES'
-import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
-import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import { useFieldContextCanEditContent } from '@/hooks/use-field-context-permissions'
-import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import {
   emitOpenImportArticlesModal,
   onImportArticlesModalClosed,
 } from '@/lib/simulation/pulse-creation-events'
-import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
+import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
 
 /**
  * Studio-shell entry point for getting source material into a FieldContext.
@@ -40,16 +36,17 @@ import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
  * Renders only when the focal entity is a route-sourced FieldContext *and*
  * the user passes `canEditContent` (kb/02-user-roles.md). The client gate is
  * discoverability hygiene only — the server remains the real boundary
- * (`handleIngestDocument`, GraphQL `@authorization`).
+ * (`enqueueDocumentIngest`, GraphQL `@authorization`).
  *
  * The bulk import modal itself is owned by the field-context page (that's
  * where the post-import refetch wiring lives, and it loads the modal
  * dynamically so SheetJS stays out of the dashboard bundle for members who
  * never import); this component only emits the open request.
  *
- * On upload success, fires `emitOpenAssistantThread` with the returned ingest
- * thread id. `StudioShell` listens for this and switches the assistant
- * runtime to the new thread (opening the floating chat panel if needed).
+ * The upload flow itself (presign → S3 PUT → enqueue → ingest watch → toasts
+ * → open the ingest thread) lives in `@/lib/ingest/upload-document-flow`,
+ * shared with the Pulses-section empty-state entry point on the field-context
+ * page (GOAL-337) so the two paths cannot drift.
  */
 export const FieldContextUploadAction: FC = () => {
   const { focalEntity } = useFocalEntity()
@@ -61,6 +58,11 @@ export const FieldContextUploadAction: FC = () => {
     string | null
   >(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  // Bumped on every open so the modal remounts with clean state. It keeps its
+  // file/hint in local state and only clears them via its own close handler —
+  // which the queued-upload path deliberately bypasses (it releases the modal
+  // directly), so without this the next open would show the previous file.
+  const [uploadSessionKey, setUploadSessionKey] = useState(0)
   // Both menu items open a modal that installs its own focus trap. Radix
   // restores focus to this menu's trigger ~300ms after the item is chosen —
   // i.e. *after* the dialog has already focused its first control — which
@@ -82,10 +84,7 @@ export const FieldContextUploadAction: FC = () => {
   // The bulk import dialog is owned by the field-context page, so this is the
   // only way to learn it closed. Must sit above the early returns below —
   // hooks cannot be called conditionally.
-  useEffect(
-    () => onImportArticlesModalClosed(refocusTrigger),
-    [refocusTrigger]
-  )
+  useEffect(() => onImportArticlesModalClosed(refocusTrigger), [refocusTrigger])
 
   // Only treat the focal as a live FieldContext when it came from the
   // current route. A 'persisted' source means the user navigated away to
@@ -113,126 +112,32 @@ export const FieldContextUploadAction: FC = () => {
       toast.error('Upload context lost — please reopen the upload dialog.')
       throw new Error('No pinned FieldContext')
     }
+    // Capture it: the modal is released as soon as the upload is queued, which
+    // clears the pinned id while the flow's ingest watch is still running.
+    const pinnedContextId = pinnedFieldContextId
     setIsSubmitting(true)
     try {
-      // Fresh bearer token — cookies alone are not enough; the server route
-      // honours Authorization first and a stale cookie will 401 where a
-      // refreshed bearer succeeds. Mirrors the chat-thread fetch helpers.
-      const authHeaders = await chatApiAuthHeaders()
-
-      // Step 1: ask the server for a presigned PUT URL.
-      const presignRes = await fetch('/api/ingest/document/presign', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          fieldContextId: pinnedFieldContextId,
-          filename: input.filename,
-          mimeType: input.mimeType,
-          sizeBytes: input.file.size,
-        }),
+      // The flow settles its own toasts (including errors) and rethrows, so
+      // the modal's catch can render the same message inline.
+      await runDocumentUploadFlow(apolloClient, {
+        fieldContextId: pinnedContextId,
+        input,
+        // The upload is durable in the queue — release the modal rather than
+        // holding the member on a spinner for the length of an LLM extraction
+        // they don't need to watch. `isSubmitting` must drop here too, not in
+        // the `finally`: the ingest watch runs for up to eight minutes, and
+        // the modal disables Cancel, disables Upload, and early-returns from
+        // its close handler while submitting. Left set, reopening the dialog
+        // to upload a second file would trap the member with no exit but a
+        // page reload.
+        onQueued: () => {
+          setPinnedFieldContextId(null)
+          setIsSubmitting(false)
+          // This path releases the modal directly rather than through its
+          // `onClose`, so it owes the trigger the same focus restore.
+          refocusTrigger()
+        },
       })
-      if (!presignRes.ok) {
-        const errorBody = await presignRes.json().catch(() => ({}))
-        throw new Error(
-          errorBody.error ?? `Presign failed (${presignRes.status})`
-        )
-      }
-      const presign = (await presignRes.json()) as {
-        documentId: string
-        blobKey: string
-        uploadUrl: string
-        contentType: string
-      }
-
-      // Step 2: PUT the file straight to S3. The bytes never traverse our
-      // server. Content-Type MUST match the value used at presign time —
-      // S3 binds it into the signature.
-      //
-      // A non-ok response (4xx/5xx from S3) and a rejected fetch are two
-      // different failures. The PUT carries a non-simple Content-Type, so
-      // the browser issues a CORS preflight first; if the bucket lacks a
-      // CORS policy for this origin the preflight is blocked and fetch
-      // rejects with a bare `TypeError: Failed to fetch`. Translate that
-      // into something a user can act on instead of leaking it raw.
-      let putRes: Response
-      try {
-        putRes = await fetch(presign.uploadUrl, {
-          method: 'PUT',
-          body: input.file,
-          headers: { 'Content-Type': presign.contentType },
-        })
-      } catch {
-        throw new Error(
-          'Upload to storage failed — the storage bucket is unreachable or misconfigured. Please try again or contact support if it persists.'
-        )
-      }
-      if (!putRes.ok) {
-        throw new Error(`Upload to storage failed (${putRes.status}).`)
-      }
-
-      // Step 3: tell the server the file is in place; it anchors the
-      // Document node and kicks off extraction.
-      const processRes = await fetch('/api/ingest/document/process', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json', ...authHeaders },
-        body: JSON.stringify({
-          documentId: presign.documentId,
-          blobKey: presign.blobKey,
-          fieldContextId: pinnedFieldContextId,
-          filename: input.filename,
-          mimeType: input.mimeType,
-          sizeBytes: input.file.size,
-          hint: input.hint ?? null,
-        }),
-      })
-      if (!processRes.ok) {
-        const errorBody = await processRes.json().catch(() => ({}))
-        throw new Error(
-          errorBody.error ?? `Extraction failed (${processRes.status})`
-        )
-      }
-      const processResult = (await processRes.json()) as {
-        threadId?: string
-        createdEntityCount?: number
-        failedEntityCount?: number
-      }
-
-      if (processResult.threadId) {
-        emitOpenAssistantThread(processResult.threadId)
-      }
-
-      // Refetch the documents + the field's pulse + people views so the
-      // dashboard surfaces newly-created entities without a route change.
-      await Promise.all([
-        apolloClient.refetchQueries({
-          include: [
-            GET_DOCUMENTS_BY_FIELD_CONTEXT,
-            GET_FIELD_CONTEXT_DETAILS,
-            GET_FIELD_CONTEXT_PEOPLE,
-          ],
-        }),
-      ])
-
-      const created = processResult.createdEntityCount ?? 0
-      const failed = processResult.failedEntityCount ?? 0
-      if (created === 0 && failed === 0) {
-        toast.success('Document uploaded. No entities were extracted.')
-      } else if (failed === 0) {
-        toast.success(
-          `Document uploaded. Created ${created} ${created === 1 ? 'entity' : 'entities'} from it.`
-        )
-      } else {
-        toast.success(
-          `Document uploaded. Created ${created} of ${created + failed} proposed entities; see the ingest thread for failures.`
-        )
-      }
-      setPinnedFieldContextId(null)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Upload failed'
-      toast.error(message)
-      throw error
     } finally {
       setIsSubmitting(false)
     }
@@ -253,15 +158,15 @@ export const FieldContextUploadAction: FC = () => {
             ref={triggerRef}
             type="button"
             disabled={!focalFieldContextId}
-            className="cursor-pointer flex items-center gap-1.5 md:gap-2 pl-3 pr-2 md:pl-5 md:pr-3 h-10 md:h-11 rounded-full gp-glass dark:gp-glass border border-gp-glass-border hover:bg-gp-ink-strong/10 dark:hover:bg-white/20 hover:border-gp-ink-strong/20 dark:hover:border-white/20 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
+            className="gp-glass-hover cursor-pointer flex items-center gap-1.5 md:gap-2 pl-3 pr-2 md:pl-5 md:pr-3 h-10 md:h-11 rounded-full gp-glass border border-gp-glass-border hover:border-gp-primary/40 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Upload to this field context"
             title="Upload a document or import articles"
           >
-            <FileUp className="w-5 h-5 text-amber-300 group-hover:text-amber-200 transition-colors" />
-            <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong dark:text-gp-ink-strong">
+            <FileUp className="w-5 h-5 text-amber-600 dark:text-amber-300 transition-colors" />
+            <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong">
               Upload
             </span>
-            <span className="material-symbols-outlined text-[18px] leading-none text-gp-ink-muted dark:text-gp-ink-soft">
+            <span className="material-symbols-outlined text-[18px] leading-none text-gp-ink-muted">
               expand_more
             </span>
           </button>
@@ -283,6 +188,7 @@ export const FieldContextUploadAction: FC = () => {
             onSelect={() => {
               if (!focalFieldContextId) return
               restoreFocusOnCloseRef.current = false
+              setUploadSessionKey((key) => key + 1)
               setPinnedFieldContextId(focalFieldContextId)
             }}
             // `.gp-menu-item` owns the hover/focus highlight (per the design
@@ -317,6 +223,7 @@ export const FieldContextUploadAction: FC = () => {
       </DropdownMenu>
 
       <UploadDocumentModal
+        key={uploadSessionKey}
         isOpen={pinnedFieldContextId !== null}
         isSubmitting={isSubmitting}
         onClose={() => {

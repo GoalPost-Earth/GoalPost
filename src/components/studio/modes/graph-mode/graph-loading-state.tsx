@@ -34,11 +34,11 @@ export const GraphLoadingState: FC<GraphLoadingStateProps> = ({
           <Skeleton className="bottom-4 right-6 size-14" delay="0.6s" />
         </div>
         <div className="text-center space-y-1.5">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/45">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gp-ink-muted">
             {label}
           </p>
           {subtitle && (
-            <p className="text-xs text-white/35 max-w-xs">{subtitle}</p>
+            <p className="text-xs text-gp-ink-soft max-w-xs">{subtitle}</p>
           )}
         </div>
       </div>
@@ -52,7 +52,9 @@ const Skeleton: FC<{ className: string; delay: string }> = ({
 }) => (
   <div
     className={cn(
-      'absolute rounded-full bg-white/5 border border-white/10 animate-pulse',
+      // Token-driven so the skeleton bubbles read on the light canvas too —
+      // `bg-white/5` was invisible against anything but the old dark backdrop.
+      'absolute rounded-full bg-gp-ink-soft/10 border border-gp-glass-border animate-pulse',
       className
     )}
     style={{ animationDelay: delay }}

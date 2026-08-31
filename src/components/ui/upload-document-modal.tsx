@@ -189,8 +189,9 @@ export function UploadDocumentModal({
         </div>
 
         <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft">
-          The assistant will read the file and pre-stage entity-creation
-          actions in a new thread for you to review and approve.
+          The assistant reads the file in the background and adds the people,
+          organizations, and pulses it finds to this field — with a record of
+          what it did in a new thread.
         </p>
 
         <label

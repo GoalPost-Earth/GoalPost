@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/contexts'
 import { useCreateField } from '@/hooks'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
+import { GET_SPACE_PROMISE_WEAVES } from '@/app/graphql/queries/PROMISE_WEAVE_SPACE_QUERIES'
 import {
   DELETE_ME_SPACE_MUTATION,
   DELETE_WE_SPACE_MUTATION,
@@ -28,6 +29,10 @@ import {
 } from '@/lib/simulation/pulse-creation-events'
 import { dispatchOpenInfoDrawer } from './entity-info-drawer'
 import { FieldContextCard } from './field-context-card'
+import {
+  PromiseWeavesSection,
+  type SpacePromiseWeave,
+} from './promise-weave-card'
 
 interface SpaceDashboardViewProps {
   spaceId: string
@@ -56,6 +61,10 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  // Spans the WHOLE create flow (mutation + dashboard refetch), unlike the
+  // mutation's own loading flag — the modal's spinner must not drop while
+  // the stale card list is still on screen.
+  const [isFieldCreatePending, setIsFieldCreatePending] = useState(false)
   const [showPermissionsModal, setShowPermissionsModal] = useState(false)
 
   // `cache-and-network` — the dashboard cards and graph bubbles use
@@ -68,7 +77,21 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
     fetchPolicy: 'cache-and-network',
   })
 
-  const { createField, loading: isCreatingField } = useCreateField()
+  // Promise weaves surfaced in this space (GOAL-343). Its own query rather
+  // than a branch of GET_SPACE_DETAILS: that document is codegen-typed, and a
+  // weave hangs off the FieldContext, not the Space, so `context_SOME` is the
+  // filter either way. Space scoping is the HAS_WEAVE → FieldContext → Space
+  // chain plus PromiseWeave's own READ @authorization — no separate rule.
+  const { data: weavesData } = useQuery<{
+    promiseWeaves: SpacePromiseWeave[]
+  }>(GET_SPACE_PROMISE_WEAVES, {
+    variables: { spaceId },
+    skip: !spaceId,
+    fetchPolicy: 'cache-and-network',
+  })
+  const weaves = weavesData?.promiseWeaves ?? []
+
+  const { createField } = useCreateField()
   const [deleteMeSpace] = useMutation(DELETE_ME_SPACE_MUTATION)
   const [deleteWeSpace] = useMutation(DELETE_WE_SPACE_MUTATION)
   const [logFieldActivity] = useMutation(LOG_FIELD_ACTIVITY)
@@ -85,6 +108,13 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         : null
   const contexts =
     (space && 'contexts' in space ? space.contexts : undefined) ?? []
+  // GOAL-295: nested fields also carry a direct Space edge, so the raw
+  // list contains the whole hierarchy. The Space page shows only the
+  // top-level fields — children are reached by drilling into their parent
+  // (Nested fields section on the field detail page).
+  const rootContexts = contexts.filter(
+    (ctx) => (ctx?.parentContext?.length ?? 0) === 0
+  )
 
   // Publish the Space + every Field Context card the user can see into
   // VisibleEntitiesProvider. The chat assistant reads this snapshot via
@@ -101,7 +131,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   // republish, briefly showing the assistant an empty canvas.
   const activeSpaceId = space?.id ?? null
   const activeSpaceName = space?.name ?? null
-  const contextsKey = contexts
+  const contextsKey = rootContexts
     .map((ctx) => `${ctx?.id ?? ''}::${ctx?.title ?? ''}`)
     .join('|')
   useEffect(() => {
@@ -116,7 +146,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         type: spaceTypeLabel,
         source: 'dashboard',
       },
-      ...contexts
+      ...rootContexts
         .filter((ctx): ctx is NonNullable<typeof ctx> => Boolean(ctx?.id))
         .map((ctx) => ({
           id: ctx.id,
@@ -230,7 +260,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         __typename: mp?.__typename || 'Person',
         id: mp?.id || '',
         name: fullName,
-        email: mp?.email ?? undefined,
+        email: mp?.privateProfile?.email ?? undefined,
       },
     }
   })
@@ -244,6 +274,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
   const handleCreateField = async (description: string, name?: string) => {
     const title = name || description
     const spaceType = isMe ? 'meSpace' : 'weSpace'
+    setIsFieldCreatePending(true)
     try {
       const created = await createField(title, spaceId, spaceType, description)
       if (created?.id) {
@@ -259,11 +290,23 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
           },
         }).catch((err) => console.warn('Field log failed:', err))
       }
+      toast.success(`Field "${title}" created.`)
+      // Keep the modal's "Creating…" spinner up until the refreshed card
+      // list is actually on screen — closing first leaves a silent gap
+      // where the new field exists but the dashboard doesn't show it. A
+      // refetch failure is NOT a create failure, so it only warns.
+      await refetch().catch((err) =>
+        console.warn('Space refetch after field create failed:', err)
+      )
       setShowCreateFieldModal(false)
-      await refetch()
+      return true
     } catch (err) {
       console.error('Field create failed:', err)
       toast.error('Failed to create field context')
+      // `false` tells the modal to keep the typed draft for retry.
+      return false
+    } finally {
+      setIsFieldCreatePending(false)
     }
   }
 
@@ -330,7 +373,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         />
       </div>
 
-      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
+      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
         <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
           {/* Top bar — back to dashboard + (i) drawer for full details */}
           <div className="flex items-center justify-between gap-3">
@@ -409,8 +452,16 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
 
             {/* At-a-glance counters */}
             <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl w-full">
-              <Stat icon={<Layers className="w-3.5 h-3.5" />} label="Fields" value={contexts.length} />
-              <Stat icon={<Sparkles className="w-3.5 h-3.5" />} label="Pulses" value={totalPulses} />
+              <Stat
+                icon={<Layers className="w-3.5 h-3.5" />}
+                label="Fields"
+                value={rootContexts.length}
+              />
+              <Stat
+                icon={<Sparkles className="w-3.5 h-3.5" />}
+                label="Pulses"
+                value={totalPulses}
+              />
               <Stat
                 icon={<Users className="w-3.5 h-3.5" />}
                 label="Members"
@@ -441,19 +492,21 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
                 onClick={() => setShowCreateFieldModal(true)}
                 className="inline-flex items-center gap-2 px-4 h-10 rounded-full bg-gp-primary hover:bg-gp-primary/90 text-white font-semibold text-sm shadow-md shadow-gp-primary/20 transition-all cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[18px]">add</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  add
+                </span>
                 Create field
               </button>
             </div>
 
-            {contexts.length === 0 ? (
+            {rootContexts.length === 0 ? (
               <EmptyFields
                 isOwner={isOwner}
                 onCreate={() => setShowCreateFieldModal(true)}
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-                {contexts.map((ctx) => (
+                {rootContexts.map((ctx) => (
                   <FieldContextCard
                     key={ctx.id}
                     context={ctx}
@@ -467,6 +520,13 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
               </div>
             )}
           </section>
+
+          {/* Promise weaves — the connective nodes anchored in this space's
+              fields. Read-only for now (PromiseWeave carries
+              `@mutation(operations: [])`), so there is no create button and
+              no activity Log to write; a card just opens the existing
+              read-only drawer. */}
+          <PromiseWeavesSection weaves={weaves} />
 
           {/* Danger zone — only owners see this, and only when there
               are no fields blocking deletion. Keeps the destructive
@@ -488,9 +548,14 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
       {showCreateFieldModal && (
         <CreateFieldModal
           isOpen={showCreateFieldModal}
-          onClose={() => setShowCreateFieldModal(false)}
+          onClose={() => {
+            // All four close routes (Cancel, X, Escape, backdrop) funnel
+            // through here — none may drop the spinner mid-flight, matching
+            // the delete-confirm dialog's disabled-while-pending behavior.
+            if (!isFieldCreatePending) setShowCreateFieldModal(false)
+          }}
           onCreateField={handleCreateField}
-          isLoading={isCreatingField}
+          isLoading={isFieldCreatePending}
         />
       )}
 
@@ -624,7 +689,7 @@ const SpaceDashboardSkeleton: FC = () => (
     <div className="absolute inset-0 pointer-events-none z-0">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.8),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.03),transparent_70%)]" />
     </div>
-    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
+    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex flex-col items-center gap-3 mt-8">
           <div className="size-16 rounded-3xl bg-white/5 animate-pulse" />
