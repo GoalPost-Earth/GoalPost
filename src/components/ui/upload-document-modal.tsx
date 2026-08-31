@@ -1,6 +1,7 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import {
   INGEST_ACCEPT_ATTRIBUTE,
   MAX_INGEST_BYTES,
@@ -76,6 +77,11 @@ export function UploadDocumentModal({
   const [hint, setHint] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Keep Tab / Shift+Tab inside the dialog and move focus into it on open —
+  // WAI-ARIA modal dialog pattern, same hook EntityInfoDrawer / PersonPanel use.
+  useFocusTrap(dialogRef, isOpen)
 
   const reset = useCallback(() => {
     setFile(null)
@@ -133,18 +139,48 @@ export function UploadDocumentModal({
     }
   }, [file, hint, onSubmit, reset])
 
+  // Esc closes — `handleClose` already no-ops mid-upload, so an in-flight
+  // submit can't be dismissed out from under the user.
+  //
+  // Capture phase on `document`, plus stopPropagation: StudioShell binds its
+  // single-key shortcuts (Escape closes the floating chat / exits fullscreen)
+  // on `window` in the bubble phase and only ignores them for text inputs.
+  // Initial focus here lands on a button, so a bubbling Escape would close
+  // the chat panel *and* this dialog. Capture runs first, so the dialog wins.
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      handleClose()
+    }
+    document.addEventListener('keydown', onKey, true)
+    return () => document.removeEventListener('keydown', onKey, true)
+  }, [isOpen, handleClose])
+
   if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="upload-document-title"
+        tabIndex={-1}
+        className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-lg w-full p-6 space-y-4 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gp-primary"
+      >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gp-ink-strong dark:text-white">
+          <h3
+            id="upload-document-title"
+            className="text-lg font-semibold text-gp-ink-strong dark:text-white"
+          >
             Upload Document
           </h3>
           <button
             onClick={handleClose}
             disabled={isSubmitting}
+            aria-label="Close"
             type="button"
             className="cursor-pointer text-gp-ink-muted hover:text-gp-ink-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >

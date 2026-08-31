@@ -88,6 +88,7 @@ import { SubContextsSection } from '@/components/fields/sub-contexts-section'
 import { MoveFieldModal } from '@/components/fields/move-field-modal'
 import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
 import {
+  emitImportArticlesModalClosed,
   onOpenAddPulseModal,
   onOpenImportArticlesModal,
 } from '@/lib/simulation/pulse-creation-events'
@@ -1761,6 +1762,10 @@ export default function FieldContextDetailsPage() {
             // A just-queued job should appear in the status section the
             // moment the modal hides, not a poll later.
             setImportStatusVersion((version) => version + 1)
+            // Lets the studio action bar — which suppressed Radix's focus
+            // restore so this dialog could take focus — put focus back on
+            // its trigger (GOAL-328). No-op when opened from this page.
+            emitImportArticlesModalClosed()
           }}
           onImported={() => {
             // Imported pulses land in the Pulses section; new/matched authors

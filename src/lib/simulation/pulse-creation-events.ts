@@ -38,6 +38,7 @@ const OPEN_ADD_PULSE_EVENT = 'gp:open-add-pulse-modal' as const
 const OPEN_ADD_FIELD_CONTEXT_EVENT = 'gp:open-add-field-context-modal' as const
 const OPEN_ADD_SPACE_MEMBERS_EVENT = 'gp:open-add-space-members-modal' as const
 const OPEN_IMPORT_ARTICLES_EVENT = 'gp:open-import-articles-modal' as const
+const CLOSED_IMPORT_ARTICLES_EVENT = 'gp:import-articles-modal-closed' as const
 
 export interface OpenAddPulseModalDetail {
   /** FieldContext.id the caller expects the modal to attach to. */
@@ -134,6 +135,28 @@ export function onOpenImportArticlesModal(
   }
   window.addEventListener(OPEN_IMPORT_ARTICLES_EVENT, wrapped)
   return () => window.removeEventListener(OPEN_IMPORT_ARTICLES_EVENT, wrapped)
+}
+
+/**
+ * Announce that the bulk import-articles modal closed (GOAL-328).
+ *
+ * The modal is owned by the field-context page but can be launched from the
+ * studio action bar, whose menu suppresses Radix's own focus restore so the
+ * dialog can take focus. That leaves the launcher as the only component able
+ * to return focus to its trigger — but it has no other way to learn the
+ * dialog went away. This is that signal.
+ */
+export function emitImportArticlesModalClosed(): void {
+  if (typeof window === 'undefined') return
+  window.dispatchEvent(new CustomEvent(CLOSED_IMPORT_ARTICLES_EVENT))
+}
+
+/** Subscribe to import-articles close notifications. Returns an unsubscribe. */
+export function onImportArticlesModalClosed(handler: () => void): () => void {
+  if (typeof window === 'undefined') return () => {}
+  const wrapped = () => handler()
+  window.addEventListener(CLOSED_IMPORT_ARTICLES_EVENT, wrapped)
+  return () => window.removeEventListener(CLOSED_IMPORT_ARTICLES_EVENT, wrapped)
 }
 
 /** Emit a request to open the add-members modal for `spaceId`. */

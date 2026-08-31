@@ -210,7 +210,19 @@ export const EntityInfoDrawer: FC = () => {
         </header>
 
         <div className="flex-1 overflow-y-auto">
-          <DrawerBody entity={entity} onClose={close} />
+          {/*
+            Keyed on the entity so swapping one entity for another of the SAME
+            type (Person A → a connection → Person B) remounts the body instead
+            of reusing the instance. Without this, every `useState` inside the
+            body survives the swap — edit mode, and (GOAL-315) the per-list
+            expanded flags, would carry over to an entity the user never
+            expanded.
+          */}
+          <DrawerBody
+            key={`${entity.type}:${entity.id}`}
+            entity={entity}
+            onClose={close}
+          />
         </div>
       </aside>
     </>

@@ -75,7 +75,13 @@ export function useFocusTrap(
       if (e.key !== 'Tab') return
       const list = focusables()
       if (list.length === 0) {
+        // Nothing focusable inside — a dialog whose every control is disabled
+        // mid-submit, say. Swallowing Tab without moving focus anywhere leaves
+        // a keyboard user stranded on <body> with no way out for as long as
+        // the submit runs, so park them on the container (needs tabIndex=-1)
+        // where Tab keeps working once a control re-enables.
         e.preventDefault()
+        container.focus()
         return
       }
       const first = list[0]

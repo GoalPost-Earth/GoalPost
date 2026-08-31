@@ -1,11 +1,12 @@
 'use client'
 
-import type { FC } from 'react'
+import { useMemo, type FC } from 'react'
 import Image from 'next/image'
 import { ArrowRight, Hash, Layers, Sparkles, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LinkifiedText } from '@/components/ui/linkified-text'
 import { SectionHeader, StatCell } from './shared'
+import { ShowMoreToggle, useExpandableList } from './expandable-list'
 import { dispatchOpenInfoDrawer } from './types'
 import type { OwnedPulseRow } from './use-person-details'
 
@@ -16,6 +17,9 @@ import type { OwnedPulseRow } from './use-person-details'
  * `person-details-body.tsx` to keep every file under the 400-line rule. These
  * are pure — all reads and derivations live in `usePersonDetails`.
  */
+
+const CONNECTION_LIMIT = 6
+const PULSE_LIMIT = 5
 
 export const AttrBlock: FC<{ label: string; text: string }> = ({
   label,
@@ -185,17 +189,34 @@ export const PersonConnections: FC<{
   connections: any[]
   connectionEdges?: any[] | null
 }> = ({ connections, connectionEdges }) => {
-  if (connections.length === 0) return null
+  const { visible, hiddenCount, expanded, toggle } = useExpandableList(
+    connections,
+    CONNECTION_LIMIT
+  )
+  // Map rather than a per-row `.find()`: once expanded this list is
+  // unbounded, and the linear scan made rendering it O(n²).
+  //
+  // `connectionEdges` is an undirected match, so a reciprocal pair yields two
+  // rows for the same person carrying each side's own `why`. First one wins,
+  // matching the `.find()` this replaced.
+  const edges = useMemo(() => {
+    const byPerson = new Map<string, any>()
+    for (const edge of connectionEdges ?? []) {
+      if (!byPerson.has(edge.connectedPersonId)) {
+        byPerson.set(edge.connectedPersonId, edge)
+      }
+    }
+    return byPerson
+  }, [connectionEdges])
 
-  const edgeFor = (id: string) =>
-    connectionEdges?.find((e: any) => e.connectedPersonId === id)
+  if (connections.length === 0) return null
 
   return (
     <section className="px-6 pb-5">
       <SectionHeader>Connections ({connections.length})</SectionHeader>
       <ul className="mt-2 space-y-2">
-        {connections.slice(0, 6).map((connection: any) => {
-          const edge = edgeFor(connection.id)
+        {visible.map((connection: any) => {
+          const edge = edges.get(connection.id)
           return (
             <li key={connection.id}>
               <button
@@ -247,9 +268,14 @@ export const PersonConnections: FC<{
             </li>
           )
         })}
-        {connections.length > 6 && (
-          <li className="text-[11px] text-gp-ink-muted dark:text-white/45 px-3 pt-1">
-            + {connections.length - 6} more
+        {hiddenCount > 0 && (
+          <li className="pt-0.5">
+            <ShowMoreToggle
+              expanded={expanded}
+              hiddenCount={hiddenCount}
+              onToggle={toggle}
+              itemLabel="connections"
+            />
           </li>
         )}
       </ul>
@@ -302,16 +328,26 @@ export const PersonSpaceLists: FC<{
   </>
 )
 
+/**
+ * Recent pulses reached via the person's owned WeSpaces. This list used to be
+ * silently capped at five with no indicator at all — worse than the dead
+ * "+ N more" label elsewhere, since nothing hinted more existed (GOAL-315).
+ */
 export const RecentPulsesSection: FC<{ pulses: OwnedPulseRow[] }> = ({
   pulses,
 }) => {
+  const { visible, hiddenCount, expanded, toggle } = useExpandableList(
+    pulses,
+    PULSE_LIMIT
+  )
+
   if (pulses.length === 0) return null
 
   return (
     <section className="px-6 pb-5">
-      <SectionHeader>Recent pulses</SectionHeader>
+      <SectionHeader>Recent pulses ({pulses.length})</SectionHeader>
       <ul className="mt-2 space-y-1.5">
-        {pulses.slice(0, 5).map((pulse) => (
+        {visible.map((pulse) => (
           <li key={pulse.id}>
             <button
               type="button"
@@ -336,6 +372,16 @@ export const RecentPulsesSection: FC<{ pulses: OwnedPulseRow[] }> = ({
             </button>
           </li>
         ))}
+        {hiddenCount > 0 && (
+          <li className="pt-0.5">
+            <ShowMoreToggle
+              expanded={expanded}
+              hiddenCount={hiddenCount}
+              onToggle={toggle}
+              itemLabel="pulses"
+            />
+          </li>
+        )}
       </ul>
     </section>
   )

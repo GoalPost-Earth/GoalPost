@@ -1,7 +1,8 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useFocusTrap } from '@/hooks/useFocusTrap'
 import {
   ARTICLE_IMPORT_STATUS,
   MAX_ARTICLE_IMPORT_ROWS,
@@ -69,6 +70,13 @@ export function ImportArticlesModal({
   const [validRows, setValidRows] = useState<ArticleImportRowInput[]>([])
   const [rowErrors, setRowErrors] = useState<ArticleRowError[]>([])
   const [pickError, setPickError] = useState<string | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Keep Tab / Shift+Tab inside the dialog and move focus into it on open —
+  // WAI-ARIA modal dialog pattern, same hook EntityInfoDrawer / PersonPanel use.
+  // Especially load-bearing here: the modal is portalled to `document.body`, so
+  // without a trap Tab walks straight into the field-context page behind it.
+  useFocusTrap(dialogRef, isOpen)
 
   const { job, isSubmitting, error, submit, clear } = useArticleImportJob({
     fieldContextId,
@@ -143,6 +151,25 @@ export function ImportArticlesModal({
     setHasPreview(true)
   }, [])
 
+  // Esc closes — `handleClose` already no-ops mid-import, so an in-flight
+  // batch can't be dismissed out from under the user.
+  //
+  // Capture phase on `document`, plus stopPropagation: StudioShell binds its
+  // single-key shortcuts (Escape closes the floating chat / exits fullscreen)
+  // on `window` in the bubble phase and only ignores them for text inputs.
+  // Initial focus here lands on a button, so a bubbling Escape would close
+  // the chat panel *and* this dialog. Capture runs first, so the dialog wins.
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      e.stopPropagation()
+      handleClose()
+    }
+    document.addEventListener('keydown', onKey, true)
+    return () => document.removeEventListener('keydown', onKey, true)
+  }, [isOpen, handleClose])
+
   if (!isOpen) return null
   // `dynamic(..., { ssr: false })` means this only ever runs in the browser,
   // but guard anyway so the component stays safe to mount eagerly.
@@ -153,14 +180,25 @@ export function ImportArticlesModal({
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-lg sm:max-w-2xl w-full max-h-[85vh] p-4 sm:p-6 flex flex-col gap-4">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-articles-title"
+        tabIndex={-1}
+        className="bg-gp-surface dark:bg-gp-surface-dark border border-gp-glass-border rounded-2xl shadow-2xl max-w-lg sm:max-w-2xl w-full max-h-[85vh] p-4 sm:p-6 flex flex-col gap-4 focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gp-primary"
+      >
         <div className="flex items-center justify-between shrink-0">
-          <h3 className="text-lg font-semibold text-gp-ink-strong dark:text-white">
+          <h3
+            id="import-articles-title"
+            className="text-lg font-semibold text-gp-ink-strong dark:text-white"
+          >
             Import Articles
           </h3>
           <button
             onClick={handleClose}
             disabled={isSubmitting}
+            aria-label="Close"
             type="button"
             className="cursor-pointer text-gp-ink-muted hover:text-gp-ink-strong transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >

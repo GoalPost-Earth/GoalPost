@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils'
 import { useApp } from '@/contexts'
 import { useCreateField } from '@/hooks'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
+import { GET_SPACE_PROMISE_WEAVES } from '@/app/graphql/queries/PROMISE_WEAVE_SPACE_QUERIES'
 import {
   DELETE_ME_SPACE_MUTATION,
   DELETE_WE_SPACE_MUTATION,
@@ -28,6 +29,10 @@ import {
 } from '@/lib/simulation/pulse-creation-events'
 import { dispatchOpenInfoDrawer } from './entity-info-drawer'
 import { FieldContextCard } from './field-context-card'
+import {
+  PromiseWeavesSection,
+  type SpacePromiseWeave,
+} from './promise-weave-card'
 
 interface SpaceDashboardViewProps {
   spaceId: string
@@ -71,6 +76,20 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
     skip: !spaceId,
     fetchPolicy: 'cache-and-network',
   })
+
+  // Promise weaves surfaced in this space (GOAL-343). Its own query rather
+  // than a branch of GET_SPACE_DETAILS: that document is codegen-typed, and a
+  // weave hangs off the FieldContext, not the Space, so `context_SOME` is the
+  // filter either way. Space scoping is the HAS_WEAVE → FieldContext → Space
+  // chain plus PromiseWeave's own READ @authorization — no separate rule.
+  const { data: weavesData } = useQuery<{
+    promiseWeaves: SpacePromiseWeave[]
+  }>(GET_SPACE_PROMISE_WEAVES, {
+    variables: { spaceId },
+    skip: !spaceId,
+    fetchPolicy: 'cache-and-network',
+  })
+  const weaves = weavesData?.promiseWeaves ?? []
 
   const { createField } = useCreateField()
   const [deleteMeSpace] = useMutation(DELETE_ME_SPACE_MUTATION)
@@ -354,7 +373,7 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
         />
       </div>
 
-      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
+      <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
         <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
           {/* Top bar — back to dashboard + (i) drawer for full details */}
           <div className="flex items-center justify-between gap-3">
@@ -433,8 +452,16 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
 
             {/* At-a-glance counters */}
             <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 max-w-xl w-full">
-              <Stat icon={<Layers className="w-3.5 h-3.5" />} label="Fields" value={rootContexts.length} />
-              <Stat icon={<Sparkles className="w-3.5 h-3.5" />} label="Pulses" value={totalPulses} />
+              <Stat
+                icon={<Layers className="w-3.5 h-3.5" />}
+                label="Fields"
+                value={rootContexts.length}
+              />
+              <Stat
+                icon={<Sparkles className="w-3.5 h-3.5" />}
+                label="Pulses"
+                value={totalPulses}
+              />
               <Stat
                 icon={<Users className="w-3.5 h-3.5" />}
                 label="Members"
@@ -465,7 +492,9 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
                 onClick={() => setShowCreateFieldModal(true)}
                 className="inline-flex items-center gap-2 px-4 h-10 rounded-full bg-gp-primary hover:bg-gp-primary/90 text-white font-semibold text-sm shadow-md shadow-gp-primary/20 transition-all cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[18px]">add</span>
+                <span className="material-symbols-outlined text-[18px]">
+                  add
+                </span>
                 Create field
               </button>
             </div>
@@ -491,6 +520,13 @@ export const SpaceDashboardView: FC<SpaceDashboardViewProps> = ({
               </div>
             )}
           </section>
+
+          {/* Promise weaves — the connective nodes anchored in this space's
+              fields. Read-only for now (PromiseWeave carries
+              `@mutation(operations: [])`), so there is no create button and
+              no activity Log to write; a card just opens the existing
+              read-only drawer. */}
+          <PromiseWeavesSection weaves={weaves} />
 
           {/* Danger zone — only owners see this, and only when there
               are no fields blocking deletion. Keeps the destructive
@@ -653,7 +689,7 @@ const SpaceDashboardSkeleton: FC = () => (
     <div className="absolute inset-0 pointer-events-none z-0">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.8),transparent_70%)] dark:bg-[radial-gradient(circle_at_50%_0%,rgba(255,255,255,0.03),transparent_70%)]" />
     </div>
-    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-24">
+    <main className="flex-1 relative z-10 overflow-y-auto scroller p-6 sm:p-8 pb-40">
       <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex flex-col items-center gap-3 mt-8">
           <div className="size-16 rounded-3xl bg-white/5 animate-pulse" />
