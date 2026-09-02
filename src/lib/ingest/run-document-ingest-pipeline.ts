@@ -504,6 +504,12 @@ export interface RunDocumentIngestPipelineInput {
   threadTitleSuffix?: string
   /** Pre-loaded record, when the caller has already read it. */
   record?: DocumentRecord
+  /**
+   * Bounds both model calls (GOAL-344). The article-import worker runs many
+   * pipelines per invocation and must keep each inside its row budget; the
+   * document cron leaves it unset.
+   */
+  modelAbortSignal?: AbortSignal
 }
 
 export async function runDocumentIngestPipeline(
@@ -560,7 +566,9 @@ export async function runDocumentIngestPipeline(
         fieldContextId: record.fieldContextId,
         fieldContextTitle,
         documentId: record.id,
+        sourceUrl: record.sourceUrl,
         userId: input.actingUserId,
+        abortSignal: input.modelAbortSignal,
       },
       modelClient
     ),
@@ -570,6 +578,7 @@ export async function runDocumentIngestPipeline(
       hint: record.userHint,
       fieldContextTitle,
       userId: input.actingUserId,
+      abortSignal: input.modelAbortSignal,
     }),
   ])
 

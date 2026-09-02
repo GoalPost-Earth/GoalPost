@@ -126,10 +126,23 @@ export interface ExtractionModelInput {
   fieldContextTitle: string
   documentId: string
   /**
+   * The public link a fetched document came from (GOAL-344 bulk article
+   * import). When set, pulses extracted without an explicit location point at
+   * the article itself rather than at our stored copy of it.
+   */
+  sourceUrl?: string | null
+  /**
    * Uploader this extraction runs on behalf of. Used only for usage
    * metering (GOAL-297), never for authorization. Null when unknown.
    */
   userId?: string | null
+  /**
+   * Bounds the model call (GOAL-344). A worker that runs several extractions
+   * inside one function invocation needs each call to give up well before the
+   * function ceiling; an aborted call surfaces as an ordinary extraction
+   * failure. Unset = the SDK default.
+   */
+  abortSignal?: AbortSignal
 }
 
 export type ExtractionResult =
@@ -404,7 +417,10 @@ function buildCreatePulseArgs(
     // the `EXTRACTED_FROM` edge stays a graph-only audit trail. Never clobber
     // an extracted/manual location above; the `documentId` guard keeps the
     // fallback from writing a malformed URL.
-    args.location = buildDocumentDownloadUrl(input.documentId)
+    // GOAL-344: a document fetched from a link is a copy of a public page —
+    // the page itself is the better source to send a member to.
+    args.location =
+      input.sourceUrl?.trim() || buildDocumentDownloadUrl(input.documentId)
   }
   if (p.time && p.time.trim()) args.time = p.time.trim()
   return args

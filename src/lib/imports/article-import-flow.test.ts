@@ -32,6 +32,21 @@ jest.mock('@/lib/resonance/discovery/on-upload-discovery', () => ({
     runContextResonanceDiscovery(params),
 }))
 
+// GOAL-344: the worker now fetches every row's link and runs the document
+// ingest pipeline on it — real network + real model spend. Stub the ingestor
+// so this suite keeps proving the queue mechanics; the ingestor has its own
+// unit suite (article-content-ingest.test.ts).
+const ingestArticle = jest.fn().mockResolvedValue({
+  status: 'fetch_failed',
+  message: 'The site could not be reached.',
+  created: 0,
+  updated: 0,
+})
+jest.mock('@/lib/imports/article-content-ingest', () => ({
+  ...jest.requireActual('@/lib/imports/article-content-ingest'),
+  createArticleContentIngestor: () => ingestArticle,
+}))
+
 // Imported after the mock is registered so the cron route picks it up.
 import { POST as enqueueArticles } from '@/app/api/import/articles/route'
 import { GET as readImportJob } from '@/app/api/import/articles/[jobId]/route'
@@ -367,6 +382,10 @@ describe('bulk article import across the queue boundary', () => {
     })
     expect(finished.body.outcomes).toHaveLength(2)
     expect(finished.body.outcomes[0]).toMatchObject({ status: 'created' })
+    // GOAL-344: the article read rides on the outcome the client renders.
+    expect(finished.body.outcomes[0].extraction).toMatchObject({
+      status: 'fetch_failed',
+    })
     // `personEvent` is an internal aid for deriving the summary — it must not
     // reach the client.
     expect(finished.body.outcomes[0]).not.toHaveProperty('personEvent')

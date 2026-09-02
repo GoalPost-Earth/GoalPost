@@ -44,7 +44,8 @@ export function ImportArticlesPicker({
       <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
         Upload a spreadsheet where each row is an article — title, author, date,
         and URL. Each row becomes a pulse in this field, attributed to its
-        author.
+        author, and the link is opened and read so the article&apos;s details
+        land in the field too.
       </p>
 
       <label

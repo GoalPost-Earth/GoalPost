@@ -103,6 +103,13 @@ export interface AnchorDocumentInput {
   blobKey: string
   blobUrl: string
   /**
+   * Where the bytes came from when the Document was not uploaded by a member
+   * but fetched server-side from a link (GOAL-344 bulk article import). Null
+   * for uploads. Also the idempotency key that stops the same article being
+   * fetched twice into one FieldContext.
+   */
+  sourceUrl?: string | null
+  /**
    * Initial ingest status (GOAL-292). The async upload path anchors PENDING so
    * the cron worker picks the document up. Defaults to COMPLETE for callers
    * that run the pipeline themselves and never enqueue — `uploadDocument`'s
@@ -149,6 +156,7 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
           d.userHint = $userHint,
           d.blobKey = $blobKey,
           d.blobUrl = $blobUrl,
+          d.sourceUrl = $sourceUrl,
           d.status = $status,
           d.statusMessage = null,
           d.statusUpdatedAt = datetime(),
@@ -169,6 +177,7 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
           userHint: input.userHint?.trim() ? input.userHint.trim() : null,
           blobKey: input.blobKey,
           blobUrl: input.blobUrl,
+          sourceUrl: input.sourceUrl?.trim() || null,
           status: input.status ?? DOCUMENT_INGEST_STATUS.complete,
         }
       )
@@ -192,6 +201,8 @@ export interface DocumentRecord {
   blobKey: string
   blobUrl: string
   userHint: string | null
+  /** Link the bytes were fetched from (GOAL-344); null for uploads. */
+  sourceUrl: string | null
   fieldContextId: string
   uploaderUserId: string
   /**
@@ -234,6 +245,7 @@ export async function loadDocumentRecord(
           d.blobKey AS blobKey,
           d.blobUrl AS blobUrl,
           d.userHint AS userHint,
+          d.sourceUrl AS sourceUrl,
           c.id AS fieldContextId,
           uploaderIds,
           coalesce(d.status, $completeStatus) AS status
@@ -256,6 +268,7 @@ export async function loadDocumentRecord(
       blobKey: (record.get('blobKey') as string | null) ?? '',
       blobUrl: (record.get('blobUrl') as string | null) ?? '',
       userHint: (record.get('userHint') as string | null) ?? null,
+      sourceUrl: (record.get('sourceUrl') as string | null) ?? null,
       fieldContextId: record.get('fieldContextId') as string,
       // Exactly one uploader, or none. An ambiguous document yields '' so the
       // caller treats it as un-attributable rather than guessing.

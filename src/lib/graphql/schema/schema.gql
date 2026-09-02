@@ -1365,6 +1365,10 @@ type Document
   downloadUrl: String @customResolver(requires: "id")
   """Optional one-line "What is this?" hint captured at upload. Reused on re-extract (slice 6)."""
   userHint: String
+  """Public link this document was fetched from, when it was not uploaded by a
+  member but read server-side by the bulk article import (GOAL-344). Null for
+  uploads. Read-only: the worker stamps it at anchor time."""
+  sourceUrl: String @settable(onCreate: false, onUpdate: false)
   """AI-generated 1-paragraph synopsis of the document content. Produced at
   ingest time by a dedicated summarization call (independent of the entity
   extraction model). Null if the call failed or was skipped — document still

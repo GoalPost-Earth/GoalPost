@@ -4,11 +4,20 @@ import { executeAuthorizedWriteTool } from '@/lib/chat/hitl'
 import { normalizeEmail } from '@/lib/auth/normalize-email'
 import {
   type ArticleImportRowInput,
+  type ArticleRowExtraction,
   type PersistedArticleRowOutcome,
   buildArticleRowContent,
   normalizeArticleDate,
   normalizeArticleUrl,
 } from './article-import'
+import {
+  ARTICLE_EXTRACTION_FAILED_MESSAGE,
+  type ArticleContentIngestor,
+} from './article-content-ingest'
+
+/** Member-safe copy when the row's pulse landed without an id to attach to. */
+const ARTICLE_NOT_ATTEMPTED_MESSAGE =
+  'The article could not be read for this row, so it was imported from the sheet details only.'
 
 /**
  * GOAL-317 — server-side orchestration for the article import batch.
@@ -23,6 +32,13 @@ import {
  *
  * The context gate is NOT run here: the worker resolves it once (and must
  * re-validate it live at claim time regardless), then hands the title in.
+ *
+ * GOAL-344: once a row's pulse has landed, the optional `ingestArticle` hook
+ * reads the row's link into the field (fetch → Document → the document ingest
+ * pipeline) and reports what it yielded on the outcome. The hook is injected
+ * rather than imported so this module stays free of blob-store and model
+ * dependencies, and so a caller without them (tests, the legacy inline path)
+ * gets exactly the pre-GOAL-344 behavior.
  */
 
 export interface ProcessArticleImportParams {
@@ -52,6 +68,12 @@ export interface ProcessArticleImportParams {
    * the remainder for the next tick — the run's time budget, not an error.
    */
   shouldYield?: () => boolean
+  /**
+   * GOAL-344 — reads the row's article into the field after its pulse lands.
+   * Never throws by contract; a throw is still caught and reported as a
+   * member-safe extraction failure so the row's pulse outcome stands.
+   */
+  ingestArticle?: ArticleContentIngestor
 }
 
 export type ProcessArticleImportStop =
@@ -375,6 +397,7 @@ async function resolveRowOutcome({
   contextTitle,
   row,
   authorCache,
+  ingestArticle,
 }: {
   graph: Neo4jGraph
   currentUserId: string
@@ -382,6 +405,7 @@ async function resolveRowOutcome({
   contextTitle: string
   row: ArticleImportRowInput
   authorCache: Map<string, ResolvedAuthor>
+  ingestArticle?: ArticleContentIngestor
 }): Promise<PersistedArticleRowOutcome> {
   const validationProblem = validateTypedRow(row)
   if (validationProblem) {
@@ -444,6 +468,19 @@ async function resolveRowOutcome({
       }
     }
 
+    // The row's pulse is durable from here — the article read that follows
+    // can only add to it, never take it away.
+    const extraction = ingestArticle
+      ? await readRowArticle(ingestArticle, {
+          fieldContextId,
+          contextTitle,
+          requesterUserId: currentUserId,
+          row,
+          rowPulseId: String(pulseResult.pulseId ?? ''),
+          authorName: author.authorName,
+        })
+      : null
+
     if (pulseResult.alreadyExisted === true) {
       return {
         row: row.row,
@@ -453,6 +490,7 @@ async function resolveRowOutcome({
           'A pulse with this title already exists in the field — kept it and filled in any missing details.',
         authorName: author.authorName,
         personEvent,
+        extraction,
       }
     }
 
@@ -463,6 +501,7 @@ async function resolveRowOutcome({
       message: 'Created.',
       authorName: author.authorName,
       personEvent,
+      extraction,
     }
   } catch (error) {
     // Raw driver/Cypher error text never reaches the member — log it
@@ -476,6 +515,38 @@ async function resolveRowOutcome({
       title: row.title?.trim() ?? '',
       status: 'failed',
       message: ROW_WRITE_FAILED_MESSAGE,
+    }
+  }
+}
+
+/**
+ * Run the article read for one row, converting a thrown error into the
+ * member-safe failure shape so the row's pulse outcome is never lost to it.
+ */
+async function readRowArticle(
+  ingestArticle: ArticleContentIngestor,
+  input: Parameters<ArticleContentIngestor>[0]
+): Promise<ArticleRowExtraction> {
+  if (!input.rowPulseId) {
+    return {
+      status: 'extraction_failed',
+      message: ARTICLE_NOT_ATTEMPTED_MESSAGE,
+      created: 0,
+      updated: 0,
+    }
+  }
+  try {
+    return await ingestArticle(input)
+  } catch (error) {
+    console.error(
+      `[article-import] article read failed for row ${input.row.row} in context ${input.fieldContextId}:`,
+      error
+    )
+    return {
+      status: 'extraction_failed',
+      message: ARTICLE_EXTRACTION_FAILED_MESSAGE,
+      created: 0,
+      updated: 0,
     }
   }
 }
@@ -499,6 +570,7 @@ export async function processArticleImport({
   startIndex = 0,
   onRowOutcome,
   shouldYield,
+  ingestArticle,
 }: ProcessArticleImportParams): Promise<ProcessArticleImportRun> {
   const outcomes: PersistedArticleRowOutcome[] = []
   const authorCache = new Map<string, ResolvedAuthor>()
@@ -539,6 +611,7 @@ export async function processArticleImport({
       contextTitle,
       row,
       authorCache,
+      ingestArticle,
     })
     await record(outcome)
   }

@@ -45,6 +45,9 @@ function toClientOutcome(
     status: outcome.status,
     message: outcome.message,
     authorName: outcome.authorName,
+    // GOAL-344: what reading the row's article yielded — rendered on the
+    // receipt row and counted into the summary chips.
+    extraction: outcome.extraction ?? null,
   }
 }
 

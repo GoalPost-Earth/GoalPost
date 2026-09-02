@@ -4,6 +4,7 @@ import type {
   ArticleImportRowInput,
   ArticleImportSummary,
   ArticleRowError,
+  ArticleRowExtraction,
   ArticleRowOutcome,
 } from '@/lib/imports/article-import'
 import { getPulseTypeClass, getPulseTypeLabel } from './field-section-primitives'
@@ -86,8 +87,44 @@ const OUTCOME_PRESENTATION: Record<
   failed: { icon: 'error', className: 'text-destructive' },
 }
 
+/**
+ * GOAL-344 — one line on what reading the row's article yielded. Success is
+ * counted, not narrated; the two failure shapes render the member-safe copy
+ * the worker persisted. Ink, not the semantic color, for the same WCAG reason
+ * as the status labels elsewhere in this modal.
+ */
+function extractionLine(extraction: ArticleRowExtraction): string {
+  switch (extraction.status) {
+    case 'extracted': {
+      const added =
+        extraction.created > 0
+          ? `added ${extraction.created} ${extraction.created === 1 ? 'entry' : 'entries'}`
+          : ''
+      const filled =
+        extraction.updated > 0
+          ? `filled in ${extraction.updated} existing`
+          : ''
+      const parts = [added, filled].filter(Boolean).join(' and ')
+      return parts ? `Read the article and ${parts}.` : 'Read the article.'
+    }
+    case 'nothing_extracted':
+      return 'Read the article — nothing new to add beyond this row.'
+    case 'already_extracted':
+    case 'in_progress':
+    case 'fetch_failed':
+    case 'extraction_failed':
+      return extraction.message ?? ''
+    default:
+      return ''
+  }
+}
+
 export function OutcomeRow({ outcome }: { outcome: ArticleRowOutcome }) {
   const presentation = OUTCOME_PRESENTATION[outcome.status]
+  const extraction =
+    outcome.status !== 'failed' && outcome.extraction
+      ? extractionLine(outcome.extraction)
+      : ''
   return (
     <div className="flex items-start gap-2 rounded-xl border border-gp-glass-border bg-gp-glass-bg/40 px-3 py-2 min-w-0">
       <span
@@ -110,6 +147,20 @@ export function OutcomeRow({ outcome }: { outcome: ArticleRowOutcome }) {
             ? ` Attributed to ${outcome.authorName}.`
             : ''}
         </p>
+        {extraction && (
+          <p className="mt-0.5 flex items-start gap-1 text-[11px] text-gp-ink-muted dark:text-gp-ink-soft break-words">
+            <span
+              className="material-symbols-outlined text-[14px] shrink-0"
+              aria-hidden="true"
+            >
+              {outcome.extraction?.status === 'fetch_failed' ||
+              outcome.extraction?.status === 'extraction_failed'
+                ? 'link_off'
+                : 'article'}
+            </span>
+            <span className="min-w-0">{extraction}</span>
+          </p>
+        )}
       </div>
     </div>
   )
@@ -172,6 +223,22 @@ export function ImportSummaryChips({
           label="new people"
           value={summary.createdPeople}
           className="border-gp-primary/30 bg-gp-primary/10 text-gp-primary"
+        />
+      )}
+      {summary.articlesRead > 0 && (
+        <SummaryChip
+          icon="article"
+          label={summary.articlesRead === 1 ? 'article read' : 'articles read'}
+          value={summary.articlesRead}
+          className="border-gp-story/30 bg-gp-story/10 text-gp-story"
+        />
+      )}
+      {summary.articlesUnread > 0 && (
+        <SummaryChip
+          icon="link_off"
+          label="couldn't be read"
+          value={summary.articlesUnread}
+          className="border-gp-glass-border bg-gp-glass-bg/40 text-gp-ink-muted"
         />
       )}
     </div>

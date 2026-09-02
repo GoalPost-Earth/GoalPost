@@ -789,6 +789,7 @@ and ADR-014 / ADR-015 in `kb/06-adr.md`.
 | blobKey                  | string   | Internal — UI surfaces filename instead                                                |
 | blobUrl                  | string   | Provider-issued URL for the blob (may be private/expiring; treat as opaque)            |
 | userHint                 | string   | Optional one-line "What is this?" hint; reused on re-extract                           |
+| sourceUrl                | string   | Public link the bytes were fetched from when the bulk article import read an article server-side (GOAL-344); null for uploads. Idempotency key: one FieldContext never fetches the same article twice. Stored as the member typed it (never the post-redirect URL, which can carry session tokens), so a share link's own token (OneDrive `?e=…`) is visible to every member of the Space — the same exposure the row pulse's `location` already has |
 | summary                  | string   | AI-generated 1-paragraph synopsis; refreshed on re-extract; null on summarizer failure |
 | concepts                 | string[] | Up to 5 short concept phrases the AI surfaced as top-level themes; empty on failure    |
 | status                   | string   | *GraphQL-exposed.* Ingest lifecycle (GOAL-292): `PENDING` → `PROCESSING` → `COMPLETE` / `FAILED`. **Absent on pre-GOAL-292 documents — every read coalesces missing to `COMPLETE`.** See `kb/04-state-machines.md` |
