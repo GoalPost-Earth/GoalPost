@@ -17,6 +17,8 @@ import { driver } from '@/lib/neo4j/driver'
 import {
   buildPendingApprovalResult,
   createApprovalHash,
+  MAX_PROPOSED_WEAVE_PULSES,
+  resolveWeaveProposalDisplay,
   executeAuthorizedWriteTool,
   isWriteToolName,
   type PendingApprovalResult,
@@ -1347,6 +1349,93 @@ export async function buildSimulationChatTools(
         }
       },
     }),
+
+    // propose_promise_weave is registered ONLY when a FieldContext is active
+    // (Rule 4, kb/07): the weave's HAS_WEAVE anchor IS the active field, and
+    // that anchor is injected from session state below rather than accepted
+    // from the model — so without an active field the tool has no useful path
+    // at all and must not be offered. It is a WRITE and routes through
+    // runWriteTool (Rule 5); what it writes is a `proposed` weave, which the
+    // member then confirms or dismisses in the field (kb/04-state-machines.md).
+    ...(ctx.fieldContextId
+      ? {
+          propose_promise_weave: tool({
+            description:
+              'PROPOSE a promise weave over pulses in the field the member is currently viewing — the connective node that gathers a promise\'s pulses and the person it concerns, so its neighbourhood is navigable instead of a dead end. Call this when the conversation shows that two or more pulses in THIS field belong to one promise/commitment (typically a care practice or goal plus the resources, stories and people it implicates) and no weave already holds them. Pass the pulse IDs from a prior search_pulse / search_promise_weave result; the approval card resolves their names itself, so you do not pass titles. This is a PROPOSAL, not an established connection: the member approves this call, and the weave then lands "proposed" and waits for them to confirm or dismiss it in that field\'s Promise weaves section. Say so when you report back — never describe a proposed weave as if it were agreed. TWO STEPS, DO NOT CONFLATE THEM: while the result says approval is required, NOTHING has been written — say you have DRAFTED a weave and ask them to approve the card, and do NOT say it is "now waiting in the Promise weaves section" or that you "set it up", because it is not there yet. Only once a later result reports success is it in the field, and even then it is still a proposal awaiting their confirm or dismiss. Do NOT call this to answer a question about existing weaves (use search_promise_weave), and do not propose a weave over a single pulse that has nothing to be tied to.',
+            inputSchema: z.object({
+              title: z
+                .string()
+                .min(1)
+                .describe(
+                  'Short human-readable name for the weave, in the member\'s own vocabulary ("Caring for the home while we are away"). Never an id.'
+                ),
+              why: z
+                .string()
+                .optional()
+                .describe(
+                  'One or two plain sentences on what ties these pulses together — the evidence for the proposal. Shown to the member on the approval card and saved on the weave.'
+                ),
+              pulseIds: z
+                .array(z.string())
+                .min(1)
+                // Same cap the write enforces — one number, not two.
+                .max(MAX_PROPOSED_WEAVE_PULSES)
+                .describe(
+                  'IDs of the pulses this weave would hold, from a prior tool result. They must be pulses of the field the member is currently viewing — ones from anywhere else are dropped.'
+                ),
+              wovenForPersonId: z
+                .string()
+                .optional()
+                .describe(
+                  'Optional ID of the person the promise concerns. Must be someone on this field\'s roster; anyone else is ignored.'
+                ),
+            }),
+            execute: async (args: {
+              title: string
+              why?: string
+              pulseIds: string[]
+              wovenForPersonId?: string
+            }) => {
+              logToolDispatch('propose_promise_weave', ctx, args)
+              // The anchor is taken from session state rather than the model,
+              // so the model cannot aim a proposal at another field. That is a
+              // scoping convenience, NOT the boundary: `fieldContextId` comes
+              // off the request body and the approval round-trip replays
+              // client-supplied args. The boundary is `canEditContext`,
+              // re-derived server-side inside the write itself.
+              const anchored = {
+                ...args,
+                // Non-null inside this branch — the tool is only registered
+                // when a field is active — but narrowed explicitly so the
+                // display resolver's contract stays honest.
+                contextId: ctx.fieldContextId ?? undefined,
+                contextTitle: ctx.fieldContextTitle ?? undefined,
+              }
+              try {
+                // Resolve the card's copy from the graph, not from the model —
+                // the card is the gate, and it must only name what the write
+                // will actually touch. See resolveWeaveProposalDisplay.
+                const graph = await initGraph()
+                const display = await resolveWeaveProposalDisplay(
+                  graph,
+                  ctx.currentUserId,
+                  anchored
+                )
+                return runWriteTool(
+                  'propose_promise_weave',
+                  { ...anchored, ...display },
+                  ctx
+                )
+              } catch (error) {
+                return toErrorResult(
+                  'Failed to prepare the promise weave proposal',
+                  error
+                )
+              }
+            },
+          }),
+        }
+      : {}),
 
     update_pulse: tool({
       description:

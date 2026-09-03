@@ -355,6 +355,28 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
    GOAL-275 target gate), then the name path via `create_person`, which
    self-links, enriches, or mints a `PersonPulse`. Results are cached per run,
    so a 50-row sheet by one author resolves once.
+5b. **The row's link is read (GOAL-344).** Once the row's pulse has landed, the
+   worker fetches the URL (`article-url-fetcher.ts` — http(s) only, a
+   validating DNS lookup at connect time that refuses loopback / private /
+   link-local / metadata addresses, per-hop redirect re-validation, a 20s
+   whole-chain deadline, 2 MB for pages / 15 MB for PDFs, and only HTML / plain
+   text / PDF accepted; OneDrive share links are resolved to the file with
+   `download=1` and the chain's own cookies; a link that fails is not retried
+   by later rows of the same run),
+   reduces HTML to article text (`article-html-text.ts`), stores the result as
+   a `Document` on the field exactly like an upload (`sourceUrl` set, hint =
+   the row's title/author/date/link, anchored `PROCESSING` so the document
+   cron cannot claim it), and runs the same `runDocumentIngestPipeline` WF-10
+   uses — summary, ingest thread, auto-executed persons / organizations /
+   pulses with `EXTRACTED_FROM` provenance and one Log per write. The row's
+   pulse is in the roster, so the extractor updates it; as a deterministic
+   floor the worker also links it `EXTRACTED_FROM` the document and, when its
+   body is still the sheet placeholder (the seeded sentence or a bare URL),
+   fills it from the document summary. The outcome records what the article
+   yielded (`extraction`). A link that cannot be read fails **only that half**:
+   the pulse stands on the sheet's details and the outcome carries member-safe
+   copy saying why. `sourceUrl` is the idempotency key — a re-uploaded sheet
+   never fetches the same article into a field twice.
 6. Each row's outcome is persisted **before the next row starts**. That list is
    the resume cursor and the source of every summary count, so a worker killed
    mid-batch resumes where it stopped instead of re-walking the sheet. A run
@@ -365,7 +387,9 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
    (`runContextResonanceDiscovery`) for any context that gained pulses —
    **awaited, in the worker**, not fired at a request that has already answered.
    Imported articles therefore surface in search and resonance without waiting
-   for the nightly cron.
+   for the nightly cron. A run that yields with rows remaining kicks the next
+   sweep itself (`kickQueueWorker`), so a long sheet keeps moving on dev/demo
+   where scheduled ticks are far apart.
 8. The modal polls `GET /api/import/articles/<jobId>` and shows Queued →
    Importing (with a row-count meter) → the per-row result summary. Closing it
    does not cancel anything; the job id is remembered per field, so reopening
@@ -382,7 +406,18 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
   `resourceType: 'article'`.
 - **`location` and `time`** carry the article's URL and normalized date. A date
   that isn't a calendar date ("Spring 2026") survives verbatim rather than
-  failing the row.
+  failing the row. Pulses the extractor adds from the article default their
+  `location` to the article URL (not our stored copy's download locator).
+- **Rows are slow now (GOAL-344).** A row is a fetch (≤40s) plus the extraction
+  and summary model calls (aborted at 90s) plus the entity writes, so the
+  worker's row deadline is 120s and its claim deadline 100s of the 300s
+  function: a freshly claimed job always gets at least one row, and a row that
+  starts at the deadline still lands. A 300-row sheet spans many ticks — that
+  is the design, not a stall.
+- **What the fetcher refuses** is reported per row, never raised: login walls
+  (LinkedIn, paywalls), JavaScript-only pages, pages without readable text,
+  non-article content types, oversize responses, unreachable hosts, and any
+  address the SSRF policy blocks.
 - **Retry is re-upload.** A `FAILED` job is terminal; re-uploading the same
   sheet is safe because rows that already landed come back as
   `skipped_existing` (having filled in any missing details).

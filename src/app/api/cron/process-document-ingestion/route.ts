@@ -22,8 +22,7 @@ import {
   createGeminiDocumentSummarizer,
   createOpenAIDocumentSummarizer,
 } from '@/lib/ingest/document-summarizer'
-import { createS3BlobStore } from '@/lib/ingest/s3-blob-store'
-import { createMemoryBlobStore } from '@/lib/ingest/blob-store'
+import { resolveIngestBlobStore } from '@/lib/ingest/resolve-blob-store'
 import { runContextResonanceDiscovery } from '@/lib/resonance/discovery/on-upload-discovery'
 
 /**
@@ -67,12 +66,6 @@ const MAX_DOCUMENTS_PER_RUN = 4
  */
 const CLAIM_DEADLINE_MS = 210_000
 
-function resolveBlobStore() {
-  if (process.env.INGEST_BLOB_BACKEND === 'memory') {
-    return createMemoryBlobStore()
-  }
-  return createS3BlobStore()
-}
 
 /**
  * Per-document line in the cron's response. Deliberately carries the document
@@ -138,7 +131,7 @@ export async function GET(request: NextRequest) {
 
     const deps = {
       driver,
-      blobStore: resolveBlobStore(),
+      blobStore: resolveIngestBlobStore(),
       pdfExtractionClient: createGeminiExtractionModelClient(),
       textExtractionClient: createOpenAIExtractionModelClient(),
       pdfSummarizerClient: createGeminiDocumentSummarizer(),

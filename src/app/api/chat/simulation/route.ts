@@ -333,9 +333,12 @@ export async function POST(req: Request) {
       // Rule 1: a few service messages embed raw entity ids (e.g. "Update pulse
       // pulse_…"). Scrub them before the text enters the model context — the
       // model must never see, and so never echo, an internal id.
+      // `weave` and `org` were missing: propose_promise_weave returns the new
+      // weave's id and search_promise_weave returns one per row, so `weave_*`
+      // reached the model unscrubbed (GOAL-342 review).
       const stripIds = (text: string): string =>
         text.replace(
-          /\b(?:pulse|context|ctx|me|ws|space|person|log|context_context)_[A-Za-z0-9-]+/g,
+          /\b(?:pulse|context|ctx|me|ws|space|person|log|weave|org|context_context)_[A-Za-z0-9-]+/g,
           'that item'
         )
       const successes: string[] = []

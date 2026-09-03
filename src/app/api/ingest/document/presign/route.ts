@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { buildDocumentBlobKey } from '@/lib/ingest/document-blob-key'
 import { driver } from '@/lib/neo4j/driver'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import { createS3BlobStore } from '@/lib/ingest/s3-blob-store'
@@ -63,16 +64,6 @@ function resolveBlobStore() {
   return createS3BlobStore()
 }
 
-function sanitizeFilename(raw: string): string {
-  // Keep the extension; strip path separators and control chars so the
-  // resulting S3 key is predictable. The display filename on the Document
-  // node is kept verbatim from input.filename, so this only affects the
-  // storage key, not the user-facing label.
-  return raw
-    .replace(/[\\/\0-\x1f]/g, '_')
-    .replace(/^\.+/, '')
-    .slice(0, 200) || 'upload'
-}
 
 async function userCanEditContext(
   userId: string,
@@ -156,7 +147,7 @@ export async function POST(req: Request) {
 
   // Predict the documentId now so the storage key + graph anchor agree later.
   const documentId = `document_${randomUUID()}`
-  const blobKey = `documents/${documentId}/${sanitizeFilename(filename)}`
+  const blobKey = buildDocumentBlobKey(documentId, filename)
 
   // The presign mint depends on blob-storage configuration (S3 bucket /
   // region / credentials). A missing or malformed config throws here — surface

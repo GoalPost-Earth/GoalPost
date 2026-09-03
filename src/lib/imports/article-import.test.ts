@@ -511,7 +511,45 @@ describe('summarizeArticleOutcomes', () => {
       failed: 1,
       createdPeople: 0,
       matchedPeople: 0,
+      articlesRead: 0,
+      articlesUnread: 0,
+      createdFromArticles: 0,
     })
+  })
+
+  it('counts article reads and what they added from the extraction field (GOAL-344)', () => {
+    const summary = summarizeArticleOutcomes(
+      [
+        outcome({
+          row: 2,
+          extraction: { status: 'extracted', message: null, created: 3, updated: 1 },
+        }),
+        outcome({
+          row: 3,
+          extraction: { status: 'nothing_extracted', message: null, created: 0, updated: 1 },
+        }),
+        outcome({
+          row: 4,
+          extraction: { status: 'fetch_failed', message: 'The site could not be reached.', created: 0, updated: 0 },
+        }),
+        outcome({
+          row: 5,
+          extraction: { status: 'extraction_failed', message: 'x', created: 0, updated: 0 },
+        }),
+        // An earlier import already read this one — neither read nor unread this run.
+        outcome({
+          row: 6,
+          extraction: { status: 'already_extracted', message: 'y', created: 0, updated: 0 },
+        }),
+        // A row that failed before its article was attempted carries no extraction.
+        outcome({ row: 7, status: 'failed' }),
+      ],
+      6
+    )
+
+    expect(summary.articlesRead).toBe(2)
+    expect(summary.articlesUnread).toBe(2)
+    expect(summary.createdFromArticles).toBe(3)
   })
 
   it('counts people from personEvent, not from the row status', () => {
@@ -539,6 +577,9 @@ describe('summarizeArticleOutcomes', () => {
       failed: 0,
       createdPeople: 0,
       matchedPeople: 0,
+      articlesRead: 0,
+      articlesUnread: 0,
+      createdFromArticles: 0,
     })
   })
 
@@ -592,11 +633,36 @@ describe('buildArticleImportMessage', () => {
     failed: 0,
     createdPeople: 0,
     matchedPeople: 0,
+    articlesRead: 0,
+    articlesUnread: 0,
+    createdFromArticles: 0,
     ...overrides,
   })
 
   it('leads with what landed', () => {
     expect(buildArticleImportMessage(summary())).toBe('Imported 3 of 3 rows.')
+  })
+
+  it('appends what reading the articles yielded (GOAL-344)', () => {
+    expect(
+      buildArticleImportMessage(
+        summary({ articlesRead: 2, createdFromArticles: 9, articlesUnread: 1 })
+      )
+    ).toBe(
+      "Imported 3 of 3 rows. Read 2 articles and added 9 entries from them; 1 article couldn't be read, so that row was imported from the sheet details only."
+    )
+  })
+
+  it('reads articles without claiming additions when nothing new came of them', () => {
+    expect(
+      buildArticleImportMessage(summary({ articlesRead: 1, createdFromArticles: 0 }))
+    ).toBe('Imported 3 of 3 rows. Read 1 article.')
+  })
+
+  it('says nothing about articles when none were read this run', () => {
+    expect(buildArticleImportMessage(summary({ skippedExisting: 3, created: 0 }))).toBe(
+      'Imported 0 of 3 rows, 3 already existed.'
+    )
   })
 
   it('names skipped and failed rows when there are any', () => {

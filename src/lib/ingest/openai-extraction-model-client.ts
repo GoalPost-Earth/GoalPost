@@ -98,6 +98,7 @@ export function createOpenAIExtractionModelClient(): ExtractionModelClient {
       schema: ExtractionSchema,
       system: buildSystemPrompt(input),
       prompt: input.documentText,
+      abortSignal: input.abortSignal,
     })
     // GOAL-297: meter doc-extraction spend against the uploader.
     void recordAiSdkUsage(result.usage, {

@@ -98,6 +98,7 @@ export function createGeminiExtractionModelClient(): ExtractionModelClient {
       model: google(modelId),
       schema: ExtractionSchema,
       system: buildSystemPrompt(input),
+      abortSignal: input.abortSignal,
       messages: [
         {
           role: 'user',

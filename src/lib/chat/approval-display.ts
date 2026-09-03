@@ -29,6 +29,14 @@ export function entityKindLabel(
   if (tool === 'create_connection') return 'connection'
   if (tool === 'create_resonance') return 'resonance'
   if (tool === 'create_resonant_pulse') return 'resonance'
+  // "proposal", not "promise weave": approving this card does not establish
+  // the weave, it only creates the `proposed` row the member then confirms or
+  // dismisses in the field (GOAL-342, kb/04-state-machines.md).
+  // "weave proposal", not "promise weave proposal": this renders as a
+  // flex-none uppercase pill beside a flex-1 truncated summary, and 22 tracked
+  // characters would eat half the row at 390px — truncating the very sentence
+  // that says the weave still needs confirming. Two words keep the distinction.
+  if (tool === 'propose_promise_weave') return 'weave proposal'
   if (tool === 'create_pulse') {
     const pulseType = String(args.pulseType ?? '').trim()
     switch (pulseType) {
@@ -105,6 +113,19 @@ const RESONANCE_FIELDS: FieldSpec[] = [
   },
 ]
 
+const PROMISE_WEAVE_FIELDS: FieldSpec[] = [
+  { fieldName: 'title', label: 'Weave name' },
+  {
+    // The evidence the assistant cited for weaving these together, persisted
+    // as the weave's description. Always shown so the member can rewrite it in
+    // their own words before it lands on a shared surface.
+    fieldName: 'why',
+    label: 'Why these belong together',
+    multiline: true,
+    alwaysShow: true,
+  },
+]
+
 const PULSE_COMMON_FIELDS: FieldSpec[] = [
   { fieldName: 'title', label: 'Title' },
   { fieldName: 'content', label: 'Content', multiline: true },
@@ -176,6 +197,11 @@ export function getEditableFields(
   }
   if (tool === 'create_resonance' || tool === 'create_resonant_pulse') {
     return RESONANCE_FIELDS.map((spec) => specToField(spec, args)).filter(
+      (f): f is EditableField => f !== null
+    )
+  }
+  if (tool === 'propose_promise_weave') {
+    return PROMISE_WEAVE_FIELDS.map((spec) => specToField(spec, args)).filter(
       (f): f is EditableField => f !== null
     )
   }

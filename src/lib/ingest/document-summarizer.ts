@@ -28,6 +28,8 @@ export interface DocumentSummaryInput {
   documentMimeType?: string
   filename: string
   hint: string | null
+  /** Bounds the model call (GOAL-344); an abort is the usual non-fatal failure. */
+  abortSignal?: AbortSignal
   fieldContextTitle: string
   /**
    * Uploader this summary runs on behalf of. Used only for usage metering
@@ -102,6 +104,7 @@ export function createOpenAIDocumentSummarizer(): DocumentSummarizerClient {
       schema: SummarySchema,
       system: buildSystemPrompt(input),
       prompt: input.documentText,
+      abortSignal: input.abortSignal,
     })
     // GOAL-297: meter doc-summary spend against the uploader.
     void recordAiSdkUsage(result.usage, {
@@ -139,6 +142,7 @@ export function createGeminiDocumentSummarizer(): DocumentSummarizerClient {
       model: google(modelId),
       schema: SummarySchema,
       system: buildSystemPrompt(input),
+      abortSignal: input.abortSignal,
       messages: [
         {
           role: 'user',

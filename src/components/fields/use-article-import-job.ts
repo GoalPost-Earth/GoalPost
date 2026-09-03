@@ -228,6 +228,9 @@ export function useArticleImportJob({
               failed: 0,
               createdPeople: 0,
               matchedPeople: 0,
+              articlesRead: 0,
+              articlesUnread: 0,
+              createdFromArticles: 0,
             },
             outcomes: [],
           })

@@ -19,6 +19,15 @@ import {
   loadEditableContext,
   processArticleImport,
 } from '@/lib/imports/article-import-service'
+import { createArticleContentIngestor } from '@/lib/imports/article-content-ingest'
+import { createGeminiExtractionModelClient } from '@/lib/ingest/gemini-extraction-model-client'
+import { createOpenAIExtractionModelClient } from '@/lib/ingest/openai-extraction-model-client'
+import {
+  createGeminiDocumentSummarizer,
+  createOpenAIDocumentSummarizer,
+} from '@/lib/ingest/document-summarizer'
+import { resolveIngestBlobStore } from '@/lib/ingest/resolve-blob-store'
+import { kickQueueWorker } from '@/lib/jobs/kick-queue-worker'
 import { runContextResonanceDiscovery } from '@/lib/resonance/discovery/on-upload-discovery'
 
 /**
@@ -44,6 +53,13 @@ import { runContextResonanceDiscovery } from '@/lib/resonance/discovery/on-uploa
  * Jobs are processed sequentially. Each row is several authorized graph writes,
  * and running batches in parallel inside one 300s function is the fastest way
  * back to the timeouts this story exists to remove.
+ *
+ * GOAL-344: each row now also fetches its article and runs it through the
+ * document ingest pipeline (`article-content-ingest.ts`) — a network fetch plus
+ * two model calls per row, so a row is tens of seconds rather than under one.
+ * The deadlines below are sized for that, and a run that yields kicks the next
+ * sweep itself so a long sheet keeps moving on dev/demo, where the scheduled
+ * ticks are minutes to an hour apart.
  */
 
 export const dynamic = 'force-dynamic'
@@ -62,19 +78,25 @@ const MAX_JOBS_PER_RUN = 2
  * keeps a slow batch off the stalled-claim path entirely: a job that yields is
  * cleanly PENDING again a second later rather than invisible for 15 minutes.
  *
- * The remaining ~80s covers the terminal write plus the resonance sweep below.
- * A sweep cut short by the function ceiling costs nothing durable — the job is
- * already COMPLETE and the nightly resonance cron re-embeds whatever it missed
- * — so the budget is deliberately spent on rows, which are not recoverable that
- * cheaply.
+ * Sized for GOAL-344 rows, every part of which is bounded: the fetch chain is
+ * capped at 40s (`ARTICLE_FETCH_TOTAL_TIMEOUT_MS`), the extraction + summary
+ * calls run in parallel under a 90s abort (`ARTICLE_MODEL_CALL_TIMEOUT_MS`),
+ * and the entity writes for a dense article were measured at ~30-40s against
+ * Aura. A row that starts at this deadline therefore lands by ~290s of the
+ * 300s ceiling. A sweep cut short by the ceiling costs nothing durable — the
+ * job is already COMPLETE and the nightly resonance cron re-embeds whatever it
+ * missed — so the budget is deliberately spent on rows, which are not
+ * recoverable that cheaply.
  */
-const ROW_DEADLINE_MS = 220_000
+const ROW_DEADLINE_MS = 120_000
 
 /**
- * Stop claiming NEW jobs earlier than that, so a run always has room to finish
- * (or cleanly yield) the job it already holds.
+ * Stop claiming NEW jobs earlier than that, so a freshly claimed job always
+ * gets at least one row before the row deadline. Claiming closer to the row
+ * deadline than a row can take would let a job be claimed, yield with nothing
+ * done, and burn one of its three attempts on every tick.
  */
-const CLAIM_DEADLINE_MS = 180_000
+const CLAIM_DEADLINE_MS = 100_000
 
 /**
  * Per-job line in the cron's response. Carries the job id and counts only —
@@ -137,6 +159,17 @@ export async function GET(request: NextRequest) {
     }
 
     const graph = await initGraph()
+    // One ingest dependency set per run: the memory blob backend is per
+    // instance, so the store that writes an article must be the one the
+    // pipeline reads it back from.
+    const ingestArticle = createArticleContentIngestor({
+      driver,
+      blobStore: resolveIngestBlobStore(),
+      pdfExtractionClient: createGeminiExtractionModelClient(),
+      textExtractionClient: createOpenAIExtractionModelClient(),
+      pdfSummarizerClient: createGeminiDocumentSummarizer(),
+      textSummarizerClient: createOpenAIDocumentSummarizer(),
+    })
     const processed: ProcessedImportReport[] = []
     // Contexts that gained pulses this run, keyed by context id so three jobs
     // into one field trigger one discovery sweep rather than three. The value
@@ -227,6 +260,7 @@ export async function GET(request: NextRequest) {
               outcome,
             }),
           shouldYield: () => Date.now() - startedAt > ROW_DEADLINE_MS,
+          ingestArticle,
         })
 
         if (run.stopReason === 'lost_claim') {
@@ -253,7 +287,12 @@ export async function GET(request: NextRequest) {
         // minted nothing on this tick still gets swept by the tick that does.
         const mintedSomething = run.outcomes.some(
           (outcome) =>
-            outcome.status === 'created' || outcome.personEvent === 'created'
+            outcome.status === 'created' ||
+            outcome.personEvent === 'created' ||
+            // GOAL-344: entities the article added, or a row pulse whose body
+            // was filled in (its embedding is cleared for re-embedding).
+            (outcome.extraction?.created ?? 0) > 0 ||
+            (outcome.extraction?.updated ?? 0) > 0
         )
         if (mintedSomething) {
           contextsToSweep.set(job.fieldContextId, job.requesterUserId)
@@ -324,6 +363,17 @@ export async function GET(request: NextRequest) {
           error
         )
       }
+    }
+
+    // A job handed back with rows remaining should not wait for the next
+    // scheduled tick — on dev/demo that is minutes to an hour away (see
+    // kick-queue-worker.ts). Kick the next sweep now; the claim is conditional,
+    // so an overlapping scheduled run finds nothing extra to do.
+    if (
+      skippedForTime > 0 ||
+      processed.some((report) => report.status === 'REQUEUED')
+    ) {
+      kickQueueWorker(request, 'article-imports')
     }
 
     // Retention sweep for finished jobs. Cheap (two index seeks, capped), and

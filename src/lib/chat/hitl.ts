@@ -13,6 +13,7 @@ import {
 import { createHash, randomUUID } from 'crypto'
 import { driver } from '@/lib/neo4j/driver'
 import { softDeleteFieldContext } from '@/lib/field-context/soft-delete-field-context'
+import { isAwaitingReview, NOT_LIVE_WEAVE_STATUSES } from '@/lib/promise-weave'
 
 export type WriteToolName =
   | 'rename_space'
@@ -32,6 +33,7 @@ export type WriteToolName =
   | 'create_connection'
   | 'create_resonance'
   | 'create_resonant_pulse'
+  | 'propose_promise_weave'
 
 export interface ApprovedAction {
   tool: WriteToolName
@@ -62,6 +64,7 @@ const WRITE_TOOL_NAMES = new Set<WriteToolName>([
   'create_connection',
   'create_resonance',
   'create_resonant_pulse',
+  'propose_promise_weave',
 ])
 
 function stableStringify(value: unknown): string {
@@ -230,6 +233,49 @@ export function describeWriteAction(
       const why = String(args.why || args.label || '').trim()
       const whyClause = why ? ` — "${why}"` : ''
       return `Capture ${kind} "${newName}" and connect it to "${existing}" as a resonance${whyClause}`
+    }
+    case 'propose_promise_weave': {
+      // Names only (Rule 1). The model passes pulse titles and the person's
+      // name alongside the ids; never echo an id, and never the `weave_*` this
+      // will mint. The copy says out loud that approving here only creates a
+      // PROPOSAL — the second gate (Confirm / Dismiss in the field's Promise
+      // weaves section) is what makes it an established connection, and an
+      // approval card that read "Weave X" would misdescribe what it does.
+      const name = String(args.title || '').trim()
+      const nameClause = name ? ` "${name}"` : ''
+      const who = String(args.wovenForName || '').trim()
+      const forClause = who ? ` for ${who}` : ''
+      const titles = Array.isArray(args.pulseTitles)
+        ? (args.pulseTitles as unknown[])
+            .map((title) => String(title ?? '').trim())
+            .filter(Boolean)
+        : []
+      const ids = Array.isArray(args.pulseIds)
+        ? (args.pulseIds as unknown[])
+            .map((id) => String(id ?? '').trim())
+            .filter(Boolean)
+        : []
+      // The titles are display-only and unverified; the IDS are what get woven.
+      // Name titles ONLY when there is one per id, so the card cannot say
+      // `holding "A", "B"` over a five-pulse weave, or name pulses that are not
+      // in the write at all. Otherwise fall back to an honest count. This card
+      // IS the gate — it has to describe the action being approved.
+      const named =
+        titles.length > 0 && titles.length === ids.length
+          ? titles
+              .slice(0, 3)
+              .map((title) => `"${title}"`)
+              .join(', ')
+          : ''
+      const unnamed = Math.max(0, titles.length - 3)
+      const holdingClause = named
+        ? ` holding ${named}${unnamed > 0 ? ` and ${unnamed} more` : ''}`
+        : ids.length > 0
+          ? ` holding ${ids.length} ${ids.length === 1 ? 'pulse' : 'pulses'}`
+          : ''
+      const where = String(args.contextTitle || '').trim()
+      const whereClause = where ? ` in ${where}` : ''
+      return `Propose promise weave${nameClause}${forClause}${holdingClause}${whereClause} — it arrives as a proposal for you to confirm or dismiss`
     }
     case 'update_person': {
       const first = String(args.firstName || '').trim()
@@ -2797,6 +2843,432 @@ async function createResonantPulseAuthorized(
   }
 }
 
+interface ProposePromiseWeaveAuthorizedInput {
+  /**
+   * Anchor FieldContext. The tool wrapper injects it from session state rather
+   * than accepting it from the model — but that is model-scoping, NOT the
+   * boundary: `fieldContextId` arrives on the request body, and the approval
+   * round-trip replays client-supplied args verbatim. **`canEditContext` below
+   * is the boundary.** Do not relax it on the strength of the injection.
+   */
+  contextId?: string
+  /** Display-only, for the approval-card copy (Rule 1). */
+  contextTitle?: string
+  /** Pulses the proposal would weave. Must all hang off `contextId`. */
+  pulseIds?: string[]
+  /** Display-only pulse titles for the approval card (Rule 1). */
+  pulseTitles?: string[]
+  /** Optional Person the weave is WOVEN_FOR — must be on the context roster. */
+  wovenForPersonId?: string
+  /** Display-only, for the approval card (Rule 1). */
+  wovenForName?: string
+  title?: string
+  /** Evidence the assistant cites — persisted as the weave's `description`. */
+  why?: string
+}
+
+/** Keeps approval cards and Log prose readable, and caps the write's fan-out. */
+export const MAX_PROPOSED_WEAVE_PULSES = 10
+
+/**
+ * Propose a PromiseWeave over pulses that already share a FieldContext
+ * (GOAL-342). Written server-side in raw Cypher rather than through
+ * `createPromiseWeaves`, because that mutation's CREATE rule requires a
+ * `createdBy` edge pointing at the caller and an AI-proposed weave has no
+ * member author — see the note on the type in `schema.gql`.
+ *
+ * TWO gates stand between the model and an established connection, and both
+ * are load-bearing:
+ *
+ * 1. This only ever runs from `runWriteTool`, so the member approves the
+ *    proposal on the HITL card before a node is written at all.
+ * 2. What it writes is `status: 'proposed'` / `origin: 'ai'` — never `active`.
+ *    A proposal is not an established weave: it renders behind the inline
+ *    Confirm / Dismiss gate in the field's "Promise weaves" section
+ *    (kb/04-state-machines.md), and only a member's Confirm promotes it.
+ *
+ * Authorization is re-derived here and never trusted from the caller:
+ * `canEditContext` (Owner / ADMIN / MEMBER — a GUEST is refused, kb/02), and
+ * then the write itself only reaches pulses this very context `HAS_PULSE` and
+ * a person it `HAS_PERSON`. So the weave cannot cross a Space boundary even if
+ * the model hands over ids from somewhere else — those ids simply match
+ * nothing, rather than being reported as forbidden.
+ */
+/**
+ * Resolve the DISPLAY strings for a weave proposal's approval card — the pulse
+ * titles and the person's name — from the graph, scoped to the anchor field.
+ *
+ * The card is the gate, so it must not be describable by the model. Left to
+ * itself the model supplies `pulseTitles` / `wovenForName` freely and nothing
+ * cross-checks them against the ids that actually get woven: text reaching it
+ * from a field or an ingested document could have it pass ten ids and two
+ * titles, and the member would approve a ten-pulse weave having been shown
+ * two — or approve one "for Alice" that is woven for Bob. Resolving here means
+ * the card can only ever name what the write will actually touch.
+ *
+ * Gated on `canEditContext` FIRST: `contextId` arrives from the request body,
+ * so reading titles out of it unconditionally would itself be a leak. On
+ * refusal this returns empty display values and lets the write produce the
+ * real refusal, rather than distinguishing "not a member" from "no such field".
+ */
+export async function resolveWeaveProposalDisplay(
+  graph: Neo4jGraph,
+  currentUserId: string | null,
+  input: { contextId?: string; pulseIds?: string[]; wovenForPersonId?: string }
+): Promise<{ pulseTitles: string[]; wovenForName?: string }> {
+  const contextId = String(input.contextId || '').trim()
+  const pulseIds = (Array.isArray(input.pulseIds) ? input.pulseIds : [])
+    .map((id) => String(id ?? '').trim())
+    .filter(Boolean)
+  const wovenForPersonId = String(input.wovenForPersonId || '').trim() || null
+
+  if (!currentUserId || !contextId || pulseIds.length === 0) {
+    return { pulseTitles: [] }
+  }
+  if (!(await canEditContext(graph, currentUserId, contextId))) {
+    return { pulseTitles: [] }
+  }
+
+  const rows = await graph.query<{
+    pulseTitles: string[]
+    wovenForName: string | null
+  }>(
+    `
+    MATCH (context:FieldContext {id: $contextId})
+    CALL {
+      WITH context
+      UNWIND $pulseIds AS wantedId
+      OPTIONAL MATCH (pulse:FieldPulse {id: wantedId})
+      WHERE (context)-[:HAS_PULSE]->(pulse)
+      RETURN collect(DISTINCT
+        CASE
+          WHEN trim(coalesce(pulse.title, '')) <> '' THEN pulse.title
+          ELSE coalesce(pulse.content, 'a pulse')
+        END
+      ) AS pulseTitles
+    }
+    OPTIONAL MATCH (context)-[:HAS_PERSON]->(person:Person)
+    WHERE $wovenForPersonId IS NOT NULL AND person.id = $wovenForPersonId
+    RETURN pulseTitles, head(collect(person.name)) AS wovenForName
+    LIMIT 1
+    `,
+    { contextId, pulseIds, wovenForPersonId }
+  )
+
+  const row = rows?.[0]
+  const titles = Array.isArray(row?.pulseTitles)
+    ? row.pulseTitles.filter(
+        (title): title is string =>
+          typeof title === 'string' && title.trim().length > 0
+      )
+    : []
+  const name = row?.wovenForName?.trim()
+  return { pulseTitles: titles, ...(name ? { wovenForName: name } : {}) }
+}
+
+async function proposePromiseWeaveAuthorized(
+  graph: Neo4jGraph,
+  currentUserId: string,
+  args: Record<string, unknown>
+): Promise<ToolExecutionResult> {
+  const input = args as ProposePromiseWeaveAuthorizedInput
+  const contextId = String(input.contextId || '').trim()
+  const contextTitle = String(input.contextTitle || '').trim()
+  const title = String(input.title || '').trim() || null
+  const why = String(input.why || '').trim() || null
+  const wovenForPersonId = String(input.wovenForPersonId || '').trim() || null
+
+  // Dedupe before the write, so a repeated id cannot inflate the Log prose or
+  // the WEAVES fan-out. The UNCAPPED unique count is kept: ids dropped by the
+  // cap are "left out" just as surely as ids from another field, and the member
+  // is told about both. (The tool's zod schema rejects >cap first, but
+  // executeAuthorizedWriteTool is reachable on its own.)
+  const requestedPulseIds = Array.from(
+    new Set(
+      (Array.isArray(input.pulseIds) ? input.pulseIds : [])
+        .map((id) => String(id ?? '').trim())
+        .filter(Boolean)
+    )
+  )
+  const pulseIds = requestedPulseIds.slice(0, MAX_PROPOSED_WEAVE_PULSES)
+
+  if (!contextId) {
+    return {
+      success: false,
+      message: 'Open a field first — a promise weave is anchored in one.',
+    }
+  }
+  if (pulseIds.length === 0) {
+    return {
+      success: false,
+      message:
+        'A promise weave holds at least one pulse — name what it ties together.',
+    }
+  }
+
+  // First half of the server-side re-authorization: the acting member must be
+  // able to EDIT this field (Owner / ADMIN / MEMBER). A GUEST who can read the
+  // field gets the same refusal as a non-member — "not a member" and "no such
+  // field" are never distinguished.
+  const allowed = await canEditContext(graph, currentUserId, contextId)
+  if (!allowed) {
+    return {
+      success: false,
+      message: 'You can only propose promise weaves in fields you belong to.',
+    }
+  }
+
+  const weaveId = `weave_${randomUUID()}`
+  const logId = `log_${Date.now()}_${randomUUID().slice(0, 8)}`
+  const metadataJson = JSON.stringify({ weaveId, origin: 'ai' })
+
+  // Second half: everything the write touches is reached THROUGH `context`,
+  // which the gate above already cleared — `HAS_PULSE` for the woven pulses,
+  // `HAS_PERSON` for the person. An id from another Space matches nothing and
+  // is simply absent from `pulses` / `wovenFor`, so a cross-Space weave is
+  // unreachable rather than merely refused.
+  //
+  // The pulse and field titles the Log records are read from the graph, so no
+  // id ever reaches the activity feed (Rule 1).
+  const rows = await graph.query<{
+    weaveTitle: string | null
+    contextTitle: string | null
+    wovenForName: string | null
+    wovenPulseTitles: string[]
+    alreadyWoven: boolean
+    // The EXISTING weave's own title and status, not the proposal's. Without
+    // them the "already woven" reply names a weave that does not exist and
+    // cannot tell an agreed weave from another unconfirmed proposal.
+    existingTitle: string | null
+    existingStatus: string | null
+    // A person was named but is not on this field's roster. Reported rather
+    // than dropped in silence: the approval card said "for <name>".
+    wovenForDropped: boolean
+  }>(
+    `
+    MATCH (context:FieldContext {id: $contextId})
+    MATCH (actor:Person {id: $currentUserId})
+
+    // Only pulses THIS field holds. Anything else — another field, another
+    // Space — never enters "pulses".
+    //
+    // Seeks each id on the FieldPulse(id) index and then checks the edge,
+    // rather than expanding every HAS_PULSE out of the field and filtering:
+    // the latter costs ~2 dbHits per pulse IN THE FIELD no matter how few ids
+    // the proposal names, and was 92% of the statement on real dev data
+    // (120 -> 22 dbHits on a 53-pulse field; 883 -> 83 on a 300-pulse one).
+    // DISTINCT is load-bearing — without it a repeated id duplicates a title.
+    CALL {
+      WITH context
+      UNWIND $pulseIds AS wantedId
+      OPTIONAL MATCH (pulse:FieldPulse {id: wantedId})
+      WHERE (context)-[:HAS_PULSE]->(pulse)
+      RETURN collect(DISTINCT pulse) AS pulses
+    }
+    WITH context, actor, pulses
+
+    // Same rule for the person: this field's roster (HAS_PERSON) only.
+    OPTIONAL MATCH (context)-[:HAS_PERSON]->(person:Person)
+    WHERE $wovenForPersonId IS NOT NULL AND person.id = $wovenForPersonId
+    WITH context, actor, pulses, head(collect(person)) AS wovenFor
+
+    // Idempotence: a LIVE weave in this field already holding every one of
+    // these pulses makes the proposal redundant. Only a dissolved one is
+    // skipped — a member who dismissed a weave can be offered a fresh one.
+    //
+    // Stated as an EXCLUSION of $notLiveStatuses (from NOT_LIVE_WEAVE_STATUSES)
+    // rather than an allow-list of live ones, so it agrees with
+    // normalizeWeaveStatus: null or an unrecognised legacy value reads as
+    // "active" there, and must read as live here too. An allow-list looked
+    // equivalent but silently classified an unknown value as not-live.
+    //
+    // The set must match EXACTLY, not merely contain. A containment test reads
+    // fine until a field fills up: any live weave holding a superset blocks the
+    // proposal, so a single-pulse proposal is refused by ANY weave that happens
+    // to touch that pulse — and migration-built weaves wrap single care points,
+    // so migrated fields are the worst hit. A different grouping of the same
+    // pulses is a different weave. The cardinality clause costs ~0.6% dbHits.
+    //
+    // size(pulses) > 0 is load-bearing: all() over an empty list is vacuously
+    // true, so without it an all-foreign proposal reports "already woven" and
+    // names a real unrelated weave.
+    OPTIONAL MATCH (context)-[:HAS_WEAVE]->(existing:PromiseWeave)
+    WHERE size(pulses) > 0
+      AND all(p IN pulses WHERE (existing)-[:WEAVES]->(p))
+      AND size([(existing)-[:WEAVES]->(x) | x]) = size(pulses)
+      AND NOT toLower(trim(coalesce(existing.status, ''))) IN $notLiveStatuses
+    WITH context, actor, pulses, wovenFor, head(collect(existing)) AS existing
+
+    // coalesce() skips null, NOT '' — a blank title would become the weave's
+    // persisted name, be stripped by the caller's trim filter (over-counting
+    // "left out"), and put the pulse's FULL content into the Log description.
+    WITH context, actor, pulses, wovenFor, existing,
+         [p IN pulses |
+           CASE
+             WHEN trim(coalesce(p.title, '')) <> '' THEN p.title
+             ELSE coalesce(p.content, 'a pulse')
+           END
+         ] AS pulseTitles
+    WITH context, actor, pulses, wovenFor, existing, pulseTitles,
+         CASE
+           WHEN $title IS NULL THEN coalesce(head(pulseTitles), 'Promise weave')
+           ELSE $title
+         END AS weaveTitle
+    WITH context, actor, pulses, wovenFor, existing, pulseTitles, weaveTitle,
+         reduce(
+           acc = '',
+           t IN pulseTitles[0..3] |
+             CASE WHEN acc = '' THEN '"' + t + '"' ELSE acc + ', "' + t + '"' END
+         ) AS namedTitles,
+         size(pulseTitles) - size(pulseTitles[0..3]) AS unnamedCount
+
+    FOREACH (_ IN CASE WHEN existing IS NULL AND size(pulses) > 0 THEN [1] ELSE [] END |
+      CREATE (weave:PromiseWeave {
+        id: $weaveId,
+        title: weaveTitle,
+        description: $why,
+        // NEVER 'active' — the member's Confirm is what promotes it.
+        status: 'proposed',
+        origin: 'ai',
+        createdAt: datetime()
+      })
+      // The context edge is the visibility anchor AND what every
+      // @authorization rule on the type traverses — without it the weave is
+      // unreadable and ungoverned, so it is created in the same breath.
+      CREATE (context)-[:HAS_WEAVE]->(weave)
+      FOREACH (p IN pulses | CREATE (weave)-[:WEAVES]->(p))
+      FOREACH (target IN CASE WHEN wovenFor IS NULL THEN [] ELSE [wovenFor] END |
+        CREATE (weave)-[:WOVEN_FOR]->(target)
+      )
+      CREATE (log:Log {
+        id: $logId,
+        description:
+          'Proposed promise weave "' + weaveTitle + '"' +
+          CASE WHEN namedTitles = '' THEN '' ELSE ' holding ' + namedTitles END +
+          CASE WHEN unnamedCount > 0 THEN ' and ' + toString(unnamedCount) + ' more' ELSE '' END +
+          CASE WHEN wovenFor IS NULL THEN '' ELSE ' for ' + coalesce(wovenFor.name, 'someone') END +
+          CASE WHEN context.title IS NULL THEN '' ELSE ' in "' + context.title + '"' END,
+        createdAt: datetime(),
+        // "metadata" only. create-log.ts also writes a "metadataJson" twin,
+        // but nothing reads it — it is absent from the GraphQL Log type and
+        // from kb/05, and every other Log write in this file sets "metadata".
+        // (Backticks are forbidden anywhere in this template literal: they
+        // terminate the string and break every route that imports this file.)
+        metadata: $metadataJson
+      })
+      CREATE (log)-[:CREATED_BY]->(actor)
+      FOREACH (p IN pulses | CREATE (log)-[:LOGGED_FOR]->(p))
+    )
+
+    RETURN
+      weaveTitle,
+      context.title AS contextTitle,
+      wovenFor.name AS wovenForName,
+      pulseTitles AS wovenPulseTitles,
+      existing IS NOT NULL AS alreadyWoven,
+      existing.title AS existingTitle,
+      existing.status AS existingStatus,
+      ($wovenForPersonId IS NOT NULL AND wovenFor IS NULL) AS wovenForDropped
+    LIMIT 1
+    `,
+    {
+      contextId,
+      currentUserId,
+      pulseIds,
+      wovenForPersonId,
+      title,
+      why,
+      weaveId,
+      logId,
+      metadataJson,
+      notLiveStatuses: NOT_LIVE_WEAVE_STATUSES,
+    }
+  )
+
+  const row = rows?.[0]
+  if (!row) {
+    return {
+      success: false,
+      message: 'I could not find that field to weave in.',
+    }
+  }
+
+  const where = row.contextTitle?.trim() || contextTitle || 'this field'
+  const wovenPulseTitles = Array.isArray(row.wovenPulseTitles)
+    ? row.wovenPulseTitles.filter(
+        (pulseTitle): pulseTitle is string =>
+          typeof pulseTitle === 'string' && pulseTitle.trim().length > 0
+      )
+    : []
+
+  if (wovenPulseTitles.length === 0) {
+    // Every id the model offered is outside this field. Name the field, not
+    // the ids (Rule 3), and give away nothing about what lives elsewhere.
+    return {
+      success: false,
+      message: `I could not find those pulses in ${where}. A promise weave only holds pulses from the field it is anchored in.`,
+    }
+  }
+
+  const wovenForName = row.wovenForName?.trim() || null
+  const weaveTitle = row.weaveTitle?.trim() || wovenPulseTitles[0]
+  // Not an error: ids that partly missed still yield a weave over what DID
+  // match, and the member is told plainly rather than silently given less.
+  // Counted against the UNCAPPED request, so ids the cap dropped are included.
+  const missing = requestedPulseIds.length - wovenPulseTitles.length
+  const droppedNote =
+    (missing > 0
+      ? ` I left out ${missing} ${missing === 1 ? 'pulse' : 'pulses'} that ${
+          missing === 1 ? 'is' : 'are'
+        } not in ${where}.`
+      : '') +
+    // The card said "for <name>". If that person is not on the field's roster
+    // the weave is woven for nobody, and saying nothing would let a success
+    // message imply the card's promise was kept.
+    (row.wovenForDropped
+      ? ` I did not weave it for anyone — the person you named is not on this field's roster.`
+      : '')
+
+  if (row.alreadyWoven) {
+    // Report the EXISTING weave's own name and state. Two failures live here:
+    // saying "already woven together" about a weave that is itself still
+    // `proposed` narrates an unconfirmed proposal as an agreed connection —
+    // the exact thing this slice exists to prevent — and naming the proposal's
+    // computed title would hand the model a weave name the graph does not hold.
+    const existingAwaiting = isAwaitingReview(row.existingStatus)
+    const existingTitle =
+      row.existingTitle?.trim() || wovenPulseTitles[0] || 'a promise weave'
+    return {
+      success: true,
+      alreadyWoven: true,
+      title: existingTitle,
+      status: existingAwaiting ? 'Proposed' : 'Active',
+      awaitingReview: existingAwaiting,
+      contextTitle: where,
+      wovenForName,
+      wovenPulseTitles,
+      message: existingAwaiting
+        ? `Those are already held by "${existingTitle}" in ${where} — a proposal that is still waiting on your confirm or dismiss, so I have not added another.${droppedNote}`
+        : `Those are already woven together by "${existingTitle}" in ${where}.${droppedNote}`,
+    }
+  }
+
+  return {
+    success: true,
+    id: weaveId,
+    title: weaveTitle,
+    status: 'Proposed',
+    awaitingReview: true,
+    contextTitle: where,
+    wovenForName,
+    wovenPulseTitles,
+    // The member must be told the proposal is NOT yet an established weave,
+    // and where the second gate lives — otherwise the model narrates a
+    // confirmed connection that nobody has agreed to.
+    message: `I have proposed "${weaveTitle}" in ${where}. It is waiting on you — confirm or dismiss it in that field's Promise weaves section.${droppedNote}`,
+  }
+}
+
 async function deleteMyProfileAuthorized(
   graph: Neo4jGraph,
   currentUserId: string,
@@ -3083,6 +3555,10 @@ export async function executeAuthorizedWriteTool(
 
   if (toolName === 'create_resonant_pulse') {
     return await createResonantPulseAuthorized(graph, currentUserId, rawArgs)
+  }
+
+  if (toolName === 'propose_promise_weave') {
+    return await proposePromiseWeaveAuthorized(graph, currentUserId, rawArgs)
   }
 
   return {

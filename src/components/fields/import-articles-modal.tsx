@@ -233,7 +233,8 @@ export function ImportArticlesModal({
             </div>
 
             <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
-              Review before importing — nothing is saved yet.
+              Review before importing — nothing is saved yet. Each article
+              link will be opened and read.
               {rowErrors.length > 0 && ' Rows with issues will be skipped.'}
             </p>
 

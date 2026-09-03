@@ -59,12 +59,40 @@ export interface ArticleRowError {
   data: Record<string, string>
 }
 
+/**
+ * GOAL-344 — what reading the row's article yielded, once the row's own pulse
+ * has landed. `extracted` / `nothing_extracted` mean the article was fetched
+ * and run through document ingestion this run; `already_extracted` and
+ * `in_progress` mean an earlier import of the same link into this field did
+ * (or is doing) that work; the two failures carry member-safe copy explaining
+ * why the row fell back to the sheet's details alone.
+ */
+export type ArticleExtractionStatus =
+  | 'extracted'
+  | 'nothing_extracted'
+  | 'already_extracted'
+  | 'in_progress'
+  | 'fetch_failed'
+  | 'extraction_failed'
+
+export interface ArticleRowExtraction {
+  status: ArticleExtractionStatus
+  /** Member-safe copy for a non-success; null when nothing needs explaining. */
+  message: string | null
+  /** Entries (pulses, people, organizations) the article added to the field. */
+  created: number
+  /** Existing entries the article filled in — the row's own pulse included. */
+  updated: number
+}
+
 export interface ArticleRowOutcome {
   row: number
   title: string
   status: 'created' | 'skipped_existing' | 'failed'
   message: string
   authorName?: string | null
+  /** Absent when the row failed before its article could be read (GOAL-344). */
+  extraction?: ArticleRowExtraction | null
 }
 
 export interface ArticleImportSummary {
@@ -74,6 +102,12 @@ export interface ArticleImportSummary {
   failed: number
   createdPeople: number
   matchedPeople: number
+  /** Articles fetched and read into the field this import (GOAL-344). */
+  articlesRead: number
+  /** Rows whose article could not be fetched or processed — the pulse still landed from the sheet. */
+  articlesUnread: number
+  /** Entries the articles added to the field beyond the rows themselves. */
+  createdFromArticles: number
 }
 
 /**
@@ -194,6 +228,9 @@ export function summarizeArticleOutcomes(
     failed: 0,
     createdPeople: 0,
     matchedPeople: 0,
+    articlesRead: 0,
+    articlesUnread: 0,
+    createdFromArticles: 0,
   }
   for (const outcome of outcomes) {
     if (outcome.status === 'created') summary.created += 1
@@ -201,8 +238,47 @@ export function summarizeArticleOutcomes(
     else summary.failed += 1
     if (outcome.personEvent === 'created') summary.createdPeople += 1
     else if (outcome.personEvent === 'matched') summary.matchedPeople += 1
+    const extraction = outcome.extraction
+    if (!extraction) continue
+    if (
+      extraction.status === 'extracted' ||
+      extraction.status === 'nothing_extracted'
+    ) {
+      summary.articlesRead += 1
+      summary.createdFromArticles += extraction.created
+    } else if (
+      extraction.status === 'fetch_failed' ||
+      extraction.status === 'extraction_failed'
+    ) {
+      summary.articlesUnread += 1
+    }
   }
   return summary
+}
+
+/**
+ * The article-reading half of the batch message (GOAL-344). Empty when no row
+ * had its link read this run — an all-skipped re-upload, or a batch that
+ * failed before any fetch — so the row sentence stands alone as before.
+ */
+export function buildArticleReadingSentence(
+  summary: ArticleImportSummary
+): string {
+  const parts: string[] = []
+  if (summary.articlesRead > 0) {
+    const read = `Read ${summary.articlesRead} article${summary.articlesRead === 1 ? '' : 's'}`
+    parts.push(
+      summary.createdFromArticles > 0
+        ? `${read} and added ${summary.createdFromArticles} ${summary.createdFromArticles === 1 ? 'entry' : 'entries'} from ${summary.articlesRead === 1 ? 'it' : 'them'}`
+        : read
+    )
+  }
+  if (summary.articlesUnread > 0) {
+    parts.push(
+      `${summary.articlesUnread} article${summary.articlesUnread === 1 ? '' : 's'} couldn't be read, so ${summary.articlesUnread === 1 ? 'that row was' : 'those rows were'} imported from the sheet details only`
+    )
+  }
+  return parts.length > 0 ? `${parts.join('; ')}.` : ''
 }
 
 /**
@@ -242,7 +318,10 @@ export function buildArticleImportMessage(
     )
   }
   const head = parts.join(', ')
-  return peopleBits.length > 0 ? `${head}. ${peopleBits.join('; ')}.` : `${head}.`
+  const rowsAndPeople =
+    peopleBits.length > 0 ? `${head}. ${peopleBits.join('; ')}.` : `${head}.`
+  const reading = buildArticleReadingSentence(summary)
+  return reading ? `${rowsAndPeople} ${reading}` : rowsAndPeople
 }
 
 type ArticleColumnKey =
@@ -577,6 +656,15 @@ export function parseArticleRows(sheetRows: Record<string, string>[]): {
  */
 export function buildArticleRowContent(row: ArticleImportRowInput): string {
   if (row.description?.trim()) return row.description.trim()
+  return buildArticleRowPlaceholder(row)
+}
+
+/**
+ * The seeded sentence a row's pulse gets when the sheet gave no description —
+ * and therefore the ONE body the article read (GOAL-344) may replace with the
+ * document summary. A member-written description is never a placeholder.
+ */
+export function buildArticleRowPlaceholder(row: ArticleImportRowInput): string {
   const datePart = row.date ? `, published ${row.date}` : ''
   return `Article by ${row.author}${datePart}: ${row.url}`
 }
