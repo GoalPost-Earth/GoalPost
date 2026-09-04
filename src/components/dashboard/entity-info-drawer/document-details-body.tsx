@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { DELETE_DOCUMENT_MUTATION } from '@/app/graphql/mutations'
+import { ADD_PERSON_TO_FIELD_CONTEXT_MUTATION } from '@/app/graphql/mutations/FIELD_CONTEXT_PEOPLE_MUTATIONS'
+import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
 import {
   BodySkeleton,
   ErrorBody,
@@ -25,6 +27,8 @@ import {
   StatCell,
 } from './shared'
 import { dispatchCloseInfoDrawer, dispatchOpenInfoDrawer } from './types'
+import { useFieldContextCanEditContent } from '@/hooks/use-field-context-permissions'
+import { ExtractedPersonRow } from './extracted-person-row'
 
 const GET_DOCUMENT_BY_ID = gql`
   query DocumentById($documentId: ID!) {
@@ -48,6 +52,18 @@ const GET_DOCUMENT_BY_ID = gql`
       fieldContext {
         id
         title
+        # GOAL-346: lets each extracted person below show whether they are
+        # already on the field's roster, so promoting reads as a state change
+        # rather than a button that appears to do nothing the second time.
+        curatedPersonIds
+        # Who is actually ATTACHED. Removing a person from a field disconnects
+        # HAS_PERSON but leaves EXTRACTED_FROM, so they keep appearing in this
+        # list. Without this, a detached person is indistinguishable from an
+        # attached-but-uncurated one, and "promote" would silently re-create
+        # the edge — re-granting the PII reach the removal revoked.
+        people {
+          id
+        }
       }
       extractedPeople {
         id
@@ -85,7 +101,12 @@ interface DocumentDetail {
     lastName: string | null
     name: string | null
   }[]
-  fieldContext?: { id: string; title: string }[]
+  fieldContext?: {
+    id: string
+    title: string
+    curatedPersonIds?: string[] | null
+    people?: { id: string }[] | null
+  }[]
   extractedPeople?: { id: string; firstName: string; lastName: string }[]
   extractedPulses?: {
     __typename: string | null
@@ -141,6 +162,22 @@ export const DocumentDetailsBody: FC<{
   })
   const [deleteDocument] = useMutation(DELETE_DOCUMENT_MUTATION)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [promotePerson] = useMutation(ADD_PERSON_TO_FIELD_CONTEXT_MUTATION)
+  // Tracks one row at a time so only the promoted person's control shows a
+  // pending state — a shared boolean would freeze every row in the list.
+  const [promotingPersonId, setPromotingPersonId] = useState<string | null>(
+    null
+  )
+
+  // GOAL-346: promoting is a write, so the control is gated on the same
+  // client-side `canEditContent` rule the field page uses for its Upload
+  // control (GOAL-242) — a GUEST would otherwise get a button the resolver
+  // rejects. Read before the early return below, because hooks cannot be
+  // called conditionally; the hook skips on a null id and reuses the
+  // already-cached roster query rather than issuing a round trip.
+  const promoteContextId =
+    data?.documents?.[0]?.fieldContext?.[0]?.id ?? null
+  const canPromote = useFieldContextCanEditContent(promoteContextId)
 
   if (loading && !data)
     return (
@@ -168,6 +205,52 @@ export const DocumentDetailsBody: FC<{
   const threads = document.ingestThreads ?? []
   const people = document.extractedPeople ?? []
   const pulses = document.extractedPulses ?? []
+
+  // GOAL-346: people this document named are attached to the field but kept
+  // off its People roster, so the roster stays a list of members rather than
+  // of every name an upload mentioned. Promoting marks the existing
+  // HAS_PERSON edge curated and returns them to the roster; the person's
+  // EXTRACTED_FROM provenance is untouched, so they keep showing here too.
+  const curatedIds = new Set(field?.curatedPersonIds ?? [])
+  // Who is still attached to the field. A person absent from this set was
+  // deliberately removed from it — re-attaching restores their gated PII to
+  // every Space that reaches the context, so that is NOT something a display
+  // toggle may do quietly. Those rows get no promote control here; the field
+  // page's Add Person flow remains the explicit, labelled way back.
+  const attachedIds = new Set((field?.people ?? []).map((p) => p.id))
+
+  const handlePromote = async (personId: string, personName: string) => {
+    if (!field?.id) return
+    setPromotingPersonId(personId)
+    try {
+      const result = await promotePerson({
+        variables: { contextId: field.id, personId },
+        // The roster query is what the field page and the field drawer both
+        // render, and it is the thing this write changes — refetch it so the
+        // person appears there without a reload. `curatedPersonIds` rides on
+        // that same query, so this row's state updates from it too.
+        refetchQueries: [
+          { query: GET_FIELD_CONTEXT_PEOPLE, variables: { contextId: field.id } },
+        ],
+        awaitRefetchQueries: true,
+      })
+      const payload = result.data?.addPersonToFieldContext
+      if (payload?.success) {
+        toast.success(`${personName || 'Person'} added to ${field.title}.`)
+      } else {
+        // The resolver deliberately returns one generic failure for missing
+        // context, missing person, no edit rights, or a User outside the
+        // Space — surface its message rather than inventing a reason.
+        toast.error(payload?.message || 'Could not add them to this field.')
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : 'Could not add them to this field.'
+      )
+    } finally {
+      setPromotingPersonId(null)
+    }
+  }
 
   const handleDelete = async () => {
     const ok = window.confirm(
@@ -343,24 +426,17 @@ export const DocumentDetailsBody: FC<{
             {people.map((p) => {
               const name = `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim()
               return (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      dispatchOpenInfoDrawer({
-                        type: 'Person',
-                        id: p.id,
-                        label: name,
-                      })
-                    }
-                    className="group w-full text-left rounded-lg px-3 py-2 hover:bg-white/5 dark:hover:bg-white/[0.04] transition-colors cursor-pointer flex items-center gap-2"
-                  >
-                    <span className="text-xs text-gp-ink-strong dark:text-white/85 flex-1">
-                      {name || 'Person'}
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-                </li>
+                <ExtractedPersonRow
+                  key={p.id}
+                  personId={p.id}
+                  name={name}
+                  fieldTitle={field?.title}
+                  onRoster={curatedIds.has(p.id)}
+                  isAttached={attachedIds.has(p.id)}
+                  isPromoting={promotingPersonId === p.id}
+                  canPromote={canPromote && !!field?.id}
+                  onPromote={handlePromote}
+                />
               )
             })}
           </ul>

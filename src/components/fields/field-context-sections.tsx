@@ -62,6 +62,13 @@ type FieldContextSectionsProps = {
   weaves?: WeaveRecord[]
   space?: SpaceRecord | null
   people?: PersonRecord[]
+  /**
+   * GOAL-346: how many attached people are being shown under their source
+   * Document instead of in this list. Without it the section says "No people
+   * yet" on a field that has dozens of them — true of the list, badly wrong
+   * about the field, and it hides where they actually went.
+   */
+  peopleFromDocumentsCount?: number
   onAddPulse: () => void
   onAddPerson?: () => void
   onAddResonance: () => void
@@ -122,6 +129,7 @@ export function FieldContextSections({
   weaves = [],
   space,
   people,
+  peopleFromDocumentsCount = 0,
   onAddPulse,
   onAddPerson,
   onAddResonance,
@@ -229,8 +237,16 @@ export function FieldContextSections({
           ) : (
             <EmptySection
               icon="groups"
-              title="No people yet"
-              body="People you add show up here with their role inside this field."
+              title={
+                peopleFromDocumentsCount
+                  ? 'No people added yet'
+                  : 'No people yet'
+              }
+              body={
+                peopleFromDocumentsCount
+                  ? `${peopleFromDocumentsCount} ${peopleFromDocumentsCount === 1 ? 'person was' : 'people were'} named by documents in this field — you'll find them under the document they came from. People you add show up here with their role.`
+                  : 'People you add show up here with their role inside this field.'
+              }
               cta={
                 onAddPerson
                   ? {

@@ -80,12 +80,33 @@ export const fieldContextPeopleMutations = {
                 OR EXISTS {
                   MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(p)
                 })
-        MERGE (c)-[:HAS_PERSON]->(p)
-        WITH u, c, p,
+        // Captured BEFORE the MERGE so the Log below can tell an attach from
+        // a promotion. Writing "Added X" for a promotion asserts something
+        // that did not happen — the edge was already there — and the sibling
+        // attach in article-import-service.ts already guards its Log the
+        // same way.
+        OPTIONAL MATCH (c)-[existingHp:HAS_PERSON]->(p)
+        WITH u, c, p, existingHp IS NOT NULL AS alreadyAttached
+        MERGE (c)-[hp:HAS_PERSON]->(p)
+        // GOAL-346: this mutation is only ever reached by a deliberate human
+        // act — the field's Add Person flow, or promoting someone the
+        // extractor surfaced under a Document — so the edge is marked
+        // curated and the person shows on the roster. Document ingestion
+        // attaches through its own writes and leaves the flag unset.
+        //
+        // Plain SET, NOT an ON CREATE SET: promoting an extracted person acts
+        // on an edge that ALREADY exists (ingestion attached it), so an
+        // on-create-only write would silently never fire for the exact case
+        // this field was added to serve.
+        SET hp.curated = true
+        WITH u, c, p, alreadyAttached,
              coalesce(p.name, trim(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, ''))) AS personName
         CREATE (log:Log {
           id: $logId,
-          description: 'Added ' + personName + ' to ' + coalesce(c.title, 'a field'),
+          description: CASE WHEN alreadyAttached
+            THEN personName + ' added to the People list for ' + coalesce(c.title, 'a field')
+            ELSE 'Added ' + personName + ' to ' + coalesce(c.title, 'a field')
+          END,
           createdAt: datetime()
         })
         CREATE (log)-[:CREATED_BY]->(u)

@@ -1170,6 +1170,49 @@ type FieldContext
       direction: OUT
       nestedOperations: [DISCONNECT]
     )
+  """
+  Ids of the people a human deliberately placed on this field's roster
+  (GOAL-346). Document ingestion attaches every person it identifies via
+  HAS_PERSON, so `people` above is dominated by extracted names; those are
+  surfaced under their source Document instead, and this list is what
+  un-hides one that a member has promoted back onto the roster.
+
+  Returns bare ids, never Person nodes, on purpose. A `@cypher` field is
+  materialized outside the field-auth translation, so projecting a Person
+  here would bypass the GOAL-275 `privateProfile` gate — the same trap
+  `field-context-people-resolver.ts` warns about. Ids carry no PII, and the
+  caller already holds the authorized `people` list to join against.
+
+  Absent `curated` reads as not-promoted. That is NOT self-correcting for
+  historical data: `update_person` stamps EXTRACTED_FROM onto people who were
+  already attached (`hitl.ts` ~1990), so a member added by hand before this
+  field existed would be evicted from the roster the first time any document
+  named them. `scripts/backfill-curated-roster.js` marks every pre-existing
+  hand-added edge curated and MUST run at deploy; after it, an uncurated edge
+  reliably means "attached by ingestion".
+
+  Declared as a NULLABLE list. An object-type `@cypher` field has no
+  standalone resolver — it is materialized inside the parent's translated
+  statement — so a FieldContext produced by a custom root resolver
+  (`searchAll`, `createSubFieldContext`, the chat/ingest mutations) yields
+  `undefined` here. Under `[ID!]!` that nulls the ENTIRE parent path, which is
+  the failure `resolvers/projection.test.ts` guards against.
+  """
+  curatedPersonIds: [ID!]
+    # Not filterable: the generated `curatedPersonIds_INCLUDES` would join
+    # `FieldContextWhere`, which is reachable as a NESTED predicate
+    # (`people(where: { contexts_SOME: … })`) where the FieldContext READ
+    # filter is not applied. Nothing in the type-level rule references this
+    # field, so switching it off builds cleanly.
+    @filterable(byValue: false, byAggregate: false)
+    @cypher(
+      statement: """
+      MATCH (this)-[r:HAS_PERSON]->(p:Person)
+      WHERE r.curated = true
+      RETURN p.id AS curatedPersonId
+      """
+      columnName: "curatedPersonId"
+    )
   # Organizations attached to this context (GOAL-298). HAS_ORGANIZATION connects
   # go through the server-side ingest write only; open nested CONNECT is disabled
   # (parity with `people`) so a context editor can't rehome an arbitrary org by id.

@@ -28,10 +28,10 @@ import logger from '@/lib/logger'
  *
  *   | limit      | app max | configured | headroom |
  *   | ---------- | ------- | ---------- | -------- |
- *   | cost       |     655 |       5000 |    ~7.6x |
+ *   | cost       |     660 |       5000 |    ~7.6x |
  *   | depth      |       6 |         15 |     2.5x |
  *   | aliases    |       6 |         20 |     3.3x |
- *   | tokens     |     392 |       3000 |     7.6x |
+ *   | tokens     |     394 |       3000 |     7.6x |
  *
  * `query-limits.test.ts` re-derives the app-side maxima from the source on
  * every run, so a genuinely heavier query fails the test rather than failing in
@@ -49,10 +49,15 @@ const isProduction = process.env.NODE_ENV === 'production'
 
 /** Measured maxima across the app's own documents — see the table above. */
 export const OBSERVED_APP_MAXIMA = {
-  cost: 655,
+  // 655 → 660 (measured 659.25) when GOAL-346 added `curatedPersonIds` to
+  // GET_FIELD_CONTEXT_PEOPLE and `fieldContext { people { id } }` to
+  // GET_DOCUMENT_BY_ID. This records a new OBSERVATION; the enforced ceiling
+  // below is unchanged, and headroom stays ~7.6x.
+  cost: 660,
   depth: 6,
   aliases: 6,
-  tokens: 392,
+  // 392 → 394 for the same GOAL-346 selections as `cost` above.
+  tokens: 394,
 } as const
 
 export const QUERY_LIMITS = {

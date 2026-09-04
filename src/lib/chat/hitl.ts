@@ -1561,6 +1561,24 @@ interface CreatePersonAuthorizedInput {
    * captures how the user relates to them). Optional.
    */
   description?: string
+  /**
+   * GOAL-346: mark the HAS_PERSON edge `curated`, so this person shows on the
+   * field's People roster rather than being filed under a source document.
+   *
+   * Set ONLY by callers where the person is roster membership rather than an
+   * incidental mention — today that is the bulk article import crediting a
+   * row's AUTHOR, which the member's own spreadsheet named and which
+   * `create_pulse`'s attribution guard needs attached. The document
+   * extractor's own `create_person` calls must leave this unset; that is the
+   * whole distinction the roster filter runs on.
+   *
+   * It matters because the flag is not otherwise recoverable: since the
+   * article import began reading each row's link through the ingest pipeline,
+   * the extractor re-encounters the byline and `update_person` stamps
+   * EXTRACTED_FROM onto the author, which would evict an uncurated author
+   * from the roster of the very field they were imported into.
+   */
+  curatedRoster?: boolean
 }
 
 async function createPersonAuthorized(
@@ -1575,6 +1593,10 @@ async function createPersonAuthorized(
   const contextTitle = input.contextTitle?.trim() || ''
   const documentId = input.documentId?.trim() || null
   const conversationThreadId = input.conversationThreadId?.trim() || null
+  // GOAL-346 — see CreatePersonAuthorizedInput.curatedRoster. Defaults false,
+  // so every existing caller (the assistant, the document extractor) keeps
+  // producing uncurated edges and nothing about their behaviour changes.
+  const curatedRoster = input.curatedRoster === true
   // The user's relationship to this person — modeled as CONNECTED_TO.why from
   // the current user to the new person. Skippable (null = no edge created).
   const relationshipWhy = input.relationshipWhy?.trim() || null
@@ -1650,7 +1672,14 @@ async function createPersonAuthorized(
       MATCH (c:FieldContext {id: $contextId})
       MATCH (u:Person {id: $currentUserId})
       OPTIONAL MATCH (d:Document {id: $documentId})
-      MERGE (c)-[:HAS_PERSON]->(u)
+      MERGE (c)-[hp:HAS_PERSON]->(u)
+      // GOAL-346: this is the acting user's OWN account being linked to the
+      // field they uploaded into — an identity attach, not an extracted
+      // mention. It is marked curated so the roster filter keeps them
+      // visible: the EXTRACTED_FROM edge stamped just below would otherwise
+      // satisfy the hide predicate and remove the uploader from the roster
+      // of their own field.
+      SET hp.curated = true
       FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
         MERGE (u)-[:EXTRACTED_FROM]->(d)
       )
@@ -1797,7 +1826,14 @@ async function createPersonAuthorized(
     FOREACH (_ IN CASE WHEN $personDescription IS NULL THEN [] ELSE [1] END |
       SET p.description = $personDescription
     )
-    CREATE (c)-[:HAS_PERSON]->(p)
+    CREATE (c)-[hp:HAS_PERSON]->(p)
+    // GOAL-346: only a caller that says so explicitly (the article import
+    // crediting a row's author) marks the edge curated. The document
+    // extractor leaves it unset, which is what files its people under the
+    // document they came from instead of on the roster.
+    FOREACH (_ IN CASE WHEN $curatedRoster THEN [1] ELSE [] END |
+      SET hp.curated = true
+    )
     // Model the user's relationship to the new person as a CONNECTED_TO edge
     // carrying the why. Only when a relationship was provided — a skipped
     // relationship leaves the person unconnected (per the always-ask-but-
@@ -1836,6 +1872,7 @@ async function createPersonAuthorized(
       metadata,
       relationshipWhy,
       relationshipInterests,
+      curatedRoster,
     }
   )
 

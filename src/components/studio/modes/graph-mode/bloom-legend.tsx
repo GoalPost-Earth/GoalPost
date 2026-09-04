@@ -226,6 +226,15 @@ const LEGEND_EDGES: LegendItem[] = [
     swatch: { dark: '#94a3b8', light: '#5a6d88' },
     colors: [DARK.structuralEdge, LIGHT.structuralEdge],
   },
+  {
+    // GOAL-346. The whole point of the Document layer is to explain why a
+    // person is on the canvas, so its edge is the one that most needs
+    // decoding. Only ever present when the Documents layer is switched on —
+    // `presentItems` drops the row otherwise.
+    label: 'Named in',
+    swatch: { dark: '#fbbf24', light: '#9e7303' },
+    colors: [DARK.extractedEdge, LIGHT.extractedEdge],
+  },
 ]
 
 /** Strip whitespace + lowercase so rgba/hex compare regardless of formatting. */

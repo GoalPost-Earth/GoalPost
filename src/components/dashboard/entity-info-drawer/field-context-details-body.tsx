@@ -38,6 +38,7 @@ import {
   type FieldContextPerson,
 } from './field-context-sections'
 import { dispatchOpenInfoDrawer } from './types'
+import { partitionFieldRoster } from '@/lib/field-roster-visibility'
 
 /**
  * Field context inspection — pulse counts, recent pulses, resonances,
@@ -66,6 +67,8 @@ export const FieldContextDetailsBody: FC<{
   const { data: peopleData } = useQuery<{
     fieldContexts?: {
       id: string
+      // GOAL-346: ids of people a member deliberately put on the roster.
+      curatedPersonIds?: string[] | null
       // Only the open directory identity is read here. Email and the rest of
       // the PII live behind `privateProfile` (GOAL-275) and this surface has
       // no need for them, so it does not declare them.
@@ -76,14 +79,19 @@ export const FieldContextDetailsBody: FC<{
     fetchPolicy: 'cache-and-network',
   })
 
-  const { data: docsData } = useQuery<{
+  const { data: docsData, loading: docsLoading } = useQuery<{
     documentsByFieldContext?: FieldContextDocument[]
   }>(GET_DOCUMENTS_BY_FIELD_CONTEXT, {
     variables: { fieldContextId: contextId },
     fetchPolicy: 'cache-and-network',
   })
 
-  if (loading && !data) return <BodySkeleton label={label} />
+  // GOAL-346: the People section below is filtered against the documents
+  // query, so painting before it resolves would show every extracted person
+  // for a frame and then retract them. Guarded on `!docsData` so a
+  // cache-and-network revalidation doesn't throw the drawer back to skeleton.
+  if ((loading && !data) || (docsLoading && !docsData))
+    return <BodySkeleton label={label} />
 
   const context = data?.fieldContexts?.[0]
   if (!context) {
@@ -105,8 +113,15 @@ export const FieldContextDetailsBody: FC<{
   const resonances = context.resonancesInContext ?? []
   const space = context.space?.[0]
   const isMe = space?.__typename === 'MeSpace'
-  const people = peopleData?.fieldContexts?.[0]?.people ?? []
   const documents = docsData?.documentsByFieldContext ?? []
+  // GOAL-346: same split the field page applies — people an upload named are
+  // shown under their document (the Documents section below), not in People,
+  // unless a member promoted them onto the roster.
+  const { roster: people } = partitionFieldRoster(
+    peopleData?.fieldContexts?.[0]?.people ?? [],
+    documents,
+    peopleData?.fieldContexts?.[0]?.curatedPersonIds
+  )
 
   const handleEditStart = () => {
     setEditTitle(context.title ?? '')

@@ -74,6 +74,25 @@ export interface BloomPalette {
   weaveEdge: string
   /** CONNECTED_TO — interpersonal relationships between people. */
   connectedEdge: string
+  /**
+   * Document nodes in the in-field view (GOAL-346). Deliberately the SAME
+   * slate the cypher generator's `styleFor` gives a Document
+   * (`lib/cypher-generator/node-style.ts:63`), because the assistant's chat
+   * overlay already paints Document nodes on this very canvas — a second
+   * Document colour would make one entity read as two.
+   */
+  documentNode: string
+  /**
+   * EXTRACTED_FROM — a document out to each person it named.
+   *
+   * Amber, NOT the document's own slate. Slate would share its RGB with both
+   * `initiatedEdge` and `structuralEdge`, and `initiated` edges are exactly
+   * the ones that co-occur with this in the in-field view — leaving alpha as
+   * the only cue, which is not a cue. Amber also matches how Documents are
+   * already dressed everywhere else in the product (the drawer's icon tile
+   * and concept chips), so the edge reads as "document" on sight.
+   */
+  extractedEdge: string
 }
 
 /** Painted when `<html>` carries the `dark` class. Tuned for `#101c22`. */
@@ -100,6 +119,8 @@ export const BLOOM_PALETTE_DARK: BloomPalette = {
   initiatedEdge: 'rgba(255, 255, 255, 0.22)',
   weaveEdge: 'rgba(45, 212, 191, 0.55)',
   connectedEdge: 'rgba(244, 114, 182, 0.55)',
+  documentNode: '#94a3b8',
+  extractedEdge: 'rgba(251, 191, 36, 0.65)',
 }
 
 /** Painted in light mode. Tuned for `#f6f7f8` — see the header for the method. */
@@ -130,6 +151,9 @@ export const BLOOM_PALETTE_LIGHT: BloomPalette = {
   initiatedEdge: 'rgba(90, 109, 136, 0.32)',
   weaveEdge: 'rgba(25, 131, 118, 0.60)',
   connectedEdge: 'rgba(206, 16, 115, 0.60)',
+  // The light-mode Document slate, per node-style.ts's own light override.
+  documentNode: '#5a6d88',
+  extractedEdge: 'rgba(158, 115, 3, 0.70)',
 }
 
 /** Both palettes, for exhaustive checks (legend decoding, drift tests). */

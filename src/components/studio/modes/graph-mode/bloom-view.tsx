@@ -27,6 +27,7 @@ import { GET_ALL_ME_SPACES, GET_ALL_WE_SPACES } from '@/app/graphql/queries'
 import { GET_SPACE_DETAILS } from '@/app/graphql/queries/SPACE_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
 import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries/FIELD_CONTEXT_PEOPLE_QUERIES'
+import { GET_DOCUMENTS_BY_FIELD_CONTEXT } from '@/app/graphql/queries/DOCUMENT_QUERIES'
 import { useFocalEntity } from '@/contexts'
 import { useIsDarkMode, useNvlTouchGestures } from '@/hooks'
 import { useRouteFocalScope } from '@/lib/focal-entity/use-route-focal-scope'
@@ -35,7 +36,12 @@ import type { NvlRefHandle } from '@/components/graph/visualizer'
 import { lightColorFor, UNKNOWN_NODE_STYLE } from '@/lib/cypher-generator/node-style'
 import { GraphLoadingState } from './graph-loading-state'
 import { BloomLegend } from './bloom-legend'
+import { DocumentLayerToggle } from './document-layer-toggle'
 import { getBloomPalette } from './bloom-palette'
+import {
+  buildDocumentProvenanceLayer,
+  type ProvenanceDocument,
+} from './document-provenance-layer'
 import { isAwaitingReview } from '@/lib/promise-weave'
 import { useBloomOverlay, type BloomOverlay } from '../../bloom-overlay-context'
 import {
@@ -142,7 +148,8 @@ function labelsToInfoEntityType(
  *   - `ctx_`      legacy / fixture data only; kept as a safety net
  *   - `pulse_`    api/pulse/create-from-conversation
  *   - `rl_`       api/resonance/suggestions/[id]/accept (ResonanceLink)
- *   - `doc_`      Document
+ *   - `document_` lib/ingest/document-storage.ts (Document) — production path
+ *   - `doc_`      chat-overlay Documents only; NOT a prefix of `document_`
  *   - `person_`   lib/chat/hitl.ts (Person — HITL-created profiles)
  *
  * Ambiguity: legacy Persons and all WeSpaces use bare UUIDs (no prefix).
@@ -157,7 +164,13 @@ function idPrefixToInfoEntityType(id: string): InfoEntityType | null {
   if (id.startsWith('ctx_') || id.startsWith('context_')) return 'FieldContext'
   if (id.startsWith('pulse_')) return 'Pulse'
   if (id.startsWith('rl_')) return 'ResonanceLink'
-  if (id.startsWith('doc_')) return 'Document'
+  // BOTH prefixes are load-bearing. Documents are minted `document_<uuid>`
+  // (document-storage.ts), and `'document_'.startsWith('doc_')` is FALSE —
+  // 'docu' is not 'doc_' — so the shorter check alone silently resolved every
+  // real Document to null and dropped the click. `doc_` stays for the chat
+  // overlay, which was the only path that put a Document on this canvas
+  // before the GOAL-346 provenance layer put real ones there.
+  if (id.startsWith('document_') || id.startsWith('doc_')) return 'Document'
   if (id.startsWith('person_')) return 'Person'
   if (id.startsWith('organization_')) return 'Organization'
   return null
@@ -430,6 +443,29 @@ export const BloomView: FC = () => {
     fetchPolicy: 'cache-first',
   })
 
+  // GOAL-346: documents of the active field, for the provenance layer below.
+  // `cache-first` and the same skip guard as its siblings — the field route
+  // has usually already loaded this exact query for its document list, so
+  // flipping into Bloom costs no round-trip (ADR-011).
+  const { data: fieldDocumentsData } = useQuery(
+    GET_DOCUMENTS_BY_FIELD_CONTEXT,
+    {
+      variables: { fieldContextId: activeFieldId ?? '' },
+      skip: !activeFieldId,
+      fetchPolicy: 'cache-first',
+    }
+  )
+
+  // ON by default. It shipped off to keep a document-heavy field from burying
+  // its pulses, but that default was the worse trade: a person a document
+  // named has provenance as their ONLY tie to anything, so with the layer off
+  // they render as edgeless dots — 12 of the 14 people on one real field.
+  // The canvas opened on exactly the floating-people problem this feature was
+  // built to fix. GOAL-350 folds this into a general per-type toggle list;
+  // until then it is deliberately shaped as one named layer rather than an
+  // ad-hoc boolean.
+  const [showDocumentProvenance, setShowDocumentProvenance] = useState(true)
+
   const loading = inField
     ? fieldDetailsLoading
     : inSpace
@@ -591,6 +627,38 @@ export const BloomView: FC = () => {
     }
     return records
   }, [inField, fieldPeopleData])
+
+  // Drives the toggle's badge and its hidden-at-zero rule. Counts what the
+  // field HAS, not what the layer drew — the layer omits a document whose
+  // people are all off-canvas, and a count that shrank when you switched the
+  // layer on would read as a bug.
+  const fieldDocumentCount = useMemo(() => {
+    return (
+      (
+        fieldDocumentsData as
+          | { documentsByFieldContext?: unknown[] }
+          | undefined
+      )?.documentsByFieldContext?.length ?? 0
+    )
+  }, [fieldDocumentsData])
+
+  // GOAL-346: Document nodes + EXTRACTED_FROM edges. Built here so both the
+  // node and relationship memos below consume one derivation and cannot
+  // disagree about which documents made it onto the canvas — the invariant
+  // that keeps NVL from being handed an edge to a node that isn't rendered.
+  const documentProvenance = useMemo(() => {
+    const documents = (
+      fieldDocumentsData as
+        | { documentsByFieldContext?: ProvenanceDocument[] }
+        | undefined
+    )?.documentsByFieldContext
+    return buildDocumentProvenanceLayer({
+      documents,
+      visiblePersonIds: new Set(persons.map((p) => p.id)),
+      palette,
+      visible: inField && showDocumentProvenance,
+    })
+  }, [fieldDocumentsData, persons, palette, inField, showDocumentProvenance])
 
   // CONNECTED_TO edges among the field's people. The relationship lives on the
   // edge (connectionEdges → connectedPersonId + why); each field person carries
@@ -845,6 +913,8 @@ export const BloomView: FC = () => {
         ...weaveNodes,
         ...anchorNodes,
         ...subContextNodes,
+        // Empty unless the Documents layer is switched on (GOAL-346).
+        ...documentProvenance.nodes,
       ]
     }
     if (inSpace) {
@@ -913,6 +983,7 @@ export const BloomView: FC = () => {
     subContexts,
     fieldAnchor,
     inFieldSpaceKind,
+    documentProvenance,
     inSpace,
     fieldContexts,
     spaces,
@@ -1028,6 +1099,12 @@ export const BloomView: FC = () => {
           } as Relationship)
         }
       }
+
+      // EXTRACTED_FROM — each Document out to the people it named (GOAL-346).
+      // The layer already filtered its person endpoints against the same
+      // person set `visibleIds` is built from, and only emits a document that
+      // kept at least one, so these need no further guard here.
+      edges.push(...documentProvenance.relationships)
 
       // CONNECTED_TO — interpersonal relationships between the people in this
       // field (including the user↔person relationships, e.g. "your wife"). Both
@@ -1155,6 +1232,7 @@ export const BloomView: FC = () => {
     subContexts,
     fieldAnchor,
     fieldDetailsData,
+    documentProvenance,
     inSpace,
     spaceAnchor,
     fieldContexts,
@@ -1297,6 +1375,16 @@ export const BloomView: FC = () => {
           dispatchOpenInfoDrawer({ type: 'PromiseWeave', id: weave.id, label })
           return
         }
+        // Document provenance hub (GOAL-346). Matched against the layer's own
+        // nodes rather than an id prefix, so only a document actually ON the
+        // canvas can open — and the drawer it opens is the one carrying this
+        // document's extracted people and the promote action, which makes the
+        // canvas a way into that flow rather than a dead end. Not a focal
+        // entity type, so no setFocalEntity — same treatment as a weave hub.
+        if (documentProvenance.nodes.some((n) => n.id === id)) {
+          dispatchOpenInfoDrawer({ type: 'Document', id, label })
+          return
+        }
         // Nested field bubble — open the FieldContext drawer (rename lives
         // behind its Edit CTA), same treatment as an in-space field node.
         const sub = subContexts.find((sc) => sc.id === id)
@@ -1375,6 +1463,7 @@ export const BloomView: FC = () => {
       pulses,
       persons,
       weaves,
+      documentProvenance,
       subContexts,
       fieldAnchor,
       inSpace,
@@ -1837,6 +1926,16 @@ export const BloomView: FC = () => {
         {/* Decodes the bare colored NVL circles. Derives its rows from the
             same nodes/relationships above, so it only lists what's on screen. */}
         <BloomLegend nodes={nodes} relationships={relationships} />
+
+        {/* GOAL-346: reveals Documents and the people they named. In-field
+            only — the space and root views have no document scope. */}
+        {inField && (
+          <DocumentLayerToggle
+            active={showDocumentProvenance}
+            onToggle={setShowDocumentProvenance}
+            documentCount={fieldDocumentCount}
+          />
+        )}
       </div>
 
       {/* Inline panel only for overlay nodes (chat artifacts with no
