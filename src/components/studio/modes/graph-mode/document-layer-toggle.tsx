@@ -4,8 +4,14 @@ import type { FC } from 'react'
 import { Switch } from '@/components/ui/switch'
 
 /**
- * GOAL-346: switches the Document provenance layer (Document nodes + their
- * EXTRACTED_FROM edges) on and off in the in-field Bloom view.
+ * GOAL-346: switches the Document layer on and off in the in-field Bloom
+ * view.
+ *
+ * "On" draws the Document nodes and their EXTRACTED_FROM edges over the rest
+ * of the canvas. "Off" removes the whole document-derived subgraph — the
+ * documents, the people they named and the pulses they produced. See
+ * `documentDerivedIds` (`document-provenance-layer.ts`) for why it is the
+ * subgraph rather than just the hub, and what survives the switch.
  *
  * ON by default. It shipped off, on the theory that a document-heavy field
  * would bury its pulses — but the cost of that default was worse than the
@@ -59,7 +65,7 @@ export const DocumentLayerToggle: FC<{
           size="sm"
           checked={active}
           onCheckedChange={onToggle}
-          aria-label={`Show documents and the people they named (${documentCount} in this field)`}
+          aria-label={`Show documents and everything extracted from them (${documentCount} in this field)`}
         />
       </label>
     </div>
