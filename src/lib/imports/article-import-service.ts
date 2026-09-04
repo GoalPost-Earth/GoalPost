@@ -250,7 +250,11 @@ async function matchAuthorByEmail(
               })
       OPTIONAL MATCH (c)-[existing:HAS_PERSON]->(p)
       WITH c, u, p, existing IS NOT NULL AS alreadyAttached
-      MERGE (c)-[:HAS_PERSON]->(p)
+      MERGE (c)-[hp:HAS_PERSON]->(p)
+      // GOAL-346: same reasoning as the create_person branch above — an
+      // article's author belongs on the roster. Plain SET, since this MERGE
+      // routinely matches an edge that already exists.
+      SET hp.curated = true
       FOREACH (_ IN CASE WHEN alreadyAttached THEN [] ELSE [1] END |
         CREATE (log:Log {
           id: $logId,
@@ -344,6 +348,13 @@ async function resolveRowAuthor(
       lastName,
       contextId: fieldContextId,
       contextTitle,
+      // GOAL-346: an article's author is roster membership, not an incidental
+      // mention — the member's own spreadsheet named them, and create_pulse's
+      // attribution guard requires them attached. Without this they would be
+      // evicted from the People list the moment the row's link runs through
+      // the ingest pipeline and the extractor re-encounters the byline,
+      // stamping EXTRACTED_FROM on them.
+      curatedRoster: true,
     }
   )
 

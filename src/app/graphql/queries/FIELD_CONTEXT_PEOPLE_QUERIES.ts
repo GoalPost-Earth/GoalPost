@@ -11,6 +11,11 @@ export const GET_FIELD_CONTEXT_PEOPLE = gql`
   query GetFieldContextPeople($contextId: ID!) {
     fieldContexts(where: { id_EQ: $contextId }) {
       id
+      # GOAL-346: ids of people a human deliberately put on the roster.
+      # Everyone else who is attached but was named by a document is shown
+      # under that document instead. Bare ids — see the schema note on why a
+      # @cypher field must never project Person here.
+      curatedPersonIds
       people {
         id
         firstName

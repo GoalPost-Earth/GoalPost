@@ -15,6 +15,7 @@ import { ResonanceSuggestionsModal } from '@/components/ui/resonance-suggestions
 import { BulkPulseShareModal } from '@/components/ui/bulk-pulse-share-modal'
 import { PersonPanel } from '@/components/ui/person-panel'
 import { resolveRelationshipWhy } from '@/lib/people/resolve-relationship-why'
+import { partitionFieldRoster } from '@/lib/field-roster-visibility'
 import {
   AddPersonToFieldModal,
   type CreateFieldPersonInput,
@@ -215,13 +216,21 @@ export default function FieldContextDetailsPage() {
     }
   )
 
-  const { data: documentsData, refetch: refetchDocuments } = useQuery(
-    GET_DOCUMENTS_BY_FIELD_CONTEXT,
-    {
-      variables: { fieldContextId: contextId },
-      skip: !contextId,
-    }
-  )
+  const {
+    data: documentsData,
+    refetch: refetchDocuments,
+    // GOAL-346: the People section now depends on this query to know which
+    // attached people arrived through an upload. Without holding the page on
+    // it, People resolves first and paints every extracted person for a frame
+    // before they vanish — the exact content this change exists to remove,
+    // shown and then retracted. Folded into the gate below rather than given
+    // its own skeleton, and it runs in parallel with the slower details
+    // query, so it is rarely the long pole.
+    loading: documentsLoading,
+  } = useQuery(GET_DOCUMENTS_BY_FIELD_CONTEXT, {
+    variables: { fieldContextId: contextId },
+    skip: !contextId,
+  })
 
   // For the shared document-upload flow (GOAL-337), whose refetches and
   // ingest watch run against the client directly rather than a single query.
@@ -344,6 +353,10 @@ export default function FieldContextDetailsPage() {
     fieldPeopleData as
       | {
           fieldContexts?: Array<{
+            // GOAL-346: ids of people a human deliberately put on the roster.
+            // Everyone else attached by document ingestion is shown under the
+            // document that named them instead of in the People section.
+            curatedPersonIds?: string[] | null
             people?: Array<{
               id: string
               firstName?: string | null
@@ -425,7 +438,18 @@ export default function FieldContextDetailsPage() {
       }
     })
 
-    return (peopleContext.people || []).map((person) => ({
+    // GOAL-346: people the extractor pulled out of a document are attached to
+    // the field by the same HAS_PERSON edge that means "on the roster", so
+    // without this split the People section is swamped by names nobody added.
+    // They stay reachable — and better explained — under the document they
+    // came from, and `curatedPersonIds` brings back anyone a member promoted.
+    const { roster } = partitionFieldRoster(
+      peopleContext.people || [],
+      documents,
+      peopleContext.curatedPersonIds
+    )
+
+    return roster.map((person) => ({
       id: person.id,
       firstName: person.firstName || '',
       lastName: person.lastName || '',
@@ -439,7 +463,20 @@ export default function FieldContextDetailsPage() {
         user?.id
       ),
     }))
-  }, [peopleContext, user?.id])
+  }, [peopleContext, documents, user?.id])
+
+  // The other half of the same split. Drives the People empty state, so a
+  // field whose roster is empty *because* its people came from uploads says
+  // where they went instead of claiming there are none.
+  const peopleFromDocumentsCount = useMemo(
+    () =>
+      partitionFieldRoster(
+        peopleContext?.people || [],
+        documents,
+        peopleContext?.curatedPersonIds
+      ).fromDocuments.length,
+    [peopleContext, documents]
+  )
 
   // Slice 7 (GOAL-242) — UI permission gate for the upload control. We mirror
   // `canEditContent` from kb/02-user-roles.md: OWNER + ADMIN + MEMBER pass,
@@ -502,8 +539,15 @@ export default function FieldContextDetailsPage() {
   })
 
   // Candidates the weave modal offers. Pulses are this field's own; people are
-  // the ones already attached to it, so a weave can only be woven for someone
-  // the member can already see here.
+  // every Person attached to it, so a weave can only be woven for someone
+  // inside this field.
+  //
+  // GOAL-346 deliberately reads the UNFILTERED attach list here, not the
+  // `people` roster below. The roster filter is presentation-only — hiding
+  // extracted people from a list must not withdraw the ability to weave a
+  // promise for them, which would turn a display change into a removed
+  // capability. On a document-heavy field the filtered list is nearly empty,
+  // so this is the difference between a working modal and a dead one.
   const weavePulseOptions = useMemo(
     () =>
       pulses.map((pulse) => ({
@@ -515,14 +559,14 @@ export default function FieldContextDetailsPage() {
   )
   const weavePeopleOptions = useMemo(
     () =>
-      people.map((person) => ({
+      (peopleContext?.people ?? []).map((person) => ({
         id: person.id,
         name:
           person.name?.trim() ||
-          `${person.firstName} ${person.lastName}`.trim() ||
+          `${person.firstName ?? ''} ${person.lastName ?? ''}`.trim() ||
           'Unnamed person',
       })),
-    [people]
+    [peopleContext]
   )
   const weaveById = useMemo(
     () => new Map(weaves.map((weave) => [weave.id, weave])),
@@ -1079,7 +1123,12 @@ export default function FieldContextDetailsPage() {
     }
   }
 
-  if (loading && !data) {
+  // `documentsLoading && !documentsData` joins the gate for GOAL-346 — see the
+  // query above. Both halves are needed: a refetch after an upload sets
+  // `loading` true again while data is already present, and re-throwing the
+  // page into a skeleton on every upload would be a worse regression than the
+  // flash this prevents.
+  if ((loading && !data) || (documentsLoading && !documentsData)) {
     return <FieldContextSkeleton />
   }
 
@@ -1450,6 +1499,7 @@ export default function FieldContextDetailsPage() {
             resonances={resonances}
             weaves={weaves}
             people={people}
+            peopleFromDocumentsCount={peopleFromDocumentsCount}
             space={space}
             onAddPulse={() => setIsCreatePulseModalOpen(true)}
             onAddPerson={() => setIsAddPersonModalOpen(true)}

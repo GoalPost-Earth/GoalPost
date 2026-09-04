@@ -49,6 +49,10 @@ export type FieldContextDocument = {
   id: string
   filename: string
   uploadedAt: string
+  // GOAL-346: already returned by GET_DOCUMENTS_BY_FIELD_CONTEXT; declared
+  // here so the roster filter can tell which attached people arrived through
+  // an upload rather than being added by a member.
+  extractedPeople?: { id: string }[] | null
 }
 
 const PULSE_LIMIT = 8
