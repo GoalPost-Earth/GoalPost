@@ -300,6 +300,7 @@ See ADR-014 (dedicated extraction endpoint) and ADR-015 (Document + blob storage
 - **Organizations are captured (GOAL-298).** Named organizations / groups / cooperatives are extracted as first-class `:Organization` nodes (`create_organization`), attached to the FieldContext via `HAS_ORGANIZATION`, and idempotent by name-within-context. Full first-class org modelling beyond upload-time capture (Living-System / LifeSensor sub-classes) is a follow-up.
 - **Durable source link on extracted pulses (GOAL-283 / GOAL-316).** Every pulse created from a document — `GoalPulse`, `ResourcePulse`, and `StoryPulse` alike — gets `location` auto-populated with the durable Space-scoped download URL (`/api/ingest/document/<id>/download`) when the extractor read no explicit location from the text. `location` is the **user-facing** provenance surface (the UI renders it as an opaque "Open document" action per GOAL-302, never the raw URL); the `EXTRACTED_FROM` edge remains a graph-only audit trail. An extracted or manually set location is never clobbered.
 - **Deduplication is in-extractor.** The ingest worker pre-loads the FieldContext roster (persons + pulses + organizations, projected to id + name + minimal context) and inlines it in the model prompt; the model emits `update_person` / `update_pulse` for roster matches rather than creating duplicates (orgs dedup at write time by name-in-context).
+- **Extracted people stay out of the field's People roster (GOAL-346).** Every person extracted here is still attached via `HAS_PERSON` — ten authorization / reach gates read that edge, and it is the only Space tie a `PersonPulse` has — but the node is stamped `Person.extractionFound = true` and the People section filters those out. They are listed on the source Document instead, where a member with `canEditContent` can promote one into the roster (which clears the marker, via `addPersonToFieldContext`). The two rosters are deliberately **not** the same list: the de-dup roster above (`loadFieldContextRoster`) still sees everyone, or a re-extract would mint a duplicate of every hidden person. See ADR-020.
 - **Partial persons are skipped.** `create_person` / `update_person` is emitted only when both `firstName` AND `lastName` can be confidently filled. First-name-only / initial-only / role-only mentions are listed in the assistant's free-text reply for manual follow-up — but a single-name mention that is actually an organization is routed to `organizations`, not dropped.
 - **No auto-`CONNECTED_TO`.** Extraction does not create `CONNECTED_TO` edges between the uploader and extracted Persons. `EXTRACTED_FROM` records "this person came from a doc the user has"; `CONNECTED_TO` remains a deliberate user gesture.
 - **Failure path.** On extraction failure (model error, malformed output, empty result), the synthesized assistant turn carries a plain-text "Extraction failed" / "Nothing to extract" message. The Document persists; re-extract is the uniform retry path. A failure *before* the model runs (unreadable blob, unsupported type, oversize, parse error) never produces a thread — it lands the Document in `status = 'FAILED'` with member-safe `statusMessage`, rendered as a Failed chip plus an inline error on the document row. Re-extract is blocked while a document is `PENDING`/`PROCESSING`, since a second pipeline would double-write its summary and thread.
@@ -355,6 +356,17 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
    GOAL-275 target gate), then the name path via `create_person`, which
    self-links, enriches, or mints a `PersonPulse`. Results are cached per run,
    so a 50-row sheet by one author resolves once.
+
+   Row authors are **not** marked `Person.extractionFound` (GOAL-346) and stay
+   in the field's People roster. Neither author path has a Document in scope —
+   the row's article has not been fetched yet here, and for an unreadable link
+   never will be — and the marker is only ever written alongside an
+   `EXTRACTED_FROM` edge, because `Document.extractedPeople` is the only
+   surface a hidden person is reachable from. Marking a byline would take them
+   out of the roster and put them on no document, so nobody could promote or
+   detach them. One byline per row is also not the hundreds-per-document volume
+   the filter exists for. The people the **article** names are marked by the 5b
+   pass below, which does have a Document. See ADR-020.
 5b. **The row's link is read (GOAL-344).** Once the row's pulse has landed, the
    worker fetches the URL (`article-url-fetcher.ts` — http(s) only, a
    validating DNS lookup at connect time that refuses loopback / private /

@@ -6,6 +6,15 @@ import type { Driver } from 'neo4j-driver'
  * attached to the FieldContext so the model can emit `update_*` instead
  * of `create_*` for matches. The ids are server-side only — they ride in
  * the model prompt but must never appear in user-facing assistantText.
+ *
+ * GOAL-346: this projection deliberately does NOT filter on
+ * `Person.extractionFound`. That marker hides extraction-found people from the
+ * People roster the UI renders (`GET_FIELD_CONTEXT_PEOPLE`) — it is a
+ * presentation filter, and this is not presentation. This list is what the
+ * extraction model matches against to decide "already known", so narrowing it
+ * would make every previously-extracted person invisible to the de-duplicator
+ * and a re-extract of the same Document would mint a second copy of all of
+ * them. The two rosters are distinct on purpose; keep them that way.
  */
 
 export interface RosterPerson {

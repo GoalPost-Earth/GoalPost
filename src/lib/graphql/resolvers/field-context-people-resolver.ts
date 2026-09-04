@@ -22,6 +22,9 @@ import { Context } from '@/config/types'
  *      imported contacts) are space content and attachable by any editor.
  *   3. Every successful attach writes an activity Log (mandatory on
  *      mutations); MERGE keeps re-attaches idempotent.
+ *   4. The attach clears `Person.extractionFound` (GOAL-346) — a member
+ *      choosing to put someone in the roster is the promote action, and it is
+ *      what makes a document-extracted person visible there.
  */
 export const fieldContextPeopleMutations = {
   addPersonToFieldContext: async (
@@ -81,6 +84,20 @@ export const fieldContextPeopleMutations = {
                   MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(p)
                 })
         MERGE (c)-[:HAS_PERSON]->(p)
+        // GOAL-346: this mutation is a member deliberately putting someone in
+        // the field's People roster, which is exactly what clears the
+        // extraction marker. It is the promote path for a document-extracted
+        // person (from the Document drawer's extracted-people list) and it is
+        // also the second half of create-then-attach on the field page, where
+        // false is simply the truth about a hand-made person.
+        //
+        // Node-scoped, not edge-scoped: the marker lives on the Person, so
+        // promoting someone in one field un-hides them in every field they are
+        // attached to. That is the accepted cost of not putting a property on
+        // the HAS_PERSON edge — see ADR-020. In practice an extracted person is
+        // minted into exactly one field, and the failure mode is a person
+        // becoming visible, never a person being hidden.
+        SET p.extractionFound = false
         WITH u, c, p,
              coalesce(p.name, trim(coalesce(p.firstName, '') + ' ' + coalesce(p.lastName, ''))) AS personName
         CREATE (log:Log {

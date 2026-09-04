@@ -322,6 +322,45 @@ type Person implements PersonInterface
     @sortable(byValue: false)
   avatar: String
   status: String
+  """
+  GOAL-346 — provenance marker: `true` when this Person node only ever reached a
+  FieldContext's `HAS_PERSON` set because a document extractor named them
+  (Document Ingestion WF-10, and the GOAL-344 article-content pass of WF-11),
+  rather than because a member curated the field's People roster.
+
+  It is a PRESENTATION marker and nothing else. The `HAS_PERSON` edge is
+  deliberately left intact — ten authorization / reach gates read it, and the
+  `PersonPrivateProfile` `contexts_SOME` READ branch is the only Space tie a
+  PersonPulse has, so narrowing the edge would blank their PII outright
+  (kb/02-user-roles.md branch 5). `GET_FIELD_CONTEXT_PEOPLE` filters on this
+  property; `loadFieldContextRoster` deliberately does NOT, so the extractor
+  still de-duplicates against every person in the field.
+
+  `true` is ONLY ever written together with an `EXTRACTED_FROM` edge, and that
+  invariant is load-bearing rather than incidental. Hiding someone from the
+  roster is only safe while another surface still lists them, and that surface
+  is `Document.extractedPeople` — the reverse of that same edge. A person
+  marked with no source Document would be absent from the roster AND from every
+  document, so nobody could promote them or detach them. The Bulk Article
+  Import row-author paths therefore do not mark at all: they have no Document.
+  See ADR-020.
+
+  Non-PII — it records how the node got here, not who the person is — so it
+  stays readable and filterable; `FieldContext.people` needs the predicate.
+  Written server-side ONLY, by the extraction write path and by
+  `addPersonToFieldContext`, which sets it `false` when a member promotes
+  someone into the roster by hand. `@settable` keeps it out of the generated
+  create/update inputs so no client can hide a person from a roster, and
+  `@sortable(byValue: false)` keeps it out of `PersonSort` — nothing orders by
+  it, and ordering is its own oracle (see the SORTING note above).
+
+  Never set to `true` on a `:User`: a registered account attached to a field is
+  a real participant, not a document artifact. The `create_person` self-link
+  branch attaches the uploader and writes an explicit `false`.
+  """
+  extractionFound: Boolean
+    @settable(onCreate: false, onUpdate: false)
+    @sortable(byValue: false)
   gender: String
     @filterable(byValue: false)
     @selectable(onRead: false, onAggregate: false)

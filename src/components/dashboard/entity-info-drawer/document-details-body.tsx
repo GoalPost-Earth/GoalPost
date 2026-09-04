@@ -24,6 +24,10 @@ import {
   SecondaryCta,
   StatCell,
 } from './shared'
+import {
+  DocumentExtractedPeople,
+  type ExtractedPerson,
+} from './document-extracted-people'
 import { dispatchCloseInfoDrawer, dispatchOpenInfoDrawer } from './types'
 
 const GET_DOCUMENT_BY_ID = gql`
@@ -53,6 +57,9 @@ const GET_DOCUMENT_BY_ID = gql`
         id
         firstName
         lastName
+        # GOAL-346 — drives the promote affordance: true while the person is
+        # held out of the field's People roster.
+        extractionFound
       }
       extractedPulses {
         __typename
@@ -86,7 +93,7 @@ interface DocumentDetail {
     name: string | null
   }[]
   fieldContext?: { id: string; title: string }[]
-  extractedPeople?: { id: string; firstName: string; lastName: string }[]
+  extractedPeople?: ExtractedPerson[]
   extractedPulses?: {
     __typename: string | null
     id: string
@@ -336,36 +343,11 @@ export const DocumentDetailsBody: FC<{
         </section>
       )}
 
-      {people.length > 0 && (
-        <section className="px-6 pb-5">
-          <SectionHeader>Extracted people ({people.length})</SectionHeader>
-          <ul className="mt-2 space-y-1">
-            {people.map((p) => {
-              const name = `${p.firstName ?? ''} ${p.lastName ?? ''}`.trim()
-              return (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      dispatchOpenInfoDrawer({
-                        type: 'Person',
-                        id: p.id,
-                        label: name,
-                      })
-                    }
-                    className="group w-full text-left rounded-lg px-3 py-2 hover:bg-white/5 dark:hover:bg-white/[0.04] transition-colors cursor-pointer flex items-center gap-2"
-                  >
-                    <span className="text-xs text-gp-ink-strong dark:text-white/85 flex-1">
-                      {name || 'Person'}
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-white/30 group-hover:text-white/70 group-hover:translate-x-0.5 transition-all" />
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
-      )}
+      <DocumentExtractedPeople
+        people={people}
+        fieldContextId={field?.id}
+        onPromoted={() => void refetch()}
+      />
 
       {pulses.length > 0 && (
         <section className="px-6 pb-5">
