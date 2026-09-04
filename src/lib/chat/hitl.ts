@@ -1582,6 +1582,25 @@ async function createPersonAuthorized(
   // A short note describing who this person is, stored on the node itself.
   // (Named distinctly from the activity-log `description` built below.)
   const personDescription = input.description?.trim() || null
+  // GOAL-346 roster provenance. A `documentId` in scope is the ONE signal that
+  // this create is a document extractor naming a person rather than a member
+  // curating the field's People roster — Document Ingestion (WF-10) and the
+  // GOAL-344 article-content path both carry it; a member typing in the
+  // assistant never does.
+  //
+  // It is deliberately the only signal. Hiding someone from the roster is only
+  // safe when there is a surface left to find them on, and that surface is
+  // `Document.extractedPeople` — which is the `EXTRACTED_FROM` edge this same
+  // `documentId` writes below. Marking a person with no source Document would
+  // remove them from the roster while putting them on no document, leaving
+  // them impossible to promote (or to detach). Whoever adds a second signal
+  // here must give the person a Document too.
+  const foundByExtraction = Boolean(documentId)
+  // A member re-adding someone through the assistant is curating the roster,
+  // so it clears the marker — the same decision `addPersonToFieldContext`
+  // encodes. An extraction re-run (documentId present) must NOT clear it, or
+  // re-extracting a document would undo every promote decision made since.
+  const clearRosterMarker = !documentId
 
   if (!firstName) {
     return {
@@ -1651,6 +1670,19 @@ async function createPersonAuthorized(
       MATCH (u:Person {id: $currentUserId})
       OPTIONAL MATCH (d:Document {id: $documentId})
       MERGE (c)-[:HAS_PERSON]->(u)
+      // GOAL-346 roster provenance, and the value is FALSE on purpose. This
+      // branch attaches the ACTING USER's own account — a Space owner/member
+      // who uploaded the document — so they belong in the People roster even
+      // though an extractor is what put them on this edge, and even though
+      // they pick up an EXTRACTED_FROM edge two lines below.
+      //
+      // Belt and braces rather than the load-bearing guard: the backfill
+      // already excludes :User nodes outright, and no path here writes true
+      // for one. This states the intent at the write site so a future rule
+      // keyed on the property alone still gets the uploader right. Set
+      // unconditionally rather than ON CREATE SET, because the MERGE above is
+      // silent on re-attach and would skip every already-linked uploader.
+      SET u.extractionFound = false
       FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
         MERGE (u)-[:EXTRACTED_FROM]->(d)
       )
@@ -1725,6 +1757,15 @@ async function createPersonAuthorized(
       FOREACH (_ IN CASE WHEN $setDescription THEN [1] ELSE [] END |
         SET p.description = $personDescription
       )
+      // GOAL-346: a MEMBER re-adding someone already in this field is curating
+      // the roster, so it promotes them — otherwise the assistant answers
+      // "they are already in North Star" about a person the member still
+      // cannot see there. Gated on there being no document in scope: an
+      // extraction re-run lands here too, and it must not undo promote
+      // decisions (or un-hide the document's people on every re-extract).
+      FOREACH (_ IN CASE WHEN $clearRosterMarker THEN [1] ELSE [] END |
+        SET p.extractionFound = false
+      )
       SET p.updatedAt = datetime()
       FOREACH (_ IN CASE WHEN $relationshipWhy IS NULL THEN [] ELSE [1] END |
         MERGE (u)-[rc:CONNECTED_TO]-(p)
@@ -1747,6 +1788,7 @@ async function createPersonAuthorized(
         relationshipInterests,
         enrichLogId,
         enrichDescription,
+        clearRosterMarker,
       }
     )
     const connectedNow = Boolean(relationshipWhy) || existing.hasWhy
@@ -1797,6 +1839,12 @@ async function createPersonAuthorized(
     FOREACH (_ IN CASE WHEN $personDescription IS NULL THEN [] ELSE [1] END |
       SET p.description = $personDescription
     )
+    // GOAL-346: stamp roster provenance on the node at birth, keyed on the SAME
+    // same d the EXTRACTED_FROM edge below is keyed on. true keeps the person
+    // out of the field's People roster, and it is only ever written when they
+    // also get the Document edge that puts them on the document surface a
+    // member promotes them from. No document, no hiding.
+    SET p.extractionFound = (d IS NOT NULL)
     CREATE (c)-[:HAS_PERSON]->(p)
     // Model the user's relationship to the new person as a CONNECTED_TO edge
     // carrying the why. Only when a relationship was provided — a skipped

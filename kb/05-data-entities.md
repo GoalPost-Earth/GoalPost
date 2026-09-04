@@ -78,6 +78,36 @@ The `Person` node is the single entity for all humans in the system. Adjacent la
 | enrichedAt   | datetime | Last enrichment timestamp              |
 | isUser       | boolean  | Computed — has `User` label            |
 | signupDate   | datetime | When they registered                   |
+| extractionFound | boolean | Roster provenance (GOAL-346) — see below |
+
+**`extractionFound` — the People-roster provenance marker (GOAL-346).** `true`
+when this person is on a FieldContext's `HAS_PERSON` set only because a document
+extractor named them (Document Ingestion WF-10, and the GOAL-344 article-content
+pass of WF-11), not because a member curated the field's People roster.
+`GET_FIELD_CONTEXT_PEOPLE` filters them out; they stay reachable on the source
+Document via `Document.extractedPeople`, and `addPersonToFieldContext` sets the
+marker `false` when a member promotes one into the roster by hand.
+
+**`true` is only ever written alongside an `EXTRACTED_FROM` edge**, and that
+invariant is load-bearing rather than incidental: `Document.extractedPeople` is
+the only surface a hidden person is reachable from, so marking someone with no
+source Document would strand them — absent from the roster, on no document,
+impossible to promote or to detach. That is why the Bulk Article Import
+row-author paths do not mark at all (they have no Document), and why the
+backfill leaves un-edged people visible.
+
+It is a **presentation marker only**. The `HAS_PERSON` edge is deliberately
+untouched — ten authorization / reach gates read it, and it is the only Space
+tie a `PersonPulse` has, so narrowing it would blank their gated PII
+(`kb/02-user-roles.md` branch 5). `loadFieldContextRoster` — the de-dup roster
+the extraction model matches against — also does **not** filter on it, or a
+re-extract would mint a duplicate of every hidden person.
+
+Never set to `true` on a `:User`: a registered account attached to a field is a
+real participant. Written server-side only (`@settable(onCreate: false,
+onUpdate: false)` plus `@sortable(byValue: false)`), so no client can hide a
+person from a roster. Existing data is marked retroactively by
+`npm run backfill:extraction-found`. See ADR-020.
 
 **Auth fields (private):** `password`, `refreshToken`, `refreshTokenExp`, `refreshTokenRevoked`, `authId`, `inviteTokenHash`, `inviteTokenExpires`, `resetTokenHash`, `resetTokenExpires` — the two single-use token fields store sha256(rawToken); the raw token only ever lives in the outgoing email URL.
 

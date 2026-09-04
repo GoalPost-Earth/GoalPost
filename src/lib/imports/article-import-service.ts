@@ -251,6 +251,19 @@ async function matchAuthorByEmail(
       OPTIONAL MATCH (c)-[existing:HAS_PERSON]->(p)
       WITH c, u, p, existing IS NOT NULL AS alreadyAttached
       MERGE (c)-[:HAS_PERSON]->(p)
+      // GOAL-346: this attach deliberately does NOT write the roster marker.
+      // It creates no EXTRACTED_FROM edge, so the person would sit on no
+      // Document — and Document.extractedPeople is the only surface a hidden
+      // person is reachable from. Marking here took them out of the roster AND
+      // put them on no document, leaving nowhere to promote or detach them
+      // from. The marker is also node-scoped while this MERGE is
+      // context-scoped, so it could hide a contact who is hand-curated into a
+      // different field in another Space entirely.
+      //
+      // This person is one article's author, matched by email from the
+      // caller's own CONNECTED_TO contacts — one byline per row, not the
+      // hundreds-per-document volume the roster filter exists for. They stay
+      // visible, and stay removable by hand. See ADR-020.
       FOREACH (_ IN CASE WHEN alreadyAttached THEN [] ELSE [1] END |
         CREATE (log:Log {
           id: $logId,
@@ -344,6 +357,15 @@ async function resolveRowAuthor(
       lastName,
       contextId: fieldContextId,
       contextTitle,
+      // GOAL-346: no `documentId`, and therefore no roster marker — the row's
+      // article has not been fetched into a Document at this point, and for an
+      // unreadable link never will be (the row's pulse still lands on the
+      // sheet's details alone). `create_person` keys the marker on the
+      // Document precisely so a person is only ever hidden from the roster
+      // when they are listed on a document a member can promote them from.
+      // The byline stays the pulse's author via INITIATED_BY either way; the
+      // people the ARTICLE names are marked later, by the GOAL-344 ingest pass
+      // that does have a Document. See ADR-020.
     }
   )
 

@@ -117,7 +117,8 @@ describe('executeAuthorizedWriteTool — create_person', () => {
         `
         MATCH (c:FieldContext {id: $ctxId})-[:HAS_PERSON]->(p:Person {id: $personId})
         MATCH (p)-[:EXTRACTED_FROM]->(d:Document {id: $docId})
-        RETURN labels(p) AS labels, p.firstName AS firstName, p.lastName AS lastName, p.name AS name
+        RETURN labels(p) AS labels, p.firstName AS firstName, p.lastName AS lastName, p.name AS name,
+               p.extractionFound AS extractionFound
         `,
         { ctxId: ids.fieldContext, personId, docId: ids.document }
       )
@@ -127,6 +128,12 @@ describe('executeAuthorizedWriteTool — create_person', () => {
       expect(rows.records[0].get('firstName')).toBe('Sarah')
       expect(rows.records[0].get('lastName')).toBe('Chen')
       expect(rows.records[0].get('name')).toBe('Sarah Chen')
+      // GOAL-346: a documentId means the extractor named this person, so they
+      // are held out of the field's People roster. The assertion sits in the
+      // SAME query as the EXTRACTED_FROM match on purpose — the marker is only
+      // ever legitimate alongside that edge, because the document listing is
+      // the only surface a hidden person is reachable from.
+      expect(rows.records[0].get('extractionFound')).toBe(true)
 
       // Exactly one Log entry attributed to the uploader, mentioning the person name
       const logRows = await session.run(
@@ -197,11 +204,18 @@ describe('executeAuthorizedWriteTool — create_person', () => {
       const rows = await session.run(
         `
         MATCH (p:Person {id: $personId})
-        RETURN size([(p)-[:EXTRACTED_FROM]->(:Document) | 1]) AS extractedFromCount
+        RETURN size([(p)-[:EXTRACTED_FROM]->(:Document) | 1]) AS extractedFromCount,
+               p.extractionFound AS extractionFound
         `,
         { personId }
       )
       expect(Number(rows.records[0].get('extractedFromCount'))).toBe(0)
+      // GOAL-346: no source Document, so no roster marker — this person stays
+      // in the field's People roster. Hiding them would strand them: absent
+      // from the roster AND on no document, so no member could promote or
+      // detach them. This is the case that made the Bulk Article Import
+      // row-author paths stop marking (ADR-020).
+      expect(rows.records[0].get('extractionFound')).toBe(false)
     } finally {
       await session.close()
     }
@@ -233,11 +247,16 @@ describe('executeAuthorizedWriteTool — create_person', () => {
         `
         MATCH (c:FieldContext {id: $ctxId})-[:HAS_PERSON]->(u:Person {id: $userId})
         MATCH (u)-[:EXTRACTED_FROM]->(d:Document {id: $docId})
-        RETURN u.id AS id
+        RETURN u.id AS id, u.extractionFound AS extractionFound
         `,
         { ctxId: ids.fieldContext, userId: ids.user, docId: ids.document }
       )
       expect(linked.records).toHaveLength(1)
+      // GOAL-346: the uploader is a registered account and a Space
+      // participant, so they belong in the People roster even though an
+      // extractor is what put them on this edge and they carry EXTRACTED_FROM.
+      // A `:User` is never hidden.
+      expect(linked.records[0].get('extractionFound')).toBe(false)
 
       // No duplicate Person was created for the uploader's name. Scoped to
       // this suite's own FieldContext (create_person attaches atomically), so
