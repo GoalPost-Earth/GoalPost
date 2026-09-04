@@ -45,8 +45,15 @@ export interface DocumentProvenanceLayer {
  */
 const empty = (): DocumentProvenanceLayer => ({ nodes: [], relationships: [] })
 
-/** Matches PERSON_SIZE's scale in bloom-view; documents read as peers of people. */
-export const DOCUMENT_SIZE = 18
+/**
+ * In scale with PERSON_SIZE (30) and PULSE_SIZE (32) in bloom-view. It was 18
+ * — small enough that NVL had nowhere to paint the caption, so every document
+ * rendered as an anonymous grey dot while every other node carried its label.
+ * A provenance hub whose whole job is to say WHICH document a person came from
+ * has to show its filename. Slightly under a person, because a document is
+ * the source of the cluster, not a peer in it.
+ */
+export const DOCUMENT_SIZE = 28
 
 /**
  * Build the layer.

@@ -148,7 +148,8 @@ function labelsToInfoEntityType(
  *   - `ctx_`      legacy / fixture data only; kept as a safety net
  *   - `pulse_`    api/pulse/create-from-conversation
  *   - `rl_`       api/resonance/suggestions/[id]/accept (ResonanceLink)
- *   - `doc_`      Document
+ *   - `document_` lib/ingest/document-storage.ts (Document) — production path
+ *   - `doc_`      chat-overlay Documents only; NOT a prefix of `document_`
  *   - `person_`   lib/chat/hitl.ts (Person — HITL-created profiles)
  *
  * Ambiguity: legacy Persons and all WeSpaces use bare UUIDs (no prefix).
@@ -163,7 +164,13 @@ function idPrefixToInfoEntityType(id: string): InfoEntityType | null {
   if (id.startsWith('ctx_') || id.startsWith('context_')) return 'FieldContext'
   if (id.startsWith('pulse_')) return 'Pulse'
   if (id.startsWith('rl_')) return 'ResonanceLink'
-  if (id.startsWith('doc_')) return 'Document'
+  // BOTH prefixes are load-bearing. Documents are minted `document_<uuid>`
+  // (document-storage.ts), and `'document_'.startsWith('doc_')` is FALSE —
+  // 'docu' is not 'doc_' — so the shorter check alone silently resolved every
+  // real Document to null and dropped the click. `doc_` stays for the chat
+  // overlay, which was the only path that put a Document on this canvas
+  // before the GOAL-346 provenance layer put real ones there.
+  if (id.startsWith('document_') || id.startsWith('doc_')) return 'Document'
   if (id.startsWith('person_')) return 'Person'
   if (id.startsWith('organization_')) return 'Organization'
   return null
@@ -449,12 +456,15 @@ export const BloomView: FC = () => {
     }
   )
 
-  // Off by default: a document-heavy field would otherwise add a document
-  // node per upload plus every person it named — "Agentic AI Advances" alone
-  // carries 54 extracted people — and bury the pulses the canvas is for.
-  // GOAL-350 folds this into a general per-type toggle list; until then it is
-  // deliberately shaped as one named layer rather than an ad-hoc boolean.
-  const [showDocumentProvenance, setShowDocumentProvenance] = useState(false)
+  // ON by default. It shipped off to keep a document-heavy field from burying
+  // its pulses, but that default was the worse trade: a person a document
+  // named has provenance as their ONLY tie to anything, so with the layer off
+  // they render as edgeless dots — 12 of the 14 people on one real field.
+  // The canvas opened on exactly the floating-people problem this feature was
+  // built to fix. GOAL-350 folds this into a general per-type toggle list;
+  // until then it is deliberately shaped as one named layer rather than an
+  // ad-hoc boolean.
+  const [showDocumentProvenance, setShowDocumentProvenance] = useState(true)
 
   const loading = inField
     ? fieldDetailsLoading
@@ -1365,6 +1375,16 @@ export const BloomView: FC = () => {
           dispatchOpenInfoDrawer({ type: 'PromiseWeave', id: weave.id, label })
           return
         }
+        // Document provenance hub (GOAL-346). Matched against the layer's own
+        // nodes rather than an id prefix, so only a document actually ON the
+        // canvas can open — and the drawer it opens is the one carrying this
+        // document's extracted people and the promote action, which makes the
+        // canvas a way into that flow rather than a dead end. Not a focal
+        // entity type, so no setFocalEntity — same treatment as a weave hub.
+        if (documentProvenance.nodes.some((n) => n.id === id)) {
+          dispatchOpenInfoDrawer({ type: 'Document', id, label })
+          return
+        }
         // Nested field bubble — open the FieldContext drawer (rename lives
         // behind its Edit CTA), same treatment as an in-space field node.
         const sub = subContexts.find((sc) => sc.id === id)
@@ -1443,6 +1463,7 @@ export const BloomView: FC = () => {
       pulses,
       persons,
       weaves,
+      documentProvenance,
       subContexts,
       fieldAnchor,
       inSpace,

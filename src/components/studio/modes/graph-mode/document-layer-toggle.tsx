@@ -1,25 +1,31 @@
 'use client'
 
 import type { FC } from 'react'
-import { cn } from '@/lib/utils'
+import { Switch } from '@/components/ui/switch'
 
 /**
  * GOAL-346: switches the Document provenance layer (Document nodes + their
  * EXTRACTED_FROM edges) on and off in the in-field Bloom view.
  *
- * Off by default — a document-heavy field would otherwise bury its pulses
- * under a node per upload plus every person that upload named.
+ * ON by default. It shipped off, on the theory that a document-heavy field
+ * would bury its pulses — but the cost of that default was worse than the
+ * crowding it avoided: with the layer off, every person a document named
+ * renders with NO edges at all, because provenance is their only tie to
+ * anything. The canvas opened on a field of floating dots, which is the exact
+ * complaint this feature exists to answer. Documents on by default is what
+ * makes the default view coherent.
  *
- * Deliberately shaped as ONE NAMED LAYER rather than a nameless eye icon,
- * because GOAL-350 turns the legend into a list of exactly these rows for
- * every node and relationship type. When that lands this control folds into
- * the legend and this file goes away; until then it stands alone so the
- * relationship is reachable without waiting on that story.
+ * Sits top-right, opposite the Legend's bottom-left, so the two pieces of
+ * canvas chrome never compete for the same corner at any width.
  *
- * Sits in the bottom-left stack directly above the legend pill, matching its
- * chrome. The offsets clear the legend's own `h-9` pill in both the mobile
- * and `sm:` positions — the canvas has no other chrome in this corner, and
- * the chat FAB owns the opposite one.
+ * A Switch rather than a pill button: this is persistent visibility state, not
+ * a command, and a switch says so at a glance without relying on the reader
+ * decoding an active/inactive tint. The primitive is already fully tokened, so
+ * it themes correctly in light, dark and every variant for free.
+ *
+ * GOAL-350 folds this into the legend as one row of a general per-type
+ * visibility list; until then it stands alone so the relationship is reachable
+ * without waiting on that story.
  */
 export const DocumentLayerToggle: FC<{
   active: boolean
@@ -27,58 +33,35 @@ export const DocumentLayerToggle: FC<{
   /** Documents available in this field; the control hides at zero. */
   documentCount: number
 }> = ({ active, onToggle, documentCount }) => {
-  // Nothing to reveal in a field with no uploads — showing a dead toggle
-  // would suggest the canvas is hiding something when it isn't.
+  // Nothing to reveal in a field with no uploads — a dead switch would suggest
+  // the canvas is withholding something when it isn't.
   if (documentCount === 0) return null
 
   return (
-    <div className="pointer-events-none absolute bottom-[7.75rem] left-3 z-30 sm:bottom-[4.25rem] sm:left-4">
-      <button
-        type="button"
-        onClick={() => onToggle(!active)}
-        aria-pressed={active}
-        title={
-          active
-            ? 'Hide documents and the people they named'
-            : 'Show documents and the people they named'
-        }
-        className={cn(
-          'gp-glass-hover pointer-events-auto cursor-pointer flex items-center gap-2',
-          'h-9 px-2.5 sm:px-3 rounded-full gp-glass border shadow-xl',
-          // Tokened in both states so the active tint re-derives per theme
-          // and stays legible on light and dark glass alike.
-          active
-            ? 'border-gp-primary/40 text-gp-primary'
-            : 'border-gp-glass-border text-gp-ink-muted hover:text-gp-primary'
-        )}
+    <div className="pointer-events-none absolute top-3 right-3 z-30 sm:top-4 sm:right-4">
+      {/*
+        The whole pill is the hit target — `htmlFor` rather than wrapping, so
+        the Switch keeps its own accessible name and Radix's keyboard handling
+        instead of inheriting a label's click semantics.
+      */}
+      <label
+        htmlFor="bloom-show-documents"
+        className="pointer-events-auto flex items-center gap-2.5 h-9 pl-3 pr-2.5 rounded-full gp-glass border border-gp-glass-border shadow-xl cursor-pointer select-none"
       >
-        {/*
-          Always `description`. There is no `description_off` in Material
-          Symbols, and an unresolvable ligature does not fall back to nothing
-          — the font renders the resolvable prefix plus the leftover as LITERAL
-          TEXT, so the control painted `[icon]_OFF` at 90px instead of an 18px
-          glyph. The icon names WHAT is toggled; the tokened active styling and
-          `aria-pressed` carry whether it is on.
-        */}
-        <span className="material-symbols-outlined text-lg leading-none">
-          description
+        <span className="text-xs font-semibold text-gp-ink-strong whitespace-nowrap">
+          Show Documents
         </span>
-        {/* Label is desktop-only, mirroring the legend pill, so the two
-            controls stay the same size at 390px. */}
-        <span className="hidden sm:inline text-xs font-semibold">
-          Documents
-        </span>
-        <span
-          className={cn(
-            'shrink-0 rounded-full px-1.5 text-[10px] font-bold tabular-nums',
-            active
-              ? 'bg-gp-primary/15 text-gp-primary'
-              : 'bg-gp-ink-muted/15 text-gp-ink-muted'
-          )}
-        >
+        <span className="shrink-0 rounded-full bg-gp-ink-muted/15 px-1.5 text-[10px] font-bold tabular-nums text-gp-ink-muted">
           {documentCount}
         </span>
-      </button>
+        <Switch
+          id="bloom-show-documents"
+          size="sm"
+          checked={active}
+          onCheckedChange={onToggle}
+          aria-label={`Show documents and the people they named (${documentCount} in this field)`}
+        />
+      </label>
     </div>
   )
 }
