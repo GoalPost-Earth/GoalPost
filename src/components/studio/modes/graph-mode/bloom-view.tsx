@@ -40,8 +40,10 @@ import { DocumentLayerToggle } from './document-layer-toggle'
 import { getBloomPalette } from './bloom-palette'
 import {
   buildDocumentProvenanceLayer,
+  documentDerivedIds,
   type ProvenanceDocument,
 } from './document-provenance-layer'
+import { applyDocumentHiding } from './document-visibility'
 import { isAwaitingReview } from '@/lib/promise-weave'
 import { useBloomOverlay, type BloomOverlay } from '../../bloom-overlay-context'
 import {
@@ -88,6 +90,13 @@ const GraphVisualizer = dynamic(
 )
 
 const EMPTY_RELATIONSHIPS: Relationship[] = []
+/**
+ * Stable identity for "nothing is hidden". It is what lets
+ * `applyDocumentHiding` return the built graph by identity in the default view
+ * (documents ON), which in turn keeps the fit-to-scope effects keyed on
+ * `nodes` from re-firing on every render.
+ */
+const EMPTY_IDS: ReadonlySet<string> = new Set<string>()
 
 // How long to wait after a single click before treating it as a drill — long
 // enough for a double-click (drawer) to arrive and cancel it.
@@ -628,6 +637,63 @@ export const BloomView: FC = () => {
     return records
   }, [inField, fieldPeopleData])
 
+  // Ids of the people the canvas keeps regardless of what the Documents layer
+  // is doing. The parent space's owner and members are rendered because they
+  // belong to the space; a document naming one of them must not evict them,
+  // and evicting the owner would strip the author edge off every pulse they
+  // wrote by hand. `persons` tags exactly these two groups 'User' — everyone
+  // reached through the field's HAS_PERSON roster is tagged 'PersonPulse'.
+  const anchoredPersonIds = useMemo(
+    () =>
+      new Set(
+        persons.filter((p) => p.focalType === 'User').map((p) => p.id)
+      ),
+    [persons]
+  )
+
+  // GOAL-346: people a human deliberately promoted onto the field roster.
+  // Already selected by GET_FIELD_CONTEXT_PEOPLE for the roster filter, and
+  // read here so both surfaces apply the same "curation outranks extraction"
+  // precedence (src/lib/field-roster-visibility.ts).
+  //
+  // The two rules are NOT identical, deliberately: the roster has no notion of
+  // `anchoredPersonIds`, so an extracted, uncurated space member is dropped
+  // from the dashboard roster but kept on the canvas. The canvas needs them —
+  // they are the endpoint every author edge points at — and the roster does
+  // not.
+  const curatedPersonIds = useMemo<string[]>(() => {
+    const fieldCtx = (
+      fieldPeopleData as
+        | { fieldContexts?: Array<{ curatedPersonIds?: string[] | null }> }
+        | undefined
+    )?.fieldContexts?.[0]
+    return fieldCtx?.curatedPersonIds ?? []
+  }, [fieldPeopleData])
+
+  // Everything the canvas drops while the Documents layer is OFF: the
+  // documents, the people they named, and the pulses they produced. See
+  // `documentDerivedIds` for why "off" is the whole subgraph and not just the
+  // Document hubs.
+  const hiddenDocumentIds = useMemo<ReadonlySet<string>>(() => {
+    if (!inField || showDocumentProvenance) return EMPTY_IDS
+    const documents = (
+      fieldDocumentsData as
+        | { documentsByFieldContext?: ProvenanceDocument[] }
+        | undefined
+    )?.documentsByFieldContext
+    return documentDerivedIds({
+      documents,
+      curatedPersonIds,
+      anchoredIds: anchoredPersonIds,
+    })
+  }, [
+    inField,
+    showDocumentProvenance,
+    fieldDocumentsData,
+    curatedPersonIds,
+    anchoredPersonIds,
+  ])
+
   // Drives the toggle's badge and its hidden-at-zero rule. Counts what the
   // field HAS, not what the layer drew — the layer omits a document whose
   // people are all off-canvas, and a count that shrank when you switched the
@@ -656,9 +722,13 @@ export const BloomView: FC = () => {
       documents,
       visiblePersonIds: new Set(persons.map((p) => p.id)),
       palette,
-      visible: inField && showDocumentProvenance,
+      // Built whenever we are in a field, INDEPENDENT of the toggle. The
+      // toggle is applied once, further down, as a visibility pass over the
+      // finished graph — and that pass needs the EXTRACTED_FROM edges present
+      // to see which people it strands by removing them.
+      visible: inField,
     })
-  }, [fieldDocumentsData, persons, palette, inField, showDocumentProvenance])
+  }, [fieldDocumentsData, persons, palette, inField])
 
   // CONNECTED_TO edges among the field's people. The relationship lives on the
   // edge (connectionEdges → connectedPersonId + why); each field person carries
@@ -831,7 +901,7 @@ export const BloomView: FC = () => {
   //   2. In-field scope — the active FieldContext's pulses.
   //   3. In-space scope — the active Space's field contexts.
   //   4. Default — the user's MeSpace + WeSpace cluster.
-  const nodes: Node[] = useMemo(() => {
+  const candidateNodes: Node[] = useMemo(() => {
     if (overlay) {
       // The overlay payload is styled server-side (cypher-generator/execute.ts)
       // with the dark pastel palette — the executor can't know the viewer's
@@ -992,7 +1062,7 @@ export const BloomView: FC = () => {
     currentUserId,
   ])
 
-  const relationships: Relationship[] = useMemo(() => {
+  const candidateRelationships: Relationship[] = useMemo(() => {
     // Dedupe defensively on `from|type|to` even when the backend should
     // already be sending unique edges — both the cypher-generator overlay
     // path and the Apollo resonance path have produced duplicates before,
@@ -1243,6 +1313,28 @@ export const BloomView: FC = () => {
     weData,
   ])
 
+  // What actually reaches NVL. The candidate graph above is the field as it
+  // stands, documents and all; this removes the document-derived subgraph when
+  // the toggle is off and sweeps up whatever that strands (see
+  // `applyDocumentHiding`). Nodes and edges are filtered together in one pass,
+  // which is what keeps the "no relationship without both endpoints rendered"
+  // invariant from depending on two memos agreeing with each other.
+  const { nodes, relationships } = useMemo(
+    () =>
+      applyDocumentHiding({
+        nodes: candidateNodes,
+        relationships: candidateRelationships,
+        hiddenIds: hiddenDocumentIds,
+        // The field's own pulses are never swept for being stranded. A pulse
+        // that ingestion did NOT create can still have an extracted person as
+        // its only edge — a member crediting someone a document named — and it
+        // would otherwise vanish when documents are switched off. It belongs to
+        // the field whoever is credited on it, so it stays, unattached.
+        protectedIds: new Set(pulses.map((p) => p.id)),
+      }),
+    [candidateNodes, candidateRelationships, hiddenDocumentIds, pulses]
+  )
+
   // Publish whatever Bloom is currently rendering so the assistant can
   // recognise entities by name (e.g. "show me what is in JD's Tech Lab"
   // resolves to the WeSpace already on screen instead of fail-searching).
@@ -1267,21 +1359,32 @@ export const BloomView: FC = () => {
       if (inField) {
         // Pulses + the people now rendered as person nodes. Publishing
         // people lets the assistant resolve someone who is visibly on the
-        // Bloom canvas by name instead of fail-searching.
+        // Bloom canvas by name instead of fail-searching. Keyed off the
+        // rendered node ids, so a pulse or person the Documents toggle just
+        // removed stops being resolvable by name too — the assistant should
+        // never claim to see something the canvas isn't showing.
+        const rendered = new Set(nodes.map((n) => n.id))
         return [
-          ...pulses.map((p) => ({
-            id: p.id,
-            name: p.name,
-            type: p.focalType as VisibleEntity['type'],
-            source: 'bloom' as const,
-          })),
-          ...persons.map((p) => ({
-            id: p.id,
-            name: p.name,
-            type: p.focalType as VisibleEntity['type'],
-            source: 'bloom' as const,
-          })),
-          // Nested fields on canvas resolve by name too (GOAL-339).
+          ...pulses
+            .filter((p) => rendered.has(p.id))
+            .map((p) => ({
+              id: p.id,
+              name: p.name,
+              type: p.focalType as VisibleEntity['type'],
+              source: 'bloom' as const,
+            })),
+          ...persons
+            .filter((p) => rendered.has(p.id))
+            .map((p) => ({
+              id: p.id,
+              name: p.name,
+              type: p.focalType as VisibleEntity['type'],
+              source: 'bloom' as const,
+            })),
+          // Nested fields on canvas resolve by name too (GOAL-339). Not
+          // filtered against `rendered`: a sub-context is never document-
+          // derived and always keeps its `nested` edge to the field anchor, so
+          // the hiding pass cannot reach it.
           ...subContexts.map((sub) => ({
             id: sub.id,
             name: sub.name,
@@ -1309,6 +1412,7 @@ export const BloomView: FC = () => {
   }, [
     overlay,
     inField,
+    nodes,
     pulses,
     persons,
     subContexts,
@@ -1375,13 +1479,18 @@ export const BloomView: FC = () => {
           dispatchOpenInfoDrawer({ type: 'PromiseWeave', id: weave.id, label })
           return
         }
-        // Document provenance hub (GOAL-346). Matched against the layer's own
+        // Document provenance hub (GOAL-346). Matched against the rendered
         // nodes rather than an id prefix, so only a document actually ON the
-        // canvas can open — and the drawer it opens is the one carrying this
+        // canvas can open — the provenance layer is built regardless of the
+        // toggle now, so matching against IT would resolve a document the
+        // canvas is not currently showing. The drawer this opens carries the
         // document's extracted people and the promote action, which makes the
         // canvas a way into that flow rather than a dead end. Not a focal
         // entity type, so no setFocalEntity — same treatment as a weave hub.
-        if (documentProvenance.nodes.some((n) => n.id === id)) {
+        if (
+          documentProvenance.nodes.some((n) => n.id === id) &&
+          nodes.some((n) => n.id === id)
+        ) {
           dispatchOpenInfoDrawer({ type: 'Document', id, label })
           return
         }
@@ -1460,6 +1569,7 @@ export const BloomView: FC = () => {
     [
       overlay,
       inField,
+      nodes,
       pulses,
       persons,
       weaves,
@@ -1847,10 +1957,27 @@ export const BloomView: FC = () => {
     !overlay &&
     !loading &&
     (inField
-      ? pulses.length === 0 && weaves.length === 0
+      ? // Exactly "NVL has nothing to draw". The old form counted pulses and
+        // weaves only, so a field carrying just people and documents replaced
+        // its canvas with "no pulses yet" — and, once the toggle could empty
+        // the canvas, told the user to switch documents back on to see a view
+        // it would have gone on refusing to draw.
+        nodes.length === 0
       : inSpace
         ? fieldContexts.length === 0
         : spaces.length === 0)
+
+  // Distinguishes "this field is empty" from "this field is entirely made of
+  // documents and you switched them off". Without it a doc-only field reads as
+  // having no content at all, and the fix — the toggle sitting in the opposite
+  // corner — is left for the user to guess at.
+  //
+  // Keyed off the candidate graph rather than the toggle: nothing but the
+  // hiding pass can empty a non-empty field, so "we built nodes and none
+  // survived" is the precise condition, and it cannot fire while the layer is
+  // on (with nothing hidden the two graphs are the same object).
+  const emptiedByDocumentToggle =
+    isEmpty && inField && candidateNodes.length > 0
 
   return (
     <div className="relative w-full h-full bg-gp-surface dark:bg-gp-surface-dark flex">
@@ -1892,14 +2019,22 @@ export const BloomView: FC = () => {
         ) : isEmpty ? (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-6 pointer-events-none">
             <span className="material-symbols-outlined text-5xl text-gp-ink-soft/70 mb-3">
-              {inField ? 'graphic_eq' : inSpace ? 'category' : 'hub'}
+              {emptiedByDocumentToggle
+                ? 'description'
+                : inField
+                  ? 'graphic_eq'
+                  : inSpace
+                    ? 'category'
+                    : 'hub'}
             </span>
             <p className="text-sm text-gp-ink-muted max-w-md">
-              {inField
-                ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here on the canvas.'
-                : inSpace
-                  ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here on the canvas.'
-                  : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here on the canvas.'}
+              {emptiedByDocumentToggle
+                ? 'Everything on this field came from its documents. Switch Show Documents back on to see it.'
+                : inField
+                  ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here on the canvas.'
+                  : inSpace
+                    ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here on the canvas.'
+                    : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here on the canvas.'}
             </p>
           </div>
         ) : (
@@ -1927,8 +2062,8 @@ export const BloomView: FC = () => {
             same nodes/relationships above, so it only lists what's on screen. */}
         <BloomLegend nodes={nodes} relationships={relationships} />
 
-        {/* GOAL-346: reveals Documents and the people they named. In-field
-            only — the space and root views have no document scope. */}
+        {/* GOAL-346: reveals Documents and everything extracted from them.
+            In-field only — the space and root views have no document scope. */}
         {inField && (
           <DocumentLayerToggle
             active={showDocumentProvenance}
