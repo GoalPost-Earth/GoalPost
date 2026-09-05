@@ -23,14 +23,32 @@ name: Nightly resonance sweep (dev + demo)
 #     (main). Editing this file on `dev` or `demo` changes nothing until it is
 #     merged to main.
 # ⚠️  GitHub disables scheduled workflows on repos with 60 days of no activity.
-# ⚠️  GitHub schedule ticks are best-effort and land late under load. That is
-#     fine here in a way it is not for the 5-minute queue drain: this job is a
-#     nightly sweep, so "some time after midnight UTC" is the requirement.
+# ⚠️  GitHub schedule ticks are best-effort and land late under load, and a
+#     day can be skipped outright. That is tolerable here in a way it is not
+#     for the 5-minute queue drain: this job only has to run about once a day.
+#     The schedule below picks an off-peak minute to keep the delay small —
+#     see the comment on the cron expression.
 
 on:
   schedule:
-    # Midnight UTC, matching the vercel.json declaration for production.
-    - cron: '0 0 * * *'
+    # 01:37 UTC, NOT midnight — deliberately an odd minute at an odd hour.
+    #
+    # GitHub runs every repository's schedules off one shared queue, and the top
+    # of the hour (midnight most of all) is where the whole platform's crons
+    # pile up. Asking for the most contended minute of the day is asking to be
+    # at the back of the longest queue. Measured on THIS repo 2026-09-05, the
+    # scheduler was handing drain-queues a tick every 100-285 minutes against a
+    # requested five — the file's older "19-94 minutes" note, written
+    # 2026-08-24, is now optimistic by roughly threefold. A daily job is not
+    # thinned the same way a */5 job is, but it queues behind the same backlog.
+    #
+    # Nothing about this sweep cares which hour it runs, only that it runs once
+    # a day, so there is no reason to spend that contention. This deliberately
+    # diverges from the `0 0 * * *` in vercel.json: that entry drives PRODUCTION
+    # through Vercel's scheduler, which is not the one with this problem, and
+    # the two are independent by design (an environment belongs to exactly one
+    # mechanism — see kb/06-adr.md, ADR-008).
+    - cron: '37 1 * * *'
   workflow_dispatch:
     inputs:
       target:
