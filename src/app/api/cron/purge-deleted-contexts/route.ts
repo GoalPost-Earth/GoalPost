@@ -31,11 +31,19 @@ function resolveBlobStore() {
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify this is a Vercel cron request
+    // Fail-CLOSED (GOAL-347). This route PERMANENTLY cascade-deletes
+    // soft-deleted contexts — pulses, chunks, links, suggestions, weaves,
+    // documents, import jobs and their S3 blobs — across every Space, and it
+    // is a public unauthenticated GET with no middleware in front of it. Under
+    // the previous `cronSecret &&` form an unset secret disabled the check
+    // entirely, making the destructive sweep anonymously triggerable by
+    // anyone. CRON_SECRET is set in all three Vercel environments
+    // (Production, Preview, demo), so requiring it changes nothing
+    // operationally. Local runs need it in .env.local.
     const authHeader = request.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       console.warn('[Purge Contexts Cron] Unauthorized cron request attempted')
       return NextResponse.json(
         { success: false, error: 'Unauthorized' },
@@ -65,12 +73,17 @@ export async function GET(request: NextRequest) {
       `[Purge Contexts Cron] ✓ Completed: purged ${result.purgedContexts.length} context(s)`
     )
 
+    // Counts only. `purgedContexts` carries context TITLES — member content —
+    // from every Space in the graph, and this body used to be reachable by an
+    // anonymous caller. The auth gate above closes that, but a cron response
+    // has no reason to carry cross-Space content either way; the per-context
+    // detail is already in the server logs above, where it is scoped to
+    // operators. (GOAL-347 security review.)
     return NextResponse.json({
       success: true,
       message: 'Purge of soft-deleted field contexts completed',
       purgedContextCount: result.purgedContexts.length,
-      purgedContexts: result.purgedContexts,
-      blobFailures: result.blobFailures,
+      blobFailureCount: result.blobFailures,
       timestamp: new Date().toISOString(),
     })
   } catch (error: unknown) {

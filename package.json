@@ -23,6 +23,7 @@
     "seed:build-space": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/seed-build-space.ts",
     "backfill:resonance-created-at": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/backfill-resonance-created-at.ts",
     "backfill:corevalue-labels": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/backfill-corevalue-pulse-labels.ts",
+    "backfill:embeddings": "tsx scripts/backfill-pulse-embeddings.ts",
     "normalize:log-created-at": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/normalize-log-created-at.ts",
     "clean:orphan-pulses": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/clean-dev-orphan-pulses.ts",
     "purge:e2e-users": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/purge-e2e-users.ts",

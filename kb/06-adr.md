@@ -115,6 +115,39 @@
 
 **Why:** Vercel Cron Jobs eliminate the need for a separate worker process, Redis instance, or BullMQ queue. Jobs are defined in `vercel.json` and hit API routes directly — simpler infrastructure, no additional services to manage, and scales with the Vercel deployment.
 
+**Amendment (GOAL-347) — scheduling on non-production environments:** Vercel Cron fires **only against a project's production deployment**. `goal-post` is a single Vercel project whose production target is `main` → goalpost.earth, so the `crons` block in `vercel.json` never reaches `dev.goalpost.earth` or `demo.goalpost.earth`. Every job declared there is therefore a no-op on those environments — the nightly resonance sweep had never executed on demo at all, leaving six Spaces with zero embedded pulses and, because an un-embedded pulse is invisible to vector search, no resonance at all.
+
+The three options were: promote demo to a production target, invoke the routes manually, or drive them from an external scheduler. Promotion is not available — one project has one production target, and it belongs to `main`. Manual invocation is not a schedule. So:
+
+- **Production** stays on `vercel.json`.
+- **dev and demo** are driven by GitHub Actions `schedule:` workflows that call the same routes with the same `Authorization: Bearer <CRON_SECRET>` header:
+  - `.github/workflows/drain-queues.yml` — the every-5-minutes queue workers (GOAL-292, GOAL-326).
+  - `.github/workflows/nightly-resonance.yml` — the midnight resonance sweep (GOAL-347).
+- An environment must appear in exactly one of the two mechanisms. Adding production to a workflow would run every job twice.
+
+Consequences to design around:
+
+- GitHub `schedule:` ticks are **best-effort** (measured 19–94 minutes late on this repo). Fine for a nightly sweep; not a latency guarantee, which is why the queues also kick their worker at enqueue time (`src/lib/jobs/kick-queue-worker.ts`).
+- A `schedule:` trigger only fires from the **default branch**, so a workflow edited on `dev`/`demo` does nothing until merged to `main`.
+- GitHub disables scheduled workflows after 60 days of repo inactivity.
+- Every scheduled route must be **fail-closed** on `CRON_SECRET` — these routes drive model spend and write across Spaces, so an unset secret must not leave them anonymously triggerable.
+- A scheduled route must **budget itself under `maxDuration`** and report progress rather than run until the platform kills it. See ADR-008a.
+
+---
+
+## ADR-008a: Scheduled Sweeps Are Budgeted and Resumable
+
+**Decision:** A scheduled job that fans out over the whole graph runs against an explicit wall-clock deadline, stops cleanly when the budget is spent, and orders its work so the next run continues where the last one stopped. Stopping early is a **success**, not a failure.
+
+**Rules:**
+
+- The route sets a budget below `maxDuration` (currently 270s of 300s) so it always has room to serialize a report.
+- Work units check the deadline at the finest granularity that is expensive — for resonance discovery, per pulse, since one pulse is a vector search plus an LLM analysis.
+- Fan-out is ordered **least-recently-processed first**, persisted in the graph (`:ResonanceSweepState {spaceId, lastSweptAt}`). A unit that throws is still stamped, or a permanently-failing one starves everything behind it.
+- The response reports what remains (`complete`, `spacesSwept/spacesTotal`, per-phase `remaining`) so an operator can watch a backlog converge instead of guessing.
+
+**Why:** The prior sweep had no budget and no cursor: it fanned out over every Space with an LLM call per pulse and simply ran until the platform killed it at 300s. Because it re-enumerated Spaces in the same order every time, it would die at the same point every time — the Spaces behind that point never swept even once — and the caller got a bare 504 that discarded the counts for the phases that HAD succeeded. (On demo the question never even arose: the route was never invoked at all, which is the bug GOAL-347 opened on. The cost profile is what made the fix more than a scheduling change: the very first successful run is the most expensive one the sweep will ever do.) A deadline turns the kill into a clean stop; the ordering turns the clean stop into forward progress.
+
 ---
 
 ## ADR-009: Sentence-Based Conversation Chunking

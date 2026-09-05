@@ -45,6 +45,29 @@ export interface DiscoveredResonance {
 }
 
 /**
+ * Time budget shared by the sweep entry points (GOAL-347).
+ *
+ * The nightly sweep runs inside a serverless function with a hard duration
+ * ceiling (`maxDuration = 300`). A cold sweep — no `lastRunTimestamp`, every
+ * Space, an LLM analysis per pulse — costs far more than that ceiling, so
+ * without a budget the function is simply killed mid-run: whatever it had
+ * written is durable, but it always dies at the same point in the same
+ * enumeration order and the Spaces after that point are never reached, on any
+ * night. `deadlineAt` turns that hard kill into a clean stop, and the
+ * least-recently-swept ordering in `sweepGlobalResonances` turns the clean stop
+ * into forward progress — each run resumes where the last one gave up.
+ */
+export interface ResonanceBudget {
+  /** Epoch-ms after which no NEW unit of work is started. */
+  deadlineAt?: number
+}
+
+/** True when the budget is set and already spent. */
+export function budgetExhausted(budget?: ResonanceBudget): boolean {
+  return budget?.deadlineAt !== undefined && Date.now() >= budget.deadlineAt
+}
+
+/**
  * Find semantically similar pulses WITHIN THE SAME CONTEXT SUBTREE using
  * vector search. "Within a context" includes the context's nested
  * sub-contexts (GOAL-295): the field is the resonance boundary —
@@ -241,15 +264,31 @@ async function createResonanceSuggestionsInDatabase(
       MATCH (target:FieldPulse {id: $targetPulseId})
 
       // Ensure source and target are both inside the resonance scope — the
-      // root field's live subtree (GOAL-295). EXISTS keeps the row count at
-      // exactly 1 so the CREATEs below never multiply.
+      // root field's live subtree (GOAL-295) — AND that the holding context
+      // belongs to this Space. EXISTS keeps the row count at exactly 1 so the
+      // CREATEs below never multiply.
+      //
+      // The Space predicate is deliberate redundancy (GOAL-347). Without it,
+      // "no suggestion crosses a Space boundary" — the guarantee ADR-003 rests
+      // on — is not enforced here at all; it is inherited from the separate
+      // invariant that a HAS_SUBCONTEXT hierarchy never spans Spaces. That
+      // invariant does hold, by construction in sub-context.ts (a child is
+      // created under its parent's Space, and the move path refuses a
+      // different one) and in data (verified: zero cross-Space HAS_SUBCONTEXT
+      // edges on dev, demo and production). But it is enforced one hop away
+      // from the thing it protects: a single stray edge from a script, a
+      // migration, or the assistant would quietly turn every discovery run
+      // into a cross-Space suggestion writer, with nothing here to stop it.
+      // Naming the Space costs one index lookup and makes the boundary
+      // self-enforcing. Safe to require: every subtree context carries its own
+      // HAS_CONTEXT edge (verified zero exceptions on all three databases).
       WHERE EXISTS {
           MATCH (scope)-[:HAS_SUBCONTEXT*0..10]->(x:FieldContext)-[:HAS_PULSE]->(source)
-          WHERE x.deletedAt IS NULL
+          WHERE x.deletedAt IS NULL AND (space)-[:HAS_CONTEXT]->(x)
         }
         AND EXISTS {
           MATCH (scope)-[:HAS_SUBCONTEXT*0..10]->(x:FieldContext)-[:HAS_PULSE]->(target)
-          WHERE x.deletedAt IS NULL
+          WHERE x.deletedAt IS NULL AND (space)-[:HAS_CONTEXT]->(x)
         }
 
       // Symmetric duplicate check — a ResonanceSuggestion or ResonanceLink that
@@ -435,7 +474,8 @@ export async function discoverResonancesForPulse(
 export async function discoverResonancesForContext(
   spaceId: string,
   contextId: string,
-  lastRunTimestamp?: string
+  lastRunTimestamp?: string,
+  budget?: ResonanceBudget
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
@@ -484,6 +524,17 @@ export async function discoverResonancesForContext(
 
   const discovered: DiscoveredResonance[] = []
   for (const pulse of pulses) {
+    // Finest-grained budget check in the sweep: one iteration is a vector
+    // search plus an LLM analysis, the single most expensive unit of work
+    // here, so this is where a run must be able to stop. Suggestions already
+    // written are durable and deduped, so the next run re-walks this context
+    // cheaply and continues past where we stopped.
+    if (budgetExhausted(budget)) {
+      console.log(
+        `[Context Discovery] Time budget spent in context ${contextId}; stopping after ${discovered.length} suggestion(s).`
+      )
+      break
+    }
     try {
       const resonances = await discoverResonancesForPulse(pulse.id, spaceId)
       discovered.push(...resonances)
@@ -504,7 +555,8 @@ export async function discoverResonancesForContext(
  */
 export async function discoverResonancesForSpace(
   spaceId: string,
-  lastRunTimestamp?: string
+  lastRunTimestamp?: string,
+  budget?: ResonanceBudget
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
@@ -550,6 +602,12 @@ export async function discoverResonancesForSpace(
 
   // Process each context independently through the context-scoped entry point.
   for (const { contextId, contextTitle } of contexts) {
+    if (budgetExhausted(budget)) {
+      console.log(
+        `[Space Discovery] Time budget spent in space ${spaceId}; stopping before context ${contextId}.`
+      )
+      break
+    }
     try {
       console.log(
         `[Space Discovery] Processing context: ${contextTitle} (${contextId})`
@@ -557,7 +615,8 @@ export async function discoverResonancesForSpace(
       const resonances = await discoverResonancesForContext(
         spaceId,
         contextId,
-        lastRunTimestamp
+        lastRunTimestamp,
+        budget
       )
       allDiscoveredResonances.push(...resonances)
     } catch (error) {
@@ -570,79 +629,6 @@ export async function discoverResonancesForSpace(
 
   console.log(
     `[Space Discovery] Discovered ${allDiscoveredResonances.length} resonance suggestions in space ${spaceId}`
-  )
-
-  return allDiscoveredResonances
-}
-
-/**
- * Discover resonances for all spaces (global discovery)
- * Processes each space independently
- */
-export async function discoverGlobalResonances(
-  lastRunTimestamp?: string
-): Promise<DiscoveredResonance[]> {
-  const graph = await initGraph()
-
-  // Enumerate the spaces to sweep. Every registered user owns a MeSpace, so a
-  // global fan-out over every space runs an LLM-backed analysis across the whole
-  // user base. On an incremental run (a lastRunTimestamp is supplied) we anchor
-  // on the FieldPulse.modifiedAt / createdAt range indexes to find only spaces
-  // with recent pulse activity — this scales with the change window, not the
-  // total graph. On a full sweep (no timestamp) we process all spaces.
-  const spacesResult = lastRunTimestamp
-    ? await graph.query<{ spaceId: string; spaceName: string }>(
-        `
-        MATCH (p:FieldPulse)
-        WHERE p.modifiedAt > datetime($lastRunTimestamp)
-           OR p.createdAt > datetime($lastRunTimestamp)
-        MATCH (space:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PULSE]->(p)
-        RETURN DISTINCT space.id as spaceId, space.name as spaceName
-      `,
-        { lastRunTimestamp }
-      )
-    : await graph.query<{ spaceId: string; spaceName: string }>(
-        `
-        MATCH (space:Space)
-        RETURN space.id as spaceId, space.name as spaceName
-      `,
-        {}
-      )
-
-  if (!Array.isArray(spacesResult) || spacesResult.length === 0) {
-    console.log('[Global Discovery] No spaces found')
-    return []
-  }
-
-  const spaces = spacesResult
-
-  console.log(
-    `[Global Discovery] Discovering resonances for ${spaces.length} spaces...`
-  )
-
-  const allDiscoveredResonances: DiscoveredResonance[] = []
-
-  // Process each space independently
-  for (const { spaceId, spaceName } of spaces) {
-    try {
-      console.log(
-        `[Global Discovery] Processing space: ${spaceName} (${spaceId})`
-      )
-      const resonances = await discoverResonancesForSpace(
-        spaceId,
-        lastRunTimestamp
-      )
-      allDiscoveredResonances.push(...resonances)
-    } catch (error) {
-      console.error(
-        `[Global Discovery] Failed to process space ${spaceId}:`,
-        error
-      )
-    }
-  }
-
-  console.log(
-    `[Global Discovery] Discovered ${allDiscoveredResonances.length} total resonance suggestions across all spaces`
   )
 
   return allDiscoveredResonances

@@ -1,0 +1,181 @@
+name: Nightly resonance sweep (dev + demo)
+
+# ADR-008's daily Resonance Discovery job (`/api/cron/discover-resonances`) is
+# declared in vercel.json, but Vercel Cron only ever fires against a project's
+# PRODUCTION deployment. `goal-post` (prj_dLPYsunfwb8rZsbiCERLS6pqvpIS) is a
+# single project whose production target is `main` -> goalpost.earth, so that
+# declaration never reaches dev.goalpost.earth or demo.goalpost.earth.
+#
+# GOAL-347: the consequence on demo was total — the route had never executed
+# there even once. Step 1 of it backfills pulse embeddings, and an un-embedded
+# pulse is invisible to vector similarity search, so it can never resonate.
+# Six demo Spaces sat at 0 embedded pulses (29, 27, 15, 10, 10 and 8 pulses
+# respectively) and the resonance system silently under-delivered across all of
+# them. Every ResonanceSuggestion that existed came from on-upload discovery
+# (GOAL-294), never from the nightly sweep.
+#
+# This workflow is the scheduler for non-production targets, the same pattern
+# `drain-queues.yml` already uses for the GOAL-292 / GOAL-326 queue workers.
+# Production is still driven by vercel.json and must NOT be added here, or
+# every pass would run twice.
+#
+# ⚠️  A `schedule:` trigger only ever fires from the repository's DEFAULT branch
+#     (main). Editing this file on `dev` or `demo` changes nothing until it is
+#     merged to main.
+# ⚠️  GitHub disables scheduled workflows on repos with 60 days of no activity.
+# ⚠️  GitHub schedule ticks are best-effort and land late under load. That is
+#     fine here in a way it is not for the 5-minute queue drain: this job is a
+#     nightly sweep, so "some time after midnight UTC" is the requirement.
+
+on:
+  schedule:
+    # Midnight UTC, matching the vercel.json declaration for production.
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Which environment to sweep
+        type: choice
+        default: all
+        options: [all, dev, demo]
+
+# One pass at a time. Overlapping passes are not corrupting — suggestion writes
+# dedup symmetric pairs — but two passes would each claim the same Spaces and
+# double the model spend for no extra coverage. Queue rather than cancel:
+# cancelling the runner does NOT cancel the route, which keeps running
+# server-side to completion, so a cancel would only blind us to the result of a
+# sweep that happens anyway.
+concurrency:
+  group: nightly-resonance
+  cancel-in-progress: false
+
+# No checkout, no repo writes — this workflow only makes outbound HTTP calls.
+permissions: {}
+
+jobs:
+  sweep:
+    runs-on: ubuntu-latest
+    # Worst case is 2 calls x the 320s curl ceiling = ~11 min.
+    timeout-minutes: 20
+    steps:
+      - name: Run the resonance sweep
+        env:
+          DEV_CRON_SECRET: ${{ secrets.DEV_CRON_SECRET }}
+          DEMO_CRON_SECRET: ${{ secrets.DEMO_CRON_SECRET }}
+          TARGET: ${{ github.event.inputs.target || 'all' }}
+        run: |
+          set -uo pipefail
+          # GitHub runs `run:` steps as `bash -e {0}` — errexit is ALREADY on and
+          # `set -uo pipefail` does not clear it. With pipefail, a non-zero curl or
+          # a failing `head` pipeline would abort the whole step before it could
+          # classify the result, and the second environment would go uncalled.
+          set +e
+
+          attempted=0
+          failures=0
+          body="$RUNNER_TEMP/sweep-response.json"
+
+          sweep() {
+            name="$1"; base="$2"; secret="$3"
+            upper=$(printf '%s' "$name" | tr '[:lower:]' '[:upper:]')
+            path=/api/cron/discover-resonances
+
+            if [ -z "$secret" ]; then
+              # FAIL, don't warn. This job gets ONE tick a night, so a silently
+              # skipped environment is a scheduler that looks configured and
+              # never runs — precisely the failure GOAL-347 exists to fix.
+              # (drain-queues.yml only warns here because it gets 288 more
+              # chances a day; the same leniency would hide a dead sweep for
+              # weeks.)
+              attempted=$((attempted + 1))
+              failures=$((failures + 1))
+              echo "::error title=${name} not swept::No ${upper}_CRON_SECRET repository secret is set, so ${name} was skipped entirely."
+              echo "| ${name} | ❌ no secret | ${upper}_CRON_SECRET unset |" >> "$GITHUB_STEP_SUMMARY"
+              return 0
+            fi
+
+            attempted=$((attempted + 1))
+            echo "--> [${name}] ${path}"
+
+            # Slightly ABOVE the route's `maxDuration = 300` so we RECEIVE a 504
+            # rather than curl giving up at the same instant and reporting a bare
+            # timeout with no information. The route budgets itself to 270s and
+            # answers 200 with a report, so a 504 here means the budget failed to
+            # hold and is worth surfacing.
+            # --retry matters here in a way it does not for drain-queues: that
+            # job gets another tick in 5 minutes, this one gets another in 24
+            # hours, so a single cold-start 502 would cost the whole night. The
+            # retries only fire on connection failures and 5xx, and 2 x 320s
+            # still fits the 20-minute job timeout.
+            code=$(curl -sS -o "$body" -w '%{http_code}' \
+                     --max-time 320 --retry 2 --retry-delay 30 \
+                     -H "Authorization: Bearer ${secret}" \
+                     "${base}${path}") || code="000"
+
+            # PRINTED ONLY ON 200. This repository is public, so Actions logs
+            # and the step summary are world-readable. A 200 body is counts
+            # only and safe; a non-200 body carries `report.error`, a raw
+            # Error.message from the Neo4j driver / OpenAI client / LangChain
+            # layer, which routinely embeds Cypher fragments, label and
+            # property names, and on a constraint violation the offending
+            # property VALUE. Failures print the status code and send the
+            # operator to the Vercel runtime logs instead.
+            # Strip pipes and backticks too: the snippet is interpolated into a
+            # markdown table cell inside backticks, and either character in the
+            # JSON body would break the rendered summary.
+            snippet=$(head -c 600 "$body" 2>/dev/null | tr -d '\r\n|`') || snippet=''
+
+            case "$code" in
+              200)
+                # `complete:false` is a NORMAL, successful outcome: the pass hit
+                # its time budget and stopped cleanly, and the Spaces it did not
+                # reach lead the queue on the next run (the route orders Spaces
+                # least-recently-swept first). Watch
+                # `pulseEmbeddings.remainingEmbeddable` converge to 0 across
+                # nights — that is the backlog draining. (It counts EMBEDDABLE
+                # rows: nodes with nothing to embed are excluded by design and
+                # never reach 0 as raw "embedding IS NULL" counts.)
+                echo "    ok — ${snippet}"
+                echo "| ${name} | ✅ 200 | \`${snippet}\` |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+              504)
+                failures=$((failures + 1))
+                echo "::error title=${name} sweep hit the function ceiling::HTTP 504 after 300s. The route budgets itself to 270s and should always answer — a 504 means a single unit of work (one embedding call, one LLM analysis) overran the remaining budget."
+                echo "| ${name} | ❌ 504 ceiling | budget did not hold |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+              401)
+                failures=$((failures + 1))
+                echo "::error title=${name} sweep rejected::HTTP 401. The ${upper}_CRON_SECRET secret does not match CRON_SECRET in the ${name} Vercel environment (or CRON_SECRET is unset there — this route is fail-CLOSED)."
+                echo "| ${name} | ❌ 401 auth | secret mismatch |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+              000)
+                failures=$((failures + 1))
+                echo "::error title=${name} sweep unreachable::curl failed or timed out after 320s with no response at all."
+                echo "| ${name} | ❌ timeout | unreachable |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+              *)
+                failures=$((failures + 1))
+                echo "::error title=${name} sweep failed::HTTP ${code}. Body withheld (public repo) — read the Vercel runtime logs for ${base}${path}."
+                echo "| ${name} | ❌ ${code} | see Vercel runtime logs |" >> "$GITHUB_STEP_SUMMARY"
+                ;;
+            esac
+          }
+
+          printf '| Environment | Result | Report |\n|---|---|---|\n' >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$TARGET" = "all" ] || [ "$TARGET" = "dev" ]; then
+            sweep dev https://dev.goalpost.earth "$DEV_CRON_SECRET"
+          fi
+          if [ "$TARGET" = "all" ] || [ "$TARGET" = "demo" ]; then
+            sweep demo https://demo.goalpost.earth "$DEMO_CRON_SECRET"
+          fi
+
+          if [ "$attempted" -eq 0 ]; then
+            echo "::error title=Nothing swept::No target environment had a CRON_SECRET secret configured."
+            exit 1
+          fi
+          if [ "$failures" -gt 0 ]; then
+            echo "${failures} of ${attempted} sweep call(s) failed."
+            exit 1
+          fi
+          echo "All ${attempted} sweep call(s) succeeded."

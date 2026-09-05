@@ -162,6 +162,14 @@ async function initializeDatabase() {
       // row in the /dev/llm-usage report.
       `CREATE CONSTRAINT system_principal_id IF NOT EXISTS
        FOR (n:SystemPrincipal) REQUIRE n.id IS UNIQUE`,
+      // Per-Space bookmark for the scheduled resonance sweep (GOAL-347). The
+      // sweep MERGEs (:ResonanceSweepState {spaceId}) after each Space and
+      // orders its next pass by the stamp, so this is both the backing index
+      // for that ordering and the guard that stops two overlapping passes
+      // from MERGEing duplicate bookmarks for one Space (which would make the
+      // ordering read a stale stamp and re-sweep a Space that was just done).
+      `CREATE CONSTRAINT resonance_sweep_state_space IF NOT EXISTS
+       FOR (n:ResonanceSweepState) REQUIRE n.spaceId IS UNIQUE`,
     ]
 
     // Drop deprecated standalone indexes that now conflict with a constraint.
