@@ -124,8 +124,14 @@ export async function handleDeleteDocument(
         // those nodes. HAS_PULSE reaches EVERY resource in the context, so
         // without a predicate here a plain MEMBER could pass an ordinary
         // member-authored resource id and hard-delete content the GraphQL path
-        // forbids them to touch. That role gap is real and still open; it is
-        // NOT widened by the predicate below.
+        // forbids them to touch. That role gap is real, still open, and IS
+        // widened here: the reconciled documents were typed article/book/event,
+        // so the old predicate excluded them and no MEMBER could delete them by
+        // any route. Latent rather than live today (no blob-backed resource
+        // currently sits in a Space with a MEMBER-role membership), but the fix
+        // is to align this gate with the kb/02 matrix — creator/ADMIN/owner
+        // instead of role IN ['ADMIN','MEMBER'] — not to keep tuning the
+        // narrowing predicate.
         //
         // It must be SOURCE_BACKED_RESOURCE rather than resourceType: the
         // read path lists every blob-backed resource, so gating the delete on
