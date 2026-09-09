@@ -79,10 +79,20 @@ export const BloomLegend: FC<{
   const panelId = 'bloom-legend-panel'
 
   return (
-    // Sits clear of the bottom-center action bar: stacked above it on mobile,
-    // pinned to the lower-left on desktop. flex-col-reverse keeps the chip at
-    // the bottom and grows the panel upward when expanded.
-    <div className="pointer-events-none absolute bottom-20 left-3 z-30 sm:bottom-6 sm:left-4">
+    // Sits clear of the bottom-centre action bar, which shares this corner.
+    // The bar is `inset-x-0 ... justify-center` (canvas-action-bar.tsx) and
+    // wraps, so on a narrow canvas — or any canvas showing the Suggestions
+    // pill — it becomes a two- or three-row block spanning nearly the full
+    // width, and its leftmost pill lands on top of this chip. A fixed offset
+    // cannot solve that: it has to clear whatever the bar currently measures.
+    //
+    // So the bar publishes its measured height as `--gp-canvas-bar-h` on the
+    // container that parents both of us (canvas-host), and this offset is that
+    // height plus the bar's own 1.5rem bottom inset plus a 0.75rem gap. The
+    // 3.25rem fallback is a one-row bar, which is what renders for the frame
+    // before the first measurement. flex-col-reverse keeps the chip at the
+    // bottom and grows the panel upward.
+    <div className="pointer-events-none absolute left-3 z-30 sm:left-4 bottom-[calc(1.5rem+var(--gp-canvas-bar-h,3.25rem)+0.75rem)]">
       <div className="pointer-events-auto flex flex-col-reverse items-start gap-2">
         <button
           type="button"

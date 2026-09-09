@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FC } from 'react'
+import { useEffect, useRef, useState, type FC } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { toast } from 'sonner'
@@ -67,8 +67,38 @@ export const StudioCanvasActionBar: FC = () => {
     window.dispatchEvent(new CustomEvent(`goalpost:graph-zoom-${action}`))
   }
 
+  // The bar shares this corner with the Bloom legend chip, and its height is
+  // not a constant: it `flex-wrap`s, so the in-field cluster is one row on a
+  // wide canvas and two or three once the Suggestions pill joins it or the
+  // viewport narrows. Measured height is published to the shared canvas
+  // container as `--gp-canvas-bar-h` so the legend can position itself off the
+  // real number instead of a guess — a fixed `bottom-*` was always one control
+  // away from burying the chip under the bar again (it rendered unclickable at
+  // both 390px and 1440px once 159 suggestions made the pill appear).
+  const barRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = barRef.current
+    const host = el?.parentElement
+    if (!el || !host) return
+    const publish = () =>
+      host.style.setProperty(
+        '--gp-canvas-bar-h',
+        `${Math.round(el.getBoundingClientRect().height)}px`
+      )
+    publish()
+    const observer = new ResizeObserver(publish)
+    observer.observe(el)
+    return () => {
+      observer.disconnect()
+      host.style.removeProperty('--gp-canvas-bar-h')
+    }
+  }, [])
+
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center px-4">
+    <div
+      ref={barRef}
+      className="pointer-events-none absolute inset-x-0 bottom-6 z-30 flex justify-center px-4"
+    >
       {/* Wraps rather than overflows: the in-field cluster is the widest case
           and the review entry (GOAL-348) pushes it past 390px on a phone.
           Wrapping stacks the bar upward from the bottom edge instead of
