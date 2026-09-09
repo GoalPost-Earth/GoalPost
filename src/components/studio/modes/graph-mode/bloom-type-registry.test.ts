@@ -17,7 +17,6 @@ import {
   BLOOM_NODE_TYPES,
   BLOOM_RELATIONSHIP_TYPES,
   DEFAULT_HIDDEN_TYPE_KEYS,
-  DOCUMENT_TYPE_KEY,
   applyBloomTypeFilters,
   nodeTypeKey,
   normalizeColor,
@@ -42,7 +41,8 @@ const edge = (
 
 /**
  * A miniature in-field canvas: two goals and a person, the person authoring
- * both goals, plus a document that named them.
+ * both goals, plus a document resource that named them. GOAL-354: the document
+ * is an ordinary Resource node, not a type of its own.
  */
 function fieldCanvas() {
   return {
@@ -50,7 +50,7 @@ function fieldCanvas() {
       node('goal-1', DARK.pulse.goal),
       node('goal-2', DARK.pulse.goal),
       node('person-1', DARK.person),
-      node('doc-1', DARK.documentNode),
+      node('doc-1', DARK.pulse.resource),
     ],
     relationships: [
       edge('initiated-1', 'goal-1', 'person-1', DARK.initiatedEdge),
@@ -80,12 +80,13 @@ describe('registry integrity', () => {
     expect([...DEFAULT_HIDDEN_TYPE_KEYS]).toEqual([])
   })
 
-  it('decodes the Document node colour in BOTH modes', () => {
-    // Not covered by the GOAL-288 drift guard (which walks space/field/pulse/
-    // person/weave only), and a light-mode miss would drop the Documents
-    // toggle entirely for light-mode viewers.
-    expect(nodeTypeKey(node('d', DARK.documentNode))).toBe('document')
-    expect(nodeTypeKey(node('d', LIGHT.documentNode))).toBe('document')
+  it('has no Document row — a document is an ordinary Resource (GOAL-354)', () => {
+    // The row used to exist because the provenance layer minted a grey node
+    // per document. Once a document became a ResourcePulse the field already
+    // renders, that node was a duplicate under the same id: NVL drew one node
+    // and the legend still offered a toggle for the twin it never painted.
+    expect(BLOOM_NODE_TYPES.map((r) => r.key)).not.toContain('document')
+    expect(nodeTypeKey(node('d', DARK.pulse.resource))).toBe('resource')
   })
 
   it('decodes every native edge colour in both modes', () => {
@@ -116,8 +117,8 @@ describe('presentRows — the toggle list derives from the canvas', () => {
 
   it('surfaces a new type with no per-type work — a colour is enough', () => {
     expect(
-      presentNodeRows(asColors(DARK.documentNode)).map((r) => r.key)
-    ).toEqual(['document'])
+      presentNodeRows(asColors(DARK.weaveNode)).map((r) => r.key)
+    ).toEqual(['promise-weave'])
   })
 
   it('offers the edge rows a field scope paints', () => {
@@ -182,12 +183,12 @@ describe('applyBloomTypeFilters', () => {
     expect(relationships.map((r) => r.id)).toEqual(['resonance-1'])
   })
 
-  it('hiding Documents takes its EXTRACTED_FROM edges with it, and nothing else', () => {
+  it('hiding Resource takes the document hub and its EXTRACTED_FROM edge', () => {
+    // GOAL-354: the hub is a Resource now, so it goes with that row, and the
+    // edge cascades because one of its endpoints left the canvas.
     const { nodes, relationships } = applyBloomTypeFilters(
       fieldCanvas(),
-      // The Documents row, named directly: it is no longer a default, and
-      // this test is about the cascade, not about what ships switched off.
-      new Set([DOCUMENT_TYPE_KEY])
+      new Set(['resource'])
     )
     expect(nodes.map((n) => n.id)).toEqual(['goal-1', 'goal-2', 'person-1'])
     expect(relationships.map((r) => r.id)).toEqual([

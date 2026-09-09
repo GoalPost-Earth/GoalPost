@@ -2,7 +2,10 @@ import { randomUUID } from 'node:crypto'
 import type { Driver } from 'neo4j-driver'
 import type { BlobStore } from './blob-store'
 import { parseDocumentDownloadLocation } from './document-download-url'
-import { RESOURCE_TYPE_DOCUMENT } from './source-resource-node'
+import {
+  RESOURCE_TYPE_DOCUMENT,
+  SOURCE_BACKED_RESOURCE,
+} from './source-resource-node'
 
 /**
  * Document deletion orchestrator (PRD `docs/prd/document-ingestion.md` § Out
@@ -113,16 +116,31 @@ export async function handleDeleteDocument(
       const candidatesResult = await tx.run(
         `
         MATCH (space:Space)-[:HAS_CONTEXT]->(c:FieldContext)-[:HAS_PULSE]->(d:FieldPulse {id: $documentId})
-        // resourceType narrowing is load-bearing, not decoration. This gate
-        // admits OWNER + ADMIN + MEMBER, but the DELETE matrix in
+        // The narrowing is load-bearing, not decoration. This gate admits
+        // OWNER + ADMIN + MEMBER, but the DELETE matrix in
         // kb/02-user-roles.md reserves deleting someone else's resource for
         // creator/ADMIN/owner. While the target was (:Document) via
         // HAS_DOCUMENT that gap was unreachable — only ingest ever created
         // those nodes. HAS_PULSE reaches EVERY resource in the context, so
-        // without this predicate a plain MEMBER could pass an ordinary
+        // without a predicate here a plain MEMBER could pass an ordinary
         // member-authored resource id and hard-delete content the GraphQL path
-        // forbids them to touch.
-        WHERE d:ResourcePulse AND d.resourceType = $resourceType
+        // forbids them to touch. That role gap is real, still open, and IS
+        // widened here: the reconciled documents were typed article/book/event,
+        // so the old predicate excluded them and no MEMBER could delete them by
+        // any route. Latent rather than live today (no blob-backed resource
+        // currently sits in a Space with a MEMBER-role membership), but the fix
+        // is to align this gate with the kb/02 matrix — creator/ADMIN/owner
+        // instead of role IN ['ADMIN','MEMBER'] — not to keep tuning the
+        // narrowing predicate.
+        //
+        // It must be SOURCE_BACKED_RESOURCE rather than resourceType: the
+        // read path lists every blob-backed resource, so gating the delete on
+        // resourceType alone left the reconciled documents
+        // rendering a Delete button whose write matched zero rows and threw
+        // FORBIDDEN. The reachable set is unchanged in kind — every
+        // blob-backed resource is an upload minted by anchorDocument — so this
+        // still cannot reach an ordinary member-authored resource.
+        WHERE d:ResourcePulse AND ${SOURCE_BACKED_RESOURCE}
         OPTIONAL MATCH (owner:Person {id: $userId})-[:OWNS]->(space)
         OPTIONAL MATCH (space)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $userId})
           WHERE sm.role IN ['ADMIN', 'MEMBER']
@@ -175,7 +193,7 @@ export async function handleDeleteDocument(
         // without this predicate a plain MEMBER could pass an ordinary
         // member-authored resource id and hard-delete content the GraphQL path
         // forbids them to touch.
-        WHERE d:ResourcePulse AND d.resourceType = $resourceType
+        WHERE d:ResourcePulse AND ${SOURCE_BACKED_RESOURCE}
         OPTIONAL MATCH (owner:Person {id: $userId})-[:OWNS]->(space)
         OPTIONAL MATCH (space)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $userId})
           WHERE sm.role IN ['ADMIN', 'MEMBER']

@@ -16,6 +16,25 @@ const uri = process.env.NEO4J_URI || 'neo4j://localhost:7687'
 const user = process.env.NEO4J_USER || 'neo4j'
 const password = process.env.NEO4J_PASSWORD || 'password'
 
+/**
+ * `docs/cypher/seed-dev.cypher` opens with `MATCH (n) DETACH DELETE n` and then
+ * plants ~80 nodes of sample data. Running it DESTROYS the database.
+ *
+ * That is opt-in behind `--seed`, because nothing about the name `init:db` — or
+ * about a file that is otherwise 75 `CREATE ... IF NOT EXISTS` statements —
+ * suggests a wipe. It has cost a full demo->dev clone twice: once run
+ * deliberately to verify an edit to the constraint list, once by `require()`ing
+ * this module as a syntax check. The damage is invisible to the obvious check,
+ * because `SHOW CONSTRAINTS` / `SHOW INDEXES` return exactly what the script
+ * just recreated — only a node count reveals it.
+ *
+ * Default is therefore schema-only: constraints and indexes, all idempotent,
+ * safe against a database with real data in it. Recovery from an accidental
+ * wipe is `npm run clone:demo-to-dev`, then `scripts/reset-dev-password.ts` per
+ * team account (a clone restores the source's password hashes).
+ */
+const SEED = process.argv.includes('--seed')
+
 async function initializeDatabase() {
   console.log('Connecting to Neo4j database...')
 
@@ -24,26 +43,36 @@ async function initializeDatabase() {
   const session = driver.session()
 
   try {
-    // Read the seed-dev.cypher file
-    const cypherFilePath = path.join(
-      __dirname,
-      '../docs/cypher/seed-dev.cypher'
-    )
-    let cypherQuery = fs.readFileSync(cypherFilePath, 'utf8')
+    if (SEED) {
+      // Destructive. Report the node count being destroyed and the target, so
+      // a run against a database someone is using is visible in the output
+      // rather than discovered afterwards.
+      const before = await session.run('MATCH (n) RETURN count(n) AS c')
+      const existing = Number(before.records[0].get('c') ?? 0)
+      console.log(`\n⚠️  --seed: WIPING ${uri}`)
+      console.log(`⚠️  ${existing} node(s) will be DELETED and replaced with sample data.\n`)
 
-    console.log('Executing database initialization queries...')
+      const cypherFilePath = path.join(
+        __dirname,
+        '../docs/cypher/seed-dev.cypher'
+      )
+      const cypherQuery = fs.readFileSync(cypherFilePath, 'utf8')
 
-    // Split the cypher file into individual statements and execute them
-    const statements = cypherQuery
-      .split(';')
-      .filter((stmt) => stmt.trim().length > 0)
+      // Split the cypher file into individual statements and execute them
+      const statements = cypherQuery
+        .split(';')
+        .filter((stmt) => stmt.trim().length > 0)
 
-    for (let i = 0; i < statements.length; i++) {
-      const statement = statements[i].trim()
-      if (statement) {
-        console.log(`Executing statement ${i + 1} of ${statements.length}...`)
-        await session.run(statement)
+      for (let i = 0; i < statements.length; i++) {
+        const statement = statements[i].trim()
+        if (statement) {
+          console.log(`Executing statement ${i + 1} of ${statements.length}...`)
+          await session.run(statement)
+        }
       }
+    } else {
+      console.log('Applying schema only (constraints + indexes).')
+      console.log('Pass --seed to wipe and re-seed with sample data.')
     }
     // Create constraints for unique IDs
     console.log('Creating database constraints...')
@@ -100,15 +129,6 @@ async function initializeDatabase() {
       // node having an id uniqueness gate.
       `CREATE CONSTRAINT context_extraction_id IF NOT EXISTS
        FOR (n:ContextExtraction) REQUIRE n.id IS UNIQUE`,
-      // Document ingestion (GOAL-235) writes a `Document` node per upload
-      // anchored to a FieldContext via `HAS_DOCUMENT`. Every hot path
-      // (uploadDocument, reExtractDocument, deleteDocument, the
-      // documentsByFieldContext query) matches by `Document.id`. Without
-      // this constraint the planner falls back to `NodeByLabelScan` +
-      // Filter, which degrades linearly with the document count across
-      // all Spaces.
-      `CREATE CONSTRAINT document_id IF NOT EXISTS
-       FOR (n:Document) REQUIRE n.id IS UNIQUE`,
       // GOAL-326: same reasoning for the bulk-import queue, and the by-id path
       // is far hotter — the claim, EVERY per-row outcome append (300 per job),
       // all three terminal writes, the load, and the member's 2-second poll all
@@ -289,22 +309,18 @@ async function initializeDatabase() {
       // planner falls back to a full label scan as the feedback table grows.
       `CREATE INDEX assistant_feedback_createdAt IF NOT EXISTS
        FOR (f:AssistantFeedback) ON (f.createdAt)`,
-      // GOAL-292: Document.status IS the ingest queue. The one-minute cron seeks
-      // PENDING (findPendingDocumentIds) and PROCESSING (reclaimStalledIngests)
-      // on every single tick, so this is the hottest index in the schema by
-      // frequency. Measured at 5k documents: 53 dbHits with the index vs 10,101
-      // without (a full Document label scan), per query, twice a minute —
-      // ~144k dbHits/day indexed against ~29.1M unindexed, growing linearly.
-      // A composite (status, uploadedAt) was tried and the planner ignored it.
-      `CREATE INDEX document_status IF NOT EXISTS
-       FOR (d:Document) ON (d.status)`,
-      // GOAL-354: the same queue, re-anchored. A document is a Resource, so the
-      // ingest lifecycle now lives on `ResourcePulse.ingestStatus` (renamed off
-      // `status`, which ResourcePulse already uses for the pulse's own,
-      // unrelated status). The cron's seek is unchanged in shape but the label
-      // it scans is larger — there are ~5x more ResourcePulses than there were
-      // Documents — so this index matters strictly more than the one above, not
-      // less. `document_status` stays until the Document type is retired.
+      // GOAL-292/GOAL-354: the ingest queue. The one-minute cron seeks PENDING
+      // (findPendingDocumentIds) and PROCESSING (reclaimStalledIngests) on
+      // every single tick, so this is the hottest index in the schema by
+      // frequency — measured on the old :Document label at 5k rows, 53 dbHits
+      // with the index against 10,101 without, twice a minute. A document is
+      // now a Resource, so the lifecycle lives on `ResourcePulse.ingestStatus`
+      // (renamed off `status`, which ResourcePulse already uses for the pulse's
+      // own, unrelated status) and the label scanned is ~5x larger, which makes
+      // the index matter more rather than less. The `:Document` twin this
+      // replaced is gone: the label holds zero nodes on every environment and
+      // the type is retired. A composite (status, uploadedAt) was tried on the
+      // old index and the planner ignored it.
       `CREATE INDEX resource_ingest_status IF NOT EXISTS
        FOR (r:ResourcePulse) ON (r.ingestStatus)`,
       // GOAL-354: the bulk article import's idempotency check (one FieldContext
@@ -402,4 +418,10 @@ async function initializeDatabase() {
   }
 }
 
-initializeDatabase()
+// Only run when this file is the entry point. Importing or `require()`ing it —
+// including as a "syntax check" — must never touch the database.
+const invokedDirectly =
+  process.argv[1] && path.resolve(process.argv[1]) === __filename
+if (invokedDirectly) {
+  initializeDatabase()
+}

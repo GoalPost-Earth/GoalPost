@@ -49,17 +49,12 @@ import {
   type SpaceRecord,
   type WeaveRecord,
 } from './bloom-graph-builder'
-import {
-  applyBloomTypeFilters,
-  DOCUMENT_TYPE_KEY,
-} from './bloom-type-registry'
+import { applyBloomTypeFilters } from './bloom-type-registry'
 import { useBloomTypeFilters } from './use-bloom-type-filters'
 import {
   buildDocumentProvenanceLayer,
-  documentDerivedIds,
   type ProvenanceDocument,
 } from './document-provenance-layer'
-import { applyDocumentHiding } from './document-visibility'
 import { isAwaitingReview } from '@/lib/promise-weave'
 import { useBloomOverlay, type BloomOverlay } from '../../bloom-overlay-context'
 import {
@@ -105,13 +100,6 @@ const GraphVisualizer = dynamic(
   }
 )
 
-/**
- * Stable identity for "nothing is hidden". It is what lets
- * `applyDocumentHiding` return the built graph by identity when the Documents
- * row is switched on, which in turn keeps the fit-to-scope effects keyed on
- * `nodes` from re-firing on every render.
- */
-const EMPTY_IDS: ReadonlySet<string> = new Set<string>()
 
 // How long to wait after a single click before treating it as a drill — long
 // enough for a double-click (drawer) to arrive and cancel it.
@@ -553,9 +541,13 @@ export const BloomView: FC = () => {
     const owner = space?.owner?.[0] ?? null
     const seen = new Set<string>()
     const records: PersonRecord[] = []
+    // The owner and the space's members are exactly "has access to the
+    // containing Space" — the ring's definition — and they are already the two
+    // groups tagged 'User' here. Everyone reached through the field's
+    // HAS_PERSON roster is an extracted contact with no access.
     if (owner?.id) {
       seen.add(owner.id)
-      records.push(toRecord(owner, 'User'))
+      records.push({ ...toRecord(owner, 'User'), isSpaceMember: true })
     }
     // Parent-space members participate in the field too — surface them so they
     // appear and so member-authored pulses keep their INITIATED_BY edge (NVL
@@ -564,7 +556,7 @@ export const BloomView: FC = () => {
       const mm = m?.member?.[0]
       if (!mm?.id || seen.has(mm.id)) continue
       seen.add(mm.id)
-      records.push(toRecord(mm, 'User'))
+      records.push({ ...toRecord(mm, 'User'), isSpaceMember: true })
     }
     for (const p of fieldCtx.people ?? []) {
       if (!p?.id || seen.has(p.id)) continue
@@ -607,46 +599,10 @@ export const BloomView: FC = () => {
     return fieldCtx?.curatedPersonIds ?? []
   }, [fieldPeopleData])
 
-  // Everything the canvas drops when the Documents row is switched OFF: the
-  // documents, the people they named, and the pulses they produced. See
-  // `documentDerivedIds` for why "off" is the whole subgraph and not just the
-  // Document hubs.
-  //
-  // GOAL-350 moved the on/off decision into the per-type filter, but the RULE
-  // stays here and stays id-based: `applyBloomTypeFilters` hides a type by
-  // colour, which reaches the Document hubs and their EXTRACTED_FROM edges but
-  // not the people and pulses those documents produced — those are painted as
-  // ordinary people and pulses. Only provenance knows which ones they are.
-  const hiddenDocumentIds = useMemo<ReadonlySet<string>>(() => {
-    if (!inField || !typeFilters.hidden.has(DOCUMENT_TYPE_KEY)) return EMPTY_IDS
-    const documents = (
-      fieldDocumentsData as
-        | { documentsByFieldContext?: ProvenanceDocument[] }
-        | undefined
-    )?.documentsByFieldContext
-    return documentDerivedIds({
-      documents,
-      curatedPersonIds,
-      anchoredIds: anchoredPersonIds,
-    })
-  }, [
-    inField,
-    typeFilters.hidden,
-    fieldDocumentsData,
-    curatedPersonIds,
-    anchoredPersonIds,
-  ])
-
-  // GOAL-346: Document nodes + EXTRACTED_FROM edges. Built here so both
-  // builders below consume one derivation and cannot disagree about which
-  // documents made it onto the canvas — the invariant that keeps NVL from
-  // being handed an edge to a node that isn't rendered.
-  //
-  // Built whenever the scope is in-field, NOT only when Documents are switched
-  // on: since GOAL-350 the on/off decision belongs to the type filter, and a
-  // type has to be on the built canvas for the legend to derive a toggle for
-  // it at all. The layer is cheap — a node per document plus edges to people
-  // already rendered, with no extra fetch behind it (ADR-011).
+  // GOAL-346/GOAL-354: the EXTRACTED_FROM edges from each document to the
+  // people it named. Edges only — a document is a ResourcePulse, so it is
+  // already on canvas as an ordinary Resource and needs no node of its own.
+  // Cheap, with no extra fetch behind it (ADR-011).
   const documentProvenance = useMemo(() => {
     const documents = (
       fieldDocumentsData as
@@ -656,13 +612,13 @@ export const BloomView: FC = () => {
     return buildDocumentProvenanceLayer({
       documents,
       visiblePersonIds: new Set(persons.map((p) => p.id)),
+      // The document hub IS its ResourcePulse, so an edge may only be drawn
+      // when that pulse is on canvas.
+      visibleDocumentIds: new Set(pulses.map((p) => p.id)),
       palette,
-      // Applied once, further down, as a visibility pass over the finished
-      // graph — and that pass needs the EXTRACTED_FROM edges present to see
-      // which people it strands by removing them.
       visible: inField,
     })
-  }, [fieldDocumentsData, persons, palette, inField])
+  }, [fieldDocumentsData, persons, pulses, palette, inField])
 
   // CONNECTED_TO edges among the field's people. The relationship lives on the
   // edge (connectionEdges → connectedPersonId + why); each field person carries
@@ -917,39 +873,14 @@ export const BloomView: FC = () => {
   // THIS — a type you switch off has to keep its row, or there is no way back.
   const builtCanvas = useMemo(() => buildBloomCanvas(graphInput), [graphInput])
 
-  // Documents are hidden by ID, not by colour, and that pass runs FIRST.
-  //
-  // `applyBloomTypeFilters` resolves a type from a node's paint, which reaches
-  // the Document hubs and their EXTRACTED_FROM edges but not the people and
-  // pulses those documents produced — those are painted as ordinary people and
-  // pulses (GOAL-346). Sweeping before the type filter is also what keeps the
-  // stranding rule honest: `applyDocumentHiding` decides who was left hanging
-  // by comparing against the edges that existed BEFORE the hiding, so it has
-  // to see the EXTRACTED_FROM edges still in place.
-  const sweptCanvas = useMemo(
-    () =>
-      applyDocumentHiding({
-        nodes: builtCanvas.nodes,
-        relationships: builtCanvas.relationships,
-        hiddenIds: hiddenDocumentIds,
-        // The field's own pulses are never swept for being stranded. A pulse
-        // that ingestion did NOT create can still have an extracted person as
-        // its only edge — a member crediting someone a document named — and it
-        // would otherwise vanish when documents are switched off. It belongs to
-        // the field whoever is credited on it, so it stays, unattached.
-        protectedIds: new Set(pulses.map((p) => p.id)),
-      }),
-    [builtCanvas, hiddenDocumentIds, pulses]
-  )
-
   // What NVL actually paints. A pure presentational transform: it drops the
   // types switched off in the legend and re-guards every surviving edge
   // against the surviving nodes, so hiding a node type cascades to its edges
   // and NVL is never handed a dangling arrow. Nothing is refetched (ADR-011),
   // and nothing here is an authorization decision (kb/02-user-roles.md).
   const { nodes, relationships } = useMemo(
-    () => applyBloomTypeFilters(sweptCanvas, typeFilters.hidden),
-    [sweptCanvas, typeFilters.hidden]
+    () => applyBloomTypeFilters(builtCanvas, typeFilters.hidden),
+    [builtCanvas, typeFilters.hidden]
   )
 
   // Publish whatever Bloom is currently rendering so the assistant can
@@ -1096,16 +1027,14 @@ export const BloomView: FC = () => {
           dispatchOpenInfoDrawer({ type: 'PromiseWeave', id: weave.id, label })
           return
         }
-        // Document provenance hub (GOAL-346). Matched against the rendered
-        // nodes rather than an id prefix, so only a document actually ON the
-        // canvas can open — the provenance layer is built regardless of the
-        // toggle now, so matching against IT would resolve a document the
-        // canvas is not currently showing. The drawer this opens carries the
-        // document's extracted people and the promote action, which makes the
-        // canvas a way into that flow rather than a dead end. Not a focal
-        // entity type, so no setFocalEntity — same treatment as a weave hub.
+        // Document provenance hub. `documentIds` only ever contains resources
+        // the layer actually drew an edge from, and it is re-checked against
+        // the rendered nodes so a filtered-out hub cannot open. The drawer
+        // carries the document's extracted people and the promote action,
+        // which makes the canvas a way into that flow rather than a dead end.
+        // Not a focal entity type, so no setFocalEntity — as with a weave hub.
         if (
-          documentProvenance.nodes.some((n) => n.id === id) &&
+          documentProvenance.documentIds.has(id) &&
           nodes.some((n) => n.id === id)
         ) {
           dispatchOpenInfoDrawer({ type: 'Document', id, label })

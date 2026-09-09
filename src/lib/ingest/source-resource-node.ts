@@ -28,6 +28,31 @@
 export const RESOURCE_TYPE_DOCUMENT = 'document'
 
 /**
+ * INVARIANT: `sourceBlobKey` is set if and only if this resource was created
+ * from an uploaded file. `anchorDocument` writes it in the same `ON CREATE SET`
+ * that mints the node, and the node id is derived from the server-minted blob
+ * key, so the key exists before the node does — there is no window in which a
+ * document lacks one. Nothing else in the codebase writes it.
+ *
+ * This used to be an incidental aside. It is now the load-bearing definition of
+ * "is a document", because `resourceType` stopped being one:
+ * `reconcile-duplicate-document-resources.ts` deliberately gives a merged
+ * resource the row pulse's identity, so an uploaded PDF ends up typed
+ * `article` / `book` / `event`. That is the right product model — `resourceType`
+ * describes what the resource IS, the file is how we got it — but it means a
+ * predicate of `resourceType = 'document'` silently loses most real uploads
+ * (45 blob-backed resources on demo, only 28 still typed `document`).
+ *
+ * Every gate that means "came from a file" MUST use the fragment below rather
+ * than spelling the predicate out, so read, delete and lifecycle can never
+ * again disagree about what a document is. Binds `d`; expects `$resourceType`.
+ * The `resourceType` arm is retained so a legacy row that never had a blob
+ * pointer (see `migrate-document-to-resource.ts`, which coalesces
+ * `blobKey -> sourceBlobKey`) still matches exactly as it did.
+ */
+export const SOURCE_BACKED_RESOURCE = `(d.sourceBlobKey IS NOT NULL OR d.resourceType = $resourceType)`
+
+/**
  * Match one document-backed Resource by id, as the driving clause of a query.
  *
  * The anchor label is `:FieldPulse`, not `:ResourcePulse`, and that is

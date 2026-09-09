@@ -55,6 +55,8 @@ export interface BloomPalette {
   pulse: Record<PulseKind, string>
   /** Person nodes — pulse initiators, space owners/members, the "You" hub. */
   person: string
+  /** Ring drawn around a person who has access to the containing Space. */
+  memberRing: string
   /**
    * PromiseWeave connector nodes — deliberately outside the violet
    * resonance/story/coreValue cluster so a weave reads as its own kind of
@@ -81,7 +83,6 @@ export interface BloomPalette {
    * overlay already paints Document nodes on this very canvas — a second
    * Document colour would make one entity read as two.
    */
-  documentNode: string
   /**
    * EXTRACTED_FROM — a document out to each person it named.
    *
@@ -113,13 +114,13 @@ export const BLOOM_PALETTE_DARK: BloomPalette = {
     coreValue: '#8b5cf6',
   },
   person: '#f9a8d4',
+  memberRing: '#fde68a',
   weaveNode: '#2dd4bf',
   structuralEdge: 'rgba(148, 163, 184, 0.40)',
   resonanceEdge: 'rgba(167, 139, 250, 0.55)',
   initiatedEdge: 'rgba(255, 255, 255, 0.22)',
   weaveEdge: 'rgba(45, 212, 191, 0.55)',
   connectedEdge: 'rgba(244, 114, 182, 0.55)',
-  documentNode: '#94a3b8',
   extractedEdge: 'rgba(251, 191, 36, 0.65)',
 }
 
@@ -141,6 +142,7 @@ export const BLOOM_PALETTE_LIGHT: BloomPalette = {
     coreValue: '#6f35f4',
   },
   person: '#e21082',
+  memberRing: '#a16207',
   weaveNode: '#198376',
   // Edges carry a little more alpha than their dark counterparts: a
   // translucent stroke loses more of itself against a light backdrop.
@@ -152,7 +154,6 @@ export const BLOOM_PALETTE_LIGHT: BloomPalette = {
   weaveEdge: 'rgba(25, 131, 118, 0.60)',
   connectedEdge: 'rgba(206, 16, 115, 0.60)',
   // The light-mode Document slate, per node-style.ts's own light override.
-  documentNode: '#5a6d88',
   extractedEdge: 'rgba(158, 115, 3, 0.70)',
 }
 
