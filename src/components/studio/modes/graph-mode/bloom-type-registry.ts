@@ -282,8 +282,13 @@ export const BLOOM_RELATIONSHIP_TYPES: BloomTypeRow[] = [
     // decoding. Hiding the Document row cascades onto these edges (a document
     // is always one endpoint), which is why switching Documents off still
     // leaves a clean canvas rather than a fan of dangling amber arrows.
+    //
+    // The label must match the caption NVL paints on the edge itself
+    // ('extracted from', document-provenance-layer.ts) — the legend is a
+    // decoder for what is on the canvas, so a row named differently from the
+    // thing it decodes reads as a missing row rather than a renamed one.
     key: 'extracted-from',
-    label: 'Named in',
+    label: 'Extracted from',
     kind: 'relationship',
     swatch: { dark: '#fbbf24', light: '#9e7303' },
     colors: [DARK.extractedEdge, LIGHT.extractedEdge],
