@@ -4,7 +4,10 @@ import {
   DOCUMENT_INGEST_STATUS,
   type DocumentIngestStatus,
 } from './document-ingest-queue'
-import { RESOURCE_TYPE_DOCUMENT } from './source-resource-node'
+import {
+  RESOURCE_TYPE_DOCUMENT,
+  SOURCE_BACKED_RESOURCE,
+} from './source-resource-node'
 
 /**
  * Owns the lifecycle of `Document` nodes and their backing blob. v1 ships
@@ -187,7 +190,7 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
         // error. Impossible while the node was separately typed (:Document).
         // Zero rows here trips the records.length === 0 throw below.
         WITH c, u, d
-        WHERE d:ResourcePulse AND d.resourceType = $resourceType
+        WHERE d:ResourcePulse AND ${SOURCE_BACKED_RESOURCE}
         MERGE (c)-[:HAS_PULSE]->(d)
         MERGE (d)-[:UPLOADED_BY]->(u)
         // The uploader is the pulse's displayed author until the extractor
@@ -426,7 +429,7 @@ export async function deleteDocument(
     const lookup = await session.executeRead(async (tx) =>
       tx.run(
         `MATCH (d:FieldPulse {id: $documentId})
-         WHERE d:ResourcePulse AND d.resourceType = $resourceType
+         WHERE d:ResourcePulse AND ${SOURCE_BACKED_RESOURCE}
          RETURN d.sourceBlobKey AS blobKey`,
         { documentId: input.documentId, resourceType: RESOURCE_TYPE_DOCUMENT }
       )
@@ -440,7 +443,7 @@ export async function deleteDocument(
         // it would DETACH DELETE any resource in any Space. The authorized
         // path is handleDeleteDocument.
         `MATCH (d:FieldPulse {id: $documentId})
-         WHERE d:ResourcePulse AND d.resourceType = $resourceType
+         WHERE d:ResourcePulse AND ${SOURCE_BACKED_RESOURCE}
          DETACH DELETE d`,
         {
           documentId: input.documentId,

@@ -6,7 +6,10 @@ import { handleReExtractDocument } from '@/lib/ingest/handle-reextract-document'
 import { runContextResonanceDiscovery } from '@/lib/resonance/discovery/on-upload-discovery'
 import { createOpenAIExtractionModelClient } from '@/lib/ingest/openai-extraction-model-client'
 import { createGeminiExtractionModelClient } from '@/lib/ingest/gemini-extraction-model-client'
-import { RESOURCE_TYPE_DOCUMENT } from '@/lib/ingest/source-resource-node'
+import {
+  RESOURCE_TYPE_DOCUMENT,
+  SOURCE_BACKED_RESOURCE,
+} from '@/lib/ingest/source-resource-node'
 import {
   createOpenAIDocumentSummarizer,
   createGeminiDocumentSummarizer,
@@ -321,11 +324,22 @@ export const documentQueries = {
           OPTIONAL MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(member:Person {id: $userId})
           WITH c, (owner IS NOT NULL OR member IS NOT NULL) AS allowed
           WHERE allowed
-          // GOAL-354: a document is a ResourcePulse. HAS_PULSE reaches every
-          // pulse in the context, so the resourceType predicate is what keeps
-          // this list to documents rather than every resource in the field.
+          // GOAL-354: a document is a ResourcePulse, and HAS_PULSE reaches
+          // every pulse in the context, so this needs a predicate that means
+          // "came from an uploaded file".
+          //
+          // resourceType is NOT that predicate, and using it alone silently
+          // lost most of the list. reconcile-duplicate-document-resources.ts
+          // deliberately gives a merged resource the row pulse's identity, so
+          // an uploaded PDF ends up typed article / book / event — the right
+          // product model (resourceType describes what the resource IS; the
+          // file is how we got it), but it means a document stopped matching.
+          // A field losing its documents also strands every person whose ONLY
+          // tie to the canvas is EXTRACTED_FROM provenance (GOAL-346) — they
+          // render as edgeless dots. SOURCE_BACKED_RESOURCE is the single
+          // definition of "came from a file"; see its header for the invariant.
           MATCH (c)-[:HAS_PULSE]->(d:ResourcePulse)
-          WHERE d.resourceType = $resourceType
+          WHERE ${SOURCE_BACKED_RESOURCE}
           RETURN
             d.id AS id,
             d.sourceFilename AS filename,
