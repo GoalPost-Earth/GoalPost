@@ -203,16 +203,6 @@ export const BLOOM_NODE_TYPES: BloomTypeRow[] = [
     colors: ov(NODE_STYLE.Community.color),
   },
   {
-    key: 'document',
-    label: 'Document',
-    kind: 'node',
-    swatch: {
-      dark: NODE_STYLE.Document.color,
-      light: lightColorFor(NODE_STYLE.Document.color),
-    },
-    colors: ov(NODE_STYLE.Document.color),
-  },
-  {
     key: 'person',
     label: 'Person',
     kind: 'node',
@@ -277,11 +267,9 @@ export const BLOOM_RELATIONSHIP_TYPES: BloomTypeRow[] = [
     colors: [DARK.structuralEdge, LIGHT.structuralEdge],
   },
   {
-    // GOAL-346. The whole point of the Document layer is to explain why a
-    // person is on the canvas, so its edge is the one that most needs
-    // decoding. Hiding the Document row cascades onto these edges (a document
-    // is always one endpoint), which is why switching Documents off still
-    // leaves a clean canvas rather than a fan of dangling amber arrows.
+    // GOAL-346. Provenance is the only tie most extracted people have, so
+    // this edge is the one that most needs decoding — it is the answer to
+    // "why is this person on my canvas at all".
     //
     // The label must match the caption NVL paints on the edge itself
     // ('extracted from', document-provenance-layer.ts) — the legend is a
@@ -295,27 +283,19 @@ export const BLOOM_RELATIONSHIP_TYPES: BloomTypeRow[] = [
   },
 ]
 
-/** The Documents row. Its hiding rule is id-based and lives in `bloom-view`. */
-export const DOCUMENT_TYPE_KEY = 'document'
-
 /**
  * Rows that are OFF the first time a viewer opens the canvas.
  *
- * Empty, deliberately. Documents shipped default-off to stop a document-heavy
- * field burying its pulses, and GOAL-346 then reversed that: a person a
- * document named has provenance as their ONLY tie to anything, so the canvas
- * opened on a field of edgeless dots — 12 of the 14 people on one real field.
- * The reversal is the current behaviour on `dev` and this list is what would
- * quietly undo it.
+ * Empty, deliberately, and the list is what has to stay empty. A filter that
+ * hides something on first paint, without the viewer ever asking, reads as
+ * missing data rather than as a filter — which is exactly how the old
+ * default-off Documents row failed: it opened a document-heavy field as a
+ * cloud of edgeless dots, because provenance was the only edge most of those
+ * people had.
  *
- * The default MECHANISM stays because the question is a live one — the volume
- * argument was real, and `applyDocumentHiding` now sweeps the dots the old
- * default produced, so default-off could be re-argued on its merits. Re-adding
- * `DOCUMENT_TYPE_KEY` here is the whole change if it wins.
- *
- * The general rule stands either way: a filter that hides something on first
- * paint, without the viewer ever asking, reads as missing data rather than as
- * a filter.
+ * GOAL-354 retired the Document row itself. A document is a ResourcePulse, so
+ * it is painted — and toggled — as an ordinary Resource, and the provenance
+ * edges it anchors are switched by the `extracted-from` row above.
  */
 export const DEFAULT_HIDDEN_TYPE_KEYS: readonly string[] = []
 

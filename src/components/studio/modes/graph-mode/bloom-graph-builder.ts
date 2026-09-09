@@ -52,12 +52,40 @@ export interface PulseRecord {
   focalType: FocalEntityType
 }
 
+/**
+ * The member ring, as an NVL `overlayIcon`.
+ *
+ * NVL paints a node as a bare filled circle: the Node type exposes `color`,
+ * `size`, `caption`, `icon` and `overlayIcon`, and nothing that strokes an
+ * outline. `overlayIcon` is the only channel that can put a mark *around* the
+ * node — it is centred on the node by default and sized as a multiple of the
+ * node's own size, so an SVG whose only content is a stroked circle at the edge
+ * of its viewBox renders as a ring sitting just outside the fill.
+ *
+ * Inlined as a data URI rather than a file so it re-colours with the theme: the
+ * stroke is whatever `palette.memberRing` resolves to for the active mode.
+ */
+export function memberRing(color: string): { url: string; size: number } {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">` +
+    `<circle cx="50" cy="50" r="44" fill="none" stroke="${color}" stroke-width="7"/>` +
+    `</svg>`
+  return { url: `data:image/svg+xml,${encodeURIComponent(svg)}`, size: 1.34 }
+}
+
 export interface PersonRecord {
   id: string
   name: string
   // Owner is a User; field-attached people are PersonPulses. The view branches
   // its focal-entity machinery on this distinction.
   focalType: 'User' | 'PersonPulse'
+  /**
+   * Has access to the Space that contains this FieldContext — its owner, or a
+   * SpaceMembership on it. Drawn as a ring rather than a colour: colour is the
+   * legend's type key, so a distinct member colour would move these people out
+   * of the Person row entirely. A member is a Person, so it stays one.
+   */
+  isSpaceMember?: boolean
 }
 
 /** In-space people carry their relationship to the space so the spoke edge
@@ -206,7 +234,6 @@ export function buildBloomNodes(input: BloomGraphInput): Node[] {
     subContexts,
     fieldAnchor,
     inFieldSpaceKind,
-    documentProvenance,
     fieldContexts,
     spaceAnchor,
     inSpacePeople,
@@ -249,6 +276,12 @@ export function buildBloomNodes(input: BloomGraphInput): Node[] {
           caption: person.name,
           color: palette.person,
           size: PERSON_SIZE,
+          // NVL has no border/stroke on a node — only colour, size, caption and
+          // icons — so the ring is an overlayIcon: a transparent SVG whose only
+          // mark is a stroked circle, centred and scaled just outside the node.
+          ...(person.isSpaceMember
+            ? { overlayIcon: memberRing(palette.memberRing) }
+            : {}),
         }) as Node
     )
     // NVL renders `caption` and nothing else per node, so the proposed state
@@ -294,11 +327,9 @@ export function buildBloomNodes(input: BloomGraphInput): Node[] {
       ...weaveNodes,
       ...anchorNodes,
       ...subContextNodes,
-      // GOAL-346. Built whenever the field has documents, then switched on and
-      // off by the `document` type filter rather than by whether it was built
-      // — a type has to be ON the canvas for the legend to offer it as a
-      // toggle at all.
-      ...documentProvenance.nodes,
+      // GOAL-354: no document nodes. A document is a ResourcePulse, so it is
+      // already in `pulseNodes` above; the provenance layer contributes only
+      // the EXTRACTED_FROM edges that start on it.
     ]
   }
 

@@ -60,7 +60,6 @@ export const NODE_STYLE = {
   PromiseWeave: { color: '#f0abfc', size: 22 },
   // Uploaded source document — slate/steel hue, distinct from the pulses it
   // was extracted into. Captioned by filename (see captionFor in execute.ts).
-  Document: { color: '#94a3b8', size: 24 },
   SpaceMembership: { color: '#cbd5e1', size: 18 },
 } as const satisfies Record<string, NodeStyle>
 
@@ -145,7 +144,6 @@ export const LIGHT_NODE_COLOR: Record<string, string> = {
   '#d8b4fe': '#9e45fd', // ResonanceLink
   '#e9d5ff': '#ab5eff', // FieldResonance
   '#f0abfc': '#ca08eb', // PromiseWeave
-  '#94a3b8': '#5a6d88', // Document
   '#cbd5e1': '#6583a6', // SpaceMembership / unknown-label fallback
 }
 
