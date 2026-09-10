@@ -511,6 +511,15 @@ export interface RunDocumentIngestPipelineInput {
   /** Pre-loaded record, when the caller has already read it. */
   record?: DocumentRecord
   /**
+   * GOAL-356 — the FieldContext the caller authorized. Passed straight to
+   * `loadDocumentRecord`, which fails closed rather than picking a context when
+   * the document sits in more than one. Required in spirit for any caller whose
+   * target is a pre-existing pulse (the bulk article import); the document cron
+   * and re-extract legitimately omit it, since they resolve the document first
+   * and have no other context in mind.
+   */
+  expectedFieldContextId?: string
+  /**
    * Bounds both model calls (GOAL-344). The article-import worker runs many
    * pipelines per invocation and must keep each inside its row budget; the
    * document cron leaves it unset.
@@ -523,7 +532,12 @@ export async function runDocumentIngestPipeline(
   input: RunDocumentIngestPipelineInput
 ): Promise<DocumentIngestPipelineResult> {
   const record =
-    input.record ?? (await loadDocumentRecord(deps.driver, input.documentId))
+    input.record ??
+    (await loadDocumentRecord(
+      deps.driver,
+      input.documentId,
+      input.expectedFieldContextId
+    ))
   if (!record) {
     return { ok: false, reason: 'not_found', error: 'Document not found.' }
   }

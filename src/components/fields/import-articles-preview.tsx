@@ -1,11 +1,13 @@
 'use client'
 
-import type {
-  ArticleImportRowInput,
-  ArticleImportSummary,
-  ArticleRowError,
-  ArticleRowExtraction,
-  ArticleRowOutcome,
+import {
+  ARTICLE_IMPORT_STATUS,
+  type ArticleImportJobStatus,
+  type ArticleImportRowInput,
+  type ArticleImportSummary,
+  type ArticleRowError,
+  type ArticleRowExtraction,
+  type ArticleRowOutcome,
 } from '@/lib/imports/article-import'
 import {
   getPulseTypeClass,
@@ -268,5 +270,45 @@ export function ImportSummaryChips({
         />
       )}
     </div>
+  )
+}
+
+/**
+ * The finished import: the receipt the member reads once the job reaches a
+ * terminal status. A FAILED job leads with its member-safe `statusMessage` —
+ * a failure is never a silent disappearance — and both outcomes then list
+ * every row, failures first so the rows needing another upload are the ones
+ * in view.
+ */
+export function ImportArticlesResults({ job }: { job: ArticleImportJobStatus }) {
+  const failed = job.status === ARTICLE_IMPORT_STATUS.failed
+
+  return (
+    <>
+      {failed && (
+        <div
+          role="alert"
+          className="shrink-0 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          {job.statusMessage ??
+            'This import could not be finished. Upload the remaining rows again.'}
+        </div>
+      )}
+      <ImportSummaryChips summary={job.summary} />
+      <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
+        {job.message}
+      </p>
+      <div className="overflow-y-auto min-h-0 space-y-2 pr-1">
+        {[...job.outcomes]
+          .sort(
+            (a, b) =>
+              (a.status === 'failed' ? 0 : 1) -
+                (b.status === 'failed' ? 0 : 1) || a.row - b.row
+          )
+          .map((outcome) => (
+            <OutcomeRow key={`out-${outcome.row}`} outcome={outcome} />
+          ))}
+      </div>
+    </>
   )
 }

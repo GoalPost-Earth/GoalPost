@@ -61,6 +61,12 @@ import {
   useVisibleEntities,
   type VisibleEntity,
 } from '../../visible-entities-context'
+import {
+  useBloomSearch,
+  BLOOM_FOCUS_NODE_EVENT,
+  type BloomFocusNodeDetail,
+} from '../../bloom-search-context'
+import { toSearchEntries } from './bloom-search-match'
 
 /**
  * Bloom Exploration — the native NVL rendering of the user's spaces.
@@ -89,7 +95,8 @@ import {
 // already lazy-loads + caches the chunk on first client render, so the warm was
 // redundant. (GOAL-280 investigation.)
 const GraphVisualizer = dynamic(
-  () => import('@/components/graph/visualizer').then((mod) => mod.GraphVisualizer),
+  () =>
+    import('@/components/graph/visualizer').then((mod) => mod.GraphVisualizer),
   {
     ssr: false,
     loading: () => (
@@ -99,7 +106,6 @@ const GraphVisualizer = dynamic(
     ),
   }
 )
-
 
 // How long to wait after a single click before treating it as a drill — long
 // enough for a double-click (drawer) to arrive and cancel it.
@@ -294,8 +300,16 @@ export const BloomView: FC = () => {
   const palette = getBloomPalette(isDark)
   const { overlay, clearOverlay } = useBloomOverlay()
   const { publish: publishVisibleEntities } = useVisibleEntities()
+  const { publish: publishSearchNodes } = useBloomSearch()
   const nvlRef = useRef<NvlRefHandle | null>(null)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  // The node canvas search last jumped to. Painted with NVL's own `selected`
+  // state so the viewer can see WHICH circle the viewport landed on — a
+  // centred node is otherwise indistinguishable from its neighbours, since
+  // Bloom nodes carry no label beyond a clipped caption.
+  const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
+    null
+  )
   // Hover-driven cursor. NVL renders native canvas nodes, so there's no
   // HTML element we can put `cursor: pointer` on. We bind a wrapper ref +
   // an `onHover`
@@ -574,9 +588,7 @@ export const BloomView: FC = () => {
   // reached through the field's HAS_PERSON roster is tagged 'PersonPulse'.
   const anchoredPersonIds = useMemo(
     () =>
-      new Set(
-        persons.filter((p) => p.focalType === 'User').map((p) => p.id)
-      ),
+      new Set(persons.filter((p) => p.focalType === 'User').map((p) => p.id)),
     [persons]
   )
 
@@ -626,47 +638,50 @@ export const BloomView: FC = () => {
   // in the in-field relationships memo, filtered to people actually on canvas
   // (the owner/user is rendered as a field person too, so a user↔person
   // relationship — e.g. "your wife" — has both endpoints visible).
-  const connections: Array<{ fromId: string; toId: string; why: string | null }> =
-    useMemo(() => {
-      if (!inField) return []
-      const fieldCtx = (
-        fieldPeopleData as
-          | {
-              fieldContexts?: Array<{
-                people?: Array<{
-                  id: string
-                  // GOAL-275: the connection graph reads through the single
-                  // type-level gate; null when this caller isn't authorized
-                  // for that person, in which case they contribute no edges.
-                  privateProfile?: {
-                    connectionEdges?: Array<{
-                      connectedPersonId?: string | null
-                      why?: string | null
-                    }> | null
-                  } | null
-                }>
+  const connections: Array<{
+    fromId: string
+    toId: string
+    why: string | null
+  }> = useMemo(() => {
+    if (!inField) return []
+    const fieldCtx = (
+      fieldPeopleData as
+        | {
+            fieldContexts?: Array<{
+              people?: Array<{
+                id: string
+                // GOAL-275: the connection graph reads through the single
+                // type-level gate; null when this caller isn't authorized
+                // for that person, in which case they contribute no edges.
+                privateProfile?: {
+                  connectionEdges?: Array<{
+                    connectedPersonId?: string | null
+                    why?: string | null
+                  }> | null
+                } | null
               }>
-            }
-          | undefined
-      )?.fieldContexts?.[0]
-      if (!fieldCtx?.people) return []
-      const seenPairs = new Set<string>()
-      const out: Array<{ fromId: string; toId: string; why: string | null }> = []
-      for (const p of fieldCtx.people) {
-        if (!p?.id) continue
-        for (const edge of p.privateProfile?.connectionEdges ?? []) {
-          const other = edge?.connectedPersonId
-          if (!other || other === p.id) continue
-          // CONNECTED_TO is undirected — key on the sorted id-pair so the same
-          // relationship surfaced from both endpoints is drawn once.
-          const key = [p.id, other].sort().join('::')
-          if (seenPairs.has(key)) continue
-          seenPairs.add(key)
-          out.push({ fromId: p.id, toId: other, why: edge?.why?.trim() || null })
-        }
+            }>
+          }
+        | undefined
+    )?.fieldContexts?.[0]
+    if (!fieldCtx?.people) return []
+    const seenPairs = new Set<string>()
+    const out: Array<{ fromId: string; toId: string; why: string | null }> = []
+    for (const p of fieldCtx.people) {
+      if (!p?.id) continue
+      for (const edge of p.privateProfile?.connectionEdges ?? []) {
+        const other = edge?.connectedPersonId
+        if (!other || other === p.id) continue
+        // CONNECTED_TO is undirected — key on the sorted id-pair so the same
+        // relationship surfaced from both endpoints is drawn once.
+        const key = [p.id, other].sort().join('::')
+        if (seenPairs.has(key)) continue
+        seenPairs.add(key)
+        out.push({ fromId: p.id, toId: other, why: edge?.why?.trim() || null })
       }
-      return out
-    }, [inField, fieldPeopleData])
+    }
+    return out
+  }, [inField, fieldPeopleData])
 
   // Resonance edges between pulses inside the active field. The Apollo
   // payload only resolves `source`/`target` when both pulse subtype
@@ -882,6 +897,60 @@ export const BloomView: FC = () => {
     () => applyBloomTypeFilters(builtCanvas, typeFilters.hidden),
     [builtCanvas, typeFilters.hidden]
   )
+
+  // What NVL is handed: the painted canvas with NVL's native `selected` flag
+  // resolved on EVERY node, not just the highlighted one.
+  //
+  // `selected` has to be present-and-false rather than absent, because the
+  // react wrapper's node diff is key-additive: it builds each update from the
+  // keys of the NEW node and drops anything left with only `{id}`
+  // (@neo4j-nvl/react/lib/utils/graph-comparison.js). A key that *disappears*
+  // therefore never reaches the canvas, so a highlight applied by omission
+  // could be set but never cleared — every node search jumped to would stay
+  // haloed for the life of the scope.
+  //
+  // Still a separate memo from `nodes`, so the fit, the layout kick and both
+  // publish channels keep reading the unhighlighted array and none of them
+  // re-run when the highlight moves. Attributes only — no positions, no
+  // restart, so the simulation is untouched.
+  const paintedNodes = useMemo(
+    () => nodes.map((n) => ({ ...n, selected: n.id === highlightedNodeId })),
+    [nodes, highlightedNodeId]
+  )
+
+  // A highlight whose node has left the canvas (its type switched off in the
+  // legend) has nothing to point at. Forgetting it means switching that type
+  // back on later doesn't silently re-light a node for a reason the viewer can
+  // no longer see.
+  //
+  // Adjusted during render rather than in an effect — the same "compare
+  // against the previous value while rendering" pattern `prevScopeKey` below
+  // uses. React re-runs this render without committing the first one, so there
+  // is no cascading render and no frame where a stale halo is painted.
+  if (highlightedNodeId && !nodes.some((n) => n.id === highlightedNodeId)) {
+    setHighlightedNodeId(null)
+  }
+
+  // Boolean, not the payload: the scope only cares THAT an overlay is up, and
+  // depending on the object would re-publish on every overlay identity change.
+  const hasOverlay = overlay !== null
+
+  // Publish the painted canvas to the header's search control. Same discipline
+  // as the visible-entities channel below: what is published is what is
+  // painted, so a type switched off in the legend is not offered as somewhere
+  // to jump to — the viewport would land on a node that isn't drawn.
+  useEffect(() => {
+    publishSearchNodes({
+      scope: hasOverlay
+        ? 'overlay'
+        : inField
+          ? 'field'
+          : inSpace
+            ? 'space'
+            : 'root',
+      entries: toSearchEntries(nodes),
+    })
+  }, [nodes, hasOverlay, inField, inSpace, publishSearchNodes])
 
   // Publish whatever Bloom is currently rendering so the assistant can
   // recognise entities by name (e.g. "show me what is in JD's Tech Lab"
@@ -1296,7 +1365,10 @@ export const BloomView: FC = () => {
       onNodeClick: (node) => handleSingleClick(node),
       onNodeDoubleClick: (node) => handleDoubleClick(node),
       onRelationshipClick: (rel) => handleRelationshipClick(rel),
-      onCanvasClick: () => setSelectedNode(null),
+      onCanvasClick: () => {
+        setSelectedNode(null)
+        setHighlightedNodeId(null)
+      },
       onHover: (_element, hitTargets: HitTargets) => {
         const hoveringNode = hitTargets.nodes.length > 0
         if (hoveringNode === isHoveringNodeRef.current) return
@@ -1358,6 +1430,10 @@ export const BloomView: FC = () => {
   if (prevScopeKey !== scopeKey) {
     setPrevScopeKey(scopeKey)
     setSelectedNode(null)
+    // A search highlight belongs to the canvas that was on screen when it was
+    // picked; carrying it into the next scope would leave a node lit for a
+    // reason the viewer can no longer see.
+    setHighlightedNodeId(null)
   }
 
   // A stable string for the current filter state. Only the layout-restart key
@@ -1466,6 +1542,45 @@ export const BloomView: FC = () => {
     }),
     [fitToScope]
   )
+
+  // Canvas search asked for a node: centre it and light it up. `fit` on a
+  // single id pans to that node and clamps the zoom, so a jump from a
+  // zoomed-right-out canvas lands readable rather than at whatever scale the
+  // viewer left behind.
+  //
+  // Defined as a callback rather than inline in the effect below so the
+  // `isInitialLayoutRef` write stays out of an effect body — mutating a ref
+  // from inside an effect makes every other mutation of it a lint error
+  // (react-hooks/immutability), including the two the fit logic already owns.
+  const focusNodeOnCanvas = useCallback((id: string) => {
+    if (!id) {
+      // A clear (the search panel closed) — drop the halo, leave the
+      // viewport where the viewer left it.
+      setHighlightedNodeId(null)
+      return
+    }
+    setHighlightedNodeId(id)
+    // Claim the viewport. On a cold load the search control is live as soon
+    // as the nodes memo computes, which is well before the force simulation
+    // settles — and `fitToScope` is still armed behind `isInitialLayoutRef`,
+    // fired by both `onLayoutDone` and the 2.5s fallback. Without this the
+    // canvas would pan to the node and then get yanked back to a whole-graph
+    // fit a moment later, so the jump would look like it silently did nothing.
+    isInitialLayoutRef.current = false
+    const ref = nvlRef.current
+    if (!ref || typeof ref.fit !== 'function') return
+    ref.fit([id], { animated: true, maxZoom: 1.2 })
+  }, [])
+
+  useEffect(() => {
+    const onFocusNode = (event: Event) => {
+      focusNodeOnCanvas(
+        (event as CustomEvent<BloomFocusNodeDetail>).detail?.id ?? ''
+      )
+    }
+    window.addEventListener(BLOOM_FOCUS_NODE_EVENT, onFocusNode)
+    return () => window.removeEventListener(BLOOM_FOCUS_NODE_EVENT, onFocusNode)
+  }, [focusNodeOnCanvas])
 
   // Touch gestures for iPad/phone: two-finger pinch-to-zoom and one-finger
   // pan on empty canvas. The floating action bar's zoom buttons cover
@@ -1584,10 +1699,10 @@ export const BloomView: FC = () => {
             </span>
             <p className="text-sm text-gp-ink-muted max-w-md">
               {inField
-                  ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here on the canvas.'
-                  : inSpace
-                    ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here on the canvas.'
-                    : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here on the canvas.'}
+                ? 'This field has no pulses yet. Add one from the dashboard view and it will appear here on the canvas.'
+                : inSpace
+                  ? 'This space has no field contexts yet. Create one from the dashboard view and it will appear here on the canvas.'
+                  : 'Nothing to render yet. Create a MeSpace or WeSpace from the dashboard and they will appear here on the canvas.'}
             </p>
           </div>
         ) : (
@@ -1602,7 +1717,7 @@ export const BloomView: FC = () => {
           >
             <GraphVisualizer
               ref={nvlRef}
-              nodes={nodes}
+              nodes={paintedNodes}
               relationships={relationships}
               mouseEventCallbacks={mouseEventCallbacks}
               nvlOptions={nvlOptions}

@@ -3512,8 +3512,21 @@ export async function executeAuthorizedWriteTool(
         `
         MATCH (pulse:FieldPulse {id: $pulseId})
         MATCH (u:Person {id: $currentUserId})
+        // GOAL-356: the document must share a FieldContext with the pulse it is
+        // provenance for. This used to match $documentId against ANY
+        // ResourcePulse in the database — the hole source-resource-node.ts flags
+        // as MATCH_SOURCE_RESOURCE_IN_CONTEXT's reason for existing: a bad id
+        // plants a cross-Space EXTRACTED_FROM edge. Narrow when the reachable
+        // set was documents only; it is now every resource, and this story makes
+        // the import a caller. Expressed as EXISTS rather than a second MATCH
+        // because a pulse can sit in several contexts, and multiplying rows here
+        // would multiply the Log this statement CREATEs.
         OPTIONAL MATCH (d:FieldPulse {id: $documentId})
           WHERE d:ResourcePulse
+            AND EXISTS {
+              MATCH (ctx:FieldContext)-[:HAS_PULSE]->(pulse)
+              WHERE (ctx)-[:HAS_PULSE]->(d)
+            }
         CREATE (log:Log {
           id: $logId,
           description: $description,
@@ -3524,7 +3537,13 @@ export async function executeAuthorizedWriteTool(
         )
         CREATE (log)-[:CREATED_BY]->(u)
         CREATE (log)-[:LOGGED_FOR]->(pulse)
-        FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
+        // GOAL-356: d = pulse is reachable now that the bulk article import
+        // attaches a row's article to the row's OWN Resource instead of minting
+        // a second node for it. That pulse is in the roster the extractor sees,
+        // so the extractor routinely proposes update_pulse against the very
+        // node it is reading from — and provenance from a node to itself is
+        // meaningless, besides drawing a self-loop on the canvas.
+        FOREACH (_ IN CASE WHEN d IS NULL OR d = pulse THEN [] ELSE [1] END |
           MERGE (pulse)-[:EXTRACTED_FROM]->(d)
         )
         `,

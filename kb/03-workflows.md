@@ -373,20 +373,53 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
    text / PDF accepted; OneDrive share links are resolved to the file with
    `download=1` and the chain's own cookies; a link that fails is not retried
    by later rows of the same run),
-   reduces HTML to article text (`article-html-text.ts`), stores the result as
-   a `Document` on the field exactly like an upload (`sourceUrl` set, hint =
-   the row's title/author/date/link, anchored `PROCESSING` so the document
-   cron cannot claim it), and runs the same `runDocumentIngestPipeline` WF-10
-   uses — summary, ingest thread, auto-executed persons / organizations /
-   pulses with `EXTRACTED_FROM` provenance and one Log per write. The row's
-   pulse is in the roster, so the extractor updates it; as a deterministic
-   floor the worker also links it `EXTRACTED_FROM` the document and, when its
-   body is still the sheet placeholder (the seeded sentence or a bare URL),
-   fills it from the document summary. The outcome records what the article
-   yielded (`extraction`). A link that cannot be read fails **only that half**:
-   the pulse stands on the sheet's details and the outcome carries member-safe
-   copy saying why. `sourceUrl` is the idempotency key — a re-uploaded sheet
-   never fetches the same article into a field twice.
+   reduces HTML to article text (`article-html-text.ts`), and attaches the
+   result to the row's **own pulse** (`attachSourceFileToResource`, GOAL-356) —
+   same blob layout, same `sourceBlobKey` / `UPLOADED_BY` contract an upload
+   gets, hint = the row's title/author/date/link, `ingestStatus` `PROCESSING`
+   so the document cron cannot claim it. It then runs the same
+   `runDocumentIngestPipeline` WF-10 uses, against that node — summary, ingest
+   thread, auto-executed persons / organizations / pulses with
+   `EXTRACTED_FROM` provenance and one Log per write. The row's pulse is in the
+   roster, so the extractor updates it; as a deterministic floor the worker also
+   fills its body from the summary when it is still the sheet placeholder (the
+   seeded sentence or a bare URL). The outcome records what the article yielded
+   (`extraction`). A link that cannot be read fails **only that half**: the
+   pulse stands on the sheet's details and the outcome carries member-safe copy
+   saying why.
+
+   **One row is one node (GOAL-356).** Until that story this anchored a
+   *separate* `resourceType: 'document'` pulse for the fetched file, beside the
+   row's own — invisible while a document was its own `(:Document)` node, and a
+   visible duplicate the moment GOAL-354 made a document a Resource: the member
+   saw the same article twice, each copy carrying its own ResonanceSuggestions
+   and ingest ConversationThread, cross-linked by `EXTRACTED_FROM`. The file now
+   attaches to the pulse that already exists, which is what WF-11 always meant —
+   the fetched document is *enrichment of the row's pulse*, not a peer artifact.
+   Consequences worth knowing:
+   - The surviving node keeps the sheet's **identity** — `title` (no file
+     extension), `content`, and `resourceType` (`article` / `book` / …). It is
+     **not** typed `document`. `sourceBlobKey` is what marks it source-backed,
+     so it still lists in Documents, downloads, re-extracts and deletes like an
+     upload — see `SOURCE_BACKED_RESOURCE` in `src/lib/ingest/source-resource-node.ts`,
+     which is the single definition of "came from a file" and the reason a
+     predicate of `resourceType = 'document'` is always wrong.
+   - **Goal and Story rows are the exception** and still get their own document
+     node. An article a goal came out of is a genuinely separate Resource, and
+     adopting the row would mean putting `:ResourcePulse` on a `:GoalPulse`.
+   - Provenance sites guard against a node pointing at itself (`d = pulse`),
+     since the extractor now routinely proposes `update_pulse` against the very
+     node it is reading from.
+   - Rows imported **before** GOAL-356 are cleaned up by
+     `scripts/reconcile-duplicate-document-resources.ts`, which merges each old
+     pair into the same shape (dry-run by default; `--execute` to apply).
+   - The idempotency key is the **fetched link** — `location` on an adopted row,
+     `sourceUrl` on a legacy or uploaded document — and it only counts on a node
+     that actually holds bytes (`sourceBlobKey IS NOT NULL`). That last guard
+     matters because GOAL-355 gave every ResourcePulse a `sourceUrl` of its own
+     meaning *where the member found it*; without it, a row whose `source_url`
+     matched another row's `url` skipped its own article. A re-uploaded sheet
+     still never fetches the same article into a field twice.
 6. Each row's outcome is persisted **before the next row starts**. That list is
    the resume cursor and the source of every summary count, so a worker killed
    mid-batch resumes where it stopped instead of re-walking the sheet. A run
@@ -394,12 +427,28 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
    continues it.
 7. The worker lands the job in `COMPLETE` (or `FAILED` with member-safe
    `statusMessage`) and then runs the embedding + resonance sweep
-   (`runContextResonanceDiscovery`) for any context that gained pulses —
-   **awaited, in the worker**, not fired at a request that has already answered.
-   Imported articles therefore surface in search and resonance without waiting
-   for the nightly cron. A run that yields with rows remaining kicks the next
-   sweep itself (`kickQueueWorker`), so a long sheet keeps moving on dev/demo
-   where scheduled ticks are far apart.
+   (`runContextResonanceDiscovery`) — **awaited, in the worker**, not fired at a
+   request that has already answered. A run that yields with rows remaining
+   kicks the next sweep itself (`kickQueueWorker`), so a long sheet keeps moving
+   on dev/demo where scheduled ticks are far apart.
+
+   **The sweep yields to that kick (GOAL-358).** It is registered only for a
+   context whose import *completed* on this tick — not on every requeue — and it
+   is skipped entirely on a tick that handed a job back, because
+   `kickQueueWorker` schedules its fetch in `after()`, which never runs if the
+   handler is killed at `maxDuration` before it can return. Sweeping first is
+   what caused that kill: it re-embeds and re-scans the whole context, work that
+   grows with the field, so every tick that landed rows ended in a 300s timeout
+   and no successor was ever started. A 24-row import consequently advanced only
+   ~4 rows per externally-scheduled tick, hours apart.
+
+   The cost of that ordering is that **"imported articles surface in search and
+   resonance without waiting for the nightly cron" is now conditional.** A
+   context deferred this way has exactly one backstop — the nightly
+   `/api/cron/discover-resonances` — because the job is already `COMPLETE` and
+   no later tick will register it again. Sweeps are additionally not *started*
+   past `SWEEP_DEADLINE_MS`, so a run that finished a job late leaves discovery
+   to that same nightly pass rather than beginning one it cannot finish.
 8. The modal polls `GET /api/import/articles/<jobId>` and shows Queued →
    Importing (with a row-count meter) → the per-row result summary. Closing it
    does not cancel anything; the job id is remembered per field, so reopening

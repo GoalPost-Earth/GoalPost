@@ -659,6 +659,31 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Canvas find — the Dashboard-view half of the header search control.
+     Painted with the CSS Custom Highlight API, which styles Ranges WITHOUT
+     touching the DOM. That matters here: the alternative (wrapping hits in
+     <mark>) mutates a tree React owns and reconciliation would fight it.
+     Both colours are derived from `gp-*` tokens via color-mix, so they
+     re-tint with light/dark and with every theme variant. Browsers without
+     ::highlight support simply paint nothing — the scroll-to and the result
+     list still work, so the feature degrades rather than breaks. */
+  ::highlight(gp-find) {
+    background-color: color-mix(
+      in srgb,
+      var(--gp-accent-glow) 40%,
+      transparent
+    );
+    color: var(--gp-ink-strong);
+  }
+
+  /* The one you are currently on, distinct from its siblings the way a find
+     bar's current hit is. Solid primary, so it reads at a glance while
+     scrolling past a dozen dimmer matches. */
+  ::highlight(gp-find-active) {
+    background-color: var(--gp-primary);
+    color: #ffffff;
+  }
 }
 
 /* Material Symbols icon font, self-declared in the lowest cascade layer

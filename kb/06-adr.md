@@ -474,6 +474,18 @@ trail.
   exact would mean persisting an author identity on every row.
 - Every outcome append is fenced on the claim, and a rejected append stops the
   run — otherwise a zombie worker would double-write alongside the new claimant.
+- **The resonance sweep is subordinate to the kick (GOAL-358).** "Awaited in the
+  worker, not fired at a dying request" survives, but *when* it is awaited had
+  to change: it is registered only for a context whose import completed on this
+  tick, skipped entirely on a tick that requeued a job, and never started past
+  `SWEEP_DEADLINE_MS`. The sweep re-embeds and re-scans a whole context, so its
+  cost grows with the field while a row's does not — running it before
+  `kickQueueWorker` meant every tick that landed rows was killed at the 300s
+  ceiling, and because that kick is scheduled in `after()` (which only runs once
+  the handler returns), no successor was ever dispatched. Measured on demo: zero
+  `[kick-queue-worker]` log lines across six hours of 504s, and a 24-row import
+  advancing ~4 rows per externally-scheduled tick. The trade is that a deferred
+  context's only backstop is the nightly `/api/cron/discover-resonances`.
 - Enqueue got cheap, which removed the synchronous design's accidental
   self-throttle: one account may hold 5 jobs in flight (429 `queue_full`) on top
   of the 10/hour `bulk-import` rate limit. The in-flight cap lives in the graph

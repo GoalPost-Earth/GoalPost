@@ -337,6 +337,55 @@ export function nodeTypeKey(node: Node): string | null {
   return NODE_COLOR_INDEX.get(normalizeColor(node.color)) ?? null
 }
 
+const NODE_LABEL_BY_KEY: ReadonlyMap<string, string> = new Map(
+  BLOOM_NODE_TYPES.map((row) => [row.key, row.label])
+)
+
+/**
+ * Colours more than one node row claims.
+ *
+ * The colour index is winner-takes-all, which is right for a *filter* — a
+ * shadowed row would be a switch that can never act, so one toggle governing
+ * both is honest. It is NOT right for a *label*: the WeSpace field tint is
+ * also the overlay's Organization colour (see the header note), so naming the
+ * winner would tell a viewer that an `:Organization` pushed onto the canvas by
+ * chat is a WeSpace — inventing a Space where there is none.
+ *
+ * So a contested colour gets no label at all. Saying nothing about a node's
+ * type is a gap; naming the wrong type is a lie.
+ */
+const CONTESTED_NODE_COLORS: ReadonlySet<string> = (() => {
+  const claimedBy = new Map<string, Set<string>>()
+  for (const row of BLOOM_NODE_TYPES) {
+    for (const color of row.colors) {
+      const key = normalizeColor(color)
+      const owners = claimedBy.get(key) ?? new Set<string>()
+      owners.add(row.key)
+      claimedBy.set(key, owners)
+    }
+  }
+  return new Set(
+    [...claimedBy.entries()]
+      .filter(([, owners]) => owners.size > 1)
+      .map(([color]) => color)
+  )
+})()
+
+/**
+ * The human label a painted node's type row carries ("Goal", "Person", …), or
+ * null when its colour decodes to nothing — or to more than one row.
+ *
+ * Used by canvas search to say what a result *is*, which is the type signal a
+ * bare coloured circle can't carry on its own. This is also why the "no type
+ * tags on Bloom captions" convention holds: the type belongs beside the
+ * caption in a panel, never baked into the node.
+ */
+export function nodeTypeLabel(node: Node): string | null {
+  if (CONTESTED_NODE_COLORS.has(normalizeColor(node.color))) return null
+  const key = nodeTypeKey(node)
+  return key ? (NODE_LABEL_BY_KEY.get(key) ?? null) : null
+}
+
 /** The row key a painted edge belongs to, or null when nothing decodes it. */
 export function relationshipTypeKey(rel: Relationship): string | null {
   return (
@@ -344,6 +393,46 @@ export function relationshipTypeKey(rel: Relationship): string | null {
       normalizeColor((rel as { color?: string }).color)
     ) ?? null
   )
+}
+
+/**
+ * How many elements of each type row a canvas carries, keyed by row key.
+ *
+ * Counted through the SAME winner-takes-all colour index the rows and the
+ * filter resolve through, so a tally can never name a row the legend doesn't
+ * offer, and the numbers always add up against the list they sit in. Anything
+ * whose colour decodes to nothing is left uncounted rather than bucketed
+ * somewhere arbitrary — matching `applyBloomTypeFilters`, which never hides
+ * what it cannot name.
+ *
+ * Feed this the UNFILTERED canvas. A count read off the painted graph would
+ * drop to zero the moment its own row was switched off, which is the one
+ * moment the number matters most: the row has to keep saying how much is
+ * behind the switch you just flipped.
+ */
+function tally<T>(
+  items: T[],
+  keyOf: (item: T) => string | null
+): ReadonlyMap<string, number> {
+  const counts = new Map<string, number>()
+  for (const item of items) {
+    const key = keyOf(item)
+    if (!key) continue
+    counts.set(key, (counts.get(key) ?? 0) + 1)
+  }
+  return counts
+}
+
+/** Per-row node counts for a canvas. See `tally` — pass the unfiltered graph. */
+export function countNodeTypes(nodes: Node[]): ReadonlyMap<string, number> {
+  return tally(nodes, nodeTypeKey)
+}
+
+/** Per-row edge counts for a canvas. See `tally` — pass the unfiltered graph. */
+export function countRelationshipTypes(
+  relationships: Relationship[]
+): ReadonlyMap<string, number> {
+  return tally(relationships, relationshipTypeKey)
 }
 
 /**

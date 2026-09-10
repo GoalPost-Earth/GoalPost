@@ -176,6 +176,15 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
           d.sourceBlobKey = $blobKey,
           d.sourceBlobUrl = $blobUrl,
           d.sourceUrl = $sourceUrl,
+          // GOAL-356: where the BYTES came from, in a property that means only
+          // that. sourceUrl cannot carry it any more — GOAL-355 gave every
+          // ResourcePulse a sourceUrl of its own meaning where the MEMBER
+          // found the resource, and now that an imported article's file lands
+          // on the row's own pulse, both meanings would sit on one node and the
+          // import's idempotency key could not tell them apart. Written on this
+          // path too, not just the adopt path, so one predicate finds every
+          // fetched document.
+          d.sourceFetchedFrom = $sourceUrl,
           d.ingestStatus = $status,
           d.ingestStatusMessage = null,
           d.ingestStatusUpdatedAt = datetime(),
@@ -244,6 +253,184 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
   }
 }
 
+/**
+ * GOAL-356 — attach a fetched file to a Resource that ALREADY EXISTS, instead
+ * of minting a second node beside it.
+ *
+ * `anchorDocument` above mints the resource and the file together, which is
+ * right for an upload: nothing existed before the member picked the file. The
+ * bulk article import is the other shape. By the time its worker fetches a
+ * row's link, the row's own `:ResourcePulse` is already in the graph — built
+ * from the sheet's title / author / date / type, attributed to the real author
+ * via INITIATED_BY. Calling `anchorDocument` there minted a SECOND resource for
+ * the same artifact: `resourceType: 'document'`, title with the file extension
+ * on it, credited to the importer rather than the author. While a document was
+ * its own `(:Document)` node that was invisible — one showed in the Pulses
+ * list, the other in the Documents list. GOAL-354 made a document a Resource,
+ * and the member started seeing the same article twice, each half carrying its
+ * own ResonanceSuggestions and ingest ConversationThread.
+ *
+ * So the file attaches to the resource that is already there. WF-11 is explicit
+ * that the fetched document is *enrichment of the row's pulse*, not a peer
+ * artifact, and `reconcile-duplicate-document-resources.ts` already produces
+ * exactly this end state for the rows imported before this fix — this is the
+ * same shape, reached at write time instead of afterwards.
+ *
+ * What this deliberately does NOT write is the resource's IDENTITY: `title`,
+ * `content` and `resourceType` stay as the sheet declared them. That is the
+ * whole point — the resource is a `book` / `article` / `event` that happens to
+ * have a file behind it, not a `document`. `sourceBlobKey` is what makes it
+ * source-backed (see `SOURCE_BACKED_RESOURCE`), so it still lists, downloads,
+ * re-extracts and deletes exactly like an upload.
+ *
+ * `sourceUrl` is coalesced rather than set, because the two writers of that
+ * property mean subtly different things and the member's wins: GOAL-355 lets a
+ * sheet carry a `source_url` column (where the resource was *found*), while
+ * this path would write where the bytes were *fetched from* — which for an
+ * imported row is the row's `url`, already on the node as `location`.
+ *
+ * Refuses a resource that is already source-backed rather than overwriting it:
+ * a second blob key would strand the first blob with nothing pointing at it.
+ * The caller dedupes before reaching here, so this is a backstop, not a branch —
+ * but it is a backstop that has to hold under concurrency, because two import
+ * jobs in one field (the per-account in-flight cap is 5) can carry the same row
+ * title and therefore adopt the same pulse. Reading `sourceBlobKey` in a WHERE
+ * and writing it in a later SET would let both pass the guard and both write:
+ * last-writer-wins, the loser's blob stranded, and two ingest pipelines running
+ * against one node. So the claim is made by the SET itself —
+ * `coalesce(d.sourceBlobKey, $blobKey)` takes the node's write lock and settles
+ * the winner atomically, and reading the property back under that lock is what
+ * says whether this call won. A retry of the SAME row re-attaches harmlessly:
+ * the blob key is derived from the resource id and filename, so it is unchanged
+ * and every write below is idempotent.
+ */
+export interface AttachSourceFileInput {
+  driver: Driver
+  /** The pulse to attach to — the row's own Resource, created before this. */
+  resourceId: string
+  /** Anchors the match, so a stale id can never attach a file cross-context. */
+  fieldContextId: string
+  uploaderUserId: string
+  filename: string
+  mimeType: string
+  sizeBytes: number
+  pageCount: number | null
+  userHint: string | null
+  blobKey: string
+  blobUrl: string
+  sourceUrl?: string | null
+  status?: DocumentIngestStatus
+}
+
+export async function attachSourceFileToResource(
+  input: AttachSourceFileInput
+): Promise<void> {
+  const session = input.driver.session()
+  try {
+    const result = await session.executeWrite(async (tx) =>
+      tx.run(
+        `
+        MATCH (c:FieldContext {id: $fieldContextId})-[:HAS_PULSE]->(d:FieldPulse {id: $resourceId})
+        // The subtype assertion is load-bearing twice over: every reader of the
+        // source* properties matches :ResourcePulse, and a Goal/Story row must
+        // never be grafted into one just because its link was readable. The
+        // caller only adopts ResourcePulse rows; this refuses the rest.
+        //
+        // The resourceType arm is the other half of SOURCE_BACKED_RESOURCE: a
+        // legacy document migrated without a blob pointer is source-backed by
+        // the project's definition even though sourceBlobKey is null, and
+        // guarding on the key alone would let this take over its identity and
+        // ingest state. Spelled out rather than using the shared fragment
+        // because this needs it NEGATED, and the fragment binds the positive.
+        WHERE d:ResourcePulse AND coalesce(d.resourceType, '') <> $resourceType
+        MATCH (u:Person:User {id: $uploaderUserId})
+        // Claim the resource. This SET is the lock and the decision both — see
+        // the header. Nothing else may read sourceBlobKey to decide.
+        SET d.sourceBlobKey = coalesce(d.sourceBlobKey, $blobKey)
+        WITH c, d, u, d.sourceBlobKey = $blobKey AS won
+        WHERE won
+        SET d.sourceFilename = $filename,
+            d.sourceMimeType = $mimeType,
+            d.sourceSizeBytes = toInteger($sizeBytes),
+            d.sourcePageCount = $pageCount,
+            d.sourceUserHint = $userHint,
+            d.sourceBlobUrl = $blobUrl,
+            // The fetched link goes in its own property and sourceUrl is left
+            // untouched. That separation is the point: on an adopted row
+            // sourceUrl is the member's source_url column (where they FOUND
+            // the resource, GOAL-355) and this is where we fetched the bytes,
+            // which is the row's url — the same value as location. Writing
+            // both to one property is what let a row whose source_url matched
+            // another row's url read back as an already-fetched document.
+            d.sourceFetchedFrom = $sourceUrl,
+            d.ingestStatus = $status,
+            d.ingestStatusMessage = null,
+            d.ingestStatusUpdatedAt = datetime(),
+            d.ingestAttempts = 0,
+            // The queue orders on this. coalesce is for the retry, not the
+            // first pass: create_pulse never writes uploadedAt, so a fresh row
+            // takes datetime() here and a re-attach keeps the original.
+            d.uploadedAt = coalesce(d.uploadedAt, datetime()),
+            // Both halves of the pair: create_pulse and the row-fill statement
+            // each write updatedAt on this same node, so setting only
+            // modifiedAt would leave the two disagreeing.
+            d.updatedAt = datetime(),
+            d.modifiedAt = datetime()
+        // Who fetched it. INITIATED_BY (the article's real author) is left
+        // exactly as the import wrote it — that attribution is the thing the
+        // duplicate node was getting wrong, so nothing here may touch it.
+        //
+        // No CREATED_BY, deliberately, and note this DIFFERS from
+        // anchorDocument, which adds one so resolvePulseAuthor has a fallback.
+        // An adopted row already has INITIATED_BY to the article's author, so
+        // authorship resolves without it, and adding a CREATED_BY to the
+        // importer would credit them for someone else's article. UPLOADED_BY is
+        // the honest edge: they fetched it, they did not write it. The delete
+        // gate in handle-delete-document.ts accepts either edge, so the
+        // importer can still remove what they brought in.
+        MERGE (d)-[:UPLOADED_BY]->(u)
+        // Activity Log, MERGE-d on a derived id so a retried row does not
+        // append a second line to the field's activity feed.
+        MERGE (log:Log {id: $logId})
+        ON CREATE SET
+          log.description = 'Attached the source file for "' + coalesce(d.title, $filename) + '"' +
+            CASE WHEN c.title IS NOT NULL AND c.title <> ''
+              THEN ' in ' + c.title
+              ELSE ''
+            END,
+          log.createdAt = datetime()
+        MERGE (log)-[:CREATED_BY]->(u)
+        MERGE (log)-[:LOGGED_FOR]->(d)
+        RETURN d.id AS id
+        `,
+        {
+          fieldContextId: input.fieldContextId,
+          resourceId: input.resourceId,
+          uploaderUserId: input.uploaderUserId,
+          filename: input.filename,
+          mimeType: input.mimeType,
+          sizeBytes: input.sizeBytes,
+          pageCount: input.pageCount,
+          userHint: input.userHint?.trim() ? input.userHint.trim() : null,
+          blobKey: input.blobKey,
+          blobUrl: input.blobUrl,
+          sourceUrl: input.sourceUrl?.trim() || null,
+          status: input.status ?? DOCUMENT_INGEST_STATUS.complete,
+          resourceType: RESOURCE_TYPE_DOCUMENT,
+          logId: `log_attach_${input.resourceId}`,
+        }
+      )
+    )
+    if (result.records.length === 0) {
+      throw new Error(
+        `attachSourceFileToResource: could not attach "${input.filename}" to resource "${input.resourceId}" in context "${input.fieldContextId}" — the resource is missing from that context, is not a :ResourcePulse, is already source-backed (another file, or a concurrent run won the claim), or uploader "${input.uploaderUserId}" was not found.`
+      )
+    }
+  } finally {
+    await session.close()
+  }
+}
+
 export interface DocumentRecord {
   id: string
   filename: string
@@ -274,7 +461,26 @@ export interface DocumentRecord {
  */
 export async function loadDocumentRecord(
   driver: Driver,
-  documentId: string
+  documentId: string,
+  /**
+   * GOAL-356 — pin the context instead of letting the ORDER BY pick one.
+   *
+   * The deterministic pick below was adequate while every caller passed an id
+   * `anchorDocument` had just minted, which had exactly one HAS_PULSE edge. The
+   * bulk article import now points this at a pulse that already existed, and a
+   * pulse in several contexts — across Spaces — is a first-class product state
+   * (`sharePulseWithContext`). Picking the wrong one would run the whole
+   * pipeline against a Space the caller never authorized: the extractor is
+   * handed that context's ENTIRE roster (every Person name, pulse title and
+   * Organization, up to 100 each, with no caller scoping) and it resurfaces in
+   * the ingest thread. Entity writes would still be refused by
+   * `executeAuthorizedWriteTool`, but the summary, page count, thread and
+   * completion all write regardless.
+   *
+   * Callers that know which context they authorized MUST pass it; the run fails
+   * closed (null) rather than silently choosing when the document is not in it.
+   */
+  expectedFieldContextId?: string
 ): Promise<DocumentRecord | null> {
   const session = driver.session()
   try {
@@ -291,6 +497,7 @@ export async function loadDocumentRecord(
         // whatever the planner yields first.
         MATCH (c:FieldContext)-[:HAS_PULSE]->(d:FieldPulse {id: $documentId})
         WHERE d:ResourcePulse
+          AND ($expectedFieldContextId IS NULL OR c.id = $expectedFieldContextId)
         // Collect uploaders rather than OPTIONAL MATCH + LIMIT 1. The cron
         // worker runs AS this user (GOAL-292), so an anomalous document with two
         // UPLOADED_BY edges must not resolve non-deterministically to whichever
@@ -306,14 +513,23 @@ export async function loadDocumentRecord(
           d.sourceBlobKey AS blobKey,
           d.sourceBlobUrl AS blobUrl,
           d.sourceUserHint AS userHint,
-          d.sourceUrl AS sourceUrl,
+          // Prefer the fetched link; fall back to sourceUrl for documents
+          // anchored before GOAL-356 split the two meanings apart. This feeds
+          // the extractor's location fallback for pulses it pulls out of the
+          // article (extraction-model-invoker.ts), which wants the public page
+          // the bytes came from — never the member's found-at link.
+          coalesce(d.sourceFetchedFrom, d.sourceUrl) AS sourceUrl,
           c.id AS fieldContextId,
           uploaderIds,
           coalesce(d.ingestStatus, $completeStatus) AS status
         ORDER BY fieldContextId
         LIMIT 1
         `,
-        { documentId, completeStatus: DOCUMENT_INGEST_STATUS.complete }
+        {
+          documentId,
+          completeStatus: DOCUMENT_INGEST_STATUS.complete,
+          expectedFieldContextId: expectedFieldContextId ?? null,
+        }
       )
     )
     const record = result.records[0]

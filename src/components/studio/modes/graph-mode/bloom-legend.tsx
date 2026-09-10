@@ -5,6 +5,8 @@ import type { Node, Relationship } from '@neo4j-nvl/base'
 import { cn } from '@/lib/utils'
 import { useIsDarkMode } from '@/hooks'
 import {
+  countNodeTypes,
+  countRelationshipTypes,
   normalizeColor,
   presentNodeRows,
   presentRelationshipRows,
@@ -50,14 +52,23 @@ export const BloomLegend: FC<{
   const isDark = useIsDarkMode()
   const { hidden, toggle, showAll } = filters
 
-  const { nodeRows, edgeRows } = useMemo(() => {
+  const { nodeRows, edgeRows, counts } = useMemo(() => {
     const nodeColors = new Set(nodes.map((n) => normalizeColor(n.color)))
     const edgeColors = new Set(
       relationships.map((r) => normalizeColor((r as { color?: string }).color))
     )
+    // Counted off the same UNFILTERED arrays the rows come from, so the number
+    // beside a label says how much of that type this canvas holds — and keeps
+    // saying it while the type is switched off. A count read off the paint
+    // would read 0 exactly when the viewer most needs to know what is behind
+    // the switch they just flipped.
     return {
       nodeRows: presentNodeRows(nodeColors),
       edgeRows: presentRelationshipRows(edgeColors),
+      counts: new Map([
+        ...countNodeTypes(nodes),
+        ...countRelationshipTypes(relationships),
+      ]),
     }
   }, [nodes, relationships])
 
@@ -165,6 +176,7 @@ export const BloomLegend: FC<{
                       row={row}
                       shape="dot"
                       isDark={isDark}
+                      count={counts.get(row.key) ?? 0}
                       visible={!hidden.has(row.key)}
                       onToggle={toggle}
                     />
@@ -182,6 +194,7 @@ export const BloomLegend: FC<{
                         row={row}
                         shape="line"
                         isDark={isDark}
+                        count={counts.get(row.key) ?? 0}
                         visible={!hidden.has(row.key)}
                         onToggle={toggle}
                       />
@@ -211,9 +224,11 @@ const TypeToggleRow: FC<{
   row: BloomTypeRow
   shape: 'dot' | 'line'
   isDark: boolean
+  /** How many of this type the canvas holds, filtered or not. */
+  count: number
   visible: boolean
   onToggle: (key: string) => void
-}> = ({ row, shape, isDark, visible, onToggle }) => (
+}> = ({ row, shape, isDark, count, visible, onToggle }) => (
   <li>
     <button
       type="button"
@@ -225,6 +240,10 @@ const TypeToggleRow: FC<{
           ? `Hide ${row.label} on the canvas`
           : `Show ${row.label} on the canvas`
       }
+      // The count rides in the accessible name rather than as a separate
+      // element: a screen reader should hear "Resource, 24, on" as one switch,
+      // not trip over a bare number between the label and the state.
+      aria-label={`${row.label} — ${count} on this canvas`}
       className="gp-menu-item flex w-full cursor-pointer items-center gap-2.5 rounded-md px-1.5 py-1 text-left"
     >
       <span
@@ -245,6 +264,19 @@ const TypeToggleRow: FC<{
         )}
       >
         {row.label}
+      </span>
+      {/* Volume, not just vocabulary — "Person" tells you the pink circles are
+          people, "Person 68" tells you why the canvas looks the way it does,
+          and tells you what you are hiding before you flip the switch.
+          `tabular-nums` keeps the column from jittering as counts change. */}
+      <span
+        aria-hidden
+        className={cn(
+          'shrink-0 text-[10px] font-bold tabular-nums',
+          visible ? 'text-gp-ink-muted' : 'text-gp-ink-soft'
+        )}
+      >
+        {count}
       </span>
       <span
         aria-hidden

@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
+import { documentDownloadPath } from '@/lib/ingest/document-download-url'
 import {
   DocumentIngestStatusChip,
   isDocumentIngestInFlight,
@@ -212,6 +213,38 @@ export function DocumentRow({
                 : 'Queued for extraction. This usually starts within a minute.'}
             </p>
           )}
+
+          {/* The original file, always reachable regardless of ingest state —
+              a queued or failed extraction still has bytes worth downloading.
+              Deliberately the durable app locator (GOAL-302), never the S3
+              URL: this path re-checks Space read access on every hit and mints
+              a fresh short-lived presigned GET server-side, so the bucket
+              stays private behind the app and no share token is handed to
+              every member of the Space. Matches the "Open document" action in
+              the pulse drawer. */}
+          <a
+            href={documentDownloadPath(document.id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              'inline-flex items-center gap-2 px-3 h-9 rounded-lg',
+              'border border-gp-glass-border bg-black/[0.03] dark:bg-white/[0.03]',
+              'hover:bg-black/[0.05] dark:hover:bg-white/[0.06]',
+              'hover:border-black/15 dark:hover:border-white/20',
+              'font-medium text-gp-ink-strong dark:text-white/85',
+              'transition-all cursor-pointer'
+            )}
+          >
+            <span
+              className="material-symbols-outlined text-[16px] shrink-0"
+              aria-hidden="true"
+            >
+              download
+            </span>
+            <span className="min-w-0 truncate">
+              Download the original document
+            </span>
+          </a>
 
           {document.summary && (
             <div>

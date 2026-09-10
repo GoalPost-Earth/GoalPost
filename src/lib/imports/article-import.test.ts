@@ -1,7 +1,9 @@
 import * as XLSX from 'xlsx'
 import {
+  ARTICLE_IMPORT_STATUS,
   buildArticleImportMessage,
   buildArticleRowContent,
+  describeArticleImportProgress,
   normalizeArticleDate,
   normalizeArticleResourceType,
   normalizeArticleUrl,
@@ -10,6 +12,7 @@ import {
   summarizeArticleOutcomes,
   validateArticleTemplateHeaders,
   type ArticleImportRowInput,
+  type ArticleImportStatus,
   type ArticleImportSummary,
   type PersistedArticleRowOutcome,
 } from './article-import'
@@ -895,5 +898,102 @@ describe('buildArticleImportMessage', () => {
     expect(buildArticleImportMessage(summary({ created: 0, failed: 3 }))).toBe(
       'No rows were imported. Fix the errors below and upload again.'
     )
+  })
+})
+
+describe('describeArticleImportProgress', () => {
+  const job = (
+    status: ArticleImportStatus,
+    processedRows: number,
+    totalRows: number
+  ) => ({ status, processedRows, summary: { totalRows } })
+
+  it('reads an unclaimed job that has landed nothing as queued', () => {
+    expect(
+      describeArticleImportProgress(job(ARTICLE_IMPORT_STATUS.pending, 0, 10))
+    ).toMatchObject({ isQueued: true, label: 'Queued', percent: 0 })
+  })
+
+  it('reads a requeued job as importing, not as queued', () => {
+    // GOAL-357, the regression itself: a run that yields on the cron time
+    // budget hands the job back as PENDING with its cursor intact. Calling
+    // that "Queued" rewound a half-finished import to a blank panel between
+    // ticks — and, in the modal, put that label above a 30%-full bar.
+    expect(
+      describeArticleImportProgress(job(ARTICLE_IMPORT_STATUS.pending, 3, 10))
+    ).toMatchObject({
+      isQueued: false,
+      label: 'Importing…',
+      processedRows: 3,
+      totalRows: 10,
+      percent: 30,
+    })
+  })
+
+  it('reads a freshly claimed job as importing before its first row lands', () => {
+    // The mirror-image mistake: deciding on landed rows alone would label a
+    // job the worker is actively working through as "Queued" for the whole of
+    // row one, which is an article fetch plus ingestion.
+    expect(
+      describeArticleImportProgress(
+        job(ARTICLE_IMPORT_STATUS.processing, 0, 10)
+      )
+    ).toMatchObject({ isQueued: false, label: 'Importing…', percent: 0 })
+  })
+
+  it('gives the two states different icons', () => {
+    expect(
+      describeArticleImportProgress(job(ARTICLE_IMPORT_STATUS.pending, 0, 10))
+        .icon
+    ).toBe('schedule')
+    expect(
+      describeArticleImportProgress(job(ARTICLE_IMPORT_STATUS.processing, 1, 10))
+        .icon
+    ).toBe('autorenew')
+  })
+
+  it('rounds honestly mid-import rather than understating', () => {
+    expect(
+      describeArticleImportProgress(
+        job(ARTICLE_IMPORT_STATUS.processing, 10, 24)
+      ).percent
+    ).toBe(42)
+  })
+
+  it('holds 100% back until the last row has actually landed', () => {
+    expect(
+      describeArticleImportProgress(
+        job(ARTICLE_IMPORT_STATUS.processing, 299, 300)
+      ).percent
+    ).toBe(99)
+    expect(
+      describeArticleImportProgress(
+        job(ARTICLE_IMPORT_STATUS.processing, 300, 300)
+      ).percent
+    ).toBe(100)
+  })
+
+  it('never reports more than a full bar', () => {
+    expect(
+      describeArticleImportProgress(
+        job(ARTICLE_IMPORT_STATUS.processing, 12, 10)
+      ).percent
+    ).toBe(100)
+  })
+
+  it('survives a job with no rows instead of dividing by zero', () => {
+    expect(
+      describeArticleImportProgress(job(ARTICLE_IMPORT_STATUS.pending, 0, 0))
+    ).toMatchObject({ isQueued: true, totalRows: 0, percent: 0 })
+  })
+
+  it('treats unreadable counts as zero rather than rendering NaN', () => {
+    expect(
+      describeArticleImportProgress({
+        status: ARTICLE_IMPORT_STATUS.pending,
+        processedRows: Number.NaN,
+        summary: { totalRows: -4 },
+      })
+    ).toMatchObject({ processedRows: 0, totalRows: 0, percent: 0 })
   })
 })

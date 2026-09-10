@@ -334,6 +334,18 @@ async function initializeDatabase() {
       // fields grow.
       `CREATE INDEX resource_source_url IF NOT EXISTS
        FOR (r:ResourcePulse) ON (r.sourceUrl)`,
+      // GOAL-356: that idempotency check moved OFF sourceUrl and onto
+      // sourceFetchedFrom, so this is the index it actually seeks now. The move
+      // was forced: GOAL-355 gave every ResourcePulse a sourceUrl meaning where
+      // the MEMBER found the resource, and GOAL-356 put the fetched file on the
+      // row's own pulse — so one property carried two meanings on one node and
+      // a row whose source_url matched another row's url read back as already
+      // fetched. sourceFetchedFrom means only "where these bytes came from".
+      // resource_source_url above is retained: sourceUrl is still read, and
+      // documents anchored before this story are still keyed on it until
+      // scripts/backfill-source-fetched-from.ts has run.
+      `CREATE INDEX resource_source_fetched_from IF NOT EXISTS
+       FOR (r:ResourcePulse) ON (r.sourceFetchedFrom)`,
       // GOAL-326: same story for the bulk-article-import queue. The one-minute
       // cron seeks PENDING (findPendingArticleImportJobIds) and PROCESSING
       // (reclaimStalledArticleImports) on every tick, and the enqueue path
