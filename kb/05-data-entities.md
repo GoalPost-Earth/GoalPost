@@ -1131,6 +1131,23 @@ spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
 
 ## Neo4j Constraints
 
+**These drift, and the drift is silent.** `scripts/init-db.js` is the
+declaration, but it is never run against a live database — it begins with
+`MATCH (n) DETACH DELETE n`, so `npm run init:db` WIPES (see the note under
+`init:db` and [[project_init_db_wipes]]). A constraint added to that file
+therefore reaches nothing until someone issues it by hand. On 2026-09-10 four
+declared constraints were missing from both dev and demo — `log_id_unique`,
+`organization_id`, `llm_usage_id`, `system_principal_id` — and the cost was not
+theoretical: every `MERGE (log:Log {id: …})` in the codebase planned as a
+`NodeByLabelScan` over the whole append-only `:Log` set. Measured 3,213 dbHits
+on dev and 3,677 on demo per lookup, against **1** once `log_id_unique` existed,
+and the MERGE's idempotency-under-concurrency argument had nothing behind it.
+
+Reconcile periodically by diffing `SHOW CONSTRAINTS` against `init-db.js` and
+issuing the missing `CREATE CONSTRAINT … IF NOT EXISTS` statements directly.
+Check for violating data first (duplicate or null keys) — the create fails loudly
+rather than silently, but it is better to know before.
+
 | Constraint                | Target                        |
 | ------------------------- | ----------------------------- |
 | `person_id`               | Person.id UNIQUE              |
