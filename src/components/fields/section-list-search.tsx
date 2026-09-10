@@ -13,6 +13,11 @@ import type { FC, RefObject } from 'react'
  * searchable, and it preserves the section's own ordering rather than ranking:
  * inside a list the viewer already understands (most recent first, say),
  * reshuffling on every keystroke costs more than it gives.
+ *
+ * Escape-to-clear is deliberately NOT handled here. Radix's DismissableLayer
+ * listens on `document` in the capture phase, so the dialog is already closing
+ * before a synthetic handler on this input could run; `SectionList` intercepts
+ * it on the dialog itself via `onEscapeKeyDown`.
  */
 
 interface SectionListSearchProps {
@@ -45,16 +50,6 @@ export const SectionListSearch: FC<SectionListSearchProps> = ({
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      onKeyDown={(e) => {
-        // Escape clears the filter rather than closing the dialog — the list
-        // underneath is the thing the viewer came for, so the first Escape
-        // should hand it back, not take it away. A second one closes.
-        if (e.key === 'Escape' && value) {
-          e.preventDefault()
-          e.stopPropagation()
-          onChange('')
-        }
-      }}
       placeholder={`Search these ${noun}…`}
       aria-label={`Search ${noun} in this list`}
       className="min-w-0 flex-1 bg-transparent text-xs text-gp-ink-strong placeholder:text-gp-ink-soft outline-none"

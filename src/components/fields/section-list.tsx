@@ -176,7 +176,23 @@ export function SectionList<T>({
             the only thing that scrolls, so the title stays put while a long
             list moves under it. `max-h-[85vh]` leaves the modal clear of the
             viewport edges on a phone as well as a desktop. */}
-        <DialogContent className="sm:max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 bg-gp-surface-strong dark:bg-gp-surface-dark border-gp-glass-border">
+        <DialogContent
+          className="sm:max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 bg-gp-surface-strong dark:bg-gp-surface-dark border-gp-glass-border"
+          // Escape clears the search before it closes the dialog: the list
+          // underneath is what the viewer came for, so the first press should
+          // hand it back, not take it away.
+          //
+          // It has to be intercepted HERE rather than on the input. Radix's
+          // DismissableLayer listens on `document` in the CAPTURE phase, so it
+          // dismisses before any React synthetic handler on the field runs —
+          // a `stopPropagation` down there never gets the chance to fire.
+          onEscapeKeyDown={(event) => {
+            if (!query) return
+            event.preventDefault()
+            setQuery('')
+            searchInputRef.current?.focus()
+          }}
+        >
           <DialogHeader className="px-4 sm:px-6 pt-5 pb-3 border-b border-gp-glass-border">
             {/* Always stacked, never side by side. The dialog is at most
                 `sm:max-w-2xl`, and a section like Pulses carries four
