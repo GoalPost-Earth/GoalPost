@@ -2,8 +2,10 @@
 
 import {
   describeArticleImportProgress,
+  type ArticleImportJobListItem,
   type ArticleImportJobStatus,
 } from '@/lib/imports/article-import'
+import { ArticleImportInFlightRow } from './article-import-inflight-row'
 
 /**
  * GOAL-326 — the in-flight half of the article import modal.
@@ -31,9 +33,27 @@ import {
 
 interface ImportArticlesProgressProps {
   job: ArticleImportJobStatus
+  /**
+   * GOAL-365: the field's OTHER in-flight imports, excluding `job`.
+   *
+   * This panel used to speak for the one job the modal tracks — whichever was
+   * submitted last — while the field page listed every one. Start two imports
+   * into a field and the surfaces contradicted each other: the page reading
+   * "5 of 10 rows · 50%" beside this panel insisting "Queued". Both were
+   * describing real jobs; neither said there was more than one.
+   *
+   * `job` stays first and keeps the fuller treatment because it is the import
+   * this member just started — and because it can be an optimistic frame
+   * painted straight from the 202, before the list poll has caught up. The
+   * rest are drawn with the field page's own row component.
+   */
+  otherJobs?: ArticleImportJobListItem[]
 }
 
-export function ImportArticlesProgress({ job }: ImportArticlesProgressProps) {
+export function ImportArticlesProgress({
+  job,
+  otherJobs = [],
+}: ImportArticlesProgressProps) {
   const { isQueued, label, icon, processedRows, totalRows, percent } =
     describeArticleImportProgress(job)
 
@@ -95,6 +115,22 @@ export function ImportArticlesProgress({ job }: ImportArticlesProgressProps) {
         You can close this — the import keeps running, and reopening Import
         Articles brings you back to it.
       </p>
+
+      {otherJobs.length > 0 && (
+        <div className="mt-4 border-t border-gp-glass-border pt-3">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-gp-ink-muted">
+            Also running in this field ({otherJobs.length})
+          </p>
+          {/* Deliberately the field page's own row, not a copy of it: these two
+              surfaces have now disagreed about the same import twice, and a
+              second implementation would be free to drift a third time. */}
+          <ul className="space-y-2">
+            {otherJobs.map((other) => (
+              <ArticleImportInFlightRow key={other.jobId} job={other} />
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }
