@@ -52,6 +52,11 @@
  * consequence is that the count of `resourceType: 'document'` resources drops by
  * the number of pairs merged.
  *
+ * ORDER MATTERS: run `scripts/backfill-source-fetched-from.ts --execute` first.
+ * That moves each document's fetched link into `sourceFetchedFrom`, which lets
+ * the merge below hand `sourceUrl` back to the member's `source_url` column
+ * without losing where the bytes came from.
+ *
  * Dry-run by DEFAULT. Nothing is written without `--execute`.
  *
  *   npx tsx scripts/reconcile-duplicate-document-resources.ts
@@ -155,8 +160,30 @@ async function main() {
            AND (doc.content IS NULL OR trim(doc.content) = ''
                 OR doc.content = doc.sourceFilename)
           THEN primary.content ELSE doc.content END,
-        // Where it was found, if the document did not already record it.
-        doc.sourceUrl = coalesce(doc.sourceUrl, primary.location),
+        // GOAL-356 INCIDENT FIX — do NOT let the fetched link win here.
+        //
+        // This line used to read coalesce(doc.sourceUrl, primary.location),
+        // and it destroyed member data on every pair it merged. The survivor is
+        // the DOCUMENT node, whose sourceUrl anchorDocument had already set to
+        // the URL the bytes were FETCHED from — so the coalesce always found a
+        // value, always kept the fetched link, and the row pulse's own
+        // sourceUrl (the sheet's source_url column, GOAL-355: where the
+        // MEMBER found the resource) died with the node this script deletes.
+        // Measured on demo: all 10 merged rows lost their LinkedIn/lnkd.in
+        // source_url and came back reading 1drv.ms. That inverts the guarantee
+        // kb/03 WF-11 makes about source_url — "nothing in the ingest path
+        // writes it, so the summary can never eat it".
+        //
+        // The row's value now wins, because the two properties mean different
+        // things and only one of them is the member's. The fetched link is not
+        // lost either: GOAL-356 moved it to sourceFetchedFrom, which is where
+        // the import's idempotency check reads it from, so run
+        // scripts/backfill-source-fetched-from.ts BEFORE this script and the
+        // survivor keeps both facts.
+        doc.sourceUrl = coalesce(primary.sourceUrl, doc.sourceUrl, primary.location),
+        // Carry the fetched link explicitly too, so a survivor merged before
+        // the backfill ran still ends up with one.
+        doc.sourceFetchedFrom = coalesce(doc.sourceFetchedFrom, doc.sourceUrl),
         doc.why = coalesce(doc.why, primary.why),
         doc.time = coalesce(doc.time, primary.time),
         doc.availability = coalesce(doc.availability, primary.availability),
