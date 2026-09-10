@@ -301,9 +301,7 @@ function resolveAuthor(
       label,
     }
   }
-  const roster = rosterPersons.find(
-    (p) => p.name.trim().toLowerCase() === key
-  )
+  const roster = rosterPersons.find((p) => p.name.trim().toLowerCase() === key)
   return roster
     ? { name: roster.name.trim(), personId: roster.id, label }
     : null
@@ -458,6 +456,16 @@ function buildCreatePulseArgs(
     // fallback from writing a malformed URL.
     // GOAL-344: a document fetched from a link is a copy of a public page —
     // the page itself is the better source to send a member to.
+    //
+    // `input.sourceUrl` is the document's member-facing link, and which
+    // property that resolves to is decided in `loadDocumentRecord` — read the
+    // comment on its `coalesce` before changing anything here. It prefers the
+    // member's found-at link over the URL the bytes were fetched from, because
+    // for a bulk-import row the fetched one is usually a OneDrive share of the
+    // PDF and a tokenized share link has no business rendering as a pulse's
+    // location. When a document has neither (an ordinary upload), this falls
+    // through to the authorized download route, which re-checks Space access
+    // on every hit rather than exposing the blob.
     args.location =
       input.sourceUrl?.trim() || buildDocumentDownloadUrl(input.documentId)
   }
@@ -623,7 +631,10 @@ export async function extractEntities(
   const personCalls: SynthesizedToolCall[] = uniquePersons.map((person) => {
     const match = resolvePersonMatch(person, input.roster.persons)
     if (match) {
-      return { tool: 'update_person', args: buildUpdatePersonArgs(person, match, input) }
+      return {
+        tool: 'update_person',
+        args: buildUpdatePersonArgs(person, match, input),
+      }
     }
     return { tool: 'create_person', args: buildCreatePersonArgs(person, input) }
   })
@@ -688,7 +699,11 @@ export async function extractEntities(
     }
 
     for (const ref of p.relatedOrganizations ?? []) {
-      const resolved = resolveRelatedOrg(ref, uniqueOrgs, input.roster.organizations)
+      const resolved = resolveRelatedOrg(
+        ref,
+        uniqueOrgs,
+        input.roster.organizations
+      )
       if (!resolved) continue
       const key = `organization|${resolved.name.trim().toLowerCase()}|${normalizePulseKey(p.kind, p.title)}`
       if (seenLinks.has(key)) continue
@@ -802,9 +817,7 @@ function buildAssistantText(params: {
         `${uniquePulses.length === 1 ? 'one pulse' : `${uniquePulses.length} pulses`}: ${titles}`
       )
     }
-    parts.push(
-      `Reading ${input.filename}, I found ${segments.join(' and ')}.`
-    )
+    parts.push(`Reading ${input.filename}, I found ${segments.join(' and ')}.`)
   }
 
   // Surface recognised matches in the chat copy — names only, no ids.

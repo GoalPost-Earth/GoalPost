@@ -1,8 +1,16 @@
 'use client'
 
-import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { cn } from '@/lib/utils'
 import { useFindQuery } from '@/components/studio/find-query-context'
+import { OPEN_INFO_DRAWER_EVENT } from '@/components/dashboard/entity-info-drawer'
 import { SectionListSearch } from './section-list-search'
 import {
   Dialog,
@@ -85,6 +93,37 @@ export function SectionList<T>({
   const [query, setQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
   const { query: findQuery } = useFindQuery()
+
+  /**
+   * GOAL-364: picking a row hands the viewer over to the info drawer, so this
+   * list stands down.
+   *
+   * Rows open `EntityInfoDrawer`, which is mounted at the canvas-host level —
+   * outside this dialog's portal. A Radix dialog is modal by default: it
+   * `aria-hidden`s everything outside itself and drops `pointer-events` on the
+   * body. So the drawer opened but arrived behind the list, unreadable and
+   * uninteractable, and the client's report was that clicking a pulse
+   * "comes up in the background behind the list of all pulses" and could not
+   * be seen without closing the list first (2026-09-10).
+   *
+   * Raising the drawer's z-index is necessary but NOT sufficient — it would
+   * paint on top while still being inert and hidden from assistive tech. The
+   * modality has to end, and the honest way to end it is to close the list,
+   * which has done its job the moment a row is chosen.
+   *
+   * Keyed off the drawer's own open event rather than a per-row callback so it
+   * holds for every section — pulses, people, documents, resonances — without
+   * each caller having to remember to wire it up. `renderItem` belongs to the
+   * caller, so a callback here would only ever be as reliable as the least
+   * careful one.
+   */
+  useEffect(() => {
+    if (!open) return
+    const closeForDrawer = () => setOpen(false)
+    window.addEventListener(OPEN_INFO_DRAWER_EVENT, closeForDrawer)
+    return () =>
+      window.removeEventListener(OPEN_INFO_DRAWER_EVENT, closeForDrawer)
+  }, [open])
 
   const preview = items.slice(0, previewCount)
   const hidden = items.length - preview.length

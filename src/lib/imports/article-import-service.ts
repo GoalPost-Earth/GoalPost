@@ -499,7 +499,23 @@ async function resolveRowOutcome({
           row.pulseType === 'ResourcePulse' && row.sourceUrl
             ? (normalizeArticleUrl(row.sourceUrl) ?? undefined)
             : undefined,
-        location: normalizeArticleUrl(row.url) ?? undefined,
+        // Where the resource LIVES, for a member to click — the page they
+        // found it on, not our copy of the file. The sheet's `url` column is
+        // routinely a OneDrive/Drive share of a PDF (it is the thing we fetch
+        // and read), so using it here put a tokenized share link under the
+        // location pin on every imported pulse. Reported by the client
+        // 2026-09-09: "the URL being shown for the pulse is still the URL from
+        // the spreadsheet, not the source URL field."
+        //
+        // `url` remains the fallback, so a sheet with no `source_url` column
+        // behaves exactly as it did before GOAL-355 added one. Unlike the
+        // `sourceUrl` property above this is NOT gated on ResourcePulse —
+        // every pulse type declares `location` — though in practice the parser
+        // already fails a non-resource row that carries `source_url`.
+        location:
+          (row.sourceUrl ? normalizeArticleUrl(row.sourceUrl) : null) ??
+          normalizeArticleUrl(row.url) ??
+          undefined,
         time: normalizeArticleDate(row.date ?? '') || undefined,
         attributedToPersonId: author.personId,
         attributedToName: author.authorName,
