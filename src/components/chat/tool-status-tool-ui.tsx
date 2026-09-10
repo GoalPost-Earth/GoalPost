@@ -80,6 +80,16 @@ const TOOL_STATUS_COPY: Record<string, ToolStatusCopy> = {
     done: 'Checked your current view',
     icon: 'center_focus_strong',
   },
+  // GOAL-359. The dedicated `ImportProgressToolPart` overrides this in
+  // `thread.tsx`'s by_name map, but it falls BACK to this chip while the
+  // lookup is running and when it errors — so the entry has to exist or a
+  // model-initiated "how's my import?" shows a blank gap and then, on failure,
+  // nothing at all.
+  get_import_status: {
+    running: 'Checking your imports',
+    done: 'Checked your imports',
+    icon: 'newspaper',
+  },
 }
 
 const FALLBACK_COPY: ToolStatusCopy = {

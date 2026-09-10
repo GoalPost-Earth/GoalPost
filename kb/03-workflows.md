@@ -453,6 +453,17 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
    Importing (with a row-count meter) → the per-row result summary. Closing it
    does not cancel anything; the job id is remembered per field, so reopening
    Import Articles returns to the running import. Reads are requester-scoped.
+9. **The import also opens its own chat thread (GOAL-359).** The same 202 that
+   mints the job creates a `ConversationThread` with `kind: 'import'`, titled
+   `Import: <n> articles into <Field>`, seeded with a synthesized user turn and
+   an assistant turn whose `get_import_status` tool part carries the job id.
+   The client emits `emitOpenAssistantThread` and closes the modal, so the
+   member lands in a thread that follows the import live rather than reopening
+   the modal to check on it. Same shape as WF-10 step 7; what differs is that
+   the tool part is a *window* onto work still running, not a receipt of work
+   already done, so `ImportProgressToolPart` polls the same jobId endpoint the
+   modal does. Thread creation is best-effort — an import that cannot get a
+   thread still queues, and the modal's own progress panel still works.
 
 ### WF-11 implementation constraints
 

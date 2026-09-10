@@ -61,7 +61,10 @@ export interface ConversationThreadRecord {
   lastTurnAt: string | null
   /** Stored AssistantMode. `'default' | 'aiden' | 'braider'`. `'default'` if unset. */
   mode: string
-  /** `'ingest'` for doc-ingestion threads; `'reflective'` for the user's normal chat. */
+  /**
+   * `'ingest'` for doc-ingestion threads, `'import'` for the thread a bulk
+   * article import opens (GOAL-359); `'reflective'` for the user's normal chat.
+   */
   kind: string
   /** Human-readable title (e.g. "Ingest: meeting-notes.pdf"). Null when unset. */
   title: string | null

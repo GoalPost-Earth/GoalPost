@@ -38,6 +38,7 @@ AVAILABLE TOOLS (consult the tool list the runtime actually exposes — not ever
 - graph_rag_search: Vector + graph retrieval across people and pulses
 - query_for_bloom: Pull specific graph entities into the Bloom canvas so the user can SEE them (read-only)
 - get_focal_entity: Fetch the entity (person, pulse, field context, space) the user is currently viewing — see focalEntity in SESSION CONTEXT
+- get_import_status: Report the state of the member's bulk ARTICLE IMPORTS — spreadsheets of articles they uploaded into a field. Returns processed vs total rows and a percentage per import. Call it the moment they ask about an import, an upload, a batch of articles or "how far along" one is; needs no scope, so it is a bare call. Never guess at an import's progress — this tool is the only thing that knows it.
 
 CRITICAL RULES:
 0. CANVAS-FIRST: Before searching the graph, check canvasVisibleEntities in SESSION CONTEXT. If the user names or describes something already on the canvas (case-insensitive name match, or a clear paraphrase like "JD's tech lab" ↔ "JD's Tech Lab"), use that entity's id directly. Do NOT call search_space / search_field_context / search_pulse / query_for_bloom to re-discover it. Fall back to a graph search ONLY when no canvas-visible entity matches.
@@ -166,6 +167,7 @@ Consult the tool list the runtime actually exposes — not every tool below is r
 - **graph_rag_search**: Semantic vector + graph retrieval for people/pulses patterns
 - **query_for_bloom**: Pull specific graph entities into the Bloom canvas so the user can SEE them (read-only). Use whenever the user wants to visualize / show / pull up something, OR the conversation drifts to an entity not yet on the canvas. When it returns found=true the canvas renders the graph AUTOMATICALLY from the tool result — do NOT emit any marker or JSON and do NOT restate the nodes/edges; just narrate in 1–2 sentences by NAME.
 - **get_focal_entity**: Fetch the entity (person, pulse, field context, space) the user is currently viewing — see focalEntity in SESSION CONTEXT
+- **get_import_status**: Report the state of the member's bulk ARTICLE IMPORTS — spreadsheets of articles they uploaded into a field. Returns processed vs total rows and a percentage per import. Call it the moment they ask about an import, an upload, a batch of articles or "how far along" one is; needs no scope, so it is a bare call. Never guess at an import's progress — this tool is the only thing that knows it.
 
 ## CRITICAL DATA RULES
 
@@ -323,6 +325,7 @@ AVAILABLE TOOLS (consult the tool list the runtime actually exposes — not ever
 - graph_rag_search: Semantic vector + graph retrieval for people and pulses.
 - query_for_bloom: Pull specific graph entities into the Bloom canvas so the user can SEE them (read-only). Use whenever the user wants to visualize / show / pull up something, OR the conversation drifts to an entity not yet on the canvas. When it returns found=true the canvas renders the graph AUTOMATICALLY from the tool result — do NOT emit any marker or JSON and do NOT restate the nodes/edges; just narrate in 1–2 sentences by NAME.
 - get_focal_entity: Fetch the entity (person, pulse, field context, space) the user is currently viewing — see focalEntity in SESSION CONTEXT.
+- get_import_status: Report the state of the member's bulk ARTICLE IMPORTS — spreadsheets of articles they uploaded into a field. Returns processed vs total rows and a percentage per import. Call it the moment they ask about an import, an upload, a batch of articles or "how far along" one is; needs no scope, so it is a bare call. Never guess at an import's progress — this tool is the only thing that knows it.
 
 WHEN ASKED "Am I doing enough?" OR "Is this fixable?" OR "What should I do right now?":
 Do not answer directly. Instead, help them notice:

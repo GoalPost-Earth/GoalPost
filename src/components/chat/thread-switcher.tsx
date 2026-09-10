@@ -234,9 +234,14 @@ export function ThreadSwitcher({
                         <span className="truncate text-xs font-medium text-slate-900 dark:text-white">
                           {displayTitle}
                         </span>
-                        {thread.kind === 'ingest' && (
+                        {/* GOAL-359 adds 'import' beside 'ingest': both are
+                            threads the platform opened on the member's behalf,
+                            so both earn the same chip rather than looking like
+                            conversations they started and forgot. */}
+                        {(thread.kind === 'ingest' ||
+                          thread.kind === 'import') && (
                           <span className="shrink-0 inline-flex items-center px-1.5 py-0.5 rounded-full bg-gp-primary/10 dark:bg-gp-primary/20 text-[9px] uppercase tracking-[0.12em] font-semibold text-gp-primary">
-                            Ingest
+                            {thread.kind === 'import' ? 'Import' : 'Ingest'}
                           </span>
                         )}
                       </div>
