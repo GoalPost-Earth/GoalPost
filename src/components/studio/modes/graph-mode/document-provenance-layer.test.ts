@@ -2,6 +2,7 @@ import {
   buildDocumentProvenanceLayer,
   type ProvenanceDocument,
 } from './document-provenance-layer'
+import { DEFAULT_EDGE_CAPTIONS } from './edge-caption'
 import {
   BLOOM_PALETTE_DARK,
   BLOOM_PALETTE_LIGHT,
@@ -100,7 +101,9 @@ describe('buildDocumentProvenanceLayer', () => {
         docsOnCanvas: ['d2'],
       })
       expect(layer.relationships).toHaveLength(1)
-      expect(layer.relationships[0].from).toBe('d2')
+      // GOAL-362: drawn person->document, matching the stored
+      // (Person)-[:EXTRACTED_FROM]->(pulse) edge.
+      expect(layer.relationships[0].to).toBe('d2')
       expect([...layer.documentIds]).toEqual(['d2'])
     })
 
@@ -110,7 +113,7 @@ describe('buildDocumentProvenanceLayer', () => {
         persons: ['p1'],
         docsOnCanvas: ['d1'],
       })
-      expect(layer.relationships.map((r) => r.to)).toEqual(['p1'])
+      expect(layer.relationships.map((r) => r.from)).toEqual(['p1'])
     })
 
     it('never references an id outside the two visible sets', () => {
@@ -132,7 +135,7 @@ describe('buildDocumentProvenanceLayer', () => {
         persons: ['p1'],
         docsOnCanvas: ['d1', 'd2'],
       })
-      expect(layer.relationships.map((r) => r.from).sort()).toEqual(['d1', 'd2'])
+      expect(layer.relationships.map((r) => r.to).sort()).toEqual(['d1', 'd2'])
     })
   })
 
@@ -186,7 +189,7 @@ describe('buildDocumentProvenanceLayer', () => {
         persons: ['p1'],
         docsOnCanvas: ['d1'],
       })
-      expect(layer.relationships.map((r) => r.to)).toEqual(['p1'])
+      expect(layer.relationships.map((r) => r.from)).toEqual(['p1'])
     })
 
     it('tolerates a null extractedPeople list', () => {
@@ -229,7 +232,16 @@ describe('buildDocumentProvenanceLayer', () => {
         persons: ['p1'],
         docsOnCanvas: ['d1'],
       })
-      expect(layer.relationships[0].caption).toBe('extracted from')
+      // GOAL-362: the caption now resolves through the shared edge-caption
+      // table rather than a literal here, so the legend row, this layer and
+      // the generic sweep cannot drift apart on wording.
+      // GOAL-362: canvas captions are uppercased (edge-caption.ts), while the
+      // legend row keeps title case — so this compares against the shared
+      // default, uppercased, rather than a literal that could drift.
+      expect(layer.relationships[0].caption).toBe(
+        DEFAULT_EDGE_CAPTIONS.EXTRACTED_FROM.toUpperCase()
+      )
+      expect(layer.relationships[0].caption).toBe('EXTRACTED FROM')
     })
   })
 

@@ -86,6 +86,50 @@ type PersonConnectionEdge {
   interests: String
 }
 
+"""
+GOAL-362 — one relationship inside a FieldContext, flattened so the canvas can
+paint it without a hand-written family per edge type.
+
+Bloom used to enumerate its edges: six families, hardcoded per scope, each with
+a literal caption. Any relationship type outside that list was invisible on the
+canvas no matter what the graph held — `MENTIONED_IN` still is. This type is
+the generic alternative: `type` says which relationship it is, and `label`
+carries the words whoever wrote it used (the ingest extractor's reading of how
+a person relates to a pulse, or the assistant's `why` on a connection), so a
+new edge type reaches the canvas without a code change.
+
+`label` is deliberately free text, not an enum. The whole point is to keep a
+reading the vocabulary never anticipated — "Cited in passing", "Keynote
+speaker" — instead of collapsing it into a generic bucket. The canvas keys its
+legend and per-type filters off the edge COLOUR, which is derived from `type`,
+so free-text captions cannot fragment those controls.
+"""
+type FieldContextEdge
+  # Pure payload, NOT a node type. Without these exclusions @neo4j/graphql
+  # treats an undecorated object type as a node and generates open CRUD roots
+  # for it — `createFieldContextEdges` / `updateFieldContextEdges` /
+  # `deleteFieldContextEdges` plus three query roots, none carrying an
+  # `@authorization` rule. `extend schema @authentication` means a JWT is
+  # required, but any authenticated caller (GUEST included) could then write
+  # unbounded unlogged `(:FieldContextEdge)` nodes with no Space check, and
+  # every other caller could read them back. Same guard, and same reason, as
+  # `CreateSubFieldContextResponse` below.
+  @query(read: false, aggregate: false)
+  @mutation(operations: []) {
+  """Neo4j relationship type, e.g. INITIATED_BY, MENTIONED_IN, CONNECTED_TO."""
+  type: String!
+  """Id of the source node. Always one of this context's own entities."""
+  fromId: String!
+  """Id of the target node. Always one of this context's own entities."""
+  toId: String!
+  """
+  The edge's own words, when whoever wrote it supplied any. Null for edges
+  written before labels existed and for purely structural edges; the client
+  falls back to the relationship type's plain-English name.
+  """
+  label: String
+}
+
 
 
 # ============================================================================
@@ -1212,6 +1256,73 @@ type FieldContext
       RETURN p.id AS curatedPersonId
       """
       columnName: "curatedPersonId"
+    )
+  """
+  GOAL-362 — every relationship among this context's own entities, typed and
+  labelled, so the Bloom canvas can paint edge types nobody hand-coded.
+
+  AUTHORIZATION: this is a `@cypher` field ON `FieldContext`, so the type-level
+  READ filter above (owner or member of the owning Me/WeSpace) gates it — the
+  statement only ever runs for a context the caller already passed that filter
+  on. It is deliberately NOT a root query taking arbitrary node ids: a root
+  `@cypher` bypasses field-level auth, and a caller-supplied id list would need
+  the whole reachability check rebuilt here to be safe.
+
+  SCOPE: both endpoints must be an entity of THIS context — a pulse in it, or
+  a person or organization attached to it. So the field reveals no node the
+  caller could not already read through `pulses`, `people` or `organizations`,
+  and no edge that reaches outside the context.
+
+  The context node itself is deliberately NOT in scope: its `HAS_PULSE` /
+  `HAS_PERSON` / `HAS_ORGANIZATION` edges are containment, not relationships
+  between entities, and the canvas does not draw the context in-field. An
+  earlier draft included them and returned 137k rows for a 135-entity field.
+
+  The second endpoint is checked with a containment EXISTS rather than
+  collected into a list and tested with `IN`. The list form scans the whole
+  list per candidate row, so its cost tracked the entities' total out-degree —
+  including edges leaving the field, which `LIMIT` cannot bound because those
+  rows never reach the limit. Measured on the largest real field (370
+  entities, 732 edges): 524ms list vs 215ms existence check, same 5,171
+  dbHits. `ORDER BY` before `LIMIT` matters too — without it a field over the
+  cap paints a different edge set on every load.
+
+  `WEAVES` / `WOVEN_FOR` are deliberately absent from the disjunction: both
+  originate at `:PromiseWeave`, which is reached by `HAS_WEAVE` and so is
+  never in scope. Including them was dead traversal, and widening scope to
+  reach them would step around `PromiseWeave`'s own authorization.
+
+  SCOPE CAVEAT: entities reached only through the parent Space — its owner and
+  members — are not in scope unless they also carry `HAS_PERSON` on this
+  context. Edges to them still come from the hand-built families in
+  `bloom-graph-builder.ts`, which is why those are layered rather than retired.
+
+  COUPLING: `label` surfaces `CONNECTED_TO.why`, which is gated PII on
+  `PersonPrivateProfile`. That gate's `contexts_SOME` branch grants exactly the
+  caller who passed this type's READ filter, so today the two agree. If that
+  rule is ever tightened, this field must be tightened with it.
+  """
+  edges: [FieldContextEdge!]
+    # Not filterable, for the same reason curatedPersonIds isn't: a generated
+    # predicate on this field would join `FieldContextWhere`, which is
+    # reachable as a nested predicate where the FieldContext READ filter does
+    # not apply.
+    @filterable(byValue: false, byAggregate: false)
+    @cypher(
+      statement: """
+      MATCH (this)-[:HAS_PULSE|HAS_PERSON|HAS_ORGANIZATION]->(a)
+      MATCH (a)-[r:INITIATED_BY|CREATED_BY|MENTIONED_IN|CONNECTED_TO|EXTRACTED_FROM]->(b)
+      WHERE (this)-[:HAS_PULSE|HAS_PERSON|HAS_ORGANIZATION]->(b)
+      RETURN DISTINCT {
+        type: type(r),
+        fromId: a.id,
+        toId: b.id,
+        label: coalesce(r.label, r.why)
+      } AS edge
+      ORDER BY edge.type, edge.fromId, edge.toId
+      LIMIT 2000
+      """
+      columnName: "edge"
     )
   # Organizations attached to this context (GOAL-298). HAS_ORGANIZATION connects
   # go through the server-side ingest write only; open nested CONNECT is disabled

@@ -813,6 +813,89 @@ describe('ExtractionModelInvoker', () => {
       ).toHaveLength(1)
     })
 
+    it('GOAL-362: carries the per-link label onto the link args, and omits it when the document did not say how', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [
+          { firstName: 'Sarah', lastName: 'Chen' },
+          { firstName: 'Bob', lastName: 'Jones' },
+        ],
+        pulses: [
+          {
+            kind: 'GoalPulse',
+            title: 'Ship the migration',
+            content: 'Cut over before EOQ.',
+            relatedPeople: [
+              { name: 'Sarah Chen', label: 'Interviewed' },
+              // No label — the document names Bob without saying how. The arg
+              // must be ABSENT rather than empty, so the write's coalesce is a
+              // no-op and the canvas falls back to "Mentioned".
+              { name: 'Bob Jones' },
+            ],
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+
+      const linkCalls = result.toolCalls.filter(
+        (c) => c.tool === 'link_entity_to_pulse'
+      )
+      expect(linkCalls).toHaveLength(2)
+      const sarah = linkCalls.find((c) => c.args.entityName === 'Sarah Chen')
+      const bob = linkCalls.find((c) => c.args.entityName === 'Bob Jones')
+      expect(sarah?.args.label).toBe('Interviewed')
+      expect(bob?.args).not.toHaveProperty('label')
+    })
+
+    it('GOAL-362: carries the author label onto the pulse call as attributedAuthorLabel', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Sashank', lastName: 'Sharma' }],
+        pulses: [
+          {
+            kind: 'StoryPulse',
+            title: 'Distraction is the New Poverty',
+            content: 'Attention is a budget.',
+            authorName: 'Sashank Sharma',
+            authorLabel: 'Author of the article',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+
+      const pulseCall = result.toolCalls.find((c) => c.tool === 'create_pulse')
+      expect(pulseCall?.args).toMatchObject({
+        attributedToName: 'Sashank Sharma',
+        attributedAuthorLabel: 'Author of the article',
+      })
+    })
+
+    it('GOAL-362: omits attributedAuthorLabel when the document credits an author without saying how', async () => {
+      const modelClient: ExtractionModelClient = async () => ({
+        persons: [{ firstName: 'Sashank', lastName: 'Sharma' }],
+        pulses: [
+          {
+            kind: 'StoryPulse',
+            title: 'Distraction is the New Poverty',
+            content: 'Attention is a budget.',
+            authorName: 'Sashank Sharma',
+          },
+        ],
+        assistantText: '',
+      })
+      const result = await extractEntities(baseInput, modelClient)
+      expect(result.kind).toBe('ok')
+      if (result.kind !== 'ok') throw new Error('unreachable')
+
+      const pulseCall = result.toolCalls.find((c) => c.tool === 'create_pulse')
+      expect(pulseCall?.args.attributedToName).toBe('Sashank Sharma')
+      expect(pulseCall?.args).not.toHaveProperty('attributedAuthorLabel')
+    })
+
     it('emits a link_entity_to_pulse (person) call — ordered LAST — for a resolvable relatedPersonName, and drops a name that resolves to no extracted/roster person', async () => {
       const modelClient: ExtractionModelClient = async () => ({
         persons: [
@@ -826,7 +909,10 @@ describe('ExtractionModelInvoker', () => {
             content: 'Cut over before EOQ.',
             // Sarah resolves to an extracted person; the ghost name resolves to
             // nobody and must be dropped (never mint a link to an invented one).
-            relatedPersonNames: ['Sarah Chen', 'Ghost Person'],
+            relatedPeople: [
+              { name: 'Sarah Chen', label: 'Interviewed' },
+              { name: 'Ghost Person' },
+            ],
           },
         ],
         assistantText: '',
@@ -868,7 +954,7 @@ describe('ExtractionModelInvoker', () => {
             authorName: 'Sarah Chen',
             // The author is also (redundantly) named as related — she must be
             // deduped out of the links: INITIATED_BY, never MENTIONED_IN.
-            relatedPersonNames: ['Sarah Chen'],
+            relatedPeople: [{ name: 'Sarah Chen' }],
           },
         ],
         assistantText: '',
@@ -897,9 +983,9 @@ describe('ExtractionModelInvoker', () => {
             kind: 'ResourcePulse',
             title: 'Shared kiln',
             content: 'A community kiln available to members.',
-            relatedOrganizationNames: [
-              'Artisan Cooperative',
-              'Nonexistent Guild',
+            relatedOrganizations: [
+              { name: 'Artisan Cooperative', label: 'Offers this resource' },
+              { name: 'Nonexistent Guild' },
             ],
           },
         ],
@@ -944,7 +1030,7 @@ describe('ExtractionModelInvoker', () => {
             content: 'A first-person account of the first planting.',
             // Resolves to the roster person (no person call this run) — the
             // link must carry her already-live id directly.
-            relatedPersonNames: ['Sarah Chen'],
+            relatedPeople: [{ name: 'Sarah Chen' }],
           },
         ],
         assistantText: '',

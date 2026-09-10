@@ -49,6 +49,7 @@ import {
   type SpaceRecord,
   type WeaveRecord,
 } from './bloom-graph-builder'
+import type { SweptEdge } from './edge-sweep'
 import { applyBloomTypeFilters } from './bloom-type-registry'
 import { useBloomTypeFilters } from './use-bloom-type-filters'
 import {
@@ -816,6 +817,19 @@ export const BloomView: FC = () => {
     })
   }, [inField, fieldDetailsData])
 
+  // GOAL-362: the generic edge layer. Read straight off the same
+  // GET_FIELD_CONTEXT_DETAILS payload the dashboard already warmed — Bloom
+  // never fetches its own data (ADR-011), so this costs no round-trip. The
+  // server scopes it to this context's own entities and the FieldContext READ
+  // authorization gates it, so nothing here is an access decision.
+  const sweptEdges = useMemo<SweptEdge[]>(() => {
+    if (!inField || !fieldDetailsData) return []
+    const context = fieldDetailsData.fieldContexts?.[0] as
+      | { edges?: SweptEdge[] | null }
+      | undefined
+    return context?.edges ?? []
+  }, [inField, fieldDetailsData])
+
   // Spaces the current user owns — their MeSpace plus any WeSpace they
   // created. Drives whether a root spoke reads `owns` or `member`.
   const ownedSpaceIds = useMemo<ReadonlySet<string>>(() => {
@@ -852,6 +866,7 @@ export const BloomView: FC = () => {
       fieldAnchor,
       inFieldSpaceKind,
       documentProvenance,
+      sweptEdges,
       fieldContexts,
       spaceAnchor,
       inSpacePeople,
@@ -875,6 +890,7 @@ export const BloomView: FC = () => {
       fieldAnchor,
       inFieldSpaceKind,
       documentProvenance,
+      sweptEdges,
       fieldContexts,
       spaceAnchor,
       inSpacePeople,

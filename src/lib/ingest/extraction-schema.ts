@@ -97,17 +97,51 @@ export const ExtractionSchema = z.object({
           .describe(
             'Full name of the person this pulse is attributed to — the document author or named speaker whose voice the pulse carries. Must exactly match a name you emitted in persons, or a name from EXISTING PEOPLE. Use null when authorship is unclear.'
           ),
-        relatedPersonNames: z
-          .array(z.string())
+        authorLabel: z
+          .string()
           .nullable()
           .describe(
-            'Full names of people the document identifies as RELATED TO or NAMED IN this pulse but who are NOT its author — subjects, contributors, beneficiaries, referenced people. Each must exactly match a name you emitted in persons, or a name from EXISTING PEOPLE. Do NOT repeat the authorName here. Use null when none apply.'
+            'GOAL-362 — how this person is credited, in the document\'s own terms and as few words as possible: "Author", "Interviewee", "Keynote speaker", "Co-author". This becomes the visible label on the authorship link, so write it as a reader would say it, not as a database term. Drawn ONLY from what the document says — never invented. Use null when the document credits them without saying how.'
           ),
-        relatedOrganizationNames: z
-          .array(z.string())
+        relatedPeople: z
+          .array(
+            z.object({
+              name: z
+                .string()
+                .describe(
+                  'Full name. Must exactly match a name you emitted in persons, or a name from EXISTING PEOPLE.'
+                ),
+              label: z
+                .string()
+                .nullable()
+                .describe(
+                  'GOAL-362 — how this person relates to the pulse, in the document\'s own terms and as few words as possible: "Interviewed", "Cited", "Beneficiary", "Mentioned by the author". This becomes the visible label on the link. Drawn ONLY from what the document says. Use null when the document names them without saying how.'
+                ),
+            })
+          )
           .nullable()
           .describe(
-            'Names of organizations the document identifies as related to this pulse (e.g. the cooperative that offers a resource). Each must exactly match a name you emitted in organizations. Use null when none apply.'
+            'People the document identifies as RELATED TO or NAMED IN this pulse but who are NOT its author — subjects, contributors, beneficiaries, referenced people. Do NOT repeat the authorName here. Use null when none apply.'
+          ),
+        relatedOrganizations: z
+          .array(
+            z.object({
+              name: z
+                .string()
+                .describe(
+                  'Organization name. Must exactly match a name you emitted in organizations.'
+                ),
+              label: z
+                .string()
+                .nullable()
+                .describe(
+                  'GOAL-362 — how this organization relates to the pulse, in the document\'s own terms and as few words as possible: "Offers this resource", "Publisher", "Funder". Use null when the document names it without saying how.'
+                ),
+            })
+          )
+          .nullable()
+          .describe(
+            'Organizations the document identifies as related to this pulse (e.g. the cooperative that offers a resource). Use null when none apply.'
           ),
         status: z
           .string()
@@ -176,8 +210,17 @@ export function mapExtractionObject(
       content: p.content ?? '',
       existingId: p.existingId ?? undefined,
       authorName: p.authorName ?? undefined,
-      relatedPersonNames: p.relatedPersonNames ?? undefined,
-      relatedOrganizationNames: p.relatedOrganizationNames ?? undefined,
+      authorLabel: p.authorLabel ?? undefined,
+      // Collapse the per-link label's `null` to `undefined` the same way every
+      // other field here does, so the invoker keeps plain-optional semantics.
+      relatedPeople: (p.relatedPeople ?? undefined)?.map((r) => ({
+        name: r.name ?? '',
+        label: r.label ?? undefined,
+      })),
+      relatedOrganizations: (p.relatedOrganizations ?? undefined)?.map((r) => ({
+        name: r.name ?? '',
+        label: r.label ?? undefined,
+      })),
       status: p.status ?? undefined,
       intensity: p.intensity ?? undefined,
       horizon: p.horizon ?? undefined,

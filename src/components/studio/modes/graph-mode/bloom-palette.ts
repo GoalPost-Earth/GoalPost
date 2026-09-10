@@ -94,6 +94,20 @@ export interface BloomPalette {
    * and concept chips), so the edge reads as "document" on sight.
    */
   extractedEdge: string
+  /**
+   * GOAL-362 — a person or organization NAMED IN a pulse without authoring it.
+   * Its own hue because it is the commonest edge the canvas never drew: 237 of
+   * them in one field, previously invisible because no hand-built family
+   * covered MENTIONED_IN.
+   */
+  mentionedEdge: string
+  /**
+   * GOAL-362 — any relationship the generic sweep returns that no other row
+   * claims. Deliberately neutral: it decodes as "a relationship exists here"
+   * without asserting a meaning the palette hasn't been told. Gives every
+   * swept edge a legend row, so nothing paints undecodable.
+   */
+  otherEdge: string
 }
 
 /** Painted when `<html>` carries the `dark` class. Tuned for `#101c22`. */
@@ -122,6 +136,8 @@ export const BLOOM_PALETTE_DARK: BloomPalette = {
   weaveEdge: 'rgba(45, 212, 191, 0.55)',
   connectedEdge: 'rgba(244, 114, 182, 0.55)',
   extractedEdge: 'rgba(251, 191, 36, 0.65)',
+  mentionedEdge: 'rgba(56, 189, 248, 0.50)',
+  otherEdge: 'rgba(203, 213, 225, 0.38)',
 }
 
 /** Painted in light mode. Tuned for `#f6f7f8` — see the header for the method. */
@@ -155,6 +171,8 @@ export const BLOOM_PALETTE_LIGHT: BloomPalette = {
   connectedEdge: 'rgba(206, 16, 115, 0.60)',
   // The light-mode Document slate, per node-style.ts's own light override.
   extractedEdge: 'rgba(158, 115, 3, 0.70)',
+  mentionedEdge: 'rgba(2, 132, 199, 0.60)',
+  otherEdge: 'rgba(100, 116, 139, 0.45)',
 }
 
 /** Both palettes, for exhaustive checks (legend decoding, drift tests). */

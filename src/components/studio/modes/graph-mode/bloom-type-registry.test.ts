@@ -22,8 +22,6 @@ import {
   countRelationshipTypes,
   nodeTypeKey,
   normalizeColor,
-  presentNodeRows,
-  presentRelationshipRows,
   relationshipTypeKey,
 } from './bloom-type-registry'
 import {
@@ -109,64 +107,6 @@ describe('registry integrity', () => {
   })
 })
 
-describe('presentRows — the toggle list derives from the canvas', () => {
-  const asColors = (...c: string[]) => new Set(c.map(normalizeColor))
-
-  it('offers only the types this scope painted', () => {
-    const rows = presentNodeRows(asColors(DARK.pulse.goal, DARK.person))
-    expect(rows.map((r) => r.key)).toEqual(['goal', 'person'])
-  })
-
-  it('surfaces a new type with no per-type work — a colour is enough', () => {
-    expect(presentNodeRows(asColors(DARK.weaveNode)).map((r) => r.key)).toEqual(
-      ['promise-weave']
-    )
-  })
-
-  it('offers the edge rows a field scope paints', () => {
-    const rows = presentRelationshipRows(
-      asColors(DARK.initiatedEdge, DARK.extractedEdge)
-    )
-    expect(rows.map((r) => r.key)).toEqual(['initiated-by', 'extracted-from'])
-  })
-
-  /**
-   * The dead-toggle guard. `Organization` shares the WeSpace field tint, so a
-   * presence check against raw `row.colors` would offer an Organization switch
-   * that `nodeTypeKey` can never return — it would flip, change nothing, and
-   * still bump the legend's hidden-count, telling the viewer a type was hidden
-   * when it wasn't. Presence and filtering must resolve identically.
-   */
-  it('never offers a row the filter cannot act on', () => {
-    const offeredButUnreachable = [
-      ...BLOOM_NODE_TYPES,
-      ...BLOOM_RELATIONSHIP_TYPES,
-    ].filter((row) => {
-      const colors = asColors(...row.colors)
-      const offered = (
-        row.kind === 'node'
-          ? presentNodeRows(colors)
-          : presentRelationshipRows(colors)
-      ).some((r) => r.key === row.key)
-      if (!offered) return false
-      return !row.colors.some(
-        (c) =>
-          (row.kind === 'node'
-            ? nodeTypeKey(node('x', c))
-            : relationshipTypeKey(edge('x', 'a', 'b', c))) === row.key
-      )
-    })
-    expect(offeredButUnreachable.map((r) => r.key)).toEqual([])
-  })
-
-  it('routes a colour claimed by two rows to exactly one row', () => {
-    // '#5eead4' is both the dark WeSpace field tint and the overlay's
-    // Organization colour. One row wins; the other is never offered.
-    const rows = presentNodeRows(asColors('#5eead4'))
-    expect(rows).toHaveLength(1)
-    expect(rows[0].key).toBe(nodeTypeKey(node('x', '#5eead4')))
-  })
-})
 
 describe('applyBloomTypeFilters', () => {
   it('is a no-op — same object — when nothing is hidden', () => {

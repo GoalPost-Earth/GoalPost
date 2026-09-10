@@ -56,6 +56,18 @@ export interface ExtractedOrganizationCandidate {
  */
 export type ExtractedPulseKind = 'GoalPulse' | 'ResourcePulse' | 'StoryPulse'
 
+/**
+ * GOAL-362: one related entity plus how the document says it relates. The
+ * label is the extractor's own words and becomes the edge caption on the Bloom
+ * canvas; it is deliberately free text rather than an enum, so a reading the
+ * vocabulary never anticipated ("Cited in passing", "Named as a beneficiary")
+ * survives to the reader instead of collapsing into a generic bucket.
+ */
+export interface RelatedEntityRef {
+  name: string
+  label?: string
+}
+
 export interface ExtractedPulseCandidate {
   kind: ExtractedPulseKind
   title: string
@@ -69,18 +81,25 @@ export interface ExtractedPulseCandidate {
    */
   authorName?: string
   /**
-   * GOAL-298: full names of people RELATED TO / NAMED IN this pulse but not its
-   * author (subjects, contributors, beneficiaries). Each is linked to the pulse
-   * via MENTIONED_IN. Only honoured when the name resolves to an extracted
-   * person candidate or a roster person.
+   * GOAL-362: how the document credits the author, in its own words —
+   * "Author", "Interviewee", "Keynote speaker". Becomes the visible label on
+   * the INITIATED_BY edge; absent when the document credits them without
+   * saying how, in which case the canvas falls back to "Authored".
    */
-  relatedPersonNames?: string[]
+  authorLabel?: string
   /**
-   * GOAL-298: names of organizations related to this pulse. Each is linked via
+   * GOAL-298: people RELATED TO / NAMED IN this pulse but not its author
+   * (subjects, contributors, beneficiaries). Each is linked to the pulse via
+   * MENTIONED_IN. Only honoured when the name resolves to an extracted person
+   * candidate or a roster person. GOAL-362 added the per-link `label`.
+   */
+  relatedPeople?: RelatedEntityRef[]
+  /**
+   * GOAL-298: organizations related to this pulse. Each is linked via
    * MENTIONED_IN. Only honoured when the name resolves to an extracted
    * organization candidate or a roster organization.
    */
-  relatedOrganizationNames?: string[]
+  relatedOrganizations?: RelatedEntityRef[]
   status?: string
   intensity?: number
   horizon?: string
@@ -245,6 +264,8 @@ function resolvePulseMatch(
 interface ResolvedAuthor {
   /** Canonical display name (extracted candidate's or the roster's). */
   name: string
+  /** GOAL-362 — the document's own words for this link, when it gave any. */
+  label?: string
   /**
    * Set only on a roster match — the id is already live, so attribution must
    * not depend on a person call running this run (the model is told not to
@@ -268,6 +289,7 @@ function resolveAuthor(
 ): ResolvedAuthor | null {
   const raw = candidate.authorName?.trim()
   if (!raw) return null
+  const label = candidate.authorLabel?.trim() || undefined
   const key = raw.toLowerCase()
   const extracted = persons.find(
     (p) =>
@@ -276,12 +298,15 @@ function resolveAuthor(
   if (extracted) {
     return {
       name: `${extracted.firstName.trim()} ${extracted.lastName.trim()}`.trim(),
+      label,
     }
   }
   const roster = rosterPersons.find(
     (p) => p.name.trim().toLowerCase() === key
   )
-  return roster ? { name: roster.name.trim(), personId: roster.id } : null
+  return roster
+    ? { name: roster.name.trim(), personId: roster.id, label }
+    : null
 }
 
 /**
@@ -291,10 +316,12 @@ function resolveAuthor(
  * a MENTIONED_IN link is never minted to an invented person.
  */
 function resolveRelatedPerson(
-  rawName: string,
+  ref: RelatedEntityRef,
   persons: ExtractedPersonCandidate[],
   rosterPersons: RosterPerson[]
 ): ResolvedAuthor | null {
+  const rawName = ref.name
+  const label = ref.label?.trim() || undefined
   const key = rawName.trim().toLowerCase()
   if (!key) return null
   const extracted = persons.find(
@@ -304,16 +331,21 @@ function resolveRelatedPerson(
   if (extracted) {
     return {
       name: `${extracted.firstName.trim()} ${extracted.lastName.trim()}`.trim(),
+      label,
     }
   }
   const roster = rosterPersons.find((p) => p.name.trim().toLowerCase() === key)
-  return roster ? { name: roster.name.trim(), personId: roster.id } : null
+  return roster
+    ? { name: roster.name.trim(), personId: roster.id, label }
+    : null
 }
 
 interface ResolvedOrg {
   name: string
   /** Set only on a roster match — the id is already live. */
   organizationId?: string
+  /** GOAL-362 — the document's own words for this link, when it gave any. */
+  label?: string
 }
 
 /**
@@ -321,16 +353,19 @@ interface ResolvedOrg {
  * and the context roster. Returns null when it matches neither.
  */
 function resolveRelatedOrg(
-  rawName: string,
+  ref: RelatedEntityRef,
   orgs: ExtractedOrganizationCandidate[],
   rosterOrgs: RosterOrganization[]
 ): ResolvedOrg | null {
-  const key = rawName.trim().toLowerCase()
+  const label = ref.label?.trim() || undefined
+  const key = ref.name.trim().toLowerCase()
   if (!key) return null
   const extracted = orgs.find((o) => o.name.trim().toLowerCase() === key)
-  if (extracted) return { name: extracted.name.trim() }
+  if (extracted) return { name: extracted.name.trim(), label }
   const roster = rosterOrgs.find((o) => o.name.trim().toLowerCase() === key)
-  return roster ? { name: roster.name.trim(), organizationId: roster.id } : null
+  return roster
+    ? { name: roster.name.trim(), organizationId: roster.id, label }
+    : null
 }
 
 function buildCreateOrganizationArgs(
@@ -360,11 +395,14 @@ function buildLinkArgs(params: {
   entityType: 'person' | 'organization'
   entityName: string
   entityId?: string
+  /** GOAL-362 — the document's own words for this link, when it gave any. */
+  label?: string
   pulse: ExtractedPulseCandidate
   pulseId?: string
   input: ExtractionModelInput
 }): Record<string, unknown> {
-  const { entityType, entityName, entityId, pulse, pulseId, input } = params
+  const { entityType, entityName, entityId, label, pulse, pulseId, input } =
+    params
   const args: Record<string, unknown> = {
     entityType,
     entityName,
@@ -379,6 +417,7 @@ function buildLinkArgs(params: {
     else args.organizationId = entityId
   }
   if (pulseId) args.pulseId = pulseId
+  if (label) args.label = label
   return args
 }
 
@@ -621,9 +660,9 @@ export async function extractEntities(
     const author = resolveAuthor(p, uniquePersons, input.roster.persons)
     const authorKey = author?.name.trim().toLowerCase() ?? ''
 
-    for (const rawName of p.relatedPersonNames ?? []) {
+    for (const ref of p.relatedPeople ?? []) {
       const resolved = resolveRelatedPerson(
-        rawName,
+        ref,
         uniquePersons,
         input.roster.persons
       )
@@ -640,6 +679,7 @@ export async function extractEntities(
           entityType: 'person',
           entityName: resolved.name,
           entityId: resolved.personId,
+          label: resolved.label,
           pulse: p,
           pulseId,
           input,
@@ -647,8 +687,8 @@ export async function extractEntities(
       })
     }
 
-    for (const rawName of p.relatedOrganizationNames ?? []) {
-      const resolved = resolveRelatedOrg(rawName, uniqueOrgs, input.roster.organizations)
+    for (const ref of p.relatedOrganizations ?? []) {
+      const resolved = resolveRelatedOrg(ref, uniqueOrgs, input.roster.organizations)
       if (!resolved) continue
       const key = `organization|${resolved.name.trim().toLowerCase()}|${normalizePulseKey(p.kind, p.title)}`
       if (seenLinks.has(key)) continue
@@ -659,6 +699,7 @@ export async function extractEntities(
           entityType: 'organization',
           entityName: resolved.name,
           entityId: resolved.organizationId,
+          label: resolved.label,
           pulse: p,
           pulseId,
           input,
@@ -681,6 +722,10 @@ export async function extractEntities(
     if (author) {
       args.attributedToName = author.name
       if (author.personId) args.attributedToPersonId = author.personId
+      // GOAL-362: the document's own word for the credit ("Interviewee",
+      // "Keynote speaker") rides along and becomes the INITIATED_BY edge's
+      // label. Absent for a document that credits without saying how.
+      if (author.label) args.attributedAuthorLabel = author.label
     }
     return { tool: match ? 'update_pulse' : 'create_pulse', args }
   })

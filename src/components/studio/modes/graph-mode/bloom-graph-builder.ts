@@ -5,6 +5,13 @@ import type { BloomPalette } from './bloom-palette'
 import type { DocumentProvenanceLayer } from './document-provenance-layer'
 import type { BloomOverlay } from '../../bloom-overlay-context'
 import type { BloomCanvas } from './bloom-type-registry'
+import { edgeCaption, edgeEndpoints } from './edge-caption'
+import {
+  buildSweptRelationships,
+  edgeKey,
+  sweptEdgeKeys,
+  type SweptEdge,
+} from './edge-sweep'
 
 /**
  * Construction of the Bloom canvas — every native NVL node and relationship
@@ -174,6 +181,13 @@ export interface BloomGraphInput {
   fieldAnchor: NamedEntity | null
   inFieldSpaceKind: 'MeSpace' | 'WeSpace'
   documentProvenance: DocumentProvenanceLayer
+  /**
+   * GOAL-362 — every relationship among this context's entities, straight from
+   * the server (`FieldContext.edges`). Layered on top of the hand-built
+   * families below, deduped, so edge types nobody wrote a branch for still
+   * reach the canvas. Empty when the field has none or the query is in flight.
+   */
+  sweptEdges: readonly SweptEdge[]
 
   // In-space scope.
   fieldContexts: FieldContextRecord[]
@@ -434,6 +448,7 @@ export function buildBloomRelationships(
     subContexts,
     fieldAnchor,
     documentProvenance,
+    sweptEdges,
     fieldContexts,
     spaceAnchor,
     inSpacePeople,
@@ -464,6 +479,21 @@ export function buildBloomRelationships(
       ...pulses.map((p) => p.id),
       ...persons.map((p) => p.id),
     ])
+    // GOAL-362: the sweep runs FIRST and its keys suppress the hand-built
+    // family for any edge it already carries. Inverted on purpose — for an
+    // edge both layers know, the sweep's caption is the writer's own words
+    // while the family can only produce the generic type word. The families
+    // still cover what the sweep's scope cannot reach (an author who belongs
+    // to the parent Space but has no HAS_PERSON on this context), so both are
+    // needed.
+    const swept = buildSweptRelationships({
+      edges: sweptEdges,
+      visibleIds,
+      existing: new Set<string>(),
+      palette,
+    })
+    const covered = sweptEdgeKeys(sweptEdges, visibleIds)
+
     const edges: Relationship[] = []
 
     // RESONATES_WITH — pulse↔pulse semantic links. Built unconditionally now
@@ -476,7 +506,7 @@ export function buildBloomRelationships(
         id: `resonance-${r.id}`,
         from: r.sourceId,
         to: r.targetId,
-        caption: r.label,
+        caption: edgeCaption(r.label, 'HAS_RESONANCE'),
         color: palette.resonanceEdge,
         width: 2,
       } as Relationship)
@@ -488,11 +518,20 @@ export function buildBloomRelationships(
     for (const author of pulseAuthors) {
       if (!visibleIds.has(author.pulseId)) continue
       if (!visibleIds.has(author.authorId)) continue
+      // Stored pulse->person; drawn person->pulse so "Authored" reads the way
+      // a reader asks the question. See REVERSED_ON_CANVAS.
+      const ends = edgeEndpoints(author.pulseId, author.authorId, 'INITIATED_BY')
+      // The sweep already drew this one, with the extractor's own wording.
+      if (covered.has(edgeKey(ends.from, ends.to, 'INITIATED_BY'))) continue
       edges.push({
         id: `initiated-by-${author.pulseId}-${author.authorId}`,
-        from: author.pulseId,
-        to: author.authorId,
-        caption: 'initiated',
+        from: ends.from,
+        to: ends.to,
+        // No label here by construction: this record is built from
+        // `initiatedBy { id }`, a relationship field that carries no edge
+        // properties. The labelled version of this edge comes from the sweep,
+        // which is why it runs first and suppresses this one.
+        caption: edgeCaption(null, 'INITIATED_BY'),
         color: palette.initiatedEdge,
         width: 1.5,
       } as Relationship)
@@ -508,7 +547,7 @@ export function buildBloomRelationships(
           id: `weaves-${w.id}-${pid}`,
           from: w.id,
           to: pid,
-          caption: 'weaves',
+          caption: edgeCaption(null, 'WEAVES'),
           color: palette.weaveEdge,
           width: 1.5,
         } as Relationship)
@@ -519,7 +558,14 @@ export function buildBloomRelationships(
     // The layer already filtered its person endpoints against the same person
     // set `visibleIds` is built from, and only emits a document that kept at
     // least one, so these need no further guard here.
-    edges.push(...documentProvenance.relationships)
+    edges.push(
+      ...documentProvenance.relationships.filter(
+        (r) =>
+          !covered.has(
+            edgeKey(String(r.from), String(r.to), 'EXTRACTED_FROM')
+          )
+      )
+    )
 
     // CONNECTED_TO — interpersonal relationships between the people in this
     // field (including the user↔person relationships, e.g. "your wife"). Both
@@ -527,11 +573,15 @@ export function buildBloomRelationships(
     // person so user↔person relationships draw correctly.
     for (const c of connections) {
       if (!visibleIds.has(c.fromId) || !visibleIds.has(c.toId)) continue
+      // CONNECTED_TO is undirected: this layer orders endpoints by the people
+      // array, the sweep reports the stored order. `edgeKey` normalises both
+      // to the sorted pair, so the two can't each draw their own line.
+      if (covered.has(edgeKey(c.fromId, c.toId, 'CONNECTED_TO'))) continue
       edges.push({
         id: `connected-${[c.fromId, c.toId].sort().join('-')}`,
         from: c.fromId,
         to: c.toId,
-        caption: 'connected',
+        caption: edgeCaption(c.why, 'CONNECTED_TO'),
         color: palette.connectedEdge,
         width: 1.5,
       } as Relationship)
@@ -546,14 +596,14 @@ export function buildBloomRelationships(
           id: `subcontext-${fieldAnchor.id}-${sub.id}`,
           from: fieldAnchor.id,
           to: sub.id,
-          caption: 'nested',
+          caption: edgeCaption(null, 'HAS_SUBCONTEXT'),
           color: palette.structuralEdge,
           width: 1.5,
         } as Relationship)
       }
     }
 
-    return dedupe(edges)
+    return [...swept, ...dedupe(edges)]
   }
 
   if (inSpace && spaceAnchor) {
@@ -578,7 +628,7 @@ export function buildBloomRelationships(
               id: `subcontext-${nestedParentId}-${ctx.id}`,
               from: nestedParentId,
               to: ctx.id,
-              caption: 'nested',
+              caption: edgeCaption(null, 'HAS_SUBCONTEXT'),
               color: palette.structuralEdge,
               width: 1.5,
             } as Relationship)
@@ -586,7 +636,7 @@ export function buildBloomRelationships(
               id: `has-${spaceAnchor.id}-${ctx.id}`,
               from: spaceAnchor.id,
               to: ctx.id,
-              caption: 'has',
+              caption: edgeCaption(null, 'HAS_CONTEXT'),
               color: palette.structuralEdge,
               width: 1.5,
             } as Relationship)
@@ -599,7 +649,7 @@ export function buildBloomRelationships(
         id: `${owns ? 'owns' : 'member'}-${p.id}-${spaceAnchor.id}`,
         from: p.id,
         to: spaceAnchor.id,
-        caption: owns ? 'owns' : 'member',
+        caption: edgeCaption(null, owns ? 'OWNS' : 'HAS_MEMBER'),
         color: palette.structuralEdge,
         width: 1.5,
       } as Relationship)
@@ -618,7 +668,7 @@ export function buildBloomRelationships(
         id: `${owns ? 'owns' : 'member'}-${currentUserId}-${space.id}`,
         from: currentUserId,
         to: space.id,
-        caption: owns ? 'owns' : 'member',
+        caption: edgeCaption(null, owns ? 'OWNS' : 'HAS_MEMBER'),
         color: palette.structuralEdge,
         width: 1.5,
       } as Relationship

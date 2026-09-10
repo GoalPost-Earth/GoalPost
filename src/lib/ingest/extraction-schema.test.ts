@@ -107,8 +107,9 @@ describe('mapExtractionObject (GOAL-282)', () => {
           content: 'Ship the v1 ingest pipeline.',
           existingId: null,
           authorName: null,
-          relatedPersonNames: null,
-          relatedOrganizationNames: null,
+          authorLabel: null,
+          relatedPeople: null,
+          relatedOrganizations: null,
           status: null,
           intensity: null,
           horizon: null,
@@ -127,8 +128,9 @@ describe('mapExtractionObject (GOAL-282)', () => {
     expect(out.persons[0].description).toBeUndefined()
     expect(out.pulses?.[0].existingId).toBeUndefined()
     expect(out.pulses?.[0].authorName).toBeUndefined()
-    expect(out.pulses?.[0].relatedPersonNames).toBeUndefined()
-    expect(out.pulses?.[0].relatedOrganizationNames).toBeUndefined()
+    expect(out.pulses?.[0].authorLabel).toBeUndefined()
+    expect(out.pulses?.[0].relatedPeople).toBeUndefined()
+    expect(out.pulses?.[0].relatedOrganizations).toBeUndefined()
     expect(out.pulses?.[0].status).toBeUndefined()
     expect(out.pulses?.[0].intensity).toBeUndefined()
   })
@@ -177,8 +179,11 @@ describe('mapExtractionObject (GOAL-282)', () => {
           content: 'A small compute budget is available.',
           existingId: 'pulse_9',
           authorName: 'Ada Lovelace',
-          relatedPersonNames: ['Charles Babbage'],
-          relatedOrganizationNames: ['Analytical Engine Co'],
+          authorLabel: 'Author',
+          relatedPeople: [{ name: 'Charles Babbage', label: 'Collaborator' }],
+          relatedOrganizations: [
+            { name: 'Analytical Engine Co', label: null },
+          ],
           status: null,
           intensity: 0,
           horizon: null,
@@ -202,9 +207,14 @@ describe('mapExtractionObject (GOAL-282)', () => {
     expect(out.organizations?.[0].existingId).toBe('org_1')
     expect(out.pulses?.[0].existingId).toBe('pulse_9')
     expect(out.pulses?.[0].authorName).toBe('Ada Lovelace')
-    expect(out.pulses?.[0].relatedPersonNames).toEqual(['Charles Babbage'])
-    expect(out.pulses?.[0].relatedOrganizationNames).toEqual([
-      'Analytical Engine Co',
+    expect(out.pulses?.[0].authorLabel).toBe('Author')
+    // GOAL-362: the per-link label rides alongside the name, and a null label
+    // normalises to undefined the same way every other field here does.
+    expect(out.pulses?.[0].relatedPeople).toEqual([
+      { name: 'Charles Babbage', label: 'Collaborator' },
+    ])
+    expect(out.pulses?.[0].relatedOrganizations).toEqual([
+      { name: 'Analytical Engine Co', label: undefined },
     ])
     expect(out.pulses?.[0].intensity).toBe(0)
     expect(out.pulses?.[0].availability).toBe(0)
