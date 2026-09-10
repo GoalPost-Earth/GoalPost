@@ -143,8 +143,30 @@ export async function handleDeleteDocument(
         WHERE d:ResourcePulse AND ${SOURCE_BACKED_RESOURCE}
         OPTIONAL MATCH (owner:Person {id: $userId})-[:OWNS]->(space)
         OPTIONAL MATCH (space)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $userId})
-          WHERE sm.role IN ['ADMIN', 'MEMBER']
-        WITH d, c, (owner IS NOT NULL OR sm IS NOT NULL) AS allowed
+          WHERE sm.role = 'ADMIN'
+        // GOAL-356 — creator / ADMIN / owner, which is what the kb/02 DELETE
+        // matrix has always said. This gate used to admit any ADMIN *or MEMBER*
+        // and rely on SOURCE_BACKED_RESOURCE above to keep the reachable set to
+        // ingest-minted nodes; the comment above still described that as latent
+        // because no blob-backed resource sat in a Space with a MEMBER-role
+        // membership. GOAL-356 ended both halves of that argument: an imported
+        // article's own pulse is now source-backed, so the reachable set is the
+        // whole bulk-import output — member-authored Resources, with titles a
+        // MEMBER can read off the field and reproduce. Worse, create_pulse's
+        // enrich-don't-duplicate branch matches on title + type, so a one-row
+        // sheet naming someone else's Resource adopts THAT pulse and stamps it
+        // source-backed — turning the gap into a selectable hard-delete of
+        // content the GraphQL path forbids the same member to touch.
+        //
+        // So the predicate stops carrying the authorization and the roles do.
+        // CREATED_BY covers an upload (anchorDocument writes it) and
+        // UPLOADED_BY covers an adopted row (attachSourceFileToResource does),
+        // so whoever brought the file in can still remove it. An imported
+        // resource attributed to its real author via INITIATED_BY is NOT
+        // deletable by an ordinary member who merely shares the field — that is
+        // the point.
+        OPTIONAL MATCH (d)-[mine:CREATED_BY|UPLOADED_BY]->(:Person {id: $userId})
+        WITH d, c, (owner IS NOT NULL OR sm IS NOT NULL OR mine IS NOT NULL) AS allowed
         WHERE allowed
         OPTIONAL MATCH (c)-[:HAS_PULSE]->(cp:FieldPulse)
           WHERE cp.location CONTAINS $locatorMarker
@@ -196,8 +218,30 @@ export async function handleDeleteDocument(
         WHERE d:ResourcePulse AND ${SOURCE_BACKED_RESOURCE}
         OPTIONAL MATCH (owner:Person {id: $userId})-[:OWNS]->(space)
         OPTIONAL MATCH (space)-[:HAS_MEMBER]->(sm:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $userId})
-          WHERE sm.role IN ['ADMIN', 'MEMBER']
-        WITH d, c, (owner IS NOT NULL OR sm IS NOT NULL) AS allowed
+          WHERE sm.role = 'ADMIN'
+        // GOAL-356 — creator / ADMIN / owner, which is what the kb/02 DELETE
+        // matrix has always said. This gate used to admit any ADMIN *or MEMBER*
+        // and rely on SOURCE_BACKED_RESOURCE above to keep the reachable set to
+        // ingest-minted nodes; the comment above still described that as latent
+        // because no blob-backed resource sat in a Space with a MEMBER-role
+        // membership. GOAL-356 ended both halves of that argument: an imported
+        // article's own pulse is now source-backed, so the reachable set is the
+        // whole bulk-import output — member-authored Resources, with titles a
+        // MEMBER can read off the field and reproduce. Worse, create_pulse's
+        // enrich-don't-duplicate branch matches on title + type, so a one-row
+        // sheet naming someone else's Resource adopts THAT pulse and stamps it
+        // source-backed — turning the gap into a selectable hard-delete of
+        // content the GraphQL path forbids the same member to touch.
+        //
+        // So the predicate stops carrying the authorization and the roles do.
+        // CREATED_BY covers an upload (anchorDocument writes it) and
+        // UPLOADED_BY covers an adopted row (attachSourceFileToResource does),
+        // so whoever brought the file in can still remove it. An imported
+        // resource attributed to its real author via INITIATED_BY is NOT
+        // deletable by an ordinary member who merely shares the field — that is
+        // the point.
+        OPTIONAL MATCH (d)-[mine:CREATED_BY|UPLOADED_BY]->(:Person {id: $userId})
+        WITH d, c, (owner IS NOT NULL OR sm IS NOT NULL OR mine IS NOT NULL) AS allowed
         WHERE allowed
         MATCH (u:Person:User {id: $userId})
         WITH d, c, u, d.sourceBlobKey AS blobKey, d.sourceFilename AS filename

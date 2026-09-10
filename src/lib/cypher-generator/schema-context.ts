@@ -254,17 +254,24 @@ PromiseWeave { id, title, description, status, origin, createdAt, modifiedAt }
 
 FieldResonance { label, description } — semantic theme node.
 
-ResourcePulse {resourceType: 'document'} { id, sourceFilename, sourceMimeType, sourceSummary, sourceConcepts, uploadedAt }
-  - An uploaded SOURCE FILE (an article, PDF, note) attached to a FieldContext.
-    Its human label is "sourceFilename" — caption documents by sourceFilename (or
-    title, which is seeded from it), never by id,
-    sourceBlobKey or sourceBlobUrl (those are internal). When a member uploads
-    articles into a field, each article becomes a document RESOURCE, and the
-    ResourcePulses / GoalPulses / StoryPulses (and Persons) the extractor pulled
-    out of it point back at it via EXTRACTED_FROM. This is how "the documents
-    that led to these resources" are reached. When the user asks about
-    "documents", "source documents", "uploaded files/articles", or "where a
-    resource came from", MATCH \`(:ResourcePulse {resourceType: 'document'})\` —
+ResourcePulse (source-backed) { id, sourceFilename, sourceMimeType, sourceSummary, sourceConcepts, uploadedAt }
+  - An uploaded or fetched SOURCE FILE (an article, PDF, note) attached to a
+    FieldContext. Its human label is "sourceFilename" — caption documents by
+    sourceFilename (or title), never by id, sourceBlobKey or sourceBlobUrl
+    (those are internal). The ResourcePulses / GoalPulses / StoryPulses (and
+    Persons) the extractor pulled out of a document point back at it via
+    EXTRACTED_FROM. This is how "the documents that led to these resources" are
+    reached.
+  - The predicate for "is a document" is \`sourceFilename IS NOT NULL\`, NOT
+    \`resourceType = 'document'\`. resourceType describes what the resource IS
+    (article / book / event); the file is only how we got it. A bulk-imported
+    article attaches its file to the row's own Resource (GOAL-356) and so is
+    typed 'article' or 'book' while still being a document, and the same is true
+    of anything merged by reconcile-duplicate-document-resources.ts. Filtering
+    on resourceType silently loses most real documents.
+  - So when the user asks about "documents", "source documents", "uploaded
+    files/articles", or "where a resource came from", MATCH
+    \`(:ResourcePulse)\` and filter \`WHERE d.sourceFilename IS NOT NULL\` —
     a document is NOT its own label, it is a kind of Resource.
 
 # Relationships (directed)
@@ -287,7 +294,7 @@ ResourcePulse {resourceType: 'document'} { id, sourceFilename, sourceMimeType, s
 (PromiseWeave)-[:WEAVES]->(FieldPulse)     // the care point(s) it connects (1..n)
 (PromiseWeave)-[:WOVEN_FOR]->(Person)      // the person it concerns
 (PromiseWeave)-[:CREATED_BY]->(Person)     // authorship
-(FieldContext)-[:HAS_PULSE]->(ResourcePulse {resourceType: 'document'}) // an uploaded source file attached to the field — a document is a Resource, reached by the ordinary pulse edge
+(FieldContext)-[:HAS_PULSE]->(ResourcePulse) // WHERE sourceFilename IS NOT NULL — an uploaded/fetched source file attached to the field. A document is a Resource, reached by the ordinary pulse edge; do NOT filter it by resourceType
 (FieldPulse)-[:EXTRACTED_FROM]->(ResourcePulse) // the resource/goal/story pulse was extracted from this document — the "source document" for that pulse
 (Person)-[:EXTRACTED_FROM]->(ResourcePulse)     // a person the extractor surfaced from this document
 (ResourcePulse)-[:UPLOADED_BY]->(Person)        // the member who uploaded it (a :Person:User)
@@ -331,7 +338,7 @@ Intent phrasing → edge:
 - "values it aligns to" → ALIGNED_TO (a CoreValuePulse)
 - "who is motivated by / provides this" → MOTIVATED_BY / PROVIDES (a Person)
 - "who created / authored / added this pulse" / "pulses by <person>" / "<person>'s contributions" → (FieldPulse)-[:INITIATED_BY|CREATED_BY]->(Person)
-- "documents" / "source documents" / "uploaded files/articles" / "what documents led to these resources" / "where did this resource come from" → (:ResourcePulse {resourceType: 'document'}), reached via (:FieldContext)-[:HAS_PULSE]->(:ResourcePulse {resourceType: 'document'}) for a field's docs, and via (:FieldPulse)-[:EXTRACTED_FROM]->(:ResourcePulse) for the source doc(s) behind specific pulses. A document is a KIND OF RESOURCE, not its own label
+- "documents" / "source documents" / "uploaded files/articles" / "what documents led to these resources" / "where did this resource come from" → (:ResourcePulse) WHERE sourceFilename IS NOT NULL, reached via (:FieldContext)-[:HAS_PULSE]->(:ResourcePulse) for a field's docs, and via (:FieldPulse)-[:EXTRACTED_FROM]->(:ResourcePulse) for the source doc(s) behind specific pulses. A document is a KIND OF RESOURCE, not its own label — and NOT a resourceType, which is 'article'/'book' for anything imported
 
 NOTE on HAS_MEMBER: it has two valid domains.
   (Space)-[:HAS_MEMBER]->(SpaceMembership)  // Space membership goes through a SpaceMembership node carrying the role

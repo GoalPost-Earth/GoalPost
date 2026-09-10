@@ -317,6 +317,21 @@ resource backed by a source file additionally carries the `source*` / `ingest*`
 block below, migrated off the retired `:Document` node. The file bytes never
 enter Neo4j — they stay in S3 and the graph holds only the key/URL.
 
+**GOAL-356 — "is a document" is `sourceBlobKey`, never `resourceType`.** A
+source-backed resource keeps the identity of what it IS: an imported article is
+typed `article` / `book`, not `document`, because the bulk article import now
+attaches the fetched file to the row's own Resource rather than minting a second
+node beside it (WF-11 step 5b), and
+`scripts/reconcile-duplicate-document-resources.ts` gives the same identity to
+everything imported before that. `resourceType = 'document'` therefore names
+only direct browser uploads and silently loses the rest — every gate meaning
+"came from a file" must use the `SOURCE_BACKED_RESOURCE` fragment in
+`src/lib/ingest/source-resource-node.ts`, which is its single definition. The
+consequence to hold onto is that one node is now both a pulse and a document: it
+appears in the Pulses list and the Documents list, has one ingest
+ConversationThread and one set of ResonanceSuggestions, and deleting it from the
+Documents list deletes the Resource.
+
 Every field in that block is `@settable(onCreate: false, onUpdate: false)`, and
 so is the `uploadedBy` **relationship**. That is load-bearing, not tidiness:
 `:Document` carried `@mutation(operations: [])` so generated CRUD could not
@@ -352,6 +367,7 @@ not implied by the others, and ordering by a hidden field is a comparison oracle
 
 | Field                    | Type     | Notes                                                                                     |
 | ------------------------ | -------- | ----------------------------------------------------------------------------------------- |
+| sourceFetchedFrom        | string   | *Internal.* Where the BYTES were fetched from, for a resource read server-side from a link rather than uploaded (GOAL-344/356). The bulk article import's idempotency key — indexed as `resource_source_fetched_from` and seeked once per row. Its own property because `sourceUrl` already means *where the member found it* (GOAL-355) and, since a fetched article now lands on the import row's own pulse, one node carries both. Null on browser uploads, which were fetched from nowhere. Backfilled onto older documents by `scripts/backfill-source-fetched-from.ts` |
 | sourceFilename           | string   | Original filename; seeds `title` at migration                                              |
 | sourceMimeType           | string   | v1: `text/plain`, `text/markdown`, `application/pdf`                                       |
 | sourceSizeBytes          | int      |                                                                                            |
