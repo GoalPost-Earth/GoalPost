@@ -9,6 +9,7 @@ import type { WeaveRecord } from './promise-weaves-section'
 import { ResonancesSection } from './resonances-section'
 import type { ResonanceRecord } from './resonances-section'
 import { EmptySection } from './field-section-primitives'
+import { SectionList } from './section-list'
 
 type PulseRecord = {
   __typename: string
@@ -137,6 +138,25 @@ export function FieldContextSections({
   pendingWeaveId = null,
   onPersonClick,
 }: FieldContextSectionsProps) {
+  // Rendered in the section header AND handed to `SectionList`, which
+  // repeats it in the modal header — the modal covers this section, so
+  // the actions have to come with it. One node, so they cannot drift.
+  const peopleActions = (
+    <>
+      {onAddPerson && (
+        <button
+          onClick={onAddPerson}
+          className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10 transition-all cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[16px]">
+            person_add
+          </span>
+          Add Person
+        </button>
+      )}
+    </>
+  )
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12">
       <div className="flex flex-col gap-4">
@@ -178,21 +198,22 @@ export function FieldContextSections({
         <div className="flex flex-col gap-4 md:col-span-2">
           <div className="flex items-center justify-between gap-3">
             <SectionHeader icon="groups" title="People" />
-            {onAddPerson && (
-              <button
-                onClick={onAddPerson}
-                className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong dark:text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10 transition-all cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  person_add
-                </span>
-                Add Person
-              </button>
-            )}
+            {peopleActions}
           </div>
           {people.length > 0 ? (
-            <div className="space-y-3">
-              {people.map((person) => (
+            <SectionList
+              items={people}
+              getKey={(person) => person.id}
+              getSearchText={(person) =>
+                [person.name, person.firstName, person.lastName, person.role]
+                  .filter(Boolean)
+                  .join(' ')
+              }
+              title="People"
+              icon="groups"
+              noun="people"
+              actions={peopleActions}
+              renderItem={(person) => (
                 <ProfileCard
                   key={person.id}
                   hover={!!onPersonClick}
@@ -218,8 +239,8 @@ export function FieldContextSections({
                     )}
                   </div>
                 </ProfileCard>
-              ))}
-            </div>
+              )}
+            />
           ) : (
             <EmptySection
               icon="groups"

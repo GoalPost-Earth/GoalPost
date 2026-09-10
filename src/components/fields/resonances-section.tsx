@@ -1,6 +1,7 @@
 'use client'
 
 import { SectionHeader } from '@/components/persons/section-header'
+import { SectionList } from './section-list'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { formatResonanceLabel } from '@/utils/graph-utils'
 import { cn } from '@/lib/utils'
@@ -72,72 +73,77 @@ export function ResonancesSection({
   pendingSuggestionCount = 0,
   onReviewSuggestions,
 }: ResonancesSectionProps) {
+  // Rendered in the section header AND handed to `SectionList`, which
+  // repeats it in the modal header — the modal covers this section, so
+  // the actions have to come with it. One node, so they cannot drift.
+  const resonanceActions = (
+    <div className="flex items-center gap-1.5 shrink-0">
+      {onReviewSuggestions && pendingSuggestionCount > 0 ? (
+        <button
+          data-testid="review-suggestions"
+          onClick={() => onReviewSuggestions()}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gp-primary hover:bg-gp-primary/90 text-white transition-colors text-xs font-semibold cursor-pointer"
+          // The NUMBER is this field's; the modal it opens is the Space's
+          // whole review queue (the list endpoint takes no per-field
+          // filter). Say both rather than promising a field-scoped list we
+          // don't deliver — a screen-reader user gets no second cue.
+          aria-label={`Review resonance suggestions — ${pendingSuggestionCount} pending in this field, opens this space's review queue`}
+          title={`${pendingSuggestionCount} AI ${pendingSuggestionCount === 1 ? 'suggestion is' : 'suggestions are'} waiting in this field. Opens this space's review queue — unlike Discover, it runs no new search.`}
+        >
+          <span className="material-symbols-outlined text-sm">rate_review</span>
+          <span>{pendingSuggestionCount}</span>
+          <span className="hidden sm:inline">Pending</span>
+        </button>
+      ) : null}
+      {onDiscoverResonances ? (
+        <button
+          onClick={() => onDiscoverResonances()}
+          disabled={isDiscoveringResonances}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-accent-glow/40 bg-gp-accent-glow/10 hover:bg-gp-accent-glow/20 text-gp-ink-strong dark:text-white transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gp-accent-glow/10 cursor-pointer"
+          aria-label="Discover resonances"
+          // Discovery scans the whole parent Space's pulses (WF-06), so it
+          // isn't gated on this field's pulse count the way manual linking
+          // is — a field with few pulses can still surface cross-field
+          // resonances in the same Space.
+          title="Let AI suggest resonances across this space"
+        >
+          <span
+            className={cn(
+              'material-symbols-outlined text-sm',
+              isDiscoveringResonances && 'animate-spin'
+            )}
+          >
+            {isDiscoveringResonances ? 'progress_activity' : 'auto_awesome'}
+          </span>
+          <span className="hidden sm:inline">
+            {isDiscoveringResonances ? 'Discovering…' : 'Discover'}
+          </span>
+        </button>
+      ) : null}
+      <button
+        onClick={() => onAddResonance()}
+        disabled={pulseCount < 2}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-primary/30 bg-gp-primary/10 hover:bg-gp-primary/20 text-gp-primary dark:border-gp-primary/40 dark:bg-gp-primary/20 dark:hover:bg-gp-primary/30 transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gp-primary/10 cursor-pointer"
+        aria-label={
+          pulseCount < 2 ? 'Add at least 2 pulses to link' : 'Link pulses'
+        }
+        title={
+          pulseCount < 2
+            ? 'Add at least 2 pulses to create a resonance link'
+            : ''
+        }
+      >
+        <span className="material-symbols-outlined text-sm">add</span>
+        <span className="hidden sm:inline">Link Pulses</span>
+      </button>
+    </div>
+  )
+
   return (
     <div className="flex flex-col gap-4 md:col-span-2">
       <div className="flex items-center justify-between gap-2">
         <SectionHeader icon="hub" title="Resonances" />
-        <div className="flex items-center gap-1.5 shrink-0">
-          {onReviewSuggestions && pendingSuggestionCount > 0 ? (
-            <button
-              data-testid="review-suggestions"
-              onClick={() => onReviewSuggestions()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gp-primary hover:bg-gp-primary/90 text-white transition-colors text-xs font-semibold cursor-pointer"
-              // The NUMBER is this field's; the modal it opens is the Space's
-              // whole review queue (the list endpoint takes no per-field
-              // filter). Say both rather than promising a field-scoped list we
-              // don't deliver — a screen-reader user gets no second cue.
-              aria-label={`Review resonance suggestions — ${pendingSuggestionCount} pending in this field, opens this space's review queue`}
-              title={`${pendingSuggestionCount} AI ${pendingSuggestionCount === 1 ? 'suggestion is' : 'suggestions are'} waiting in this field. Opens this space's review queue — unlike Discover, it runs no new search.`}
-            >
-              <span className="material-symbols-outlined text-sm">
-                rate_review
-              </span>
-              <span>{pendingSuggestionCount}</span>
-              <span className="hidden sm:inline">Pending</span>
-            </button>
-          ) : null}
-          {onDiscoverResonances ? (
-            <button
-              onClick={() => onDiscoverResonances()}
-              disabled={isDiscoveringResonances}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-accent-glow/40 bg-gp-accent-glow/10 hover:bg-gp-accent-glow/20 text-gp-ink-strong dark:text-white transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gp-accent-glow/10 cursor-pointer"
-              aria-label="Discover resonances"
-              // Discovery scans the whole parent Space's pulses (WF-06), so it
-              // isn't gated on this field's pulse count the way manual linking
-              // is — a field with few pulses can still surface cross-field
-              // resonances in the same Space.
-              title="Let AI suggest resonances across this space"
-            >
-              <span
-                className={cn(
-                  'material-symbols-outlined text-sm',
-                  isDiscoveringResonances && 'animate-spin'
-                )}
-              >
-                {isDiscoveringResonances ? 'progress_activity' : 'auto_awesome'}
-              </span>
-              <span className="hidden sm:inline">
-                {isDiscoveringResonances ? 'Discovering…' : 'Discover'}
-              </span>
-            </button>
-          ) : null}
-          <button
-            onClick={() => onAddResonance()}
-            disabled={pulseCount < 2}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-primary/30 bg-gp-primary/10 hover:bg-gp-primary/20 text-gp-primary dark:border-gp-primary/40 dark:bg-gp-primary/20 dark:hover:bg-gp-primary/30 transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gp-primary/10 cursor-pointer"
-            aria-label={
-              pulseCount < 2 ? 'Add at least 2 pulses to link' : 'Link pulses'
-            }
-            title={
-              pulseCount < 2
-                ? 'Add at least 2 pulses to create a resonance link'
-                : ''
-            }
-          >
-            <span className="material-symbols-outlined text-sm">add</span>
-            <span className="hidden sm:inline">Link Pulses</span>
-          </button>
-        </div>
+        {resonanceActions}
       </div>
       {resonances.length === 0 ? (
         <EmptySection
@@ -173,8 +179,25 @@ export function ResonancesSection({
         />
       ) : (
         <ProfileCard>
-          <div className="space-y-3">
-            {resonances.map((resonance, idx) => {
+          <SectionList
+            items={resonances}
+            getKey={(resonance) => resonance.id}
+            getSearchText={(resonance) =>
+              [
+                resonance.label,
+                resonance.description,
+                resonance.evidence,
+                resonance.source?.[0]?.title,
+                resonance.target?.[0]?.title,
+              ]
+                .filter(Boolean)
+                .join(' ')
+            }
+            title="Resonances"
+            icon="hub"
+            noun="resonances"
+            actions={resonanceActions}
+            renderItem={(resonance, idx) => {
               const source = resonance.source?.[0]
               const target = resonance.target?.[0]
 
@@ -215,8 +238,8 @@ export function ResonancesSection({
                   )}
                 </div>
               )
-            })}
-          </div>
+            }}
+          />
         </ProfileCard>
       )}
     </div>

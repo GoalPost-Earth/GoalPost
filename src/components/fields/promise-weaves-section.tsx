@@ -1,6 +1,7 @@
 'use client'
 
 import { SectionHeader } from '@/components/persons/section-header'
+import { SectionList } from './section-list'
 import { ProfileCard } from '@/components/persons/profile-card'
 import { cn } from '@/lib/utils'
 import {
@@ -85,30 +86,35 @@ export function PromiseWeavesSection({
 }: PromiseWeavesSectionProps) {
   const canWeave = !!onAddWeave && pulseCount > 0
 
+  // Rendered in the section header AND handed to `SectionList`, which
+  // repeats it in the modal header — the modal covers this section, so
+  // the actions have to come with it. One node, so they cannot drift.
+  const weaveActions = (
+    <div className="flex items-center gap-1.5 shrink-0">
+      {onAddWeave ? (
+        <button
+          onClick={() => onAddWeave()}
+          disabled={!canWeave}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-primary/30 bg-gp-primary/10 hover:bg-gp-primary/20 text-gp-primary dark:border-gp-primary/40 dark:bg-gp-primary/20 dark:hover:bg-gp-primary/30 transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          aria-label={
+            canWeave ? 'New promise weave' : 'Add a pulse before weaving'
+          }
+          title={
+            canWeave ? '' : 'A weave holds at least one pulse — add one first'
+          }
+        >
+          <span className="material-symbols-outlined text-sm">add</span>
+          <span className="hidden sm:inline">Weave</span>
+        </button>
+      ) : null}
+    </div>
+  )
+
   return (
     <div className="flex flex-col gap-4 md:col-span-2">
       <div className="flex items-center justify-between gap-2">
         <SectionHeader icon="account_tree" title="Promise weaves" />
-        <div className="flex items-center gap-1.5 shrink-0">
-          {onAddWeave ? (
-            <button
-              onClick={() => onAddWeave()}
-              disabled={!canWeave}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-primary/30 bg-gp-primary/10 hover:bg-gp-primary/20 text-gp-primary dark:border-gp-primary/40 dark:bg-gp-primary/20 dark:hover:bg-gp-primary/30 transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              aria-label={
-                canWeave ? 'New promise weave' : 'Add a pulse before weaving'
-              }
-              title={
-                canWeave
-                  ? ''
-                  : 'A weave holds at least one pulse — add one first'
-              }
-            >
-              <span className="material-symbols-outlined text-sm">add</span>
-              <span className="hidden sm:inline">Weave</span>
-            </button>
-          ) : null}
-        </div>
+        {weaveActions}
       </div>
 
       {weaves.length === 0 ? (
@@ -128,8 +134,25 @@ export function PromiseWeavesSection({
         />
       ) : (
         <ProfileCard>
-          <div className="space-y-3">
-            {weaves.map((weave, idx) => {
+          <SectionList
+            items={weaves}
+            getKey={(weave) => weave.id}
+            getSearchText={(weave) =>
+              [
+                weave.title,
+                composeWeavePersonName(weave.wovenFor?.[0] ?? undefined),
+                ...(weave.weaves ?? []).map((pulse) =>
+                  getWeaveEndpointLabel(pulse)
+                ),
+              ]
+                .filter(Boolean)
+                .join(' ')
+            }
+            title="Promise weaves"
+            icon="account_tree"
+            noun="promise weaves"
+            actions={weaveActions}
+            renderItem={(weave, idx) => {
               const woven = weave.weaves ?? []
               const personName = composeWeavePersonName(
                 weave.wovenFor?.[0] ?? undefined
@@ -205,9 +228,9 @@ export function PromiseWeavesSection({
                   {awaitingReview && (onConfirmWeave || onDismissWeave) && (
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       {/* Gate-specific copy, NOT `getWeaveOriginLabel` — its
-                          null-origin fallback ("Carried over from a migrated
-                          care point") would read as a self-contradiction on a
-                          row that is asking to be confirmed. */}
+                        null-origin fallback ("Carried over from a migrated
+                        care point") would read as a self-contradiction on a
+                        row that is asking to be confirmed. */}
                       <span className="text-[10px] text-gp-ink-muted dark:text-gp-ink-soft min-w-0">
                         {weave.origin?.trim().toLowerCase() === 'ai'
                           ? 'Suggested by the assistant — keep it?'
@@ -239,8 +262,8 @@ export function PromiseWeavesSection({
                   )}
                 </div>
               )
-            })}
-          </div>
+            }}
+          />
         </ProfileCard>
       )}
     </div>

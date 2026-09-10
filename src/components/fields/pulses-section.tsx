@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
   Tooltip,
@@ -8,6 +8,14 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { SectionHeader } from '@/components/persons/section-header'
+import { SectionList } from './section-list'
+import { PulsesSectionActions } from './pulses-section-actions'
+import {
+  PulseTypeFilter,
+  PulseTypeFilterEmpty,
+  usePulseTypeCounts,
+} from './pulse-type-filter'
+import type { NodeType } from '@/lib/pulse-type-config'
 import { ProfileCard } from '@/components/persons/profile-card'
 import {
   personDisplayName,
@@ -81,6 +89,12 @@ export function PulsesSection({
 }: PulsesSectionProps) {
   const richSharing = Boolean(onOpenShare)
   const [selectMode, setSelectMode] = useState(false)
+  // Pulse types switched off. Empty = everything shows, which is the state a
+  // field opens in — a filter should never be something you have to undo
+  // before you can see your own field.
+  const [hiddenTypes, setHiddenTypes] = useState<ReadonlySet<NodeType>>(
+    () => new Set()
+  )
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
   const selectedCount = selectedIds.size
@@ -105,81 +119,68 @@ export function PulsesSection({
     exitSelect()
   }
 
+  // Rendered in the section header AND handed to `SectionList`, which
+  // repeats it in the modal header. Select / Import / Add all drive state
+  // that lives here, so acting from inside the modal changes the same
+  // section the modal is showing.
+  const typeCounts = usePulseTypeCounts(pulses)
+
+  // What the section actually lists. The preview, the "Show all N" count and
+  // the modal all read this, so the number on the button is the number of rows
+  // the modal opens with — a filtered section never promises more than it has.
+  const visiblePulses = useMemo(
+    () =>
+      hiddenTypes.size === 0
+        ? pulses
+        : pulses.filter((pulse) => {
+            const type = getEditablePulseType(pulse.__typename)
+            // An unrecognised type has no chip to switch it off with, so it is
+            // never hidden — the filter cannot silently swallow what it can't
+            // name.
+            return type === null || !hiddenTypes.has(type)
+          }),
+    [pulses, hiddenTypes]
+  )
+
+  const toggleType = useCallback((type: NodeType) => {
+    setHiddenTypes((current) => {
+      const next = new Set(current)
+      if (next.has(type)) next.delete(type)
+      else next.add(type)
+      return next
+    })
+  }, [])
+
+  const showAllTypes = useCallback(() => setHiddenTypes(new Set()), [])
+
+  const typeFilter = (
+    <PulseTypeFilter
+      counts={typeCounts}
+      hidden={hiddenTypes}
+      onToggle={toggleType}
+      onShowAll={showAllTypes}
+    />
+  )
+
+  const pulseActions = (
+    <PulsesSectionActions
+      typeFilter={typeFilter}
+      hasPulses={pulses.length > 0}
+      richSharing={richSharing}
+      selectMode={selectMode}
+      onEnterSelect={() => setSelectMode(true)}
+      onExitSelect={exitSelect}
+      onSharePulses={onSharePulses}
+      onImportArticles={onImportArticles}
+      onAddPulse={onAddPulse}
+    />
+  )
+
   return (
     <div className="flex flex-col gap-4 md:col-span-2">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <SectionHeader icon="waves" title="Pulses" />
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          {richSharing && pulses.length > 0 ? (
-            selectMode ? (
-              <button
-                onClick={exitSelect}
-                className={cn(
-                  pillBase,
-                  'bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10'
-                )}
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  close
-                </span>
-                Done
-              </button>
-            ) : (
-              <button
-                onClick={() => setSelectMode(true)}
-                className={cn(
-                  pillBase,
-                  'bg-gp-primary/10 dark:bg-gp-primary/15 border border-gp-primary/30 dark:border-gp-primary/40 text-gp-primary hover:bg-gp-primary/20 dark:hover:bg-gp-primary/25'
-                )}
-              >
-                <span className="material-symbols-outlined text-[16px]">
-                  checklist
-                </span>
-                Select
-              </button>
-            )
-          ) : null}
-          {!richSharing && onSharePulses && (
-            <button
-              onClick={onSharePulses}
-              className={cn(
-                pillBase,
-                'bg-gp-primary/10 dark:bg-gp-primary/15 border border-gp-primary/30 dark:border-gp-primary/40 text-gp-primary hover:bg-gp-primary/20 dark:hover:bg-gp-primary/25'
-              )}
-            >
-              <span className="material-symbols-outlined text-[16px]">
-                share
-              </span>
-              Share
-            </button>
-          )}
-          {!selectMode && onImportArticles && (
-            <button
-              onClick={onImportArticles}
-              className={cn(
-                pillBase,
-                'bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10'
-              )}
-            >
-              <span className="material-symbols-outlined text-[16px]">
-                newspaper
-              </span>
-              Import Articles
-            </button>
-          )}
-          {!selectMode && (
-            <button
-              onClick={onAddPulse}
-              className={cn(
-                pillBase,
-                'bg-white/50 dark:bg-white/5 border border-white/60 dark:border-white/10 text-gp-ink-strong hover:bg-white/80 dark:hover:bg-white/10'
-              )}
-            >
-              <span className="material-symbols-outlined text-[16px]">add</span>
-              Add Pulse
-            </button>
-          )}
-        </div>
+        {pulseActions}
       </div>
 
       {richSharing && selectMode && (
@@ -234,9 +235,26 @@ export function PulsesSection({
               : undefined
           }
         />
+      ) : visiblePulses.length === 0 ? (
+        <PulseTypeFilterEmpty
+          typeFilter={typeFilter}
+          totalPulses={pulses.length}
+          onShowAll={showAllTypes}
+        />
       ) : (
-        <div className="space-y-3">
-          {pulses.map((pulse) => {
+        <SectionList
+          items={visiblePulses}
+          getKey={(pulse) => pulse.id}
+          getSearchText={(pulse) =>
+            [pulse.title, pulse.content, getPulseTypeLabel(pulse.__typename)]
+              .filter(Boolean)
+              .join(' ')
+          }
+          title="Pulses"
+          icon="waves"
+          noun="pulses"
+          actions={pulseActions}
+          renderItem={(pulse) => {
             const pulseType = getEditablePulseType(pulse.__typename)
             // Every recognized pulse type (Goal, Resource, Story, Care,
             // Core Value) is editable/deletable — see GOAL-252.
@@ -377,8 +395,8 @@ export function PulsesSection({
                 )}
               </ProfileCard>
             )
-          })}
-        </div>
+          }}
+        />
       )}
     </div>
   )

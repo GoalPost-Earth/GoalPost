@@ -59,6 +59,7 @@ import {
 } from './studio-canvas-context'
 import { BloomOverlayProvider } from './bloom-overlay-context'
 import { BloomSearchProvider } from './bloom-search-context'
+import { FindQueryProvider } from './find-query-context'
 import {
   VisibleEntitiesProvider,
   useVisibleEntities,
@@ -92,7 +93,9 @@ export const StudioShell: FC<StudioShellProps> = ({ children }) => {
         <BloomOverlayProvider>
           <VisibleEntitiesProvider>
             <BloomSearchProvider>
-              <StudioBody>{children}</StudioBody>
+              <FindQueryProvider>
+                <StudioBody>{children}</StudioBody>
+              </FindQueryProvider>
             </BloomSearchProvider>
           </VisibleEntitiesProvider>
         </BloomOverlayProvider>

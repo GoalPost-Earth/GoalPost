@@ -11,10 +11,11 @@ import {
   type KeyboardEvent,
   type RefObject,
 } from 'react'
-import { cn } from '@/lib/utils'
 import { useBloomSearch, type BloomSearchScope } from './bloom-search-context'
 import { matchBloomNodes } from './modes/graph-mode/bloom-search-match'
 import { useDashboardTextFind } from './use-dashboard-text-find'
+import { CanvasSearchBar } from './canvas-search-bar'
+import { useFindQuery } from './find-query-context'
 import {
   CanvasSearchResults,
   type CanvasSearchHit,
@@ -102,6 +103,20 @@ export const CanvasSearch: FC<CanvasSearchProps> = ({
     open && !isBloom ? debouncedQuery : '',
     open && !isBloom
   )
+
+  // Broadcast the settled query to the page. Sections subscribe and reveal
+  // their matching rows in place, so by the time the DOM scan below runs, a
+  // row that was folded behind "Show all" is simply on the page and behaves
+  // like any other hit. Nothing here has to know those sections exist.
+  const { setQuery: setFindQuery } = useFindQuery()
+  const broadcastQuery = open && !isBloom ? debouncedQuery : ''
+  useEffect(() => {
+    setFindQuery(broadcastQuery)
+  }, [broadcastQuery, setFindQuery])
+
+  // Clear the broadcast when the control goes away entirely, so a page-wide
+  // reveal can't outlive the search that asked for it.
+  useEffect(() => () => setFindQuery(''), [setFindQuery])
 
   /** One shape for the list, whichever backend produced it. */
   const hits = useMemo<CanvasSearchHit[]>(
@@ -280,93 +295,20 @@ export const CanvasSearch: FC<CanvasSearchProps> = ({
 
   return (
     <div ref={containerRef} className="relative flex items-center">
-      <div className="flex items-center gap-1 rounded-full bg-gp-surface-strong/50 dark:bg-gp-surface-dark/50 border border-gp-glass-border pl-2.5 pr-1 py-1 focus-within:ring-2 focus-within:ring-gp-primary/50 transition-colors">
-        <span
-          className="material-symbols-outlined shrink-0 text-[16px] leading-none text-gp-ink-muted"
-          aria-hidden="true"
-        >
-          search
-        </span>
-        <input
-          ref={inputRef}
-          type="text"
-          role="combobox"
-          aria-expanded={hits.length > 0}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          aria-activedescendant={
-            hits.length > 0 ? `${listId}-${activeIndex}` : undefined
-          }
-          aria-label={`Search within ${noun}`}
-          // Names the scope Bloom actually painted — "this field context",
-          // "this space", "your spaces", "this custom view" — rather than a
-          // generic "canvas", so the control says what it will look through.
-          placeholder={isBloom ? `Search ${noun}…` : 'Search this page…'}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={onKeyDown}
-          className="w-28 sm:w-44 min-w-0 bg-transparent text-xs text-gp-ink-strong placeholder:text-gp-ink-soft outline-none"
-        />
-
-        {/* Occurrence counter — the count is of EVERY hit, not of the rows the
-            panel renders, so the arrows and this number always agree. */}
-        {hasQuery && (
-          <span
-            className={cn(
-              'shrink-0 px-1 text-[10px] font-bold tabular-nums',
-              hits.length === 0 ? 'text-gp-ink-soft' : 'text-gp-ink-muted'
-            )}
-            aria-live="polite"
-          >
-            {hits.length === 0 ? '0/0' : `${activeIndex + 1}/${hits.length}`}
-          </span>
-        )}
-
-        <button
-          type="button"
-          onClick={() => step(-1)}
-          disabled={hits.length === 0}
-          aria-label="Previous match"
-          title="Previous match (Shift+Enter)"
-          className="gp-menu-item shrink-0 flex items-center justify-center size-6 rounded-full cursor-pointer text-gp-ink-muted disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <span
-            className="material-symbols-outlined text-[16px] leading-none"
-            aria-hidden="true"
-          >
-            keyboard_arrow_up
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => step(1)}
-          disabled={hits.length === 0}
-          aria-label="Next match"
-          title="Next match (Enter)"
-          className="gp-menu-item shrink-0 flex items-center justify-center size-6 rounded-full cursor-pointer text-gp-ink-muted disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <span
-            className="material-symbols-outlined text-[16px] leading-none"
-            aria-hidden="true"
-          >
-            keyboard_arrow_down
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => close(true)}
-          aria-label="Close search"
-          title="Close search (Esc)"
-          className="gp-menu-item shrink-0 flex items-center justify-center size-6 rounded-full cursor-pointer text-gp-ink-muted"
-        >
-          <span
-            className="material-symbols-outlined text-[16px] leading-none"
-            aria-hidden="true"
-          >
-            close
-          </span>
-        </button>
-      </div>
+      <CanvasSearchBar
+        inputRef={inputRef}
+        listId={listId}
+        noun={noun}
+        isBloom={isBloom}
+        query={query}
+        onQueryChange={setQuery}
+        onKeyDown={onKeyDown}
+        hasQuery={hasQuery}
+        matchCount={hits.length}
+        activeIndex={activeIndex}
+        onStep={step}
+        onClose={() => close(true)}
+      />
 
       <CanvasSearchResults
         listId={listId}

@@ -9,6 +9,7 @@ import {
 } from '@/app/graphql/mutations'
 import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import { DocumentRow } from './document-list-row'
+import { SectionList } from './section-list'
 import type { DocumentRecord } from './document-list-row'
 
 // Re-exported because `document-list` is the established import path for the
@@ -85,8 +86,7 @@ export function DocumentList({ documents, onRefetch }: DocumentListProps) {
       if (expandedId === documentId) setExpandedId(null)
       await onRefetch()
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Delete failed'
+      const message = error instanceof Error ? error.message : 'Delete failed'
       toast.error(message)
     } finally {
       setDeletingId(null)
@@ -106,10 +106,17 @@ export function DocumentList({ documents, onRefetch }: DocumentListProps) {
           Uploaded Documents
         </h2>
       </div>
-      <ul className="space-y-2">
-        {documents.map((document) => (
+      <SectionList
+        items={documents}
+        getKey={(document) => document.id}
+        getSearchText={(document) => document.filename}
+        title="Uploaded documents"
+        icon="description"
+        noun="documents"
+        as="ul"
+        listClassName="space-y-2"
+        renderItem={(document) => (
           <DocumentRow
-            key={document.id}
             document={document}
             isExpanded={expandedId === document.id}
             isReExtracting={reExtractingId === document.id}
@@ -122,8 +129,8 @@ export function DocumentList({ documents, onRefetch }: DocumentListProps) {
             onReExtract={() => handleReExtract(document.id)}
             onDelete={() => handleDelete(document.id, document.filename)}
           />
-        ))}
-      </ul>
+        )}
+      />
     </div>
   )
 }
