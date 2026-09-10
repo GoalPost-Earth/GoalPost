@@ -1,5 +1,6 @@
 import type { Relationship } from '@neo4j-nvl/base'
 import type { BloomPalette } from './bloom-palette'
+import { edgeCaption } from './edge-caption'
 
 /**
  * The EXTRACTED_FROM edges from each document to the people it named.
@@ -105,9 +106,13 @@ export function buildDocumentProvenanceLayer(params: {
     for (const personId of linkedPersonIds) {
       relationships.push({
         id: `extracted-from-${doc.id}-${personId}`,
-        from: doc.id,
-        to: personId,
-        caption: 'extracted from',
+        // The graph stores `(Person)-[:EXTRACTED_FROM]->(pulse)` — the person
+        // was extracted FROM the document, not the reverse. This layer drew it
+        // document->person, so the arrow contradicted both the data and the
+        // caption ("document extracted from person"). GOAL-362.
+        from: personId,
+        to: doc.id,
+        caption: edgeCaption(null, 'EXTRACTED_FROM'),
         color: palette.extractedEdge,
         width: 1.5,
       } as Relationship)

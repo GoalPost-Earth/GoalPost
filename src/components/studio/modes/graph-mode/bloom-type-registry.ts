@@ -253,8 +253,12 @@ export const BLOOM_RELATIONSHIP_TYPES: BloomTypeRow[] = [
     colors: [DARK.connectedEdge, LIGHT.connectedEdge],
   },
   {
+    // GOAL-362: named for what the edge SAYS, not for the schema's relationship
+    // type. The caption NVL paints is "Authored" (edge-caption.ts) and the
+    // entity drawer has always said "Authored" too; a legend row reading
+    // "Initiated by" was the third different name for one relationship.
     key: 'initiated-by',
-    label: 'Initiated by',
+    label: 'Authored',
     kind: 'relationship',
     swatch: { dark: '#94a3b8', light: '#5a6d88' },
     colors: [DARK.initiatedEdge, LIGHT.initiatedEdge],
@@ -280,6 +284,27 @@ export const BLOOM_RELATIONSHIP_TYPES: BloomTypeRow[] = [
     kind: 'relationship',
     swatch: { dark: '#fbbf24', light: '#9e7303' },
     colors: [DARK.extractedEdge, LIGHT.extractedEdge],
+  },
+  {
+    // GOAL-362. A person or organization the document names in a pulse without
+    // authoring it. No hand-built family ever drew MENTIONED_IN, so these were
+    // invisible on the canvas however many of them the field held.
+    key: 'mentioned-in',
+    label: 'Mentioned in',
+    kind: 'relationship',
+    swatch: { dark: '#38bdf8', light: '#0284c7' },
+    colors: [DARK.mentionedEdge, LIGHT.mentionedEdge],
+  },
+  {
+    // GOAL-362. The catch-all for anything the generic sweep returns that no
+    // row above claims — which is how a relationship type added to the graph
+    // tomorrow still arrives on the canvas with a working toggle, rather than
+    // painting a colour the legend cannot decode.
+    key: 'other-edge',
+    label: 'Other',
+    kind: 'relationship',
+    swatch: { dark: '#cbd5e1', light: '#64748b' },
+    colors: [DARK.otherEdge, LIGHT.otherEdge],
   },
 ]
 
@@ -312,8 +337,9 @@ export const normalizeColor = (c: string | undefined): string =>
  * `bloom-palette.ts`: the WeSpace field tint is also the overlay's
  * Organization colour, so an Organization node in a chat overlay is governed
  * by the `Field context` toggle, and the `Organization` row is never offered
- * as a control (`presentRowsVia` resolves through this same index precisely so
- * a shadowed row cannot surface as a switch that does nothing). Colour is the
+ * as a control — the legend lists only types it counts on the canvas, and a
+ * shadowed colour resolves to the winning row, so the loser counts zero and
+ * is never offered as a switch that does nothing). Colour is the
  * only type signal a painted NVL node carries, so this is a limit of the
  * encoding rather than of the filter — giving Organization its own colour in
  * `node-style.ts` is what would restore it as an independent toggle.
@@ -433,54 +459,6 @@ export function countRelationshipTypes(
   relationships: Relationship[]
 ): ReadonlyMap<string, number> {
   return tally(relationships, relationshipTypeKey)
-}
-
-/**
- * The rows a given canvas actually needs — the scope-awareness the legend has
- * always had, and now the reason the toggle list differs per scope without
- * anything hard-coding which types each scope renders.
- *
- * Presence is judged against the UNFILTERED canvas, so a type the viewer has
- * switched off keeps its row (and its way back on) instead of vanishing the
- * moment it is hidden.
- *
- * Resolution goes through the SAME winner-takes-all index the filter uses, not
- * through raw `row.colors`. The two differ wherever a colour is claimed by more
- * than one row, and that gap strands the loser: `Organization` shares the
- * WeSpace field tint, so matching on raw colours would offer an `Organization`
- * switch that `nodeTypeKey` can never return — flipping it would change nothing
- * while the legend's hidden-count insisted a type was hidden. That is exactly
- * the dead-control problem the old Documents toggle was careful to avoid.
- * Routing presence and filtering through one index means a row is offered only
- * when it can actually act, and immunises the next collision for free.
- */
-function presentRowsVia(
-  rows: BloomTypeRow[],
-  index: ReadonlyMap<string, string>,
-  colors: ReadonlySet<string>
-): BloomTypeRow[] {
-  const reachable = new Set<string>()
-  for (const color of colors) {
-    const key = index.get(color)
-    if (key) reachable.add(key)
-  }
-  return rows.filter((row) => reachable.has(row.key))
-}
-
-/** Node rows this canvas can actually control. `colors` must be normalized. */
-export function presentNodeRows(colors: ReadonlySet<string>): BloomTypeRow[] {
-  return presentRowsVia(BLOOM_NODE_TYPES, NODE_COLOR_INDEX, colors)
-}
-
-/** Relationship rows this canvas can actually control. */
-export function presentRelationshipRows(
-  colors: ReadonlySet<string>
-): BloomTypeRow[] {
-  return presentRowsVia(
-    BLOOM_RELATIONSHIP_TYPES,
-    RELATIONSHIP_COLOR_INDEX,
-    colors
-  )
 }
 
 export interface BloomCanvas {

@@ -332,6 +332,20 @@ appears in the Pulses list and the Documents list, has one ingest
 ConversationThread and one set of ResonanceSuggestions, and deleting it from the
 Documents list deletes the Resource.
 
+That same collapse broke the SDL's DELETE guard, which is worth knowing before
+touching it. `ResourcePulse`'s `@authorization` DELETE filter excluded
+document-backed resources with `NOT: { resourceType_EQ: "document" }`, so that
+only `deleteDocument` — which also removes the S3 blob and nulls the dangling
+download locators — could delete one. An adopted row is typed `article`/`book`,
+so it sailed straight through (verified against dev: `deleteResourcePulses`
+returned `nodesDeleted: 1` on a blob-backed `book`), and the generated root
+dropped the node while stranding the file in S3 forever. The filter now also
+requires `sourceFilename_EQ: null`. It has to be a *declared, filterable* field,
+which is why it is not `sourceBlobKey` — the canonical marker is
+`@filterable(byValue: false)` precisely so it cannot be value-inferred, and that
+gate is worth keeping. Both predicates are ANDed so the two arms of
+`SOURCE_BACKED_RESOURCE` are covered as closely as filterable fields allow.
+
 Every field in that block is `@settable(onCreate: false, onUpdate: false)`, and
 so is the `uploadedBy` **relationship**. That is load-bearing, not tidiness:
 `:Document` carried `@mutation(operations: [])` so generated CRUD could not
@@ -367,7 +381,7 @@ not implied by the others, and ordering by a hidden field is a comparison oracle
 
 | Field                    | Type     | Notes                                                                                     |
 | ------------------------ | -------- | ----------------------------------------------------------------------------------------- |
-| sourceFetchedFrom        | string   | *Internal.* Where the BYTES were fetched from, for a resource read server-side from a link rather than uploaded (GOAL-344/356). The bulk article import's idempotency key — indexed as `resource_source_fetched_from` and seeked once per row. Its own property because `sourceUrl` already means *where the member found it* (GOAL-355) and, since a fetched article now lands on the import row's own pulse, one node carries both. Null on browser uploads, which were fetched from nowhere. Backfilled onto older documents by `scripts/backfill-source-fetched-from.ts` |
+| sourceFetchedFrom        | string   | *Internal, SDL-declared with the full guard set* (`@settable(false,false)` + `@selectable(onRead: false)` + `@filterable(byValue: false)` + `@sortable(byValue: false)`, like the blob pointers). Where the BYTES were fetched from, for a resource read server-side from a link rather than uploaded (GOAL-344/356). The bulk article import's idempotency key — indexed as `resource_source_fetched_from` and seeked once per row. Its own property because `sourceUrl` already means *where the member found it* (GOAL-355) and, since a fetched article now lands on the import row's own pulse, one node carries both. Null on browser uploads, which were fetched from nowhere. Backfilled onto older documents by `scripts/backfill-source-fetched-from.ts` |
 | sourceFilename           | string   | Original filename; seeds `title` at migration                                              |
 | sourceMimeType           | string   | v1: `text/plain`, `text/markdown`, `application/pdf`                                       |
 | sourceSizeBytes          | int      |                                                                                            |
@@ -1116,6 +1130,23 @@ spend-cap *config* mutations WILL be logged; that is out of scope for Phase 1.)
 ---
 
 ## Neo4j Constraints
+
+**These drift, and the drift is silent.** `scripts/init-db.js` is the
+declaration, but it is never run against a live database — it begins with
+`MATCH (n) DETACH DELETE n`, so `npm run init:db` WIPES (see the note under
+`init:db` and [[project_init_db_wipes]]). A constraint added to that file
+therefore reaches nothing until someone issues it by hand. On 2026-09-10 four
+declared constraints were missing from both dev and demo — `log_id_unique`,
+`organization_id`, `llm_usage_id`, `system_principal_id` — and the cost was not
+theoretical: every `MERGE (log:Log {id: …})` in the codebase planned as a
+`NodeByLabelScan` over the whole append-only `:Log` set. Measured 3,213 dbHits
+on dev and 3,677 on demo per lookup, against **1** once `log_id_unique` existed,
+and the MERGE's idempotency-under-concurrency argument had nothing behind it.
+
+Reconcile periodically by diffing `SHOW CONSTRAINTS` against `init-db.js` and
+issuing the missing `CREATE CONSTRAINT … IF NOT EXISTS` statements directly.
+Check for violating data first (duplicate or null keys) — the create fails loudly
+rather than silently, but it is better to know before.
 
 | Constraint                | Target                        |
 | ------------------------- | ----------------------------- |

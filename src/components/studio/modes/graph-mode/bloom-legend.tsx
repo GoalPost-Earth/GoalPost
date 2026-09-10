@@ -7,9 +7,8 @@ import { useIsDarkMode } from '@/hooks'
 import {
   countNodeTypes,
   countRelationshipTypes,
-  normalizeColor,
-  presentNodeRows,
-  presentRelationshipRows,
+  BLOOM_NODE_TYPES,
+  BLOOM_RELATIONSHIP_TYPES,
   type BloomTypeRow,
 } from './bloom-type-registry'
 import type { BloomTypeFilters } from './use-bloom-type-filters'
@@ -53,31 +52,36 @@ export const BloomLegend: FC<{
   const { hidden, toggle, showAll } = filters
 
   const { nodeRows, edgeRows, counts } = useMemo(() => {
-    const nodeColors = new Set(nodes.map((n) => normalizeColor(n.color)))
-    const edgeColors = new Set(
-      relationships.map((r) => normalizeColor((r as { color?: string }).color))
-    )
-    // Counted off the same UNFILTERED arrays the rows come from, so the number
-    // beside a label says how much of that type this canvas holds — and keeps
-    // saying it while the type is switched off. A count read off the paint
-    // would read 0 exactly when the viewer most needs to know what is behind
-    // the switch they just flipped.
+    // Only types this canvas actually holds get a row. A legend of mostly
+    // zeroes is a wall of dead entries that pushes the rows that matter off
+    // screen — and on a canvas, a row you cannot act on reads as a control
+    // that is broken rather than as information.
+    //
+    // GOAL-362 switched presence from the registry's colour index to these
+    // COUNTS. Same result for every ordinary type, and strictly more accurate
+    // for the registry's one known colour collision (Organization shares the
+    // WeSpace field tint): a shadowed row can never be resolved back from a
+    // painted node, so it counts 0 and is now correctly absent rather than
+    // offered as a switch that does nothing.
+    //
+    // Counted off the UNFILTERED arrays, so the number beside a label keeps
+    // saying how much of that type the canvas holds while the type is switched
+    // off. A count read off the paint would read 0 exactly when the viewer
+    // most needs to know what is behind the switch they just flipped.
+    const counts = new Map([
+      ...countNodeTypes(nodes),
+      ...countRelationshipTypes(relationships),
+    ])
+    const present = (row: { key: string }) => (counts.get(row.key) ?? 0) > 0
     return {
-      nodeRows: presentNodeRows(nodeColors),
-      edgeRows: presentRelationshipRows(edgeColors),
-      counts: new Map([
-        ...countNodeTypes(nodes),
-        ...countRelationshipTypes(relationships),
-      ]),
+      nodeRows: BLOOM_NODE_TYPES.filter(present),
+      edgeRows: BLOOM_RELATIONSHIP_TYPES.filter(present),
+      counts,
     }
   }, [nodes, relationships])
 
-  // Only count types this canvas can actually show. Counting every hidden key
-  // would report a filter the viewer has no row for — the Documents default in
-  // a field with no uploads, say — which reads as the canvas withholding
-  // something it isn't. Presence itself is resolved through the registry's
-  // colour index, so a row that could never act is not offered and cannot be
-  // counted here either.
+  // Every listed row is a type this canvas holds, so a hidden one is always a
+  // filter the viewer actually set.
   const hiddenCount = useMemo(
     () =>
       [...nodeRows, ...edgeRows].filter((row) => hidden.has(row.key)).length,

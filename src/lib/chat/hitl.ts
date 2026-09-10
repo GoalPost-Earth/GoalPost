@@ -358,6 +358,12 @@ interface CreatePulseInput extends ContextLocatorInput {
   attributedToPersonId?: string
   /** Display name for the attributed person — approval-card copy only (Rule 1). */
   attributedToName?: string
+  /**
+   * GOAL-362 — how the document credits the author, in its own words
+   * ("Interviewee", "Keynote speaker"). Stored on the INITIATED_BY edge and
+   * rendered as its caption; absent edges fall back to "Authored".
+   */
+  attributedAuthorLabel?: string
 }
 
 interface DeletePulseInput {
@@ -1110,8 +1116,14 @@ async function reattributeIngestPulseAuthor(
     contextId: string
     attributedToPersonId?: unknown
     attributedToName?: unknown
+    /** GOAL-362 — the document's own word for the credit. */
+    attributedAuthorLabel?: unknown
   }
 ): Promise<string | null> {
+  const authorLabel =
+    typeof params.attributedAuthorLabel === 'string'
+      ? params.attributedAuthorLabel.trim() || null
+      : null
   const authorId =
     typeof params.attributedToPersonId === 'string'
       ? params.attributedToPersonId.trim()
@@ -1149,7 +1161,13 @@ async function reattributeIngestPulseAuthor(
     // initiatedBy[0], so the edge must stay single (DISTINCT collapses the
     // per-deleted-edge rows before CREATE).
     WITH DISTINCT pulse, author
-    CREATE (pulse)-[:INITIATED_BY]->(author)
+    CREATE (pulse)-[rel:INITIATED_BY]->(author)
+    // GOAL-362: this branch replaces the edge outright (the old one is deleted
+    // above), so there is no prior label to preserve — a plain SET is correct
+    // here, unlike the MERGE-based MENTIONED_IN write.
+    FOREACH (_ IN CASE WHEN $authorLabel IS NULL THEN [] ELSE [1] END |
+      SET rel.label = $authorLabel
+    )
     RETURN coalesce(author.name, trim(coalesce(author.firstName, '') + ' ' + coalesce(author.lastName, ''))) AS name
     LIMIT 1
     `,
@@ -1158,6 +1176,7 @@ async function reattributeIngestPulseAuthor(
       pulseId: params.pulseId,
       authorId,
       currentUserId,
+      authorLabel,
     }
   )
   if (!rows?.[0]) return null
@@ -1241,6 +1260,7 @@ async function createPulseAuthorized(
         contextId: resolvedContext.contextId,
         attributedToPersonId: input.attributedToPersonId,
         attributedToName: input.attributedToName,
+        attributedAuthorLabel: input.attributedAuthorLabel,
       }
     )
     const enrichWhere = input.contextTitle?.trim() || ''
@@ -1343,6 +1363,10 @@ async function createPulseAuthorized(
   // pull authorship from outside the Space the canEditContext gate above
   // authorized. Unresolvable ids fall back silently to the acting user.
   const attributedToPersonId = input.attributedToPersonId?.trim() || null
+  // GOAL-362: null, not '', so the CREATE below simply omits the property when
+  // the document credited the author without saying how (Neo4j drops a null
+  // property rather than storing a blank one).
+  const attributedAuthorLabel = input.attributedAuthorLabel?.trim() || null
   let attributedAuthor: { id: string; name: string } | null = null
   if (attributedToPersonId && attributedToPersonId !== currentUserId) {
     const authorRows = await graph.query<{ id: string; name: string | null }>(
@@ -1430,8 +1454,20 @@ async function createPulseAuthorized(
     // Canonical author edge: the attributed person when one was verified
     // above, otherwise the acting user. Exactly one INITIATED_BY either way —
     // resolvePulseAuthor reads initiatedBy[0], so the edge must stay single.
-    FOREACH (a IN CASE WHEN author IS NULL THEN [person] ELSE [author] END |
+    // GOAL-362: the label describes how the DOCUMENT credits its author, so it
+    // may only ride the edge when the attributed author was actually resolved.
+    // The fallback branch credits the acting uploader — which happens when
+    // attribution was absent or the person write failed — and stamping
+    // "Author of the article" on that edge would have the canvas credit the
+    // uploader in the article's own words.
+    FOREACH (a IN CASE WHEN author IS NULL THEN [person] ELSE [] END |
       CREATE (pulse)-[:INITIATED_BY]->(a)
+    )
+    FOREACH (a IN CASE WHEN author IS NULL THEN [] ELSE [author] END |
+      // The label rides in the property map rather than a following SET —
+      // Neo4j omits a null-valued property outright, so an unlabelled edge
+      // stays clean instead of carrying an empty string.
+      CREATE (pulse)-[:INITIATED_BY {label: $attributedAuthorLabel}]->(a)
     )
     CREATE (log:Log {
       id: $logId,
@@ -1454,6 +1490,7 @@ async function createPulseAuthorized(
     contextId: resolvedContext.contextId,
     currentUserId,
     authorId: attributedAuthor?.id ?? null,
+    attributedAuthorLabel,
     documentId,
     pulseId,
     logId,
@@ -2395,6 +2432,13 @@ interface LinkEntityToPulseAuthorizedInput {
   contextTitle?: string
   documentId?: string
   conversationThreadId?: string
+  /**
+   * GOAL-362 — the document's own words for this link ("Interviewed",
+   * "Offers this resource"), rendered as the edge's caption on the Bloom
+   * canvas. Optional: an edge without one falls back to the relationship
+   * type's default word ("Mentioned").
+   */
+  label?: string
 }
 
 /**
@@ -2425,6 +2469,10 @@ async function linkEntityToPulseAuthorized(
   const entityName = input.entityName?.trim() || (entityType === 'organization' ? 'organization' : 'person')
   const documentId = input.documentId?.trim() || null
   const conversationThreadId = input.conversationThreadId?.trim() || null
+  // GOAL-362: null (not '') so the coalesce in the write is a no-op when the
+  // extractor gave no label — an empty string would win the coalesce and pin
+  // the edge to a blank caption forever.
+  const label = input.label?.trim() || null
 
   if (!entityId || !pulseId) {
     return {
@@ -2469,7 +2517,18 @@ async function linkEntityToPulseAuthorized(
     MATCH (ctx:FieldContext)-[:HAS_PULSE]->(pulse)
     MATCH (ctx)-[:HAS_PERSON|HAS_ORGANIZATION]->(entity {id: $entityId})
     MATCH (u:Person {id: $currentUserId})
-    MERGE (entity)-[:MENTIONED_IN]->(pulse)
+    MERGE (entity)-[rel:MENTIONED_IN]->(pulse)
+    // GOAL-362: coalesce, never SET outright. This MERGE is idempotent across
+    // re-extracts by design, so an unconditional SET would let every
+    // re-extraction rewrite the label — the same failure mode updatePulse has
+    // with hand-edited titles. First writer wins.
+    //
+    // Note the current cost of that choice: no UI edits a MENTIONED_IN label
+    // yet, so first-writer-wins means a poor first extraction is sticky and
+    // only raw Cypher can change it. Still the right default — a re-extract
+    // silently rewriting labels members have read is worse — but it becomes
+    // properly correct once there is a way to curate one.
+    SET rel.label = coalesce(rel.label, $label)
     CREATE (log:Log {
       id: $logId,
       description: $description,
@@ -2496,6 +2555,7 @@ async function linkEntityToPulseAuthorized(
       // real pulse, so audit linkage is exact regardless of the display string.
       description: `Connected ${entityName} to "${input.pulseTitle?.trim() || 'a pulse'}"`,
       metadata,
+      label,
     }
   )
 
@@ -3479,6 +3539,8 @@ export async function executeAuthorizedWriteTool(
               attributedToPersonId: rawAttributedToPersonId,
               attributedToName: (input as Record<string, unknown>)
                 .attributedToName,
+              attributedAuthorLabel: (input as Record<string, unknown>)
+                .attributedAuthorLabel,
             }
           )
         }

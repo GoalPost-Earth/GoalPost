@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { CreateNestedFieldModal } from '@/components/fields/create-nested-field-modal'
+import { SectionList } from './section-list'
 
 export interface SubContextSummary {
   id: string
@@ -51,6 +52,25 @@ export function SubContextsSection({
     ? 'text-amber-600 dark:text-amber-400'
     : 'text-teal-600 dark:text-teal-400'
 
+  // Rendered in the section header AND handed to `SectionList`, which
+  // repeats it in the modal header — the modal covers this section, so
+  // the actions have to come with it. One node, so they cannot drift.
+  const nestedFieldActions = (
+    <>
+      {canEdit && (
+        <button
+          type="button"
+          onClick={() => setIsCreateOpen(true)}
+          className="ml-auto shrink-0 inline-flex items-center gap-1.5 px-3 h-8 rounded-full bg-gp-primary hover:bg-gp-primary/90 text-white font-semibold text-xs shadow-md shadow-gp-primary/20 transition-all cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[16px]">add</span>
+          <span className="hidden sm:inline">New nested field</span>
+          <span className="sm:hidden">New</span>
+        </button>
+      )}
+    </>
+  )
+
   return (
     <div className="rounded-2xl border border-gp-glass-border bg-gp-glass-bg/40 p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-3 min-w-0">
@@ -64,17 +84,7 @@ export function SubContextsSection({
           Nested fields
           {subContexts.length > 0 ? ` (${subContexts.length})` : ''}
         </h2>
-        {canEdit && (
-          <button
-            type="button"
-            onClick={() => setIsCreateOpen(true)}
-            className="ml-auto shrink-0 inline-flex items-center gap-1.5 px-3 h-8 rounded-full bg-gp-primary hover:bg-gp-primary/90 text-white font-semibold text-xs shadow-md shadow-gp-primary/20 transition-all cursor-pointer"
-          >
-            <span className="material-symbols-outlined text-[16px]">add</span>
-            <span className="hidden sm:inline">New nested field</span>
-            <span className="sm:hidden">New</span>
-          </button>
-        )}
+        {nestedFieldActions}
       </div>
 
       {subContexts.length === 0 ? (
@@ -83,9 +93,20 @@ export function SubContextsSection({
           whole field&apos;s resonance.
         </p>
       ) : (
-        <ul className="space-y-2">
-          {subContexts.map((sub) => (
-            <li key={sub.id}>
+        <SectionList
+          items={subContexts}
+          getKey={(sub) => sub.id}
+          getSearchText={(sub) =>
+            [sub.title, sub.emergentName].filter(Boolean).join(' ')
+          }
+          title="Nested fields"
+          icon="account_tree"
+          noun="nested fields"
+          as="ul"
+          listClassName="space-y-2"
+          actions={nestedFieldActions}
+          renderItem={(sub) => (
+            <li>
               <button
                 type="button"
                 onClick={() =>
@@ -142,8 +163,8 @@ export function SubContextsSection({
                 </span>
               </button>
             </li>
-          ))}
-        </ul>
+          )}
+        />
       )}
 
       <CreateNestedFieldModal

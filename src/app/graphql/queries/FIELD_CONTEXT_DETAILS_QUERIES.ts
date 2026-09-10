@@ -102,6 +102,15 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       title
       emergentName
       createdAt
+      # GOAL-362: every relationship among this context's own entities, typed
+      # and labelled, so Bloom can paint edge types nobody hand-coded a branch
+      # for (MENTIONED_IN was invisible on the canvas before this).
+      edges {
+        type
+        fromId
+        toId
+        label
+      }
       parentContext {
         id
         title

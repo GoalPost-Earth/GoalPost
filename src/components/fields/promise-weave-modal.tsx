@@ -352,11 +352,7 @@ export function PromiseWeaveModal({
             disabled={isSubmitting || pulses.length === 0}
             className="px-4 h-9 rounded-full bg-gp-primary hover:bg-gp-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-semibold shadow-md shadow-gp-primary/20 transition-all cursor-pointer"
           >
-            {isSubmitting
-              ? 'Saving…'
-              : isEditMode
-                ? 'Save weave'
-                : 'Weave it'}
+            {isSubmitting ? 'Saving…' : isEditMode ? 'Save weave' : 'Weave it'}
           </button>
         </div>
       </div>
