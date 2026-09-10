@@ -643,7 +643,7 @@ describe('ingestArticleForRow', () => {
       baseInput
     )
 
-    // GOAL-366 — this expectation is inverted from what it was, deliberately.
+    // GOAL-367 — this expectation is inverted from what it was, deliberately.
     // It used to assert COMPLETE on the reasoning that "re-extract is the
     // retry path", but a COMPLETE document with a null status message gives
     // the member nothing to re-extract FROM: the ingest chip shows no error,

@@ -502,6 +502,62 @@ describe('parseArticleRows', () => {
     )
   })
 
+  // GOAL-366 — the `url` column is the one we READ, and these hosts refuse an
+  // anonymous reader. Caught in the preview so the member fixes a cell,
+  // instead of at fetch time where it costs a request per row and lands as an
+  // import full of pulses with nothing to analyse.
+  it('rejects a gated host in url, and names the column to move it to', () => {
+    const { rows, errors } = parseArticleRows([
+      {
+        title: 'Can someone become enlightened?',
+        author: 'Robert Waldinger',
+        date: '2026-09-08',
+        url: 'https://www.linkedin.com/posts/robert-waldinger-90012169_abc',
+      },
+    ])
+
+    expect(rows).toEqual([])
+    expect(errors).toHaveLength(1)
+    expect(errors[0].message).toContain('We cannot read LinkedIn directly')
+    // The remedy has to name both columns — the two-column split IS the model,
+    // and this is the moment the member is getting it wrong.
+    expect(errors[0].message).toContain('source_url')
+    expect(errors[0].message).toContain('url')
+  })
+
+  it('allows a gated host in source_url, which is what that column is for', () => {
+    const { rows, errors } = parseArticleRows([
+      {
+        title: 'Can someone become enlightened?',
+        author: 'Robert Waldinger',
+        date: '2026-09-08',
+        url: 'https://1drv.ms/b/c/a2d123d3ae1d8bf1/IQDn2ajl',
+        pulse_type: 'resource',
+        source_url:
+          'https://www.linkedin.com/posts/robert-waldinger-90012169_abc',
+      },
+    ])
+
+    expect(errors).toEqual([])
+    expect(rows).toHaveLength(1)
+    expect(rows[0].url).toContain('1drv.ms')
+    expect(rows[0].sourceUrl).toContain('linkedin.com')
+  })
+
+  it('does not catch a lookalike host on the suffix boundary', () => {
+    const { rows, errors } = parseArticleRows([
+      {
+        title: 'A real article',
+        author: 'Someone Real',
+        date: '2026-09-08',
+        url: 'https://notlinkedin.com/posts/whatever',
+      },
+    ])
+
+    expect(errors).toEqual([])
+    expect(rows).toHaveLength(1)
+  })
+
   it('distinguishes a missing URL from an invalid one', () => {
     const { errors } = parseArticleRows([
       { title: 'T', author: 'A', date: '2026-01-01', url: '' },
@@ -947,8 +1003,9 @@ describe('describeArticleImportProgress', () => {
         .icon
     ).toBe('schedule')
     expect(
-      describeArticleImportProgress(job(ARTICLE_IMPORT_STATUS.processing, 1, 10))
-        .icon
+      describeArticleImportProgress(
+        job(ARTICLE_IMPORT_STATUS.processing, 1, 10)
+      ).icon
     ).toBe('autorenew')
   })
 

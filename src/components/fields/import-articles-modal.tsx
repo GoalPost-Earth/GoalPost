@@ -116,6 +116,13 @@ export function ImportArticlesModal({
     onRowsLanded: onImported,
   })
 
+  // GOAL-366 — did the sheet carry a `source_url` column at all? Derived from
+  // the parsed rows rather than the headers because that is what actually
+  // reached the import: a column present but empty on every row behaves
+  // identically and should read the same way.
+  const lacksSourceUrlColumn =
+    validRows.length > 0 && validRows.every((candidate) => !candidate.sourceUrl)
+
   const inFlight = job !== null && isArticleImportInFlight(job.status)
   // Everything else this member has running here. Excluding the tracked job by
   // id is what stops it appearing twice mid-poll, when the list and the single
@@ -301,6 +308,31 @@ export function ImportArticlesModal({
               will be opened and read.
               {rowErrors.length > 0 && ' Rows with issues will be skipped.'}
             </p>
+
+            {/* GOAL-366 — a sheet with no `source_url` column is not an error,
+                it is the pre-GOAL-355 format and still imports exactly as it
+                always did. But it silently produces pulses that link to the
+                file we read rather than to a page a person would want to open,
+                and that difference is invisible until afterwards — a client
+                reported it as a bug twice, on two different sheets, because
+                nothing here mentioned the column existed. Said once for the
+                sheet rather than per row: it is a property of the file. */}
+            {!lacksSourceUrlColumn ? null : (
+              <div className="shrink-0 flex items-start gap-2 rounded-xl border border-gp-glass-border bg-gp-glass-bg/40 px-3 py-2 text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
+                <span
+                  className="material-symbols-outlined text-[14px] shrink-0 text-gp-ink-muted"
+                  aria-hidden="true"
+                >
+                  info
+                </span>
+                <p className="min-w-0">
+                  No <span className="font-semibold">source_url</span> column —
+                  each pulse will link to the same address we read it from. Add
+                  that column to point members somewhere else, like the post or
+                  page the article came from.
+                </p>
+              </div>
+            )}
 
             <div className="overflow-y-auto min-h-0 space-y-2 pr-1">
               {rowErrors.map((rowError) => (

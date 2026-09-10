@@ -638,7 +638,7 @@ export async function ingestArticleForRow(
     return extraction('extraction_failed', ARTICLE_EXTRACTION_FAILED_MESSAGE)
   }
 
-  // GOAL-366: the document's status has to agree with what the row reports.
+  // GOAL-367: the document's status has to agree with what the row reports.
   //
   // This used to mark COMPLETE unconditionally and then return
   // `extraction_failed` a few lines below, so a document whose extraction
