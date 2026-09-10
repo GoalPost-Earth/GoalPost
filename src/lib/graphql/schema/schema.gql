@@ -1801,6 +1801,32 @@ type ResourcePulse implements FieldPulse
               # the resource renders with an author, and the creator-self-delete
               # branch below would otherwise hand that uploader a delete that
               # skips all three cleanups.
+              #
+              # GOAL-356 — `resourceType` ALONE no longer expresses this, and
+              # relying on it left the hole wide open. A bulk-imported article
+              # now attaches its file to the row's own Resource, which keeps the
+              # sheet's type: `article`, `book`, `event` — never `document`. So
+              # a blob-backed resource sailed through `NOT resourceType_EQ
+              # "document"` and the generated root deleted it, blob stranded in
+              # S3 and download locators left dangling. Verified against dev
+              # before this line was added: `deleteResourcePulses` on a
+              # source-backed `book` returned `nodesDeleted: 1`.
+              #
+              # `sourceFilename_EQ: null` is the predicate that actually means
+              # "not backed by a file". It has to be a *declared, filterable*
+              # field, which rules out `sourceBlobKey` — the canonical marker
+              # (`SOURCE_BACKED_RESOURCE`) is `@filterable(byValue: false)`
+              # precisely so it cannot be value-inferred, and that gate is worth
+              # more than the tidiness of using one property everywhere.
+              # `sourceFilename` is set by both writers that mint a source-backed
+              # resource (`anchorDocument` and `attachSourceFileToResource`) and
+              # by the GOAL-354 migration, so it is present wherever a blob is.
+              #
+              # Both predicates are kept, ANDed: they cover the two arms of
+              # SOURCE_BACKED_RESOURCE as closely as filterable fields allow, so
+              # a legacy document that somehow lacks a filename is still caught
+              # by its type.
+              { sourceFilename_EQ: null }
               { NOT: { resourceType_EQ: "document" } }
               { OR: [
               # Creator self-delete (kb/02 matrix) must accept BOTH live
@@ -1904,19 +1930,43 @@ type ResourcePulse implements FieldPulse
     @selectable(onRead: false, onAggregate: false)
     @filterable(byValue: false, byAggregate: false)
     @sortable(byValue: false)
+  """The public link the bytes were fetched from, for a resource read
+  server-side from a URL rather than uploaded (GOAL-344/356). Null for uploads.
+  The bulk article import's idempotency key — one FieldContext never fetches the
+  same article twice (`findArticleDocument`), backed by the
+  `resource_source_fetched_from` index.
+
+  Internal, and carrying the full guard set for the reason the block header
+  gives: it is ingest machinery, not member-editable copy, and the whole point
+  of splitting it out of `sourceUrl` is that the two can no longer be confused
+  for each other. A member sees where they found a resource (`sourceUrl`) and
+  the resource itself (`location`); where our fetcher went is ours."""
+  sourceFetchedFrom: String
+    @settable(onCreate: false, onUpdate: false)
+    @selectable(onRead: false, onAggregate: false)
+    @filterable(byValue: false, byAggregate: false)
+    @sortable(byValue: false)
   """
   Where this resource came from — one field serving two paths that arrived at
   the same idea independently.
 
-  GOAL-344: the public link the bytes were fetched from, when the resource was
-  not uploaded by a member but read server-side by the bulk article import.
-  Null for uploads. Also the idempotency key for that import — one FieldContext
-  never fetches the same article twice (`findArticleDocument`).
+  GOAL-356 SPLIT THIS FIELD IN TWO. It now carries only the second meaning
+  below; the first moved to the internal `sourceFetchedFrom` declared after it.
 
-  GOAL-355: where the resource was *found*, as distinct from `location`, which
-  is the resource itself. Written from the sheet's `source_url` column (WF-11).
-  Nullable and additive: pulses created before GOAL-355, and rows whose sheet
-  omits the column, simply have no value.
+  GOAL-355 (what this field means now): where the resource was *found*, as
+  distinct from `location`, which is the resource itself. Written from the
+  sheet's `source_url` column (WF-11). Nullable and additive: pulses created
+  before GOAL-355, and rows whose sheet omits the column, simply have no value.
+  Member data — nothing in the ingest path may write it.
+
+  GOAL-344 (what it used to ALSO mean): the public link the bytes were fetched
+  from, plus the bulk import's idempotency key. Two meanings on one property was
+  survivable only while a fetched article lived on its own node. GOAL-356
+  attaches the file to the import row's own pulse, so both landed on one node —
+  and a row whose `source_url` matched another row's `url` read back as
+  already-fetched, skipping its own article. The reconcile that merged such
+  pairs then let the fetched link overwrite the member's value outright, which
+  destroyed real member data on demo before it was caught.
 
   It is a property of its own rather than part of `content` precisely so the
   doc-ingest pass that may replace a placeholder body with an AI-generated
