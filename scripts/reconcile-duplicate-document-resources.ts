@@ -147,6 +147,14 @@ async function main() {
     // which also chips at the unnormalised vocabulary ('Book' vs 'book').
     SET doc.title = primary.title,
         doc.resourceType = toLower(trim(primary.resourceType)),
+        // GOAL-356: re-typing away from 'document' is exactly what takes this
+        // node out of the two SDL @authorization rules that used resourceType
+        // as their sole "is a document" test. Stamp the filterable flag in the
+        // same SET, or the merged resource silently becomes invisible in the
+        // document drawer and deletable through the generated root — which
+        // orphans its S3 object. See scripts/backfill-source-backed-flag.ts for
+        // the resources this script already re-typed before the flag existed.
+        doc.sourceBacked = true,
         // The row's body is the member-facing description from the sheet. Keep
         // it when the document's own content is just the filename placeholder
         // or the AI summary; otherwise leave the richer text alone.

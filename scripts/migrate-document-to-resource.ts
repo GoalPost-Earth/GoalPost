@@ -326,7 +326,11 @@ async function main() {
         d.sourceBlobUrl   = coalesce(d.sourceBlobUrl, d.blobUrl),
         d.sourceUserHint  = coalesce(d.sourceUserHint, d.userHint),
         d.sourceSummary   = coalesce(d.sourceSummary, d.summary),
-        d.sourceConcepts  = coalesce(d.sourceConcepts, d.concepts)
+        d.sourceConcepts  = coalesce(d.sourceConcepts, d.concepts),
+        // GOAL-356: the filterable mirror of sourceBlobKey that the SDL
+        // @authorization rules gate on. Every node this migration touches came
+        // from a file by definition, so it is unconditionally true here.
+        d.sourceBacked    = true
 
     // Ingest lifecycle. Pre-GOAL-292 uploads carry no status and have always
     // read back as COMPLETE, so make that explicit rather than leaving a null

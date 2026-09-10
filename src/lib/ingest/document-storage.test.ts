@@ -1,7 +1,11 @@
 import { randomUUID } from 'node:crypto'
 import { driver } from '@/lib/neo4j/driver'
 import { createMemoryBlobStore } from './blob-store'
-import { uploadDocument, deleteDocument } from './document-storage'
+import {
+  uploadDocument,
+  deleteDocument,
+  attachSourceFileToResource,
+} from './document-storage'
 
 /**
  * Integration test: exercises the real Neo4j driver against the dev Aura
@@ -247,6 +251,152 @@ describe('DocumentStorage — uploadDocument', () => {
     try {
       const rows = await session.run(`MATCH (d:ResourcePulse {id: $docId}) RETURN d`, { docId })
       expect(rows.records).toHaveLength(0)
+    } finally {
+      await session.close()
+    }
+  })
+})
+
+/**
+ * GOAL-356 — the bulk article import attaches a fetched file to the row's OWN
+ * Resource instead of anchoring a second one beside it. These pin the two
+ * things that shape depends on: the row keeps its identity, and it becomes
+ * addressable as a document.
+ */
+describe('DocumentStorage — attachSourceFileToResource', () => {
+  const attachArgs = (resourceId: string) => ({
+    driver,
+    resourceId,
+    fieldContextId: ids.fieldContext,
+    uploaderUserId: ids.user,
+    filename: 'Seeing People as Living Systems.pdf',
+    mimeType: 'application/pdf',
+    sizeBytes: 4096,
+    pageCount: null,
+    userHint: 'Article "Seeing People as Living Systems" by V. Letellier',
+    blobKey: 'documents/x/Seeing People as Living Systems.pdf',
+    blobUrl: 'documents/x/Seeing People as Living Systems.pdf',
+    status: 'PROCESSING' as const,
+  })
+
+  /** A row pulse as the import leaves it: typed, authored, no file. */
+  async function seedRowPulse(id: string, props = '') {
+    const session = driver.session()
+    try {
+      await session.run(
+        `
+        MATCH (c:FieldContext {id: $ctxId})
+        CREATE (r:FieldPulse:ResourcePulse {
+          id: $id, title: 'Seeing People as Living Systems',
+          content: 'Article by V. Letellier, published 2025-05-19: https://example.org/a',
+          resourceType: 'article', createdAt: datetime()${props}
+        })
+        CREATE (c)-[:HAS_PULSE]->(r)
+        `,
+        { ctxId: ids.fieldContext, id }
+      )
+    } finally {
+      await session.close()
+    }
+  }
+
+  itIf(true)('makes the row pulse document-backed without touching its identity', async () => {
+    if (!neo4jAvailable) return
+    const id = `test_${testRunId}_row_merge`
+    await seedRowPulse(id)
+
+    expect(await attachSourceFileToResource(attachArgs(id))).toBe('attached')
+
+    const session = driver.session()
+    try {
+      const rows = await session.run(
+        `MATCH (c:FieldContext {id: $ctxId})-[:HAS_PULSE]->(r:ResourcePulse {id: $id})-[:UPLOADED_BY]->(:Person:User {id: $userId})
+         OPTIONAL MATCH (log:Log)-[:LOGGED_FOR]->(r)
+         RETURN r.title AS title, r.resourceType AS resourceType, r.content AS content,
+                r.sourceFilename AS filename, r.sourceBlobKey AS blobKey,
+                r.sourceBacked AS sourceBacked, r.ingestStatus AS ingestStatus,
+                r.uploadedAt AS uploadedAt, count(log) AS logs`,
+        { ctxId: ids.fieldContext, id, userId: ids.user }
+      )
+      expect(rows.records).toHaveLength(1)
+      const r = rows.records[0]
+      // Identity survives: no ".pdf" title, still an article, body untouched.
+      expect(r.get('title')).toBe('Seeing People as Living Systems')
+      expect(r.get('resourceType')).toBe('article')
+      expect(r.get('content')).toContain('published 2025-05-19')
+      // …and it is now a document everywhere that matters.
+      expect(r.get('filename')).toBe('Seeing People as Living Systems.pdf')
+      expect(r.get('blobKey')).toBe(attachArgs(id).blobKey)
+      expect(r.get('ingestStatus')).toBe('PROCESSING')
+      expect(r.get('uploadedAt')).toBeTruthy()
+      // The filterable mirror of sourceBlobKey the two SDL @authorization
+      // rules gate on. Without it the resource 404s in the document drawer and
+      // the generated delete root will orphan its blob.
+      expect(r.get('sourceBacked')).toBe(true)
+      expect(Number(r.get('logs'))).toBe(1)
+    } finally {
+      await session.close()
+    }
+  })
+
+  itIf(true)('never re-points a resource that already holds a file, and says so', async () => {
+    if (!neo4jAvailable) return
+    const id = `test_${testRunId}_row_taken`
+    await seedRowPulse(id, `, sourceBlobKey: 'documents/first/original.pdf', sourceBacked: true`)
+
+    expect(await attachSourceFileToResource(attachArgs(id))).toBe(
+      'already_source_backed'
+    )
+
+    const session = driver.session()
+    try {
+      const rows = await session.run(
+        `MATCH (r:ResourcePulse {id: $id})
+         OPTIONAL MATCH (log:Log)-[:LOGGED_FOR]->(r)
+         RETURN r.sourceBlobKey AS blobKey, count(log) AS logs`,
+        { id }
+      )
+      expect(rows.records[0].get('blobKey')).toBe('documents/first/original.pdf')
+      expect(Number(rows.records[0].get('logs'))).toBe(0)
+    } finally {
+      await session.close()
+    }
+  })
+
+  itIf(true)('refuses a resource that is not under the targeted FieldContext', async () => {
+    if (!neo4jAvailable) return
+    const id = `test_${testRunId}_row_elsewhere`
+    await seedRowPulse(id)
+    expect(
+      await attachSourceFileToResource({
+        ...attachArgs(id),
+        fieldContextId: 'ctx_nonexistent_xyz',
+      })
+    ).toBe('not_found')
+  })
+
+  itIf(true)('uploadDocument-anchored documents carry the same sourceBacked flag', async () => {
+    if (!neo4jAvailable) return
+    const blobStore = createMemoryBlobStore()
+    const docId = `test_${testRunId}_doc_flag`
+    await uploadDocument({
+      driver,
+      blobStore,
+      documentId: docId,
+      fieldContextId: ids.fieldContext,
+      uploaderUserId: ids.user,
+      filename: 'flagged.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('anchored'),
+    })
+    const session = driver.session()
+    try {
+      const rows = await session.run(
+        `MATCH (d:ResourcePulse {id: $docId}) RETURN d.sourceBacked AS sourceBacked`,
+        { docId }
+      )
+      // Both writers must agree, or the SDL rules see two populations.
+      expect(rows.records[0].get('sourceBacked')).toBe(true)
     } finally {
       await session.close()
     }

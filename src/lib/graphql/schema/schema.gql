@@ -1324,9 +1324,11 @@ type Document
   # after which this type goes away.
   #
   # The label alone would match EVERY ResourcePulse, so the READ filter below
-  # additionally requires `resourceType: "document"`. That predicate is the only
-  # thing separating this type from ordinary resources — it must stay ANDed
-  # around the Space check, never ORed beside it.
+  # additionally requires `resourceType: "document" OR sourceBacked: true`
+  # (GOAL-356 — a document-backed resource keeps its own type now). That
+  # two-armed predicate is the only thing separating this type from ordinary
+  # resources — the arms may be ORed with each other, but the result must stay
+  # ANDed around the Space check, never ORed beside it.
   @node(labels: ["ResourcePulse"])
   # No generated CRUD (GOAL-292). Every Document write goes through a purpose-
   # built path that owns an invariant the generic mutations cannot: the REST
@@ -1341,16 +1343,28 @@ type Document
   @mutation(operations: [])
   @authorization(
     # READ — inherits from the parent FieldContext / Space, AND is restricted to
-    # document-backed resources (GOAL-354). Without the resourceType predicate
-    # every generated read on this type — `documents(where: …)`, and the
+    # document-backed resources (GOAL-354). Without that predicate every
+    # generated read on this type — `documents(where: …)`, and the
     # `FieldContext.documents` traversal — would return ordinary member-authored
     # resources projected through document field names, i.e. rows with a null
     # filename and a download link to nothing.
+    #
+    # GOAL-356: `resourceType = "document"` is no longer the whole set. The bulk
+    # article import now attaches a fetched file to the row's OWN resource,
+    # which keeps the sheet's type (`article` / `book` / …), so gating on
+    # resourceType alone made every imported document invisible here — the
+    # document detail drawer queries this root by id and would 404 on a document
+    # the (correctly `SOURCE_BACKED_RESOURCE`-gated) list beside it just showed.
+    # The OR is the SDL-side spelling of that same predicate; see
+    # `ResourcePulse.sourceBacked`.
     filter: [
       {
         where: {
           node: {
-            resourceType_EQ: "document"
+            OR: [
+              { resourceType_EQ: "document" }
+              { sourceBacked_EQ: true }
+            ]
             fieldContext_SOME: {
               OR: [
                 { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
@@ -1400,9 +1414,12 @@ type Document
     ]
   ) {
   id: ID! @id
-  """Always "document" — the predicate that separates this projection from
-  ordinary resources. Declared because the READ filter above has to reference
-  it; an @authorization filter can only name fields the type declares."""
+  """What the resource IS. `"document"` for anything anchored by the upload
+  flow; since GOAL-356 a bulk-imported row that holds its own file keeps the
+  sheet's type instead (`article` / `book` / …), which is why it is no longer
+  sufficient on its own and the READ filter above pairs it with `sourceBacked`.
+  Declared because that filter has to reference it; an @authorization filter can
+  only name fields the type declares."""
   resourceType: String!
   filename: String! @alias(property: "sourceFilename")
   mimeType: String! @alias(property: "sourceMimeType")
@@ -1418,6 +1435,13 @@ type Document
     @alias(property: "sourceBlobKey")
     @selectable(onRead: false, onAggregate: false)
     @filterable(byValue: false, byAggregate: false)
+  """GOAL-356 — the filterable "came from a file" discriminator this type's READ
+  rule gates on. See `ResourcePulse.sourceBacked` for why it exists and why it
+  is paired with `resourceType` rather than replacing it."""
+  sourceBacked: Boolean
+    @settable(onCreate: false, onUpdate: false)
+    @selectable(onRead: false, onAggregate: false)
+    @sortable(byValue: false)
   """Provider-issued URL for the blob. May be expiring/private — never returned
   to a client (GOAL-302); members open the file through `downloadUrl`. Same
   non-selectable / non-filterable gate as `blobKey`."""
@@ -1801,7 +1825,18 @@ type ResourcePulse implements FieldPulse
               # the resource renders with an author, and the creator-self-delete
               # branch below would otherwise hand that uploader a delete that
               # skips all three cleanups.
-              { NOT: { resourceType_EQ: "document" } }
+              #
+              # GOAL-356 widened what "document-backed" means: a bulk-imported
+              # row now holds its own file and keeps the sheet's resourceType,
+              # so `resourceType` alone stopped catching them — and those rows
+              # are INITIATED_BY their author, which is exactly the branch below
+              # that would have let the blob be orphaned. `sourceBacked` is the
+              # filterable spelling of `SOURCE_BACKED_RESOURCE`; both arms are
+              # kept so pre-GOAL-356 documents need no backfill.
+              { NOT: { OR: [
+                { resourceType_EQ: "document" }
+                { sourceBacked_EQ: true }
+              ] } }
               { OR: [
               # Creator self-delete (kb/02 matrix) must accept BOTH live
               # author edges: createdBy (dashboard flow, imports) and
@@ -1896,6 +1931,36 @@ type ResourcePulse implements FieldPulse
     @settable(onCreate: false, onUpdate: false)
     @selectable(onRead: false, onAggregate: false)
     @filterable(byValue: false, byAggregate: false)
+    @sortable(byValue: false)
+  """GOAL-356 — "this resource was created from a file", as a plain boolean the
+  `@authorization` rules on this type and on `Document` can actually filter by.
+
+  It exists only because `sourceBlobKey`, the property that genuinely defines a
+  document (`lib/ingest/source-resource-node.ts`), is deliberately
+  `@filterable(byValue: false)` so a client cannot infer S3 keys through
+  filters — and that gate must not be loosened. Every raw-Cypher site uses
+  `SOURCE_BACKED_RESOURCE`; the two SDL rules use this instead, and both are
+  written by the same two functions (`anchorDocument`,
+  `attachSourceFileToResource`) so they cannot disagree.
+
+  Both rules pair it with `resourceType = "document"` rather than replacing that
+  test, so an untouched legacy document keeps matching on type alone. That is
+  NOT the same as "no backfill needed": `reconcile-duplicate-document-resources.ts`
+  (GOAL-354) deliberately re-typed merged resources to `article` / `book` / …
+  while keeping their `sourceBlobKey`, so a blob-backed resource can match
+  NEITHER arm until this flag is set — 27 of dev's 56 at the time of writing.
+  Those already fell outside both rules before GOAL-356 (that is the pre-existing
+  half of the same bug: invisible in the document drawer, and deletable through
+  the generated root, which orphans their S3 object). Run
+  `scripts/backfill-source-backed-flag.ts` per environment to close it; the
+  invariant to hold is `sourceBlobKey IS NOT NULL` ⟺ `sourceBacked = true`.
+
+  Server-written only — a member who could set it would be able to hide their
+  own resource from the generated delete guard, or project an ordinary pulse
+  through the `Document` type's field names."""
+  sourceBacked: Boolean
+    @settable(onCreate: false, onUpdate: false)
+    @selectable(onRead: false, onAggregate: false)
     @sortable(byValue: false)
   """Provider-issued URL for the S3 object. May be expiring/private — never
   returned to a client. Same gate as `sourceBlobKey`."""

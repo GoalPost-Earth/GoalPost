@@ -3524,7 +3524,14 @@ export async function executeAuthorizedWriteTool(
         )
         CREATE (log)-[:CREATED_BY]->(u)
         CREATE (log)-[:LOGGED_FOR]->(pulse)
-        FOREACH (_ IN CASE WHEN d IS NULL THEN [] ELSE [1] END |
+        // GOAL-356: d = pulse is now reachable. The bulk import attaches a
+        // fetched article to the row's OWN Resource rather than minting a
+        // second node, and that resource is in the roster the extractor sees —
+        // so it routinely proposes an update_pulse against the very node it is
+        // being extracted from. Unguarded, that MERGEs a self-loop, and the
+        // document detail view would then list the resource as an entity
+        // extracted out of itself.
+        FOREACH (_ IN CASE WHEN d IS NULL OR d = pulse THEN [] ELSE [1] END |
           MERGE (pulse)-[:EXTRACTED_FROM]->(d)
         )
         `,

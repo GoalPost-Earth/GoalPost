@@ -175,6 +175,9 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
           d.sourceUserHint = $userHint,
           d.sourceBlobKey = $blobKey,
           d.sourceBlobUrl = $blobUrl,
+          // GOAL-356: the filterable mirror of sourceBlobKey, for the two SDL
+          // @authorization rules that cannot filter on the key itself.
+          d.sourceBacked = true,
           d.sourceUrl = $sourceUrl,
           d.ingestStatus = $status,
           d.ingestStatusMessage = null,
@@ -239,6 +242,160 @@ export async function anchorDocument(input: AnchorDocumentInput): Promise<void> 
         `anchorDocument: could not anchor document resource "${input.documentId}" — FieldContext "${input.fieldContextId}" or uploader "${input.uploaderUserId}" not found, or the id collided with an existing non-document pulse.`
       )
     }
+  } finally {
+    await session.close()
+  }
+}
+
+export interface AttachSourceFileInput {
+  driver: Driver
+  /**
+   * The Resource the file belongs to — a pulse that ALREADY exists. This is the
+   * bulk-import row's own ResourcePulse (GOAL-356), not a node minted here.
+   */
+  resourceId: string
+  fieldContextId: string
+  uploaderUserId: string
+  filename: string
+  mimeType: string
+  sizeBytes: number
+  pageCount: number | null
+  userHint: string | null
+  blobKey: string
+  blobUrl: string
+  /** Where the bytes were fetched from; only fills a `sourceUrl` gap. */
+  sourceUrl?: string | null
+  status?: DocumentIngestStatus
+}
+
+export type AttachSourceFileResult =
+  /** The source properties landed; this resource is now document-backed. */
+  | 'attached'
+  /** It already carries a file — the caller must not overwrite the pointer. */
+  | 'already_source_backed'
+  /** No such ResourcePulse under that FieldContext. */
+  | 'not_found'
+
+/**
+ * GOAL-356 — make an EXISTING Resource document-backed, instead of anchoring a
+ * second node beside it.
+ *
+ * The bulk article import already mints one `:ResourcePulse` per sheet row
+ * (GOAL-317/355). Since GOAL-354 a document *is* a ResourcePulse, so having the
+ * import then call `anchorDocument` produced two resources per row — the row's
+ * own, and a `resourceType: 'document'` twin titled "<row title>.pdf", credited
+ * to the importer rather than the author, cross-linked by EXTRACTED_FROM, each
+ * with its own ingest thread and its own resonance suggestions. This writes the
+ * same `source*` + ingest-queue properties onto the row's pulse so there is one
+ * node, and every document surface (list, download, re-extract, delete, the
+ * ingest queue) still finds it — they all gate on `sourceBlobKey`
+ * (`SOURCE_BACKED_RESOURCE`), never on `resourceType`.
+ *
+ * What it deliberately does NOT touch, all of which `anchorDocument` owns on a
+ * node it is minting from scratch:
+ *
+ *   - `title` — the row's clean title stays; the filename (with its extension)
+ *     lives on `sourceFilename`, which is what the document surfaces render.
+ *   - `content` — the sheet's description stays. The summary fill is a separate,
+ *     placeholder-only step in `article-content-ingest.ts`.
+ *   - `resourceType` — the row is an article / book / podcast that happens to
+ *     have a file, not a 'document' (same product model the GOAL-354 reconcile
+ *     script settled on).
+ *   - `sourceUrl` when the member supplied one — that is GOAL-355's "where I
+ *     found this" column, and WF-11 promises the ingest path never eats it. It
+ *     is only filled when absent, where it records where the bytes came from
+ *     exactly as it does for an anchored document.
+ *
+ * Idempotent by the `alreadyBacked` guard: a resource that already has a file
+ * keeps it, and the caller is told so rather than silently re-pointing a blob.
+ */
+export async function attachSourceFileToResource(
+  input: AttachSourceFileInput
+): Promise<AttachSourceFileResult> {
+  const session = input.driver.session()
+  try {
+    const result = await session.executeWrite(async (tx) =>
+      tx.run(
+        `
+        // Anchored on the context the import targets, so a stale or mismatched
+        // pulse id can never graft a blob pointer onto a resource elsewhere.
+        MATCH (c:FieldContext {id: $fieldContextId})-[:HAS_PULSE]->(d:FieldPulse {id: $resourceId})
+        WHERE d:ResourcePulse
+        MATCH (u:Person:User {id: $uploaderUserId})
+        // Force the exclusive node lock BEFORE reading sourceBlobKey. Neo4j is
+        // read-committed and only locks where a SET executes, so without this
+        // two concurrent attaches both project alreadyBacked = false, both
+        // write, and the loser's blob is orphaned in S3 with nothing pointing
+        // at it. Same lock-token idiom as claimDocumentForIngest; the property
+        // is deliberately one nothing reads.
+        SET d.ingestLockToken = randomUUID()
+        WITH c, d, u, d.sourceBlobKey IS NOT NULL AS alreadyBacked
+        FOREACH (_ IN CASE WHEN alreadyBacked THEN [] ELSE [1] END |
+          SET d.sourceFilename = $filename,
+              d.sourceMimeType = $mimeType,
+              d.sourceSizeBytes = toInteger($sizeBytes),
+              d.sourcePageCount = $pageCount,
+              d.sourceUserHint = $userHint,
+              d.sourceBlobKey = $blobKey,
+              d.sourceBlobUrl = $blobUrl,
+              // Keeps the two SDL @authorization rules (Document READ, the
+              // ResourcePulse DELETE guard) seeing this node as the document it
+              // now is, even though its resourceType stays what the sheet said.
+              d.sourceBacked = true,
+              // Fill-gaps-only — see the header.
+              d.sourceUrl = coalesce(d.sourceUrl, $sourceUrl),
+              d.ingestStatus = $status,
+              d.ingestStatusMessage = null,
+              d.ingestStatusUpdatedAt = datetime(),
+              d.ingestAttempts = 0,
+              // Document.uploadedAt is DateTime! in the SDL and is the ingest
+              // queue's ordering key, so it has to exist from the moment this
+              // resource becomes document-backed.
+              d.uploadedAt = datetime(),
+              d.updatedAt = datetime(),
+              d.modifiedAt = datetime()
+          // The uploader identity IS the captured authorization decision for
+          // any later cron re-claim, exactly as in anchorDocument.
+          MERGE (d)-[:UPLOADED_BY]->(u)
+          // MERGE on a derived id, mirroring anchorDocument: the guard above
+          // already makes a second attach a no-op, but a Log is cheap to make
+          // idempotent and expensive to duplicate in the activity feed.
+          MERGE (log:Log {id: $logId})
+          ON CREATE SET
+            log.description = $logDescription,
+            log.metadata = $metadata,
+            log.createdAt = datetime()
+          MERGE (log)-[:CREATED_BY]->(u)
+          MERGE (log)-[:LOGGED_FOR]->(d)
+        )
+        RETURN alreadyBacked
+        `,
+        {
+          fieldContextId: input.fieldContextId,
+          resourceId: input.resourceId,
+          uploaderUserId: input.uploaderUserId,
+          filename: input.filename,
+          mimeType: input.mimeType,
+          sizeBytes: input.sizeBytes,
+          pageCount: input.pageCount,
+          userHint: input.userHint?.trim() ? input.userHint.trim() : null,
+          blobKey: input.blobKey,
+          blobUrl: input.blobUrl,
+          sourceUrl: input.sourceUrl?.trim() || null,
+          status: input.status ?? DOCUMENT_INGEST_STATUS.complete,
+          logId: `log_source_${input.resourceId}`,
+          logDescription: `Attached "${input.filename}" as the source file`,
+          metadata: JSON.stringify({
+            source: 'article-import',
+            fieldContextId: input.fieldContextId,
+            documentId: input.resourceId,
+          }),
+        }
+      )
+    )
+    const record = result.records[0]
+    if (!record) return 'not_found'
+    return record.get('alreadyBacked') ? 'already_source_backed' : 'attached'
   } finally {
     await session.close()
   }

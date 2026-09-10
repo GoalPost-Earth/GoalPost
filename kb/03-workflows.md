@@ -373,20 +373,22 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
    text / PDF accepted; OneDrive share links are resolved to the file with
    `download=1` and the chain's own cookies; a link that fails is not retried
    by later rows of the same run),
-   reduces HTML to article text (`article-html-text.ts`), stores the result as
-   a `Document` on the field exactly like an upload (`sourceUrl` set, hint =
-   the row's title/author/date/link, anchored `PROCESSING` so the document
-   cron cannot claim it), and runs the same `runDocumentIngestPipeline` WF-10
-   uses — summary, ingest thread, auto-executed persons / organizations /
-   pulses with `EXTRACTED_FROM` provenance and one Log per write. The row's
-   pulse is in the roster, so the extractor updates it; as a deterministic
-   floor the worker also links it `EXTRACTED_FROM` the document and, when its
-   body is still the sheet placeholder (the seeded sentence or a bare URL),
-   fills it from the document summary. The outcome records what the article
-   yielded (`extraction`). A link that cannot be read fails **only that half**:
-   the pulse stands on the sheet's details and the outcome carries member-safe
-   copy saying why. `sourceUrl` is the idempotency key — a re-uploaded sheet
-   never fetches the same article into a field twice.
+   reduces HTML to article text (`article-html-text.ts`), and stores the result
+   on the field exactly like an upload (hint = the row's title/author/date/link,
+   `PROCESSING` so the document cron cannot claim it) — **on the row's own pulse,
+   see the GOAL-356 constraint below**. It then runs the same
+   `runDocumentIngestPipeline` WF-10 uses — summary, ingest thread,
+   auto-executed persons / organizations / pulses with `EXTRACTED_FROM`
+   provenance and one Log per write. The row's pulse is in the roster, so the
+   extractor updates it; as a deterministic floor the worker also fills its body
+   from the document summary when that body is still the sheet placeholder (the
+   seeded sentence or a bare URL). The outcome records what the article yielded
+   (`extraction`). A link that cannot be read fails **only that half**: the pulse
+   stands on the sheet's details and the outcome carries member-safe copy saying
+   why. A re-uploaded sheet never fetches the same article into a field twice:
+   the row's pulse already carries a `sourceBlobKey`, and a *second* row pointing
+   at the same file finds the first one by `sourceUrl` and takes
+   `EXTRACTED_FROM` provenance to it rather than reading it again.
 6. Each row's outcome is persisted **before the next row starts**. That list is
    the resume cursor and the source of every summary count, so a worker killed
    mid-batch resumes where it stopped instead of re-walking the sheet. A run
@@ -450,6 +452,41 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
   that isn't a calendar date ("Spring 2026") survives verbatim rather than
   failing the row. Pulses the extractor adds from the article default their
   `location` to the article URL (not our stored copy's download locator).
+- **One Resource per row, file included (GOAL-356).** The fetched article is
+  attached to the row's *own* `ResourcePulse` — `sourceBlobKey`,
+  `sourceFilename`, `ingestStatus` and the rest of the `source*` block are set on
+  that node, and no separate document node is anchored. Before this, every row
+  whose link resolved to a file produced **two** `ResourcePulse` nodes: the row's
+  own, and a `resourceType: 'document'` twin titled `"<row title>.pdf"`, credited
+  by `UPLOADED_BY`/`CREATED_BY` to the importer rather than to the author,
+  cross-linked by `EXTRACTED_FROM` — each with its own ingest `ConversationThread`
+  and its own `ResonanceSuggestion`s, so the duplication was of downstream graph
+  structure, not just node count. (Invisible pre-GOAL-354, when a document was
+  its own node type; `scripts/reconcile-duplicate-document-resources.ts` is the
+  one-off backfill for rows imported before this fix.)
+  - The merged node keeps the row's identity: its clean title (the extension
+    lives on `sourceFilename`), its `resourceType` from the sheet, its
+    `INITIATED_BY` author, and its GOAL-355 `sourceUrl` — which is only *filled*
+    with the fetched link when the sheet supplied no `source_url`, never
+    overwritten. `content` is still fill-gaps-only from the summary.
+  - Every raw-Cypher document surface keeps working because they gate on
+    `sourceBlobKey` (`SOURCE_BACKED_RESOURCE`), never on `resourceType`: the
+    document list, download, re-extract, delete, and the ingest queue. The two
+    **SDL `@authorization` rules did not** — the `Document` READ filter and the
+    `ResourcePulse` DELETE guard both still tested `resourceType = "document"`,
+    which GOAL-354 had already stopped being the definition. Left alone, an
+    imported row would have 404'd in the document detail drawer while showing in
+    the list beside it, and would have been deletable through the generated
+    `deleteResourcePulses` root — orphaning its S3 object and stranding every
+    download locator pointing at it. Both rules now test
+    `resourceType = "document" OR sourceBacked = true`;
+    `ResourcePulse.sourceBacked` is a server-written boolean that exists purely
+    because `sourceBlobKey` is (correctly) `@filterable(byValue: false)`.
+    Keeping both arms is what makes it additive — no backfill.
+  - **Goal and story rows are unchanged** and still anchor a separate document
+    Resource. Only `ResourcePulse` declares the `source*` properties, and a goal
+    plus its source article are genuine provenance rather than duplicates — the
+    same line the GOAL-354 reconcile script drew.
 - **Rows are slow now (GOAL-344).** A row is a fetch (≤40s) plus the extraction
   and summary model calls (aborted at 90s) plus the entity writes, so the
   worker's row deadline is 120s and its claim deadline 100s of the 300s

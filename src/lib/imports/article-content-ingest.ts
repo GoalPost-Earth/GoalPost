@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto'
 import type { Driver } from 'neo4j-driver'
-import { anchorDocument } from '@/lib/ingest/document-storage'
+import {
+  anchorDocument,
+  attachSourceFileToResource,
+} from '@/lib/ingest/document-storage'
 import { buildDocumentBlobKey } from '@/lib/ingest/document-blob-key'
 import {
   DOCUMENT_INGEST_STATUS,
@@ -14,6 +17,10 @@ import {
   runDocumentIngestPipeline,
   type DocumentIngestPipelineDependencies,
 } from '@/lib/ingest/run-document-ingest-pipeline'
+import {
+  RESOURCE_TYPE_DOCUMENT,
+  SOURCE_BACKED_RESOURCE,
+} from '@/lib/ingest/source-resource-node'
 import type { ExecutedToolCallRecord } from '@/lib/ingest/synthesized-turn-appender'
 import {
   type ArticleImportRowInput,
@@ -39,11 +46,9 @@ import {
  *   1. Fetch the link (`article-url-fetcher.ts` — SSRF-hardened, member-safe
  *      failures) and reduce it to text (`article-html-text.ts`) or keep the
  *      PDF bytes.
- *   2. Store that as a `Document` on the field — same blob layout, same node,
- *      same `HAS_PULSE` / `UPLOADED_BY` edges — so it shows in the document
- *      list and is downloadable, re-extractable and deletable like an upload.
- *      `sourceUrl` records where it came from and is the idempotency key: a
- *      re-uploaded sheet never fetches the same article into a field twice.
+ *   2. Make that the field's stored copy — same blob layout, same `HAS_PULSE` /
+ *      `UPLOADED_BY` edges — so it shows in the document list and is
+ *      downloadable, re-extractable and deletable like an upload.
  *   3. Run `runDocumentIngestPipeline` against it: entity extraction, summary,
  *      ingest thread, auto-executed create/update tools with EXTRACTED_FROM
  *      provenance and one Log per write. The row's metadata rides in as the
@@ -51,18 +56,44 @@ import {
  *      sees (so it emits an update), and when it is not — the roster is capped
  *      at 100 entries — `create_pulse`'s enrich-don't-duplicate branch still
  *      catches a same-title, same-type proposal.
- *   4. Attach the row's pulse to the document and, when its body is still the
- *      sheet placeholder (the seeded "Article by …" sentence or a bare URL),
- *      fill it with the document summary — the deterministic guarantee that
- *      the pulse the member sees carries the article's substance even when the
- *      extractor classified the piece under a different pulse type.
+ *   4. When the pulse's body is still the sheet placeholder (the seeded
+ *      "Article by …" sentence or a bare URL), fill it with the document
+ *      summary — the deterministic guarantee that the pulse the member sees
+ *      carries the article's substance even when the extractor classified the
+ *      piece under a different pulse type.
  *
- * The Document is anchored PROCESSING, not PENDING, because this run owns the
+ * ─────────────────────────────────────────────────────────────────────────────
+ * GOAL-356 — ONE node per row, not two
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Step 2 used to `anchorDocument` a brand-new node every time. That was
+ * invisible while a Document was its own node type, but GOAL-354 made a document
+ * *a kind of Resource* — so every document-linked row minted a second
+ * `:ResourcePulse` beside the one the row already had: `resourceType: 'document'`,
+ * titled "<row title>.pdf", credited by UPLOADED_BY/CREATED_BY to the importer
+ * rather than to the author, cross-linked to the real one by EXTRACTED_FROM, and
+ * carrying its own ingest thread and its own resonance suggestions. The member
+ * saw the same artifact twice in the pulse list, and every affected row doubled
+ * the downstream graph structure.
+ *
+ * So when the row's own pulse IS a Resource — every `ResourcePulse` row, which
+ * is the default and the only type that can hold the `source*` properties — the
+ * fetched article is attached to THAT node (`attachSourceFileToResource`) and no
+ * second node is created. `resourceType` stays what the sheet said, the title
+ * stays clean, and the author keeps INITIATED_BY. A goal or story row still
+ * anchors a separate document Resource, because a `:GoalPulse` cannot carry the
+ * document properties and a goal and its source article are not duplicates of
+ * each other — that pair is genuine provenance, which is why the GOAL-354
+ * reconcile script only ever matched `ResourcePulse` rows too.
+ *
+ * The document is anchored PROCESSING, not PENDING, because this run owns the
  * pipeline: a PENDING document is fair game for the document-ingestion cron,
  * which would claim it mid-run and ingest it a second time. If this worker
  * dies mid-row the stale-claim reclaim in that cron turns the document back
- * into PENDING and finishes it — and the row's re-run finds the document by
- * `sourceUrl` instead of fetching again.
+ * into PENDING and finishes it — and the row's re-run finds the stored copy
+ * instead of fetching again. Two dedupe checks cover that, in order: the row's
+ * own pulse already carrying a `sourceBlobKey` (a merged re-run), then any OTHER
+ * resource in the field already fetched from this link (a second row pointing at
+ * the same file, or a pre-GOAL-356 document node).
  */
 
 export interface ArticleContentIngestDeps extends DocumentIngestPipelineDependencies {
@@ -224,14 +255,81 @@ function toStoredArticle(
   }
 }
 
+interface RowPulseShape {
+  /** Can this pulse hold the `source*` properties itself? (GOAL-356) */
+  isResource: boolean
+  /** Already document-backed — this row has been read before. */
+  hasSourceFile: boolean
+  /** Its ingest status, when it has a file. */
+  status: string
+}
+
 /**
- * Has this link already been read into this field? Anchored on the context so
- * the check never sees another Space's documents.
+ * What the row's own pulse is, decided by the graph rather than by
+ * `row.pulseType`: the id came back from `create_pulse`, which may have matched
+ * a pre-existing pulse, and everything downstream (the `d:ResourcePulse` gate in
+ * every document query) keys off the labels actually on the node. Anchored on
+ * the context so a stale id from another Space can never be adopted.
+ */
+async function findRowPulseShape(
+  driver: Driver,
+  fieldContextId: string,
+  rowPulseId: string
+): Promise<RowPulseShape | null> {
+  const session = driver.session()
+  try {
+    const result = await session.executeRead((tx) =>
+      tx.run(
+        `
+        MATCH (c:FieldContext {id: $fieldContextId})-[:HAS_PULSE]->(p:FieldPulse {id: $rowPulseId})
+        RETURN p:ResourcePulse AS isResource,
+               p.sourceBlobKey IS NOT NULL AS hasSourceFile,
+               coalesce(p.ingestStatus, $complete) AS status
+        LIMIT 1
+        `,
+        { fieldContextId, rowPulseId, complete: DOCUMENT_INGEST_STATUS.complete }
+      )
+    )
+    const record = result.records[0]
+    if (!record) return null
+    return {
+      isResource: Boolean(record.get('isResource')),
+      hasSourceFile: Boolean(record.get('hasSourceFile')),
+      status: record.get('status') as string,
+    }
+  } finally {
+    await session.close()
+  }
+}
+
+/**
+ * Has this link already been read into this field by SOME OTHER resource?
+ * Anchored on the context so the check never sees another Space's documents.
+ *
+ * Two rows of one sheet legitimately point at the same file (a shared PDF
+ * described twice), and pre-GOAL-356 imports left standalone document nodes
+ * behind; both are matched here so the article is fetched and ingested once and
+ * the second row gets provenance instead of a duplicate read.
+ *
+ * Two narrowings, both GOAL-356 and both guarding the same hazard — `sourceUrl`
+ * has been dual-purpose since GOAL-355, meaning either "the link these bytes
+ * were fetched from" or "the link the member says they found this at", and only
+ * the first is evidence the article was ever read:
+ *
+ *   - `SOURCE_BACKED_RESOURCE`, so a resource that merely carries a
+ *     member-typed `source_url` and has no file cannot answer for one. Without
+ *     it, a row whose `url` equals some other row's `source_url` is reported
+ *     `already_extracted`, takes a false EXTRACTED_FROM edge to that unrelated
+ *     pulse, and its article is silently never fetched.
+ *   - the row's own pulse is excluded, which is the same collision within a
+ *     single row: a member may put one link in both the `url` and `source_url`
+ *     columns.
  */
 async function findArticleDocument(
   driver: Driver,
   fieldContextId: string,
-  sourceUrl: string
+  sourceUrl: string,
+  excludePulseId: string
 ): Promise<{ id: string; status: string } | null> {
   const session = driver.session()
   try {
@@ -240,6 +338,8 @@ async function findArticleDocument(
         `
         MATCH (c:FieldContext {id: $fieldContextId})-[:HAS_PULSE]->(d:ResourcePulse)
         WHERE d.sourceUrl = $sourceUrl
+          AND d.id <> $excludePulseId
+          AND ${SOURCE_BACKED_RESOURCE}
         RETURN d.id AS id, coalesce(d.ingestStatus, $complete) AS status
         ORDER BY coalesce(d.uploadedAt, d.createdAt) DESC
         LIMIT 1
@@ -247,6 +347,8 @@ async function findArticleDocument(
         {
           fieldContextId,
           sourceUrl,
+          excludePulseId,
+          resourceType: RESOURCE_TYPE_DOCUMENT,
           complete: DOCUMENT_INGEST_STATUS.complete,
         }
       )
@@ -268,6 +370,11 @@ async function findArticleDocument(
  * sheet's description column stays, unless it was nothing but the link
  * itself. Also clears the embedding so the discovery sweep re-embeds the
  * pulse on its real content. One Log, only when the body actually changed.
+ *
+ * Runs in both shapes (GOAL-356). When the row's pulse IS the document, `d` and
+ * `p` bind to the same node and only the fill happens; when the article was
+ * stored on a separate node (a goal/story row, or another row's copy of the same
+ * file) the provenance edge is written too.
  */
 async function attachRowPulseToDocument(
   driver: Driver,
@@ -291,13 +398,15 @@ async function attachRowPulseToDocument(
         MATCH (c)-[:HAS_PULSE]->(d:FieldPulse {id: $documentId})
           WHERE d:ResourcePulse
         MATCH (u:Person:User {id: $userId})
-        // d <> p guards a self-loop that only became reachable once a document
-        // became a pulse: both ends are now :FieldPulse under the same context,
-        // so a row whose pulse id equals its document id would MERGE an
-        // EXTRACTED_FROM edge from the node to itself. Impossible while the
-        // target was a separately-typed (:Document).
-        WHERE d <> p
-        MERGE (p)-[:EXTRACTED_FROM]->(d)
+        // Provenance only when the two are actually different nodes. Since
+        // GOAL-356 the row's pulse normally IS the document, and an
+        // unconditional MERGE would give it an EXTRACTED_FROM edge to itself —
+        // a self-loop that only became expressible once a document became a
+        // pulse. Guarding it as a filter instead would drop the row entirely
+        // and lose the summary fill with it.
+        FOREACH (_ IN CASE WHEN d <> p THEN [1] ELSE [] END |
+          MERGE (p)-[:EXTRACTED_FROM]->(d)
+        )
         WITH p, d, u,
           (d.sourceSummary IS NOT NULL AND trim(d.sourceSummary) <> ''
             AND (
@@ -400,18 +509,20 @@ export async function ingestArticleForRow(
       logDescription: `Filled in ${label} "${rowTitle}" in ${where} from its article`,
     })
 
-  const existing = await findArticleDocument(
-    deps.driver,
-    input.fieldContextId,
-    sourceUrl
-  )
-  if (existing) {
-    if (existing.status === DOCUMENT_INGEST_STATUS.failed) {
+  /**
+   * A stored copy of this article already exists — on the row's own pulse or on
+   * another node in the field. Never re-fetch; just settle the row's outcome.
+   */
+  const alreadyRead = async (
+    documentId: string,
+    status: string
+  ): Promise<ArticleRowExtraction> => {
+    if (status === DOCUMENT_INGEST_STATUS.failed) {
       return extraction('extraction_failed', ARTICLE_PREVIOUS_FAILURE_MESSAGE)
     }
     if (
-      existing.status === DOCUMENT_INGEST_STATUS.pending ||
-      existing.status === DOCUMENT_INGEST_STATUS.processing
+      status === DOCUMENT_INGEST_STATUS.pending ||
+      status === DOCUMENT_INGEST_STATUS.processing
     ) {
       return extraction('in_progress', ARTICLE_IN_PROGRESS_MESSAGE)
     }
@@ -420,10 +531,10 @@ export async function ingestArticleForRow(
     // the provenance edge and the body fill. Both writes are idempotent.
     let filled = false
     try {
-      filled = await attachRowPulse(existing.id)
+      filled = await attachRowPulse(documentId)
     } catch (error) {
       console.error(
-        `[article-import] could not attach row pulse ${input.rowPulseId} to existing document ${existing.id}:`,
+        `[article-import] could not attach row pulse ${input.rowPulseId} to existing document ${documentId}:`,
         error
       )
     }
@@ -431,6 +542,32 @@ export async function ingestArticleForRow(
       created: 0,
       updated: filled ? 1 : 0,
     })
+  }
+
+  // GOAL-356 — the row's own pulse is the article's node whenever it can be.
+  // Read from the graph, not from `row.pulseType`: `create_pulse` may have
+  // matched a pre-existing pulse, and every document query gates on the labels
+  // actually present. A pulse we cannot resolve at all falls through to the
+  // separate-node path, which is self-contained and cannot make things worse.
+  const rowPulse = await findRowPulseShape(
+    deps.driver,
+    input.fieldContextId,
+    input.rowPulseId
+  )
+  const mergeIntoRowPulse = rowPulse?.isResource === true
+
+  if (rowPulse?.hasSourceFile) {
+    return alreadyRead(input.rowPulseId, rowPulse.status)
+  }
+
+  const existing = await findArticleDocument(
+    deps.driver,
+    input.fieldContextId,
+    sourceUrl,
+    input.rowPulseId
+  )
+  if (existing) {
+    return alreadyRead(existing.id, existing.status)
   }
 
   const hostKey = `host:${hostnameOf(sourceUrl)}`
@@ -459,7 +596,13 @@ export async function ingestArticleForRow(
     return unreadable
   }
 
-  const documentId = `document_${randomUUID()}`
+  // GOAL-356: the row's own Resource holds the file when it can, so no second
+  // node is minted. The blob key shape is unchanged either way — it is
+  // `documents/<node id>/<filename>`, and every reader derives it from the
+  // stored `sourceBlobKey` rather than parsing the id back out of it.
+  const documentId = mergeIntoRowPulse
+    ? input.rowPulseId
+    : `document_${randomUUID()}`
   const blobKey = buildDocumentBlobKey(documentId, stored.filename)
   try {
     await deps.blobStore.put({
@@ -467,11 +610,8 @@ export async function ingestArticleForRow(
       contentType: stored.mimeType,
       buffer: stored.buffer,
     })
-    await anchorDocument({
-      driver: deps.driver,
-      documentId,
+    const anchored = {
       fieldContextId: input.fieldContextId,
-      uploaderUserId: input.requesterUserId,
       filename: stored.filename,
       mimeType: stored.mimeType,
       sizeBytes: stored.buffer.length,
@@ -482,7 +622,39 @@ export async function ingestArticleForRow(
       sourceUrl,
       // Owned by this run — see the module header.
       status: DOCUMENT_INGEST_STATUS.processing,
-    })
+    }
+    if (mergeIntoRowPulse) {
+      const attached = await attachSourceFileToResource({
+        driver: deps.driver,
+        resourceId: documentId,
+        uploaderUserId: input.requesterUserId,
+        ...anchored,
+      })
+      if (attached === 'already_source_backed') {
+        // Lost the attach race: a concurrent import job (or an upload) got this
+        // resource its file first, and that run owns the pipeline. Reported as
+        // in-progress rather than as an error — the row's pulse is fine and its
+        // article IS being read, just not by us. Our blob is left for S3
+        // lifecycle rather than deleted, since the winner's key is the one on
+        // the node and deleting by key here would race that too.
+        return extraction('in_progress', ARTICLE_IN_PROGRESS_MESSAGE)
+      }
+      if (attached !== 'attached') {
+        // 'not_found' — the pulse resolved as a Resource under this context
+        // moments ago, so this is a bug or a vanished uploader, not a
+        // member-facing condition. The row keeps the pulse it already has.
+        throw new Error(
+          `attachSourceFileToResource returned "${attached}" for ${documentId}`
+        )
+      }
+    } else {
+      await anchorDocument({
+        driver: deps.driver,
+        documentId,
+        uploaderUserId: input.requesterUserId,
+        ...anchored,
+      })
+    }
   } catch (error) {
     console.error(
       `[article-import] could not store the article for row ${input.row.row} in context ${input.fieldContextId}:`,
