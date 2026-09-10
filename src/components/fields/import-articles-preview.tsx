@@ -280,7 +280,11 @@ export function ImportSummaryChips({
  * every row, failures first so the rows needing another upload are the ones
  * in view.
  */
-export function ImportArticlesResults({ job }: { job: ArticleImportJobStatus }) {
+export function ImportArticlesResults({
+  job,
+}: {
+  job: ArticleImportJobStatus
+}) {
   const failed = job.status === ARTICLE_IMPORT_STATUS.failed
 
   return (

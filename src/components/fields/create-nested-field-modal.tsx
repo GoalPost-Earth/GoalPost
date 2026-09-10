@@ -64,10 +64,7 @@ export function CreateNestedFieldModal({
       try {
         await onCreated?.()
       } catch (error) {
-        console.warn(
-          '[create-nested-field] post-create refresh failed',
-          error
-        )
+        console.warn('[create-nested-field] post-create refresh failed', error)
       }
       setTitle('')
       onClose()

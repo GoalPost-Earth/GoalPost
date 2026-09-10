@@ -33,7 +33,9 @@ interface EntityProvenanceProps {
   documents: ProvenanceDocument[] | null | undefined
 }
 
-function uploaderName(uploaders: ProvenanceUploader[] | null | undefined): string {
+function uploaderName(
+  uploaders: ProvenanceUploader[] | null | undefined
+): string {
   const first = uploaders?.[0]
   if (!first) return 'someone'
   const composed = first.name?.trim()
@@ -107,7 +109,8 @@ export function EntityProvenance({ documents }: EntityProvenanceProps) {
                 {doc.filename}
               </button>
               <span className="text-gp-ink-muted">
-                {' '}— uploaded by {name}
+                {' '}
+                — uploaded by {name}
                 {date ? ` on ${date}` : ''}
               </span>
             </li>
