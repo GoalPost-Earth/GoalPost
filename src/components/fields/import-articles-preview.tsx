@@ -49,10 +49,20 @@ export function PreviewRowCard({ row }: { row: ArticleImportRowInput }) {
           </>
         )}
       </div>
+      {/* GOAL-366 — say what each link is FOR, not just what it is.
+          The two columns do different jobs — one is read by the importer, the
+          other is what a member clicks — and nothing said so. A client spent a
+          day believing the importer was fetching the wrong column, because the
+          preview showed one bare URL per row and the pulse afterwards showed
+          another. The labels are the cheapest place to make the split legible,
+          and they appear at the moment the member is deciding whether the sheet
+          is right. `shrink-0` on the label, `truncate` on the value: at 390px
+          the URL yields, never the word that explains it. */}
       <div className="mt-0.5 flex items-center gap-1 text-[10px] text-gp-ink-muted dark:text-gp-ink-soft min-w-0">
         <span className="material-symbols-outlined text-[12px] shrink-0">
           link
         </span>
+        <span className="shrink-0 font-semibold">We read:</span>
         <span className="truncate">{row.url}</span>
       </div>
       {/*
@@ -77,6 +87,7 @@ export function PreviewRowCard({ row }: { row: ArticleImportRowInput }) {
           <span className="material-symbols-outlined text-[12px] shrink-0">
             share
           </span>
+          <span className="shrink-0 font-semibold">Pulse links to:</span>
           <span className="truncate">{row.sourceUrl}</span>
         </div>
       )}

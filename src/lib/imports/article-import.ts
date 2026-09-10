@@ -583,6 +583,49 @@ export function validateArticleTemplateHeaders(
  * domain-shaped values by prefixing https://. Returns null when the value
  * cannot be a usable article link.
  */
+
+/**
+ * Hosts that reliably refuse an anonymous server-side reader (GOAL-366).
+ *
+ * Deliberately a SHORT list of hosts measured to fail, not a guess at
+ * everything that might. A false positive here fails a row the member could
+ * legitimately have imported, so the bar is "we have watched this return a
+ * login wall", and the remedy the message offers — move it to `source_url` —
+ * costs one edit rather than blocking the import.
+ *
+ * Checked only against the `url` column, never `source_url`: pointing at a
+ * gated page is precisely what `source_url` is FOR. LinkedIn is here because
+ * a client's whole sheet was LinkedIn posts; it is inconsistent rather than
+ * uniformly walled (some posts render for a bare fetch), and inconsistent is
+ * worse than blocked — it produces an import that half works.
+ */
+const GATED_ARTICLE_HOSTS: ReadonlyArray<{ suffix: string; label: string }> = [
+  { suffix: 'linkedin.com', label: 'LinkedIn' },
+  { suffix: 'lnkd.in', label: 'LinkedIn' },
+  { suffix: 'facebook.com', label: 'Facebook' },
+  { suffix: 'instagram.com', label: 'Instagram' },
+  { suffix: 'x.com', label: 'X' },
+  { suffix: 'twitter.com', label: 'X' },
+]
+
+/**
+ * The display name of the gated host this URL points at, or null when it is
+ * one we can read. Matches on the registrable-suffix boundary so
+ * `notlinkedin.com` is not caught by `linkedin.com`.
+ */
+export function gatedHostLabel(url: string): string | null {
+  let host: string
+  try {
+    host = new URL(url).hostname.toLowerCase()
+  } catch {
+    return null
+  }
+  const match = GATED_ARTICLE_HOSTS.find(
+    ({ suffix }) => host === suffix || host.endsWith(`.${suffix}`)
+  )
+  return match ? match.label : null
+}
+
 export function normalizeArticleUrl(raw: string): string | null {
   const trimmed = raw.trim()
   if (!trimmed) return null
@@ -753,6 +796,21 @@ export function parseArticleRows(sheetRows: Record<string, string>[]): {
     } else if (url.length > ARTICLE_FIELD_LIMITS.url) {
       problems.push(
         `URL is longer than ${ARTICLE_FIELD_LIMITS.url} characters.`
+      )
+    } else if (gatedHostLabel(url)) {
+      // GOAL-366 — fail the row here rather than at fetch time, because the
+      // `url` column is the one we READ and these hosts refuse an anonymous
+      // reader. Left to the worker it costs a fetch per row and lands as an
+      // import full of pulses with no content — which is exactly what a
+      // client hit: a sheet of LinkedIn links produced 24 pulses and nothing
+      // to analyse, and the failure was only legible in the per-row receipt.
+      //
+      // The message names the fix rather than the rule, because the two
+      // columns are the whole paradigm and this is the moment it is being
+      // violated: the readable copy goes in `url`, the page a person should
+      // open goes in `source_url`.
+      problems.push(
+        `We cannot read ${gatedHostLabel(url)} directly — it is behind a login. Put that link in the source_url column, and a readable copy (a PDF or a public page) in url.`
       )
     }
 
