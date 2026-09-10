@@ -394,12 +394,28 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
    continues it.
 7. The worker lands the job in `COMPLETE` (or `FAILED` with member-safe
    `statusMessage`) and then runs the embedding + resonance sweep
-   (`runContextResonanceDiscovery`) for any context that gained pulses —
-   **awaited, in the worker**, not fired at a request that has already answered.
-   Imported articles therefore surface in search and resonance without waiting
-   for the nightly cron. A run that yields with rows remaining kicks the next
-   sweep itself (`kickQueueWorker`), so a long sheet keeps moving on dev/demo
-   where scheduled ticks are far apart.
+   (`runContextResonanceDiscovery`) — **awaited, in the worker**, not fired at a
+   request that has already answered. A run that yields with rows remaining
+   kicks the next sweep itself (`kickQueueWorker`), so a long sheet keeps moving
+   on dev/demo where scheduled ticks are far apart.
+
+   **The sweep yields to that kick (GOAL-358).** It is registered only for a
+   context whose import *completed* on this tick — not on every requeue — and it
+   is skipped entirely on a tick that handed a job back, because
+   `kickQueueWorker` schedules its fetch in `after()`, which never runs if the
+   handler is killed at `maxDuration` before it can return. Sweeping first is
+   what caused that kill: it re-embeds and re-scans the whole context, work that
+   grows with the field, so every tick that landed rows ended in a 300s timeout
+   and no successor was ever started. A 24-row import consequently advanced only
+   ~4 rows per externally-scheduled tick, hours apart.
+
+   The cost of that ordering is that **"imported articles surface in search and
+   resonance without waiting for the nightly cron" is now conditional.** A
+   context deferred this way has exactly one backstop — the nightly
+   `/api/cron/discover-resonances` — because the job is already `COMPLETE` and
+   no later tick will register it again. Sweeps are additionally not *started*
+   past `SWEEP_DEADLINE_MS`, so a run that finished a job late leaves discovery
+   to that same nightly pass rather than beginning one it cannot finish.
 8. The modal polls `GET /api/import/articles/<jobId>` and shows Queued →
    Importing (with a row-count meter) → the per-row result summary. Closing it
    does not cancel anything; the job id is remembered per field, so reopening

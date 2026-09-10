@@ -48,8 +48,9 @@ import type { PersistedArticleRowOutcome } from '@/lib/imports/article-import'
  *      REQUESTED_BY edge, then re-validated live here.
  *   4. Lands each job in COMPLETE / FAILED, or hands it back to the queue with
  *      its cursor intact when the run is out of time.
- *   5. Runs the embedding + resonance sweep for contexts that gained pulses —
- *      awaited here as a durable step, not fired at a dying request.
+ *   5. Runs the embedding + resonance sweep for contexts whose import FINISHED
+ *      here — awaited as a durable step, not fired at a dying request, but
+ *      yielded entirely to the kick when a job was handed back (GOAL-358).
  *
  * Jobs are processed sequentially. Each row is several authorized graph writes,
  * and running batches in parallel inside one 300s function is the fastest way
@@ -98,6 +99,15 @@ const ROW_DEADLINE_MS = 120_000
  * done, and burn one of its three attempts on every tick.
  */
 const CLAIM_DEADLINE_MS = 100_000
+
+/**
+ * Don't START a resonance sweep past this point in the run (GOAL-358). The
+ * sweep re-embeds and re-scans a whole context, so it cannot be given a
+ * meaningful upper bound the way a row can — this only guarantees we are not
+ * beginning one with no budget left. A context skipped here is picked up by
+ * the nightly `/api/cron/discover-resonances`.
+ */
+const SWEEP_DEADLINE_MS = 240_000
 
 /**
  * Did this row actually add something a resonance sweep would care about?
@@ -191,9 +201,10 @@ export async function GET(request: NextRequest) {
       textSummarizerClient: createOpenAIDocumentSummarizer(),
     })
     const processed: ProcessedImportReport[] = []
-    // Contexts that gained pulses this run, keyed by context id so three jobs
-    // into one field trigger one discovery sweep rather than three. The value
-    // is the requester the sweep is attributed to.
+    // Contexts whose import COMPLETED this run having minted something (not
+    // merely "gained pulses this run" — see the registration site), keyed by
+    // context id so three jobs into one field trigger one discovery sweep
+    // rather than three. The value is the requester the sweep is attributed to.
     const contextsToSweep = new Map<string, string>()
     let claimedCount = 0
     let considered = 0
@@ -333,9 +344,7 @@ export async function GET(request: NextRequest) {
         // demo: 13 pulses scanned at 23:26, 30 by 01:08) and that ran INSIDE
         // the run's remaining budget, so every tick died at the 300s ceiling.
         // Deferring it to completion makes a tick's cost bounded by its rows.
-        if (
-          [...job.outcomes, ...run.outcomes].some(outcomeMintedEntities)
-        ) {
+        if ([...job.outcomes, ...run.outcomes].some(outcomeMintedEntities)) {
           contextsToSweep.set(job.fieldContextId, job.requesterUserId)
         }
       } catch (error) {
@@ -366,10 +375,14 @@ export async function GET(request: NextRequest) {
     // scheduled tick — on dev/demo that is minutes to an hour away (see
     // kick-queue-worker.ts). Kick the next sweep now; the claim is conditional,
     // so an overlapping scheduled run finds nothing extra to do.
-    const successorNeeded =
-      skippedForTime > 0 ||
-      processed.some((report) => report.status === 'REQUEUED')
-    if (successorNeeded) {
+    // A half-finished import is the only thing that MUST chain: its rows go
+    // nowhere until this same job is claimed again. Jobs we never looked at
+    // (`skippedForTime`) are still PENDING and any tick can claim them, so
+    // they earn a kick but not the discovery deferral below.
+    const requeuedThisRun = processed.some(
+      (report) => report.status === 'REQUEUED'
+    )
+    if (skippedForTime > 0 || requeuedThisRun) {
       kickQueueWorker(request, 'article-imports')
     }
 
@@ -378,23 +391,34 @@ export async function GET(request: NextRequest) {
     // request — that was the other half of the durability problem ADR-019
     // closed.
     //
-    // GOAL-358: but it is skipped entirely on a tick that owes the queue a
-    // successor, and the ORDER above is not what makes that work.
-    // `kickQueueWorker` schedules its fetch inside `after()`, which does not
-    // run until this handler RETURNS and the response flushes — so merely
-    // moving the call up buys nothing if we then block here for minutes and
-    // get killed at `maxDuration`. Returning promptly is the fix; the move is
-    // just honesty about the order things happen in.
+    // GOAL-358: but it yields to the kick, and the ORDER above is not what
+    // makes that work. `kickQueueWorker` schedules its fetch inside `after()`,
+    // which does not run until this handler RETURNS and the response flushes —
+    // so merely moving the call up buys nothing if we then block here for
+    // minutes and get killed at `maxDuration`. Returning promptly is the fix;
+    // the move is just honesty about the order things happen in.
     //
     // That kill is what was actually happening: on demo every tick that landed
     // rows ended `Vercel Runtime Timeout Error: Task timed out after 300
     // seconds`, no `[kick-queue-worker]` line was ever logged, and a 24-row
     // import crawled at ~4 rows per externally-scheduled tick, hours apart.
-    // Starting the next tick beats embedding a field nobody is looking at yet:
-    // whatever is skipped here is swept by the tick that completes the job, and
-    // failing that by the nightly resonance cron.
-    if (!successorNeeded) {
+    //
+    // Anything skipped here has EXACTLY ONE backstop — the nightly
+    // `/api/cron/discover-resonances` sweep. Not "the tick that completes the
+    // job": these contexts belong to jobs this tick already marked COMPLETE,
+    // so no later tick will ever register them again. Deferral is therefore
+    // gated on `requeuedThisRun` alone, and bounded by a start deadline rather
+    // than skipped wholesale, so a job that finished early still gets swept.
+    if (!requeuedThisRun) {
       for (const [contextId, actorUserId] of contextsToSweep) {
+        // Only bounds when a sweep STARTS, not how long it runs — a partial
+        // guard, in the same shape as ROW_DEADLINE_MS / CLAIM_DEADLINE_MS.
+        if (Date.now() - startedAt > SWEEP_DEADLINE_MS) {
+          console.warn(
+            `[Import Cron] Out of budget before discovery for context ${contextId} — leaving it to the nightly resonance cron`
+          )
+          break
+        }
         try {
           await runContextResonanceDiscovery({ contextId, actorUserId })
         } catch (error) {
@@ -408,7 +432,7 @@ export async function GET(request: NextRequest) {
       }
     } else if (contextsToSweep.size > 0) {
       console.warn(
-        `[Import Cron] Deferring discovery for ${contextsToSweep.size} context(s) — this run owes the queue a successor.`
+        `[Import Cron] Deferring discovery for ${contextsToSweep.size} context(s) to the nightly cron — this run owes the queue a successor.`
       )
     }
 
