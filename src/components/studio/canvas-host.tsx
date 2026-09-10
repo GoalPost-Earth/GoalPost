@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, type FC, type ReactNode } from 'react'
+import { useRef, useState, type FC, type ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 import { Maximize2, Minimize2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -8,6 +8,7 @@ import { useStudioCanvas, type CanvasView } from './studio-canvas-context'
 import { routeHasCanvasScope } from './canvas-scope'
 import { useBloomOverlay } from './bloom-overlay-context'
 import { BloomView } from './modes/graph-mode/bloom-view'
+import { CanvasSearch } from './canvas-search'
 import { StudioCanvasActionBar } from './canvas-action-bar'
 import { StudioBreadcrumb } from './studio-breadcrumb'
 import { EntityInfoDrawer } from '@/components/dashboard/entity-info-drawer'
@@ -50,6 +51,10 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
   const showOverlayChip = effectiveView === 'bloom' && overlay !== null
 
   // Lazy-mount Bloom; it retains its state across toggles back to dashboard.
+  // The Dashboard view's rendered content — the DOM that view's half of
+  // canvas find scans for text.
+  const dashboardRootRef = useRef<HTMLDivElement>(null)
+
   const [bloomVisited, setBloomVisited] = useState(effectiveView === 'bloom')
   if (effectiveView === 'bloom' && !bloomVisited) setBloomVisited(true)
 
@@ -60,7 +65,12 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
         'relative h-full w-full flex flex-col overflow-hidden bg-gp-surface dark:bg-gp-surface-dark'
       )}
     >
-      <header className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-gp-glass-border bg-gp-glass-bg backdrop-blur-md">
+      {/* `relative z-20` is load-bearing, not decoration. `backdrop-blur-md`
+          already makes this header a stacking context, so the search panel's
+          own z-index is trapped inside it — and the canvas region below is a
+          POSITIONED sibling that would otherwise paint over the whole header,
+          hiding the dropdown behind an opaque `bg-gp-surface`. */}
+      <header className="relative z-20 flex items-center justify-between gap-2 px-3 py-1.5 border-b border-gp-glass-border bg-gp-glass-bg backdrop-blur-md">
         <div className="flex items-center gap-2 min-w-0">
           <div className="hidden md:flex min-w-0">
             <StudioBreadcrumb />
@@ -92,7 +102,18 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
             </button>
           )}
         </div>
-        <div className="flex items-center gap-1">
+        {/* `shrink-0`: the open search pill is the only flexible thing in
+            this row, so without it the pill (not the chip beside it) is what
+            collapses at 390px. */}
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Find something on the canvas and go to it — nodes in Bloom, text
+              on the page in Dashboard view. The chrome's ⌘K pill is the
+              platform-wide search and navigates away; this one never leaves
+              the canvas. */}
+          <CanvasSearch
+            view={effectiveView}
+            dashboardRootRef={dashboardRootRef}
+          />
           {/* With the chat hidden (GOAL-313) the canvas already fills the
               studio, so "fullscreen" has nothing left to collapse — the
               control would flip its own icon and change nothing on screen.
@@ -127,6 +148,7 @@ export const CanvasHost: FC<CanvasHostProps> = ({ children, fullscreen }) => {
 
       <div className="relative flex-1 overflow-hidden">
         <div
+          ref={dashboardRootRef}
           className={cn(
             'absolute inset-0',
             effectiveView !== 'dashboard' && 'pointer-events-none'

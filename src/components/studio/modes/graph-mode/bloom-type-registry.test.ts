@@ -18,6 +18,8 @@ import {
   BLOOM_RELATIONSHIP_TYPES,
   DEFAULT_HIDDEN_TYPE_KEYS,
   applyBloomTypeFilters,
+  countNodeTypes,
+  countRelationshipTypes,
   nodeTypeKey,
   normalizeColor,
   presentNodeRows,
@@ -116,9 +118,9 @@ describe('presentRows — the toggle list derives from the canvas', () => {
   })
 
   it('surfaces a new type with no per-type work — a colour is enough', () => {
-    expect(
-      presentNodeRows(asColors(DARK.weaveNode)).map((r) => r.key)
-    ).toEqual(['promise-weave'])
+    expect(presentNodeRows(asColors(DARK.weaveNode)).map((r) => r.key)).toEqual(
+      ['promise-weave']
+    )
   })
 
   it('offers the edge rows a field scope paints', () => {
@@ -246,5 +248,88 @@ describe('applyBloomTypeFilters', () => {
     const result = applyBloomTypeFilters(canvas, hidden)
     expect(result.nodes).toHaveLength(1)
     expect(result.relationships).toHaveLength(1)
+  })
+})
+
+/**
+ * Per-row counts — the numbers the legend prints beside each label.
+ *
+ * Tallied through the same winner-takes-all colour index the rows and the
+ * filter resolve through, so the count and the switch it sits beside can never
+ * disagree about which bucket an element landed in.
+ */
+describe('countNodeTypes / countRelationshipTypes', () => {
+  it('tallies each type row by the colour it painted with', () => {
+    const counts = countNodeTypes([
+      node('p1', DARK.person),
+      node('p2', DARK.person),
+      node('g1', DARK.pulse.goal),
+    ])
+    expect(counts.get('person')).toBe(2)
+    expect(counts.get('goal')).toBe(1)
+  })
+
+  it('counts light-mode paint into the same row as its dark counterpart', () => {
+    const counts = countNodeTypes([
+      node('p1', DARK.person),
+      node('p2', LIGHT.person),
+    ])
+    expect(counts.get('person')).toBe(2)
+  })
+
+  it('leaves an undecodable colour uncounted rather than bucketing it', () => {
+    const counts = countNodeTypes([
+      node('x1', '#010203'),
+      node('p1', DARK.person),
+    ])
+    expect(counts.get('person')).toBe(1)
+    expect([...counts.values()].reduce((a, b) => a + b, 0)).toBe(1)
+  })
+
+  it('reports nothing for a type the canvas does not carry', () => {
+    const counts = countNodeTypes([node('p1', DARK.person)])
+    expect(counts.get('goal')).toBeUndefined()
+    expect(countNodeTypes([]).size).toBe(0)
+  })
+
+  it('tallies relationship rows the same way', () => {
+    const counts = countRelationshipTypes([
+      edge('r1', 'a', 'b', DARK.initiatedEdge),
+      edge('r2', 'a', 'c', DARK.initiatedEdge),
+      edge('r3', 'b', 'c', DARK.resonanceEdge),
+    ])
+    expect(counts.get('initiated-by')).toBe(2)
+    expect(counts.get('resonates-with')).toBe(1)
+  })
+
+  it('only ever keys a count to a row the legend can offer', () => {
+    // A tally keyed to something no row carries would print a number with
+    // nowhere to sit — or silently vanish from the panel.
+    const nodeKeys = new Set(BLOOM_NODE_TYPES.map((r) => r.key))
+    const counts = countNodeTypes([
+      node('p1', DARK.person),
+      node('s1', LIGHT.pulse.story),
+      node('x1', '#010203'),
+    ])
+    for (const key of counts.keys()) expect(nodeKeys.has(key)).toBe(true)
+  })
+})
+
+/**
+ * Drift guard: node and relationship row keys share ONE flat namespace.
+ *
+ * Two things already depend on this and would break silently if a key were
+ * reused across the two tables — the legend's `hidden` Set (one Set for both
+ * kinds, so hiding an edge type would also hide a node type) and the legend's
+ * merged count Map (one tally would clobber the other). Neither would throw;
+ * both would just quietly lie.
+ */
+describe('row key namespace', () => {
+  it('never reuses a key between node rows and relationship rows', () => {
+    const all = [
+      ...BLOOM_NODE_TYPES.map((r) => r.key),
+      ...BLOOM_RELATIONSHIP_TYPES.map((r) => r.key),
+    ]
+    expect(new Set(all).size).toBe(all.length)
   })
 })

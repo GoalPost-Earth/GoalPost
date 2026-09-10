@@ -58,6 +58,7 @@ import {
   type CanvasView,
 } from './studio-canvas-context'
 import { BloomOverlayProvider } from './bloom-overlay-context'
+import { BloomSearchProvider } from './bloom-search-context'
 import {
   VisibleEntitiesProvider,
   useVisibleEntities,
@@ -90,7 +91,9 @@ export const StudioShell: FC<StudioShellProps> = ({ children }) => {
       <StudioCanvasProvider>
         <BloomOverlayProvider>
           <VisibleEntitiesProvider>
-            <StudioBody>{children}</StudioBody>
+            <BloomSearchProvider>
+              <StudioBody>{children}</StudioBody>
+            </BloomSearchProvider>
           </VisibleEntitiesProvider>
         </BloomOverlayProvider>
       </StudioCanvasProvider>
@@ -673,8 +676,7 @@ const AssistantRuntimeBoundary: FC<{
   // the fetch effect from re-running when the parent clears the "fresh" hint.
   const skipHydrationRef = useRef(skipHydration)
   const [hydration, setHydration] = useState<
-    | { status: 'loading' }
-    | { status: 'ready'; thread: HydratedThread | null }
+    { status: 'loading' } | { status: 'ready'; thread: HydratedThread | null }
   >(skipHydration ? { status: 'ready', thread: null } : { status: 'loading' })
 
   useEffect(() => {
