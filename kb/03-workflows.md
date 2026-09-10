@@ -373,20 +373,53 @@ rather than on Redis, and `kb/04-state-machines.md` for the status machine.
    text / PDF accepted; OneDrive share links are resolved to the file with
    `download=1` and the chain's own cookies; a link that fails is not retried
    by later rows of the same run),
-   reduces HTML to article text (`article-html-text.ts`), stores the result as
-   a `Document` on the field exactly like an upload (`sourceUrl` set, hint =
-   the row's title/author/date/link, anchored `PROCESSING` so the document
-   cron cannot claim it), and runs the same `runDocumentIngestPipeline` WF-10
-   uses — summary, ingest thread, auto-executed persons / organizations /
-   pulses with `EXTRACTED_FROM` provenance and one Log per write. The row's
-   pulse is in the roster, so the extractor updates it; as a deterministic
-   floor the worker also links it `EXTRACTED_FROM` the document and, when its
-   body is still the sheet placeholder (the seeded sentence or a bare URL),
-   fills it from the document summary. The outcome records what the article
-   yielded (`extraction`). A link that cannot be read fails **only that half**:
-   the pulse stands on the sheet's details and the outcome carries member-safe
-   copy saying why. `sourceUrl` is the idempotency key — a re-uploaded sheet
-   never fetches the same article into a field twice.
+   reduces HTML to article text (`article-html-text.ts`), and attaches the
+   result to the row's **own pulse** (`attachSourceFileToResource`, GOAL-356) —
+   same blob layout, same `sourceBlobKey` / `UPLOADED_BY` contract an upload
+   gets, hint = the row's title/author/date/link, `ingestStatus` `PROCESSING`
+   so the document cron cannot claim it. It then runs the same
+   `runDocumentIngestPipeline` WF-10 uses, against that node — summary, ingest
+   thread, auto-executed persons / organizations / pulses with
+   `EXTRACTED_FROM` provenance and one Log per write. The row's pulse is in the
+   roster, so the extractor updates it; as a deterministic floor the worker also
+   fills its body from the summary when it is still the sheet placeholder (the
+   seeded sentence or a bare URL). The outcome records what the article yielded
+   (`extraction`). A link that cannot be read fails **only that half**: the
+   pulse stands on the sheet's details and the outcome carries member-safe copy
+   saying why.
+
+   **One row is one node (GOAL-356).** Until that story this anchored a
+   *separate* `resourceType: 'document'` pulse for the fetched file, beside the
+   row's own — invisible while a document was its own `(:Document)` node, and a
+   visible duplicate the moment GOAL-354 made a document a Resource: the member
+   saw the same article twice, each copy carrying its own ResonanceSuggestions
+   and ingest ConversationThread, cross-linked by `EXTRACTED_FROM`. The file now
+   attaches to the pulse that already exists, which is what WF-11 always meant —
+   the fetched document is *enrichment of the row's pulse*, not a peer artifact.
+   Consequences worth knowing:
+   - The surviving node keeps the sheet's **identity** — `title` (no file
+     extension), `content`, and `resourceType` (`article` / `book` / …). It is
+     **not** typed `document`. `sourceBlobKey` is what marks it source-backed,
+     so it still lists in Documents, downloads, re-extracts and deletes like an
+     upload — see `SOURCE_BACKED_RESOURCE` in `src/lib/ingest/source-resource-node.ts`,
+     which is the single definition of "came from a file" and the reason a
+     predicate of `resourceType = 'document'` is always wrong.
+   - **Goal and Story rows are the exception** and still get their own document
+     node. An article a goal came out of is a genuinely separate Resource, and
+     adopting the row would mean putting `:ResourcePulse` on a `:GoalPulse`.
+   - Provenance sites guard against a node pointing at itself (`d = pulse`),
+     since the extractor now routinely proposes `update_pulse` against the very
+     node it is reading from.
+   - Rows imported **before** GOAL-356 are cleaned up by
+     `scripts/reconcile-duplicate-document-resources.ts`, which merges each old
+     pair into the same shape (dry-run by default; `--execute` to apply).
+   - The idempotency key is the **fetched link** — `location` on an adopted row,
+     `sourceUrl` on a legacy or uploaded document — and it only counts on a node
+     that actually holds bytes (`sourceBlobKey IS NOT NULL`). That last guard
+     matters because GOAL-355 gave every ResourcePulse a `sourceUrl` of its own
+     meaning *where the member found it*; without it, a row whose `source_url`
+     matched another row's `url` skipped its own article. A re-uploaded sheet
+     still never fetches the same article into a field twice.
 6. Each row's outcome is persisted **before the next row starts**. That list is
    the resume cursor and the source of every summary count, so a worker killed
    mid-batch resumes where it stopped instead of re-walking the sheet. A run
