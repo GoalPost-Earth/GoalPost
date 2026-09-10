@@ -137,7 +137,9 @@ export interface AnchorDocumentInput {
  * as a 400/404 to the frontend so the user can retry. The blob is left in
  * place — orphan cleanup is a separate concern handled by S3 lifecycle.
  */
-export async function anchorDocument(input: AnchorDocumentInput): Promise<void> {
+export async function anchorDocument(
+  input: AnchorDocumentInput
+): Promise<void> {
   const session = input.driver.session()
   try {
     const result = await session.executeWrite(async (tx) =>
@@ -513,12 +515,34 @@ export async function loadDocumentRecord(
           d.sourceBlobKey AS blobKey,
           d.sourceBlobUrl AS blobUrl,
           d.sourceUserHint AS userHint,
-          // Prefer the fetched link; fall back to sourceUrl for documents
-          // anchored before GOAL-356 split the two meanings apart. This feeds
-          // the extractor's location fallback for pulses it pulls out of the
-          // article (extraction-model-invoker.ts), which wants the public page
-          // the bytes came from — never the member's found-at link.
-          coalesce(d.sourceFetchedFrom, d.sourceUrl) AS sourceUrl,
+          // NOTE: no backticks anywhere in this block. The whole query is a
+          // template literal, so a backtick in a comment ends the string and
+          // the file stops parsing.
+          //
+          // Prefer the member's found-at link, falling back to the fetched
+          // one. This feeds the extractor's location fallback for pulses it
+          // pulls out of the article (extraction-model-invoker.ts), and
+          // location is a member-facing "where does this live" — so it must be
+          // the page a person can actually read, not our copy of the file.
+          //
+          // The order was the other way round and produced the client-reported
+          // bug (2026-09-09): a bulk-import row's url column is typically a
+          // OneDrive share of the PDF, that is what gets fetched and therefore
+          // what sourceFetchedFrom holds, and preferring it stamped a tokenized
+          // share link into location on every extracted pulse — rendered under
+          // a map-pin icon as though it were a place.
+          //
+          // BOTH arms are load-bearing, so do not collapse this to one
+          // property. A document anchored before GOAL-356 split the two
+          // meanings has only sourceUrl, and for those it still holds the
+          // FETCHED link — the fallback is what keeps their behaviour
+          // unchanged. An ordinary upload has neither, and the extractor then
+          // falls through to the authorized download route.
+          //
+          // Not the import's idempotency key: findArticleDocument matches on
+          // d.sourceFetchedFrom directly, so this ordering cannot re-fetch an
+          // article that was already read into the field.
+          coalesce(d.sourceUrl, d.sourceFetchedFrom) AS sourceUrl,
           c.id AS fieldContextId,
           uploaderIds,
           coalesce(d.ingestStatus, $completeStatus) AS status
