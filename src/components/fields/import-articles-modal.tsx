@@ -61,6 +61,12 @@ interface ImportArticlesModalProps {
   onClose: () => void
   /** Called as rows land — parent refetches pulses/people. */
   onImported: () => void
+  /**
+   * Called the moment a sheet is queued, before any row has landed (GOAL-365)
+   * — the page's status section polls the same list and goes quiet the same
+   * way, and without this it would learn about the job only on close.
+   */
+  onJobQueued: () => void
 }
 
 export function ImportArticlesModal({
@@ -68,6 +74,7 @@ export function ImportArticlesModal({
   fieldContextId,
   onClose,
   onImported,
+  onJobQueued,
 }: ImportArticlesModalProps) {
   const [hasPreview, setHasPreview] = useState(false)
   const [fileName, setFileName] = useState('')
@@ -106,13 +113,20 @@ export function ImportArticlesModal({
   // sessionStorage or the list); on its own it made a second concurrent import
   // invisible here while the page showed it plainly.
   //
-  // `refreshKey` is fixed: this list is only ever read while the modal is open
-  // and its own poll already keeps it current, so there is no outside event to
-  // force a refetch on. `onRowsLanded` is shared with the tracked job's hook —
-  // both mean the same thing to the page, which is "the field changed".
+  // `refreshKey` is bumped on every submit (see `handleSubmit`). The list's
+  // poll stops as soon as nothing it can see is in flight, so a modal opened
+  // over a quiet field holds a dead poll — and its first, empty response — for
+  // the rest of its life. "Import another sheet" queues the second import
+  // without ever closing the modal, so on that path the first sheet's job
+  // never reached `fieldJobs` and the panel was back to speaking for one job
+  // while the page listed both: this ticket's bug by another route. Re-keying
+  // restarts the poll at the moment the job being replaced becomes one of the
+  // "others". `onRowsLanded` is shared with the tracked job's hook — both mean
+  // the same thing to the page, "the field changed".
+  const [listRefreshKey, setListRefreshKey] = useState(0)
   const { jobs: fieldJobs } = useArticleImportJobList({
     fieldContextId,
-    refreshKey: 0,
+    refreshKey: listRefreshKey,
     onRowsLanded: onImported,
   })
 
@@ -165,6 +179,22 @@ export function ImportArticlesModal({
     if (!inFlight && !isRecovering) reset()
     onClose()
   }, [inFlight, isRecovering, isSubmitting, onClose, reset])
+
+  /**
+   * Queue the previewed rows, then re-read the field's job list — here and on
+   * the page behind, which polls the same list and goes quiet the same way.
+   *
+   * Submitting is the one moment the list is guaranteed to be behind: it has
+   * just gained a job, and the import it replaces as the tracked one has just
+   * become an "other" this panel has to name. `submit` resolves after the 202,
+   * so by now the server can see both. A failed submit re-reads for nothing,
+   * which is cheaper than working out whether it needed to.
+   */
+  const handleSubmit = useCallback(async () => {
+    await submit(validRows)
+    setListRefreshKey((key) => key + 1)
+    onJobQueued()
+  }, [onJobQueued, submit, validRows])
 
   const handleFileSelected = useCallback(async (picked: File | null) => {
     if (!picked) return
@@ -373,7 +403,7 @@ export function ImportArticlesModal({
               </button>
               <button
                 type="button"
-                onClick={() => void submit(validRows)}
+                onClick={() => void handleSubmit()}
                 disabled={isSubmitting || validRows.length === 0}
                 className="px-5 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
