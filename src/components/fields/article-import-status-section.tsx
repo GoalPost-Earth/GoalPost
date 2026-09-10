@@ -7,6 +7,7 @@ import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 import {
   ARTICLE_IMPORT_STATUS,
   FINISHED_JOB_RETENTION_DAYS,
+  describeArticleImportProgress,
   isArticleImportInFlight,
   type ArticleImportJobListItem,
   type ArticleImportJobStatus,
@@ -166,9 +167,13 @@ export function ArticleImportStatusSection({
  * plus the one number that shows the import is actually moving.
  */
 function InFlightRow({ job }: { job: ArticleImportJobListItem }) {
-  const isQueued = job.status === ARTICLE_IMPORT_STATUS.pending
-  const total = Math.max(job.summary.totalRows, 1)
-  const percent = Math.min(100, Math.round((job.processedRows / total) * 100))
+  // GOAL-357 — landed rows, not `status`, decide whether this reads as queued:
+  // a job that yields on the cron run's time budget returns to PENDING with
+  // its cursor intact, and calling that "Queued" threw away progress the
+  // server already knew about. Shared with the modal's progress panel so one
+  // import never describes itself two ways.
+  const { isQueued, label, icon, processedRows, totalRows, percent } =
+    describeArticleImportProgress(job)
   const queuedAgo = relativeTime(job.createdAtMs)
 
   return (
@@ -181,16 +186,16 @@ function InFlightRow({ job }: { job: ArticleImportJobListItem }) {
           )}
           aria-hidden="true"
         >
-          {isQueued ? 'schedule' : 'autorenew'}
+          {icon}
         </span>
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-gp-ink-strong dark:text-white truncate">
-            {isQueued ? 'Queued' : 'Importing…'}
+            {label}
           </p>
           <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft truncate">
             {isQueued
-              ? `${job.summary.totalRows} row${job.summary.totalRows === 1 ? '' : 's'} — importing starts shortly.`
-              : `${job.processedRows} of ${job.summary.totalRows} rows`}
+              ? `${totalRows} row${totalRows === 1 ? '' : 's'} — importing starts shortly.`
+              : `${processedRows} of ${totalRows} rows`}
             {queuedAgo ? ` · queued ${queuedAgo}` : ''}
           </p>
         </div>
@@ -203,9 +208,11 @@ function InFlightRow({ job }: { job: ArticleImportJobListItem }) {
       <div
         className="mt-2 h-1 w-full overflow-hidden rounded-full bg-gp-ink-soft/20"
         role="progressbar"
-        aria-valuenow={job.processedRows}
+        // Omitted while queued — see the twin panel in
+        // `import-articles-progress.tsx`.
+        aria-valuenow={isQueued ? undefined : processedRows}
         aria-valuemin={0}
-        aria-valuemax={job.summary.totalRows}
+        aria-valuemax={Math.max(totalRows, 1)}
         aria-label="Rows imported"
       >
         <div

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import {
-  ARTICLE_IMPORT_STATUS,
   MAX_ARTICLE_IMPORT_ROWS,
   isArticleImportInFlight,
   parseArticleRows,
@@ -14,13 +13,15 @@ import {
 } from '@/lib/imports/article-import'
 import { parseSpreadsheetArrayBuffer } from '@/lib/imports/article-sheet-parser'
 import {
-  ImportSummaryChips,
-  OutcomeRow,
+  ImportArticlesResults,
   PreviewRowCard,
   RowIssueCard,
 } from './import-articles-preview'
 import { ImportArticlesPicker } from './import-articles-picker'
-import { ImportArticlesProgress } from './import-articles-progress'
+import {
+  ImportArticlesProgress,
+  ImportArticlesRecovering,
+} from './import-articles-progress'
 import { useArticleImportJob } from './use-article-import-job'
 
 /**
@@ -35,8 +36,10 @@ import { useArticleImportJob } from './use-article-import-job'
  * and a cron worker mints the pulses, so the last two steps are driven by
  * polling the job rather than by one long-blocked request. Which step shows is
  * derived from the job, not stored — that way a member who closed the modal
- * mid-import reopens straight into their progress (the hook recovers the job
- * id) instead of a fresh drop zone.
+ * mid-import reopens straight into their progress instead of a fresh drop
+ * zone. GOAL-357 added a brief `recovering` state in front of the picker,
+ * because the hook has to ask (sessionStorage first, then the server) before
+ * "no job" is a fact rather than a guess.
  *
  * Rendered through a portal to `document.body` (GOAL-327). The field-context
  * page that owns this modal is mounted inside `CanvasHost`'s per-view
@@ -70,6 +73,18 @@ export function ImportArticlesModal({
   const [validRows, setValidRows] = useState<ArticleImportRowInput[]>([])
   const [rowErrors, setRowErrors] = useState<ArticleRowError[]>([])
   const [pickError, setPickError] = useState<string | null>(null)
+  /**
+   * The running import the member has chosen to step past in order to queue
+   * another sheet (GOAL-357). Holding the job *id* rather than a boolean is
+   * what makes the return automatic: the moment `submit` mints a new job the
+   * ids differ and the modal follows the new one, while a submit that fails
+   * leaves them on the preview with the error instead of bouncing back.
+   *
+   * The queue is built for this — `MAX_IN_FLIGHT_ARTICLE_IMPORTS_PER_USER` is
+   * 5 — and without a way through, recovering into a running import would
+   * turn "Import Articles" into a dead end for as long as that import lasts.
+   */
+  const [supersededJobId, setSupersededJobId] = useState<string | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
 
   // Keep Tab / Shift+Tab inside the dialog and move focus into it on open —
@@ -78,13 +93,29 @@ export function ImportArticlesModal({
   // without a trap Tab walks straight into the field-context page behind it.
   useFocusTrap(dialogRef, isOpen)
 
-  const { job, isSubmitting, error, submit, clear } = useArticleImportJob({
-    fieldContextId,
-    onRowsLanded: onImported,
-  })
+  const { job, isRecovering, isSubmitting, error, submit, clear } =
+    useArticleImportJob({
+      fieldContextId,
+      onRowsLanded: onImported,
+    })
 
   const inFlight = job !== null && isArticleImportInFlight(job.status)
-  const step = job ? (inFlight ? 'progress' : 'results') : hasPreview ? 'preview' : 'pick'
+  const steppedPast = inFlight && job.jobId === supersededJobId
+  // GOAL-357 — the picker is only correct once we know no import is running.
+  // This modal is unmounted while closed, so every reopen starts with no
+  // snapshot; showing the drop zone in that gap flashed a fresh import over
+  // one already in flight (and in a second tab, where sessionStorage is empty,
+  // it stayed there until the lookup answered).
+  const step =
+    job && !steppedPast
+      ? inFlight
+        ? 'progress'
+        : 'results'
+      : hasPreview
+        ? 'preview'
+        : isRecovering
+          ? 'recovering'
+          : 'pick'
 
   const reset = useCallback(() => {
     setHasPreview(false)
@@ -92,16 +123,19 @@ export function ImportArticlesModal({
     setValidRows([])
     setRowErrors([])
     setPickError(null)
+    setSupersededJobId(null)
     clear()
   }, [clear])
 
   const handleClose = useCallback(() => {
     if (isSubmitting) return
     // A finished import is dismissed for good; one still running is only
-    // hidden, so reopening returns to its progress.
-    if (!inFlight) reset()
+    // hidden, so reopening returns to its progress. Closing mid-lookup
+    // dismisses nothing — `reset()` clears the stored job id, and doing that
+    // before we know what is running would throw away the way back to it.
+    if (!inFlight && !isRecovering) reset()
     onClose()
-  }, [inFlight, isSubmitting, onClose, reset])
+  }, [inFlight, isRecovering, isSubmitting, onClose, reset])
 
   const handleFileSelected = useCallback(async (picked: File | null) => {
     if (!picked) return
@@ -175,7 +209,6 @@ export function ImportArticlesModal({
   // but guard anyway so the component stays safe to mount eagerly.
   if (typeof document === 'undefined') return null
 
-  const failed = job?.status === ARTICLE_IMPORT_STATUS.failed
   const visibleError = pickError ?? error
 
   return createPortal(
@@ -205,6 +238,8 @@ export function ImportArticlesModal({
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
+
+        {step === 'recovering' && <ImportArticlesRecovering />}
 
         {step === 'pick' && (
           <ImportArticlesPicker onFileSelected={handleFileSelected} />
@@ -251,34 +286,7 @@ export function ImportArticlesModal({
 
         {step === 'progress' && job && <ImportArticlesProgress job={job} />}
 
-        {step === 'results' && job && (
-          <>
-            {failed && (
-              <div
-                role="alert"
-                className="shrink-0 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-              >
-                {job.statusMessage ??
-                  'This import could not be finished. Upload the remaining rows again.'}
-              </div>
-            )}
-            <ImportSummaryChips summary={job.summary} />
-            <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
-              {job.message}
-            </p>
-            <div className="overflow-y-auto min-h-0 space-y-2 pr-1">
-              {[...job.outcomes]
-                .sort(
-                  (a, b) =>
-                    (a.status === 'failed' ? 0 : 1) -
-                      (b.status === 'failed' ? 0 : 1) || a.row - b.row
-                )
-                .map((outcome) => (
-                  <OutcomeRow key={`out-${outcome.row}`} outcome={outcome} />
-                ))}
-            </div>
-          </>
-        )}
+        {step === 'results' && job && <ImportArticlesResults job={job} />}
 
         {visibleError && (
           <div
@@ -290,13 +298,32 @@ export function ImportArticlesModal({
         )}
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1 shrink-0">
-          {(step === 'pick' || step === 'progress') && (
+          {(step === 'pick' ||
+            step === 'progress' ||
+            step === 'recovering') && (
             <button
               type="button"
-              onClick={handleClose}
+              // While the member is stepping past a running import, this is
+              // the way back to it rather than a way out of the modal.
+              onClick={
+                steppedPast ? () => setSupersededJobId(null) : handleClose
+              }
               className="px-5 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors cursor-pointer"
             >
-              {step === 'progress' ? 'Close' : 'Cancel'}
+              {steppedPast
+                ? 'Back to import'
+                : step === 'pick'
+                  ? 'Cancel'
+                  : 'Close'}
+            </button>
+          )}
+          {step === 'progress' && job && (
+            <button
+              type="button"
+              onClick={() => setSupersededJobId(job.jobId)}
+              className="px-5 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors cursor-pointer"
+            >
+              Import another sheet
             </button>
           )}
           {step === 'preview' && (

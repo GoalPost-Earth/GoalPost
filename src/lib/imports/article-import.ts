@@ -217,6 +217,85 @@ export function isArticleImportInFlight(status: ArticleImportStatus): boolean {
 }
 
 /**
+ * What an in-flight job should say it is doing (GOAL-357).
+ *
+ * `status` alone is not that answer, because `PENDING` means two different
+ * things. A job the worker has never claimed is genuinely queued and has
+ * landed nothing. But a job that ran out of the cron run's time budget hands
+ * itself back to the queue with its cursor intact (`PROCESSING → PENDING`,
+ * kb/04-state-machines.md — "a 300-row import may legitimately span several
+ * ticks"), and the stale sweep requeues the same way. Reading that second
+ * `PENDING` as "not started" rewinds a half-finished import to a blank
+ * "Queued" panel with no counter, then forward again on the next claim — the
+ * client watching one import saw three different pictures across three
+ * reopens, one of them a "Queued" label above a 30%-full bar.
+ *
+ * Landed rows alone are not the answer either, and for the mirror-image
+ * reason: a job the worker has just claimed is `PROCESSING` with nothing
+ * appended yet, and row one is an article fetch plus ingestion — tens of
+ * seconds of "Your rows are in the queue" while the worker is demonstrably
+ * working on them. So it takes both. Queued is the one state where the worker
+ * has not claimed the job *and* nothing has landed; everything else in flight
+ * is importing.
+ *
+ * The label and icon come back with it, not just the predicate. GOAL-357 was
+ * two surfaces describing one job differently, and leaving them to spell
+ * "Queued" and pick `schedule` for themselves would leave that exposure in
+ * place a copy change later. What legitimately differs between the two —
+ * their size tokens, and the status section's "· queued 2 hours ago" — stays
+ * with them.
+ */
+export interface ArticleImportProgress {
+  /** True only for an unclaimed job that has landed nothing — honest "Queued". */
+  isQueued: boolean
+  /** Member-facing state label. */
+  label: string
+  /** Material Symbols name for the state icon. */
+  icon: string
+  processedRows: number
+  totalRows: number
+  /** Rows done as a whole percent, clamped to 0–100. */
+  percent: number
+}
+
+export function describeArticleImportProgress(job: {
+  status: ArticleImportStatus
+  processedRows: number
+  summary: { totalRows: number }
+}): ArticleImportProgress {
+  // Both counts come off the wire, so treat anything non-finite as zero
+  // rather than rendering `NaN%` in the meter.
+  const processedRows = Math.max(
+    0,
+    Number.isFinite(job.processedRows) ? job.processedRows : 0
+  )
+  const totalRows = Math.max(
+    0,
+    Number.isFinite(job.summary.totalRows) ? job.summary.totalRows : 0
+  )
+  // 100% is reserved for "every row has landed", because a full meter beside
+  // a spinner is its own small lie — 299 of 300 rounds up to it otherwise.
+  // Everything short of that rounds normally and caps at 99, rather than
+  // flooring, which would understate honest progress all the way up (10 of 24
+  // is 42%, not 41%). The divisor is guarded, not the numerator: a job whose
+  // totalRows somehow read as 0 must not divide by zero.
+  const isComplete = totalRows > 0 && processedRows >= totalRows
+  const percent = isComplete
+    ? 100
+    : Math.min(99, Math.round((processedRows / Math.max(totalRows, 1)) * 100))
+  const isQueued =
+    job.status === ARTICLE_IMPORT_STATUS.pending && processedRows === 0
+  return {
+    isQueued,
+    label: isQueued ? 'Queued' : 'Importing…',
+    icon: isQueued ? 'schedule' : 'autorenew',
+    processedRows,
+    totalRows,
+    percent,
+  }
+}
+
+/**
  * Recompute the batch summary from the durable per-row outcomes — the single
  * source of truth for every count. `totalRows` is the only value that cannot be
  * derived, and it is fixed at enqueue.
