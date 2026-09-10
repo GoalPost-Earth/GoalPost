@@ -638,11 +638,41 @@ export async function ingestArticleForRow(
     return extraction('extraction_failed', ARTICLE_EXTRACTION_FAILED_MESSAGE)
   }
 
-  await markDocumentIngestComplete({
-    driver: deps.driver,
-    documentId,
-    ...countExecutedToolCalls(run.executedToolCalls),
-  })
+  // GOAL-366: the document's status has to agree with what the row reports.
+  //
+  // This used to mark COMPLETE unconditionally and then return
+  // `extraction_failed` a few lines below, so a document whose extraction
+  // produced nothing was stamped finished with a null status message. That is
+  // worse than a plain failure, because COMPLETE is unreachable by every
+  // recovery path we have: the document cron claims only PENDING, the stalled
+  // sweep touches only PROCESSING, and `ingestAttempts` never leaves 0. The
+  // document became a permanent empty shell that no retry could find and no
+  // surface flagged.
+  //
+  // Measured cost of that on demo (2026-09-10): a Gemini spend cap silently
+  // refused all 23 PDFs in a client's import. Every fetch succeeded, every
+  // extraction was rejected, and all 23 documents read COMPLETE with no
+  // summary and no entities — so the outage looked like an import bug for a
+  // day, and the only way back was deleting the field and starting over.
+  //
+  // FAILED is deliberate rather than PENDING: a re-queue would let a
+  // permanently unreadable file spin through the attempt ceiling, and it would
+  // burn every document's attempts at once during a provider outage. FAILED is
+  // visible on the field page's ingest chip and the member can re-extract in
+  // place — the blob is already stored, so nothing needs re-uploading.
+  if (run.extractionFailed) {
+    await markDocumentIngestFailed({
+      driver: deps.driver,
+      documentId,
+      statusMessage: ARTICLE_EXTRACTION_FAILED_MESSAGE,
+    })
+  } else {
+    await markDocumentIngestComplete({
+      driver: deps.driver,
+      documentId,
+      ...countExecutedToolCalls(run.executedToolCalls),
+    })
+  }
 
   const counts = countArticleEntities(run.executedToolCalls)
   try {

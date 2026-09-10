@@ -167,13 +167,21 @@ beforeEach(() => {
 })
 
 describe('ingestArticleForRow', () => {
-  it('fetches, attaches the article to the row\'s own Resource, runs the pipeline against it, and fills the body', async () => {
+  it("fetches, attaches the article to the row's own Resource, runs the pipeline against it, and fills the body", async () => {
     const { driver, writes } = fakeDriver({ existing: null, filled: true })
     const d = deps(driver, async () => htmlFetch())
     runDocumentIngestPipeline.mockResolvedValue(
       okRun([
-        { tool: 'create_person', args: {}, result: { success: true, personId: 'p1' } },
-        { tool: 'create_pulse', args: {}, result: { success: true, pulseId: 'p2' } },
+        {
+          tool: 'create_person',
+          args: {},
+          result: { success: true, personId: 'p1' },
+        },
+        {
+          tool: 'create_pulse',
+          args: {},
+          result: { success: true, pulseId: 'p2' },
+        },
         { tool: 'update_pulse', args: {}, result: { success: true } },
         { tool: 'link_entity_to_pulse', args: {}, result: { success: true } },
         { tool: 'create_pulse', args: {}, result: { success: false } },
@@ -196,10 +204,16 @@ describe('ingestArticleForRow', () => {
       sourceUrl: row.url,
       status: 'PROCESSING',
     })
-    expect(anchored.blobKey).toBe('documents/pulse_row/Seeing People as Living Systems.txt')
-    expect(anchored.userHint).toBe(buildArticleDocumentHint(row, 'Veronique Letellier'))
+    expect(anchored.blobKey).toBe(
+      'documents/pulse_row/Seeing People as Living Systems.txt'
+    )
+    expect(anchored.userHint).toBe(
+      buildArticleDocumentHint(row, 'Veronique Letellier')
+    )
     const stored = await d.blobStore.get(anchored.blobKey)
-    expect(stored?.buffer.toString('utf8')).toContain('Leadership as a living system')
+    expect(stored?.buffer.toString('utf8')).toContain(
+      'Leadership as a living system'
+    )
     expect(stored?.buffer.toString('utf8')).not.toContain('<article>')
 
     // The pipeline ran as the requester against that same node, so everything
@@ -230,7 +244,8 @@ describe('ingestArticleForRow', () => {
         pulseId: 'pulse_row',
         documentId: 'pulse_row',
         userId: 'user_1',
-        placeholder: 'Article by Veronique Letellier, published 2025-05-19: https://example.org/articles/living-systems',
+        placeholder:
+          'Article by Veronique Letellier, published 2025-05-19: https://example.org/articles/living-systems',
       }),
     })
 
@@ -250,10 +265,13 @@ describe('ingestArticleForRow', () => {
     const { driver, writes } = fakeDriver({ existing: null, filled: false })
     runDocumentIngestPipeline.mockResolvedValue(okRun([]))
 
-    await ingestArticleForRow(deps(driver, async () => htmlFetch()), {
-      ...baseInput,
-      row: { ...row, pulseType: 'GoalPulse' },
-    })
+    await ingestArticleForRow(
+      deps(driver, async () => htmlFetch()),
+      {
+        ...baseInput,
+        row: { ...row, pulseType: 'GoalPulse' },
+      }
+    )
 
     expect(attachSourceFileToResource).not.toHaveBeenCalled()
     expect(anchorDocument).toHaveBeenCalledTimes(1)
@@ -272,7 +290,7 @@ describe('ingestArticleForRow', () => {
     })
   })
 
-  it('keys the link lookup on where bytes were fetched from, not on the member\'s source_url', async () => {
+  it("keys the link lookup on where bytes were fetched from, not on the member's source_url", async () => {
     // The collision this guards: row A carries the sheet's source_url (where
     // the member FOUND it, GOAL-355) and is blob-backed because GOAL-356 put
     // its article on its own pulse. Row B's url equals that source_url. Keyed
@@ -287,16 +305,18 @@ describe('ingestArticleForRow', () => {
 
     expect(fetchSource).toHaveBeenCalledTimes(1)
     expect(attachSourceFileToResource).toHaveBeenCalledTimes(1)
-    const linkLookup = (reads.find((r) =>
-      (r as { query: string }).query.includes('$sourceUrl')
-    ) as { query: string }).query
+    const linkLookup = (
+      reads.find((r) =>
+        (r as { query: string }).query.includes('$sourceUrl')
+      ) as { query: string }
+    ).query
     expect(linkLookup).toContain('d.sourceFetchedFrom = $sourceUrl')
     // The two properties that carry a DIFFERENT meaning must not be keys.
     expect(linkLookup).not.toContain('d.sourceUrl = $sourceUrl')
     expect(linkLookup).not.toContain('d.location = $sourceUrl')
   })
 
-  it('treats the row\'s own already-read pulse as read, without refetching or re-storing', async () => {
+  it("treats the row's own already-read pulse as read, without refetching or re-storing", async () => {
     // The re-import case GOAL-356 created: create_pulse's enrich branch returns
     // the SAME pulse id, and that pulse is already source-backed. Before this
     // was checked, the worker refetched, PUT a second blob, and then failed the
@@ -309,7 +329,10 @@ describe('ingestArticleForRow', () => {
       filled: false,
     })
 
-    const result = await ingestArticleForRow(deps(driver, fetchSource), baseInput)
+    const result = await ingestArticleForRow(
+      deps(driver, fetchSource),
+      baseInput
+    )
 
     expect(fetchSource).not.toHaveBeenCalled()
     expect(attachSourceFileToResource).not.toHaveBeenCalled()
@@ -327,10 +350,13 @@ describe('ingestArticleForRow', () => {
   it('does not ask the own-pulse question for a Goal row, which never adopts', async () => {
     const { driver, reads } = fakeDriver({ existing: null, own: null })
     runDocumentIngestPipeline.mockResolvedValue(okRun([]))
-    await ingestArticleForRow(deps(driver, async () => htmlFetch()), {
-      ...baseInput,
-      row: { ...row, pulseType: 'GoalPulse' },
-    })
+    await ingestArticleForRow(
+      deps(driver, async () => htmlFetch()),
+      {
+        ...baseInput,
+        row: { ...row, pulseType: 'GoalPulse' },
+      }
+    )
     expect(
       reads.some((r) => (r as { query: string }).query.includes('$resourceId'))
     ).toBe(false)
@@ -344,11 +370,21 @@ describe('ingestArticleForRow', () => {
     ]
     for (const [status, expected, message] of cases) {
       const fetchSource = jest.fn()
-      const { driver, writes } = fakeDriver({ existing: { id: 'document_old', status } })
-      const result = await ingestArticleForRow(deps(driver, fetchSource), baseInput)
+      const { driver, writes } = fakeDriver({
+        existing: { id: 'document_old', status },
+      })
+      const result = await ingestArticleForRow(
+        deps(driver, fetchSource),
+        baseInput
+      )
       expect(fetchSource).not.toHaveBeenCalled()
       expect(writes).toHaveLength(0)
-      expect(result).toEqual({ status: expected, message, created: 0, updated: 0 })
+      expect(result).toEqual({
+        status: expected,
+        message,
+        created: 0,
+        updated: 0,
+      })
     }
     expect(anchorDocument).not.toHaveBeenCalled()
     expect(attachSourceFileToResource).not.toHaveBeenCalled()
@@ -362,13 +398,19 @@ describe('ingestArticleForRow', () => {
       existing: { id: 'document_old', status: 'COMPLETE' },
       filled: true,
     })
-    const result = await ingestArticleForRow(deps(driver, fetchSource), baseInput)
+    const result = await ingestArticleForRow(
+      deps(driver, fetchSource),
+      baseInput
+    )
     expect(fetchSource).not.toHaveBeenCalled()
     expect(anchorDocument).not.toHaveBeenCalled()
     expect(attachSourceFileToResource).not.toHaveBeenCalled()
     expect(writes).toHaveLength(1)
     expect(writes[0]).toMatchObject({
-      params: expect.objectContaining({ pulseId: 'pulse_row', documentId: 'document_old' }),
+      params: expect.objectContaining({
+        pulseId: 'pulse_row',
+        documentId: 'document_old',
+      }),
     })
     expect(result).toEqual({
       status: 'already_extracted',
@@ -381,15 +423,22 @@ describe('ingestArticleForRow', () => {
   it('treats only the seeded sentence as a placeholder, never a member-written description', async () => {
     const { driver, writes } = fakeDriver({ existing: null, filled: false })
     runDocumentIngestPipeline.mockResolvedValue(okRun([]))
-    await ingestArticleForRow(deps(driver, async () => htmlFetch()), {
-      ...baseInput,
-      row: { ...row, description: 'My own note about why this article matters.' },
-    })
+    await ingestArticleForRow(
+      deps(driver, async () => htmlFetch()),
+      {
+        ...baseInput,
+        row: {
+          ...row,
+          description: 'My own note about why this article matters.',
+        },
+      }
+    )
     // The placeholder handed to the fill statement is the seeded sentence, so
     // a body equal to the member's description can never match it.
     expect(writes[0]).toMatchObject({
       params: expect.objectContaining({
-        placeholder: 'Article by Veronique Letellier, published 2025-05-19: https://example.org/articles/living-systems',
+        placeholder:
+          'Article by Veronique Letellier, published 2025-05-19: https://example.org/articles/living-systems',
       }),
     })
   })
@@ -397,8 +446,13 @@ describe('ingestArticleForRow', () => {
   it('bounds the model calls for one article', async () => {
     const { driver } = fakeDriver({ existing: null })
     runDocumentIngestPipeline.mockResolvedValue(okRun([]))
-    await ingestArticleForRow(deps(driver, async () => htmlFetch()), baseInput)
-    const pipelineInput = runDocumentIngestPipeline.mock.calls[0][1] as { modelAbortSignal?: AbortSignal }
+    await ingestArticleForRow(
+      deps(driver, async () => htmlFetch()),
+      baseInput
+    )
+    const pipelineInput = runDocumentIngestPipeline.mock.calls[0][1] as {
+      modelAbortSignal?: AbortSignal
+    }
     expect(pipelineInput.modelAbortSignal).toBeInstanceOf(AbortSignal)
   })
 
@@ -409,10 +463,14 @@ describe('ingestArticleForRow', () => {
       message: 'The site took too long to respond.',
     })
     const { driver } = fakeDriver({ existing: null })
-    const { createArticleContentIngestor } = await import('./article-content-ingest')
+    const { createArticleContentIngestor } =
+      await import('./article-content-ingest')
     const ingest = createArticleContentIngestor(deps(driver, fetchSource))
     const first = await ingest(baseInput)
-    const second = await ingest({ ...baseInput, row: { ...row, row: 3, title: 'Another row, same link' } })
+    const second = await ingest({
+      ...baseInput,
+      row: { ...row, row: 3, title: 'Another row, same link' },
+    })
     expect(fetchSource).toHaveBeenCalledTimes(1)
     expect(first).toEqual(second)
     expect(first.status).toBe('fetch_failed')
@@ -425,12 +483,22 @@ describe('ingestArticleForRow', () => {
       message: 'The site took too long to respond.',
     })
     const { driver } = fakeDriver({ existing: null })
-    const { createArticleContentIngestor } = await import('./article-content-ingest')
+    const { createArticleContentIngestor } =
+      await import('./article-content-ingest')
     const ingest = createArticleContentIngestor(deps(driver, fetchSource))
-    await ingest({ ...baseInput, row: { ...row, url: 'https://slow.example.org/a?n=1' } })
-    const second = await ingest({ ...baseInput, row: { ...row, row: 3, url: 'https://slow.example.org/b?n=2' } })
+    await ingest({
+      ...baseInput,
+      row: { ...row, url: 'https://slow.example.org/a?n=1' },
+    })
+    const second = await ingest({
+      ...baseInput,
+      row: { ...row, row: 3, url: 'https://slow.example.org/b?n=2' },
+    })
     // A different host is still tried.
-    await ingest({ ...baseInput, row: { ...row, row: 4, url: 'https://other.example.org/c' } })
+    await ingest({
+      ...baseInput,
+      row: { ...row, row: 4, url: 'https://other.example.org/c' },
+    })
     expect(fetchSource).toHaveBeenCalledTimes(2)
     expect(second.status).toBe('fetch_failed')
   })
@@ -439,29 +507,39 @@ describe('ingestArticleForRow', () => {
     const fetchSource = jest.fn().mockResolvedValue({
       ok: false,
       reason: 'login_required',
-      message: 'The site asked for a login or refused the request, so the article could not be read.',
+      message:
+        'The site asked for a login or refused the request, so the article could not be read.',
     })
     const { driver } = fakeDriver({ existing: null })
-    const { createArticleContentIngestor } = await import('./article-content-ingest')
+    const { createArticleContentIngestor } =
+      await import('./article-content-ingest')
     const ingest = createArticleContentIngestor(deps(driver, fetchSource))
-    await ingest({ ...baseInput, row: { ...row, url: 'https://wall.example.org/a' } })
-    await ingest({ ...baseInput, row: { ...row, row: 3, url: 'https://wall.example.org/b' } })
+    await ingest({
+      ...baseInput,
+      row: { ...row, url: 'https://wall.example.org/a' },
+    })
+    await ingest({
+      ...baseInput,
+      row: { ...row, row: 3, url: 'https://wall.example.org/b' },
+    })
     expect(fetchSource).toHaveBeenCalledTimes(2)
   })
 
-  it('reports a fetch failure with the fetcher\'s member-safe copy and stores nothing', async () => {
+  it("reports a fetch failure with the fetcher's member-safe copy and stores nothing", async () => {
     const { driver } = fakeDriver({ existing: null })
     const result = await ingestArticleForRow(
       deps(driver, async () => ({
         ok: false,
         reason: 'login_required',
-        message: 'The site asked for a login or refused the request, so the article could not be read.',
+        message:
+          'The site asked for a login or refused the request, so the article could not be read.',
       })),
       baseInput
     )
     expect(result).toEqual({
       status: 'fetch_failed',
-      message: 'The site asked for a login or refused the request, so the article could not be read.',
+      message:
+        'The site asked for a login or refused the request, so the article could not be read.',
       created: 0,
       updated: 0,
     })
@@ -474,7 +552,9 @@ describe('ingestArticleForRow', () => {
     const result = await ingestArticleForRow(
       deps(driver, async () => ({
         ...htmlFetch(),
-        buffer: Buffer.from('<html><body><nav>Sign in</nav><main>Join now</main></body></html>'),
+        buffer: Buffer.from(
+          '<html><body><nav>Sign in</nav><main>Join now</main></body></html>'
+        ),
       })),
       baseInput
     )
@@ -514,7 +594,10 @@ describe('ingestArticleForRow', () => {
       reason: 'oversize_chars',
       error: 'too big',
     })
-    const result = await ingestArticleForRow(deps(driver, async () => htmlFetch()), baseInput)
+    const result = await ingestArticleForRow(
+      deps(driver, async () => htmlFetch()),
+      baseInput
+    )
     expect(markDocumentIngestFailed).toHaveBeenCalledTimes(1)
     expect(markDocumentIngestComplete).not.toHaveBeenCalled()
     expect(result).toMatchObject({
@@ -526,7 +609,10 @@ describe('ingestArticleForRow', () => {
   it('marks the document FAILED and degrades when the pipeline throws', async () => {
     const { driver } = fakeDriver({ existing: null })
     runDocumentIngestPipeline.mockRejectedValue(new Error('driver exploded'))
-    const result = await ingestArticleForRow(deps(driver, async () => htmlFetch()), baseInput)
+    const result = await ingestArticleForRow(
+      deps(driver, async () => htmlFetch()),
+      baseInput
+    )
     expect(markDocumentIngestFailed).toHaveBeenCalledTimes(1)
     expect(result.status).toBe('extraction_failed')
     expect(result.message).not.toContain('driver exploded')
@@ -549,12 +635,27 @@ describe('ingestArticleForRow', () => {
     expect(result.message).not.toContain('S3')
   })
 
-  it('reports extraction_failed with counts when the model itself failed', async () => {
+  it('marks the document FAILED, not COMPLETE, when the model itself failed', async () => {
     const { driver } = fakeDriver({ existing: null, filled: false })
     runDocumentIngestPipeline.mockResolvedValue(okRun([], true))
-    const result = await ingestArticleForRow(deps(driver, async () => htmlFetch()), baseInput)
-    // The document still landed COMPLETE (re-extract is the retry path).
-    expect(markDocumentIngestComplete).toHaveBeenCalledTimes(1)
+    const result = await ingestArticleForRow(
+      deps(driver, async () => htmlFetch()),
+      baseInput
+    )
+
+    // GOAL-366 — this expectation is inverted from what it was, deliberately.
+    // It used to assert COMPLETE on the reasoning that "re-extract is the
+    // retry path", but a COMPLETE document with a null status message gives
+    // the member nothing to re-extract FROM: the ingest chip shows no error,
+    // the document cron claims only PENDING, the stalled sweep only
+    // PROCESSING, and `ingestAttempts` never leaves 0. A failed extraction
+    // was therefore unreachable by every recovery path we have.
+    //
+    // On demo a Gemini spend cap refused all 23 PDFs of a client's import and
+    // every one of them read COMPLETE-and-empty, which is how a provider
+    // outage passed for an import bug for a day.
+    expect(markDocumentIngestFailed).toHaveBeenCalledTimes(1)
+    expect(markDocumentIngestComplete).not.toHaveBeenCalled()
     expect(result).toEqual({
       status: 'extraction_failed',
       message: ARTICLE_EXTRACTION_FAILED_MESSAGE,
@@ -569,7 +670,11 @@ describe('countArticleEntities', () => {
     expect(
       countArticleEntities([
         { tool: 'create_person', args: {}, result: { success: true } },
-        { tool: 'create_pulse', args: {}, result: { success: true, alreadyExisted: true } },
+        {
+          tool: 'create_pulse',
+          args: {},
+          result: { success: true, alreadyExisted: true },
+        },
         { tool: 'update_pulse', args: {}, result: { success: true } },
         { tool: 'create_organization', args: {}, result: { success: false } },
         { tool: 'link_entity_to_pulse', args: {}, result: { success: true } },
