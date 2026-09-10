@@ -7,11 +7,11 @@ import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
 import {
   ARTICLE_IMPORT_STATUS,
   FINISHED_JOB_RETENTION_DAYS,
-  describeArticleImportProgress,
   isArticleImportInFlight,
   type ArticleImportJobListItem,
   type ArticleImportJobStatus,
 } from '@/lib/imports/article-import'
+import { ArticleImportInFlightRow } from './article-import-inflight-row'
 import { ImportSummaryChips, OutcomeRow } from './import-articles-preview'
 import { useArticleImportJobList } from './use-article-import-job-list'
 
@@ -141,7 +141,7 @@ export function ArticleImportStatusSection({
       <ul className="space-y-2">
         {jobs.map((job) =>
           isArticleImportInFlight(job.status) ? (
-            <InFlightRow key={job.jobId} job={job} />
+            <ArticleImportInFlightRow key={job.jobId} job={job} />
           ) : (
             <ReceiptRow
               key={job.jobId}
@@ -166,67 +166,6 @@ export function ArticleImportStatusSection({
  * row is a live region so a screen reader hears Queued → Importing → gone,
  * plus the one number that shows the import is actually moving.
  */
-function InFlightRow({ job }: { job: ArticleImportJobListItem }) {
-  // GOAL-357 — landed rows, not `status`, decide whether this reads as queued:
-  // a job that yields on the cron run's time budget returns to PENDING with
-  // its cursor intact, and calling that "Queued" threw away progress the
-  // server already knew about. Shared with the modal's progress panel so one
-  // import never describes itself two ways.
-  const { isQueued, label, icon, processedRows, totalRows, percent } =
-    describeArticleImportProgress(job)
-  const queuedAgo = relativeTime(job.createdAtMs)
-
-  return (
-    <li className="rounded-xl border border-gp-glass-border bg-gp-glass-bg/40 px-3 py-2.5 min-w-0">
-      <div role="status" className="flex items-center gap-2.5 min-w-0">
-        <span
-          className={cn(
-            'material-symbols-outlined text-[18px] shrink-0',
-            isQueued ? 'text-gp-ink-muted' : 'text-gp-primary animate-spin'
-          )}
-          aria-hidden="true"
-        >
-          {icon}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold text-gp-ink-strong dark:text-white truncate">
-            {label}
-          </p>
-          <p className="text-[11px] text-gp-ink-muted dark:text-gp-ink-soft truncate">
-            {isQueued
-              ? `${totalRows} row${totalRows === 1 ? '' : 's'} — importing starts shortly.`
-              : `${processedRows} of ${totalRows} rows`}
-            {queuedAgo ? ` · queued ${queuedAgo}` : ''}
-          </p>
-        </div>
-        {!isQueued && (
-          <span className="text-xs font-bold text-gp-ink-strong shrink-0 tabular-nums">
-            {percent}%
-          </span>
-        )}
-      </div>
-      <div
-        className="mt-2 h-1 w-full overflow-hidden rounded-full bg-gp-ink-soft/20"
-        role="progressbar"
-        // Omitted while queued — see the twin panel in
-        // `import-articles-progress.tsx`.
-        aria-valuenow={isQueued ? undefined : processedRows}
-        aria-valuemin={0}
-        aria-valuemax={Math.max(totalRows, 1)}
-        aria-label="Rows imported"
-      >
-        <div
-          className={cn(
-            'h-full rounded-full bg-gp-primary transition-all duration-500',
-            isQueued && 'opacity-40'
-          )}
-          style={{ width: isQueued ? '100%' : `${percent}%` }}
-        />
-      </div>
-    </li>
-  )
-}
-
 /**
  * A finished job. COMPLETE leads with the one-line batch summary; FAILED
  * leads with the member-safe `statusMessage` rendered as-is, plus how far the

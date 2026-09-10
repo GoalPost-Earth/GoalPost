@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import {
@@ -23,6 +23,7 @@ import {
   ImportArticlesRecovering,
 } from './import-articles-progress'
 import { useArticleImportJob } from './use-article-import-job'
+import { useArticleImportJobList } from './use-article-import-job-list'
 
 /**
  * GOAL-317 — spreadsheet-driven bulk upload of articles as pulses.
@@ -99,7 +100,35 @@ export function ImportArticlesModal({
       onRowsLanded: onImported,
     })
 
+  // GOAL-365 — the same server-driven list the field page renders, so the two
+  // surfaces cannot disagree about how many imports are running. `useArticleImportJob`
+  // above follows exactly ONE job (the last one submitted, recovered through
+  // sessionStorage or the list); on its own it made a second concurrent import
+  // invisible here while the page showed it plainly.
+  //
+  // `refreshKey` is fixed: this list is only ever read while the modal is open
+  // and its own poll already keeps it current, so there is no outside event to
+  // force a refetch on. `onRowsLanded` is shared with the tracked job's hook —
+  // both mean the same thing to the page, which is "the field changed".
+  const { jobs: fieldJobs } = useArticleImportJobList({
+    fieldContextId,
+    refreshKey: 0,
+    onRowsLanded: onImported,
+  })
+
   const inFlight = job !== null && isArticleImportInFlight(job.status)
+  // Everything else this member has running here. Excluding the tracked job by
+  // id is what stops it appearing twice mid-poll, when the list and the single
+  // job hook are momentarily out of step.
+  const otherInFlightJobs = useMemo(
+    () =>
+      fieldJobs.filter(
+        (candidate) =>
+          candidate.jobId !== job?.jobId &&
+          isArticleImportInFlight(candidate.status)
+      ),
+    [fieldJobs, job?.jobId]
+  )
   const steppedPast = inFlight && job.jobId === supersededJobId
   // GOAL-357 — the picker is only correct once we know no import is running.
   // This modal is unmounted while closed, so every reopen starts with no
@@ -284,7 +313,9 @@ export function ImportArticlesModal({
           </>
         )}
 
-        {step === 'progress' && job && <ImportArticlesProgress job={job} />}
+        {step === 'progress' && job && (
+          <ImportArticlesProgress job={job} otherJobs={otherInFlightJobs} />
+        )}
 
         {step === 'results' && job && <ImportArticlesResults job={job} />}
 
