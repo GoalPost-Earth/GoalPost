@@ -177,14 +177,7 @@ export function useDashboardTextFind(
     rangesRef.current = []
   }, [])
 
-  // Rescan whenever the query (already debounced by the caller) changes.
-  //
-  // This is the effect exception the rule's own guidance names: the hook is
-  // synchronising React state with an EXTERNAL system — the live DOM — which
-  // can only be read after the render that produced it. One scan, one
-  // setState, no cascade; an inactive query resolves to the shared empty array
-  // so React bails out of the update entirely.
-  useEffect(() => {
+  const runScan = useCallback(() => {
     const root = rootRef.current
     const active = enabled && root !== null && query.trim().length > 0
     const { ranges, matches: found } = active
@@ -204,9 +197,51 @@ export function useDashboardTextFind(
       registry?.delete(HIGHLIGHT_ALL)
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM scan result; the rendered DOM is the external system this hook synchronises with
     setMatches(found)
   }, [rootRef, query, enabled])
+
+  // Scan when the query (already debounced by the caller) changes.
+  //
+  // This is the effect exception the rule's own guidance names: the hook is
+  // synchronising React state with an EXTERNAL system — the live DOM — which
+  // can only be read after the render that produced it.
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- DOM scan result; the rendered DOM is the external system this hook synchronises with
+    runScan()
+  }, [runScan])
+
+  // …and again whenever the page changes underneath us.
+  //
+  // This is not belt-and-braces, it is the load-bearing half. Sections reveal
+  // their matching rows in response to the SAME query, but they learn about it
+  // through a context set in an effect — so their reveal lands a render AFTER
+  // the scan above has already run and concluded the page holds nothing. That
+  // is precisely the "0/0 for a row that is right there" bug.
+  //
+  // Observing the DOM covers it without either side knowing about the other,
+  // and covers everything else that arrives late too — a lazy list, a settling
+  // refetch. Safe from feedback: highlighting paints through the CSS Custom
+  // Highlight API and scrolling moves the viewport, so neither mutates the
+  // tree we are watching. Coalesced onto one frame so a burst of mutations
+  // costs a single scan.
+  useEffect(() => {
+    const root = rootRef.current
+    if (!enabled || !root || !query.trim()) return
+    let frame = 0
+    const observer = new MutationObserver(() => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(runScan)
+    })
+    observer.observe(root, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    })
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
+    }
+  }, [rootRef, enabled, query, runScan])
 
   // Highlights live on a global registry, so they have to be torn down when
   // the control unmounts or the view flips away — otherwise a stale paint
