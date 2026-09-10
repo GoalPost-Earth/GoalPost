@@ -1,12 +1,6 @@
 'use client'
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type FC,
-} from 'react'
+import { useCallback, useEffect, useRef, useState, type FC } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { gsap } from 'gsap'
 import { X } from 'lucide-react'
@@ -34,6 +28,9 @@ import { OrganizationDetailsBody } from './organization-details-body'
 import { ConnectionDetailsBody } from './connection-details-body'
 
 export { dispatchOpenInfoDrawer, dispatchCloseInfoDrawer } from './types'
+// GOAL-364: surfaces that host their own overlay listen for this so they can
+// stand down when a detail drawer takes over — see `fields/section-list.tsx`.
+export { OPEN_INFO_DRAWER_EVENT, CLOSE_INFO_DRAWER_EVENT } from './types'
 export type { InfoEntity, InfoEntityType } from './types'
 
 const TYPE_LABEL: Record<InfoEntityType, string> = {
@@ -169,8 +166,35 @@ export const EntityInfoDrawer: FC = () => {
 
   return (
     <>
+      {/* GOAL-364: `z-[100]` / `z-[101]`, not the old `z-40` / `z-50`.
+
+          This drawer is opened FROM overlays as well as from the page — the
+          "Show all N pulses" list (`fields/section-list.tsx`) is a shadcn
+          `Dialog`, whose overlay is `z-80` and content `z-90` and which
+          portals to `document.body`. At `z-50` the drawer lost to both, so
+          clicking a pulse there put its details underneath the list and the
+          member saw nothing happen (client report, 2026-09-10).
+
+          `z-[100]` is this codebase's established "clears the dialog" tier —
+          see the same reasoning on the type filter's dropdown in
+          `fields/pulse-type-filter.tsx`, which sits inside that very dialog.
+
+          This raise is NOT on its own the fix, and must not be mistaken for
+          one. A Radix dialog is modal by default, so while one is open this
+          drawer is also `aria-hidden` and has no pointer events no matter what
+          it is painted over — visible and inert is a worse bug than hidden.
+          The actual fix is that `section-list` closes itself when the drawer
+          opens; this keeps the drawer from flashing behind the list during
+          that close, and covers surfaces that raise it without a dialog.
+
+          Safe to outrank every dialog because nothing inside this drawer opens
+          one: `Edit` is an inline mode on `pulse-details-body`, and
+          `SharePulseModal` is a plain fixed overlay rendered within this
+          panel's own stacking context, so it still paints above it. Revisit if
+          a shadcn `Dialog` is ever opened from in here — it would land behind
+          this panel. */}
       <div
-        className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
+        className="fixed inset-0 z-[100] bg-black/30 backdrop-blur-[2px]"
         onClick={close}
         aria-hidden="true"
       />
@@ -182,7 +206,7 @@ export const EntityInfoDrawer: FC = () => {
         aria-label={`${entity.type} details`}
         tabIndex={-1}
         className={cn(
-          'fixed right-0 top-0 h-full w-full sm:w-[520px] z-50',
+          'fixed right-0 top-0 h-full w-full sm:w-[520px] z-[101]',
           'bg-gp-surface dark:bg-slate-950/95 backdrop-blur-2xl',
           'border-l border-gp-glass-border shadow-2xl',
           'flex flex-col overflow-hidden',
@@ -244,7 +268,9 @@ const DrawerBody: FC<{ entity: InfoEntity; onClose: () => void }> = ({
     case 'Pulse':
       return <PulseDetailsBody pulseId={entity.id} label={entity.label} />
     case 'FieldContext':
-      return <FieldContextDetailsBody contextId={entity.id} label={entity.label} />
+      return (
+        <FieldContextDetailsBody contextId={entity.id} label={entity.label} />
+      )
     case 'Person':
       return (
         <PersonDetailsBody
@@ -256,9 +282,13 @@ const DrawerBody: FC<{ entity: InfoEntity; onClose: () => void }> = ({
     case 'Document':
       return <DocumentDetailsBody documentId={entity.id} label={entity.label} />
     case 'ResonanceLink':
-      return <ResonanceDetailsBody resonanceId={entity.id} label={entity.label} />
+      return (
+        <ResonanceDetailsBody resonanceId={entity.id} label={entity.label} />
+      )
     case 'PromiseWeave':
-      return <PromiseWeaveDetailsBody weaveId={entity.id} label={entity.label} />
+      return (
+        <PromiseWeaveDetailsBody weaveId={entity.id} label={entity.label} />
+      )
     case 'Organization':
       return (
         <OrganizationDetailsBody
@@ -267,7 +297,9 @@ const DrawerBody: FC<{ entity: InfoEntity; onClose: () => void }> = ({
         />
       )
     case 'Connection':
-      return <ConnectionDetailsBody connectionKey={entity.id} label={entity.label} />
+      return (
+        <ConnectionDetailsBody connectionKey={entity.id} label={entity.label} />
+      )
   }
 }
 
@@ -304,11 +336,7 @@ function useEntityDrawerUrl(
       if (entity) setEntity(null)
       return
     }
-    if (
-      !entity ||
-      entity.type !== fromUrl.type ||
-      entity.id !== fromUrl.id
-    ) {
+    if (!entity || entity.type !== fromUrl.type || entity.id !== fromUrl.id) {
       setEntity(fromUrl)
     }
     // entity isn't a dep — we only react to *URL* changes here; the
