@@ -68,6 +68,21 @@ export const STALE_PROCESSING_MINUTES = 15
 export const INGEST_UNEXPECTED_FAILURE_MESSAGE =
   'Something went wrong while reading this document. Try re-extracting it, or upload the file again.'
 
+/**
+ * Member-safe copy for a run whose extractor itself failed (GOAL-367).
+ *
+ * Distinct from INGEST_UNEXPECTED_FAILURE_MESSAGE because nothing is wrong
+ * with the file: it was stored and parsed, and only the model call was
+ * refused — a provider quota, a rate limit, a timeout. Telling the member to
+ * "upload the file again" would be wrong advice and would mint a duplicate
+ * document; re-extract reuses the blob that is already there.
+ *
+ * Lives beside the other two so the cron, the inline path and re-extract
+ * cannot drift apart on what a member is told.
+ */
+export const INGEST_EXTRACTION_FAILED_MESSAGE =
+  'We saved this document but could not read anything out of it just now. Re-extract it to try again.'
+
 /** Member-safe copy for a document parked after too many failed attempts. */
 export const INGEST_ABANDONED_MESSAGE =
   'We could not read this document after several attempts. Try re-extracting it, or upload the file again.'
