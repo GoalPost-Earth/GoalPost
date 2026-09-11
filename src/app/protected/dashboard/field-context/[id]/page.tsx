@@ -1869,6 +1869,13 @@ export default function FieldContextDetailsPage() {
             void refetchFieldPeople()
             setImportStatusVersion((version) => version + 1)
           }}
+          onJobQueued={() => {
+            // GOAL-365 — a sheet queued from inside the modal appears in the
+            // status section now, not when the modal closes. The section's
+            // poll stops while nothing is running, so over a quiet field it
+            // would otherwise show nothing beside a modal showing two.
+            setImportStatusVersion((version) => version + 1)
+          }}
         />
       )}
 
