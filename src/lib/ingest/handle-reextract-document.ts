@@ -237,21 +237,49 @@ export async function handleReExtractDocument(
     return { ok: false, reason: run.reason, error: run.error }
   }
 
-  // Re-extract is the documented recovery path for a FAILED document, so a
-  // successful pass must clear that state. Without this the row keeps showing
-  // the old Failed chip and stale error copy to every member of the Space —
-  // beside the entities this run just created.
-  await markDocumentIngestComplete({
-    driver: deps.driver,
-    documentId: record.id,
-    ...countExecutedToolCalls(run.executedToolCalls),
-  })
-
   const outcome: 'success' | 'failure' | 'empty' = run.extractionFailed
     ? 'failure'
     : run.executedToolCalls.length === 0
       ? 'empty'
       : 'success'
+
+  // Re-extract is the documented recovery path for a FAILED document, so a
+  // successful pass must clear that state. Without this the row keeps showing
+  // the old Failed chip and stale error copy to every member of the Space —
+  // beside the entities this run just created.
+  //
+  // GOAL-367: "successful" has to mean the extractor actually ran. `run.ok` is
+  // still true when the extractor itself was refused — the pass produced a
+  // thread documenting the attempt, which is why it is not a pipeline failure
+  // — and clearing FAILED on that is the worst outcome available here. It
+  // takes a document the member could see was broken and could retry, and
+  // parks it COMPLETE with a null status message: no chip, no error copy, and
+  // out of reach of both crons (one claims PENDING, the stalled sweep touches
+  // PROCESSING). The one action offered as the way out of FAILED would have
+  // been the thing that made the document unrecoverable — and during the kind
+  // of provider outage that produces these, every retry a member made would
+  // have quietly destroyed its own recovery state.
+  //
+  // A refused attempt therefore writes NO status, rather than writing FAILED.
+  // Re-extract is the only entry point that runs against a document which
+  // already holds a terminal status, and the two it can find want opposite
+  // things: a FAILED document must KEEP its FAILED (that is the whole bug),
+  // while a COMPLETE one must not be dragged down to FAILED on the strength of
+  // a refused re-read — its earlier extraction is still there, still correct,
+  // and still rendered on the row, so "could not read anything out of it"
+  // would be false copy sitting directly above the entities it did read, and
+  // `ingestCreatedEntityCount` would still hold that run's count. Leaving the
+  // status untouched is the only write that is right for both. The attempt is
+  // not silent either way: the pipeline opened a thread explaining the
+  // refusal, and the activity Log below records outcome 'failure'.
+  if (outcome !== 'failure') {
+    await markDocumentIngestComplete({
+      driver: deps.driver,
+      documentId: record.id,
+      ...countExecutedToolCalls(run.executedToolCalls),
+    })
+  }
+
   await writeReExtractLog(
     deps.driver,
     input.currentUserId,

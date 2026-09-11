@@ -4,6 +4,7 @@ import { driver } from '@/lib/neo4j/driver'
 import { loadDocumentRecord } from '@/lib/ingest/document-storage'
 import {
   claimDocumentForIngest,
+  INGEST_EXTRACTION_FAILED_MESSAGE,
   INGEST_UNEXPECTED_FAILURE_MESSAGE,
   findPendingDocumentIds,
   markDocumentIngestComplete,
@@ -247,6 +248,48 @@ export async function GET(request: NextRequest) {
             documentId,
             status: 'FAILED',
             reason: run.reason,
+          })
+          continue
+        }
+
+        // GOAL-367: `run.ok` only means the pipeline reached the end — it is
+        // still true when the extractor itself was refused. Marking COMPLETE
+        // on that produces a document that is finished, empty, and carries a
+        // null status message, which is unreachable by every recovery path we
+        // have: this cron claims only PENDING, the stalled sweep above touches
+        // only PROCESSING, and `ingestAttempts` never leaves 0. Nothing
+        // retries it and no surface flags it.
+        //
+        // This is the upload twin of the import bug GOAL-367 was filed for. On
+        // demo (2026-09-10) a Gemini spend cap refused every PDF while the
+        // OpenAI-backed text route kept working, so a 100% PDF outage read as
+        // 23 successful imports for a day. An upload during that window lands
+        // here and produced exactly the same silent shell.
+        //
+        // FAILED rather than a re-queue to PENDING is deliberate, and matches
+        // the import path. Re-queueing would not cost three attempts and then
+        // stop: `claimDocumentForIngest` gates only on `ingestStatus = PENDING`
+        // and never consults MAX_INGEST_ATTEMPTS — that ceiling is enforced
+        // solely by `reclaimStalledIngests`, which looks at PROCESSING. A
+        // document sent back to PENDING on every refusal would therefore be
+        // re-claimed forever, and during a provider outage the entire queue
+        // would spin against a model refusing all of it. FAILED shows on the
+        // field page's ingest chip and is re-extractable in place — the blob
+        // is already stored, so nothing needs re-uploading.
+        if (run.extractionFailed) {
+          await markDocumentIngestFailed({
+            driver,
+            documentId,
+            workerRunId,
+            statusMessage: INGEST_EXTRACTION_FAILED_MESSAGE,
+          })
+          console.warn(
+            `[Ingest Cron] Extraction failed for document ${documentId} — parked FAILED for re-extract`
+          )
+          processed.push({
+            documentId,
+            status: 'FAILED',
+            reason: 'extraction_failed',
           })
           continue
         }
