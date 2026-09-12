@@ -208,7 +208,8 @@ async function createResonanceSuggestionsInDatabase(
     try {
       const graphFacts = await collectPulsePairEvidence(
         connection.sourcePulseId,
-        connection.targetPulseId
+        connection.targetPulseId,
+        spaceId
       )
       enrichedEvidence = composeEvidenceString(graphFacts, connection.evidence)
     } catch (evidenceError) {
@@ -431,11 +432,17 @@ export async function discoverResonancesForPulse(
  * expected to already be embedded — callers that create fresh pulses (upload,
  * import) must embed them first (see `runContextResonanceDiscovery`), otherwise
  * `findSimilarPulsesInContext` returns nothing and no suggestion is produced.
+ *
+ * `deadline` (epoch ms) stops the loop from STARTING another pulse once
+ * passed — the manual sweep (GOAL-368) runs inside one request's
+ * `maxDuration` and must return before it is killed. It bounds starts, not
+ * the pulse already in flight.
  */
 export async function discoverResonancesForContext(
   spaceId: string,
   contextId: string,
-  lastRunTimestamp?: string
+  lastRunTimestamp?: string,
+  deadline?: number
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
@@ -484,6 +491,12 @@ export async function discoverResonancesForContext(
 
   const discovered: DiscoveredResonance[] = []
   for (const pulse of pulses) {
+    if (deadline !== undefined && Date.now() >= deadline) {
+      console.warn(
+        `[Context Discovery] Out of time budget in context ${contextId}; stopping early`
+      )
+      break
+    }
     try {
       const resonances = await discoverResonancesForPulse(pulse.id, spaceId)
       discovered.push(...resonances)
@@ -666,6 +679,13 @@ export async function discoverGlobalResonances(
 // one. See kb/06-adr.md (data sovereignty).
 // ---------------------------------------------------------------------------
 
+/** How `findSimilarPulsesAcrossContexts` finds candidates — see there. */
+interface CrossContextSearch {
+  exact?: boolean
+  /** ANN only: index over-fetch multiplier on `limit`. Defaults to 3 (GOAL-293). */
+  overFetch?: number
+}
+
 /**
  * Vector-search for pulses similar to `pulseId` that live in one of the
  * member's OTHER accessible contexts. Restricted to `accessibleContextIds`
@@ -673,13 +693,24 @@ export async function discoverGlobalResonances(
  * that pairing is handled by the within-context pass). Only embedded pulses are
  * reachable via the vector index, so un-embedded candidates are silently — and
  * correctly — skipped.
+ *
+ * `search` picks how candidates are found:
+ *  - ANN (default): the global vector index, over-fetching `overFetch × limit`
+ *    before the context filter. Cheap, but the global top-k is shared with
+ *    every other Space, soft-deleted pulses (which keep their embeddings) and
+ *    the excluded context — with the GOAL-293 default of 3 only ~75% of the
+ *    true matches survived for a WeSpace on dev (GOAL-368 cypher review).
+ *  - exact: cosine-score every embedded pulse in the allowed contexts. Recall
+ *    is exact at any graph size and cost is bounded by that candidate pool
+ *    (~0.45ms per candidate) — the right choice when the pool is one Space.
  */
 async function findSimilarPulsesAcrossContexts(
   pulseId: string,
   accessibleContextIds: string[],
   excludeContextId: string,
   threshold: number = 0.7,
-  limit: number = 10
+  limit: number = 10,
+  search: CrossContextSearch = {}
 ): Promise<Array<{ id: string; content: string; similarity: number }>> {
   if (accessibleContextIds.length === 0) return []
 
@@ -698,15 +729,33 @@ async function findSimilarPulsesAcrossContexts(
   }
   const embedding = pulseResult[0].embedding
 
+  // Both variants skip soft-deleted pulses and contexts (GOAL-319): stamped
+  // pulses keep their embeddings, and a context list captured at the start of
+  // a long sweep can outlive a delete made during it.
   const similarResult = await graph.query<{
     pulse: { id: string; content: string }
     similarity: number
   }>(
+    search.exact
+      ? `
+    MATCH (ctx:FieldContext)-[:HAS_PULSE]->(node:FieldPulse)
+    WHERE ctx.id IN $accessibleContextIds AND ctx.id <> $excludeContextId
+      AND ctx.deletedAt IS NULL AND node.deletedAt IS NULL
+      AND node.id <> $pulseId AND node.embedding IS NOT NULL
+    WITH DISTINCT node
+    // Same [0,1] scale as the vector index score, so $threshold carries over.
+    WITH node, vector.similarity.cosine(node.embedding, $embedding) AS score
+    WHERE score >= $threshold
+    RETURN {id: node.id, content: node.content} as pulse, score as similarity
+    ORDER BY similarity DESC
+    LIMIT $limit
     `
-    CALL db.index.vector.queryNodes('pulseContentVectorIndex', $limit * 3, $embedding)
+      : `
+    CALL db.index.vector.queryNodes('pulseContentVectorIndex', $limit * $overFetch, $embedding)
     YIELD node, score
     WITH node, score
     WHERE node.id <> $pulseId AND score >= $threshold
+      AND node.deletedAt IS NULL
       // Node qualifies iff it is reachable through at least one context the
       // member can view that is NOT the upload's own context. EXISTS avoids
       // row-multiplication when a pulse lives in several contexts, and gates
@@ -714,6 +763,7 @@ async function findSimilarPulsesAcrossContexts(
       AND EXISTS {
         MATCH (ctx:FieldContext)-[:HAS_PULSE]->(node)
         WHERE ctx.id IN $accessibleContextIds AND ctx.id <> $excludeContextId
+          AND ctx.deletedAt IS NULL
       }
     RETURN {id: node.id, content: node.content} as pulse, score as similarity
     ORDER BY similarity DESC
@@ -725,6 +775,7 @@ async function findSimilarPulsesAcrossContexts(
       excludeContextId,
       threshold,
       limit: neo4j.int(limit),
+      overFetch: neo4j.int(search.overFetch ?? 3),
       embedding,
     }
   )
@@ -772,12 +823,14 @@ async function createCrossContextResonanceSuggestion(params: {
     MATCH (target:FieldPulse {id: $targetPulseId})
     WHERE source <> target
       // Structural authorization (defense in depth): the target MUST live in a
-      // context the caller can access. Callers already filter candidates to the
-      // accessible set, but enforcing it in the write means a mis-call can never
-      // link an out-of-scope pulse.
+      // LIVE context the caller can access. Callers already filter candidates to
+      // the accessible set, but enforcing it in the write means a mis-call can
+      // never link an out-of-scope pulse — nor, on a long sweep, one whose
+      // field was deleted after its candidates were found.
+      AND target.deletedAt IS NULL
       AND EXISTS {
-        MATCH (a:FieldContext)-[:HAS_PULSE]->(target)
-        WHERE a.id IN $accessibleContextIds
+        MATCH (:Space)-[:HAS_CONTEXT]->(a:FieldContext)-[:HAS_PULSE]->(target)
+        WHERE a.id IN $accessibleContextIds AND a.deletedAt IS NULL
       }
 
     // Symmetric duplicate check across BOTH suggestion and link nodes.
@@ -824,7 +877,8 @@ export async function discoverCrossContextResonancesForPulse(
   sourcePulseId: string,
   sourceSpaceId: string,
   sourceContextId: string,
-  accessibleContextIds: string[]
+  accessibleContextIds: string[],
+  search: CrossContextSearch = {}
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
@@ -841,7 +895,10 @@ export async function discoverCrossContextResonancesForPulse(
   const similar = await findSimilarPulsesAcrossContexts(
     sourcePulseId,
     accessibleContextIds,
-    sourceContextId
+    sourceContextId,
+    undefined,
+    undefined,
+    search
   )
   if (similar.length === 0) return []
 
@@ -865,7 +922,11 @@ export async function discoverCrossContextResonancesForPulse(
 
     let enrichedEvidence = connection.evidence
     try {
-      const graphFacts = await collectPulsePairEvidence(sourcePulseId, targetId)
+      const graphFacts = await collectPulsePairEvidence(
+        sourcePulseId,
+        targetId,
+        sourceSpaceId
+      )
       enrichedEvidence = composeEvidenceString(graphFacts, connection.evidence)
     } catch (evidenceError) {
       console.warn(
@@ -964,6 +1025,123 @@ export async function discoverCrossContextResonancesForContext(params: {
     } catch (error) {
       console.error(
         `[CrossContextResonance] Failed for pulse ${sourcePulseId}:`,
+        error
+      )
+    }
+  }
+
+  return discovered
+}
+
+/**
+ * Candidate-pool size up to which the cross-field pass scores exactly. At
+ * ~0.45ms per candidate that is ≲0.5s per source pulse; beyond it, ANN with a
+ * 10× over-fetch (100% recall on dev's WeSpaces, GOAL-368 cypher review).
+ */
+const EXACT_CROSS_FIELD_SEARCH_MAX_CANDIDATES = 1000
+
+/**
+ * Cross-FIELD discovery inside one Space (GOAL-368): pair the recent pulses of
+ * one root field (its whole live subtree — ADR-017) with pulses in the SAME
+ * Space's other fields. The within-field pass already covers pairs inside the
+ * root's subtree, so those contexts are excluded from the candidate set.
+ *
+ * AUTHORIZATION — safe by construction, and the reason this may run for a
+ * WeSpace when on-upload cross-context may not: the candidate set is derived
+ * from the Space's own contexts, never from the triggering member's reach. A
+ * suggestion anchored on Space S therefore only ever embeds pulses every viewer
+ * of S can already see (source audience === target audience, the trivial case
+ * of the audience-superset rule on-upload-discovery.ts describes). ADR-020.
+ *
+ * Each suggestion anchors (`HAS_SUGGESTION`) on the context that directly holds
+ * its SOURCE pulse — the same anchor the within-field pass uses — so the
+ * soft-delete cascade's sweeps (anchored-on-subtree + touching-a-stamped-pulse)
+ * drop it whichever of the two fields is deleted.
+ */
+export async function discoverCrossFieldResonancesForRoot(params: {
+  spaceId: string
+  rootContextId: string
+  maxSourcePulses?: number
+  deadline?: number
+}): Promise<DiscoveredResonance[]> {
+  const { spaceId, rootContextId, maxSourcePulses = 10, deadline } = params
+
+  const graph = await initGraph()
+
+  // Every live context of this Space outside the root's subtree. Soft delete
+  // re-points HAS_CONTEXT (GOAL-319), so the one-hop match already skips
+  // deleted contexts; the deletedAt check is belt-and-braces.
+  const otherRows = await graph.query<{ id: string }>(
+    `MATCH (:Space {id: $spaceId})-[:HAS_CONTEXT]->(c:FieldContext)
+     WHERE c.deletedAt IS NULL
+       AND NOT EXISTS {
+         MATCH (:FieldContext {id: $rootContextId})-[:HAS_SUBCONTEXT*0..10]->(c)
+       }
+     RETURN c.id AS id`,
+    { spaceId, rootContextId }
+  )
+  const otherFieldContextIds = Array.isArray(otherRows)
+    ? otherRows.map((r) => r.id)
+    : []
+  if (otherFieldContextIds.length === 0) return []
+
+  // Exact scoring over the Space's other fields while the pool is small
+  // enough to scan per source pulse (~0.45ms per candidate); a bigger pool
+  // falls back to the index with a wide over-fetch. Count arrives as a
+  // STRING from the LangChain graph layer — coerce.
+  const poolRows = await graph.query<{ n: number | string }>(
+    `MATCH (ctx:FieldContext)-[:HAS_PULSE]->(p:FieldPulse)
+     WHERE ctx.id IN $otherFieldContextIds AND ctx.deletedAt IS NULL
+       AND p.deletedAt IS NULL AND p.embedding IS NOT NULL
+     RETURN count(DISTINCT p) AS n`,
+    { otherFieldContextIds }
+  )
+  const poolSize = Number(poolRows?.[0]?.n || 0)
+  if (poolSize === 0) return []
+  const search: CrossContextSearch =
+    poolSize <= EXACT_CROSS_FIELD_SEARCH_MAX_CANDIDATES
+      ? { exact: true }
+      : { overFetch: 10 }
+
+  // Recent embedded pulses anywhere in the root's live subtree, each with the
+  // context that holds it (the suggestion's anchor). A pulse held by two
+  // subtree contexts appears once. Order on the temporal createdAt before the
+  // LIMIT, as discoverResonancesForContext does.
+  const sourceRows = await graph.query<{
+    pulseId: string
+    holdingContextId: string
+  }>(
+    `MATCH (:FieldContext {id: $rootContextId})-[:HAS_SUBCONTEXT*0..10]->(sc:FieldContext)-[:HAS_PULSE]->(p:FieldPulse)
+     WHERE sc.deletedAt IS NULL AND p.deletedAt IS NULL
+       AND p.embedding IS NOT NULL
+     WITH p, min(sc.id) AS holdingContextId
+     ORDER BY p.createdAt DESC
+     LIMIT $limit
+     RETURN p.id AS pulseId, holdingContextId`,
+    { rootContextId, limit: neo4j.int(maxSourcePulses) }
+  )
+  if (!Array.isArray(sourceRows) || sourceRows.length === 0) return []
+
+  const discovered: DiscoveredResonance[] = []
+  for (const { pulseId, holdingContextId } of sourceRows) {
+    if (deadline !== undefined && Date.now() >= deadline) {
+      console.warn(
+        `[CrossFieldResonance] Out of time budget in field ${rootContextId}; stopping early`
+      )
+      break
+    }
+    try {
+      const resonances = await discoverCrossContextResonancesForPulse(
+        pulseId,
+        spaceId,
+        holdingContextId,
+        otherFieldContextIds,
+        search
+      )
+      discovered.push(...resonances)
+    } catch (error) {
+      console.error(
+        `[CrossFieldResonance] Failed for pulse ${pulseId}:`,
         error
       )
     }

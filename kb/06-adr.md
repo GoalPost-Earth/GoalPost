@@ -284,6 +284,10 @@
 
 ## ADR-017: Nested FieldContexts Are a Pure Overlay; the Root Field Is the Resonance Scope (GOAL-295)
 
+> **Amended by ADR-020:** the *manual* discovery sweep adds a cross-field pass
+> within the Space. The nightly and on-upload within-field passes still treat
+> the root field as the boundary.
+
 **Decision:** FieldContexts can nest via a `HAS_SUBCONTEXT` self-relationship
 (`(parent)-[:HAS_SUBCONTEXT]->(child)`), capped at 5 levels. The hierarchy is
 a **pure overlay**: every context — nested or not — keeps its own direct
@@ -470,3 +474,69 @@ trail.
   it. A count-then-create is a check-then-act, and it is precisely the bound
   that has to survive a Redis outage (`bulk-import` fails open), so it must not
   evaporate under concurrency.
+
+---
+
+## ADR-020: A Manual Sweep Pairs Pulses Across Fields Within One Space (GOAL-368)
+
+**Decision:** The manual, field-initiated discovery sweep
+(`POST /api/resonance/discover`, `src/lib/resonance/discovery/manual-sweep.ts`)
+widens the resonance boundary from the root field (ADR-017) to the **Space**:
+besides each root field's within-field pass, it runs a cross-field pass that
+pairs a field's recent pulses with pulses in the *same Space's* other fields.
+The nightly cron is unchanged — it still sweeps each root field on its own.
+
+**Why this is safe for every Space type, including a WeSpace:**
+
+- The on-upload cross-context pass (GOAL-293) is restricted to the uploader's
+  own MeSpace because its targets come from the *uploader's* reach, and a
+  suggestion anchored on Space S is shown to every viewer of S — a co-member
+  could be shown content from a Space they have no role on.
+- The cross-field pass instead derives its candidate set from the **Space's own
+  live contexts** (`discoverCrossFieldResonancesForRoot`), never from the
+  member who pressed the button. Source and target share one audience, so the
+  audience-superset rule that on-upload-discovery.ts defers holds by
+  construction. An ADMIN's wider reach cannot pull a GUEST-visible suggestion
+  out of another Space. Cross-**Space** resonance stays out of scope.
+
+**Rules:**
+
+- Anchoring: a cross-field suggestion hangs `HAS_SUGGESTION` off its Space and
+  off the context that directly holds its **source** pulse (the same anchor the
+  within-field pass uses), carrying `crossContext: true`. The GOAL-319 soft
+  delete already drops suggestions anchored on a deleted subtree *and* any that
+  touch a stamped pulse, so deleting either field removes it — nothing is
+  stranded.
+- Cost is bounded per sweep: ≤30 source pulses per root field within-field and
+  ≤10 cross-field (each = one vector search + at most one LLM call), a 100-pulse
+  embedding backfill, and a 240s start budget inside the route's 300s
+  `maxDuration`. The triggering field is swept first so a truncated run still
+  covers it.
+- One manual sweep per Space per 10 minutes, and one in-flight sweep per member,
+  claimed together with lock-forcing writes on the Space and Person nodes (same
+  write-then-guard shape as `claimArticleImportJob`). The cooldown is longer than
+  `maxDuration`, so two manual sweeps never overlap in a Space. A sweep that
+  *throws* shrinks the Space's remaining cooldown to 60s. The nightly cron reads
+  neither claim.
+- Candidates are scored **exactly** (`vector.similarity.cosine`) over the Space's
+  other-field pulses while that pool is ≤1,000, falling back to the vector index
+  with a 10× over-fetch above it. The global index's 3× over-fetch used by
+  on-upload discovery found only ~75% of the true matches for a WeSpace on dev
+  (34% in one field). Most of its slots went to soft-deleted pulses (they keep
+  their embeddings) and to other Spaces.
+- The evidence string's "shared field" titles are limited to the anchoring
+  Space, and the run's activity `Log` is attached only to pulses held in that
+  Space alone. Otherwise a pulse also held elsewhere (e.g. linked into a
+  member's private MeSpace field) would leak that field's title, or the Log,
+  to the other audience.
+- Suggestions stay `pending` (ADR-004).
+
+**Consequences:**
+
+- A WeSpace now gets cross-field suggestions, but only after someone presses
+  Discover. Adding the cross-field pass to the nightly sweep (GOAL-349) is a
+  one-call change in `discoverResonancesForSpace`. It is left for later because
+  the nightly sweep already covers every Space inside one 300s run.
+- LLM calls are still metered as `principal: 'system'`, so a manual sweep's cost
+  is not attributed to the member who started it. Only the claims above bound
+  it.

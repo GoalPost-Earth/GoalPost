@@ -43,10 +43,17 @@ interface CollectorRow {
  * Author names fall back through `name → firstName + lastName → "someone"`
  * because the dev/prod data set has rows where one of those fields is
  * populated and the others aren't.
+ *
+ * `spaceId` is the Space the suggestion is anchored on. Shared-context titles
+ * are limited to that Space's live contexts: the evidence string is shown to
+ * every viewer of the anchoring Space, and a pulse can also be held by a
+ * context in another Space (e.g. a member's private MeSpace field) whose
+ * title those viewers must never see (ADR-003).
  */
 export async function collectPulsePairEvidence(
   p1Id: string,
-  p2Id: string
+  p2Id: string,
+  spaceId: string
 ): Promise<PulsePairEvidence> {
   const graph = await initGraph()
 
@@ -58,8 +65,8 @@ export async function collectPulsePairEvidence(
   const rows = await graph.query<CollectorRow>(
     `
     MATCH (p1:FieldPulse {id: $p1Id}), (p2:FieldPulse {id: $p2Id})
-    OPTIONAL MATCH (ctx:FieldContext)-[:HAS_PULSE]->(p1)
-      WHERE (ctx)-[:HAS_PULSE]->(p2)
+    OPTIONAL MATCH (:Space {id: $spaceId})-[:HAS_CONTEXT]->(ctx:FieldContext)-[:HAS_PULSE]->(p1)
+      WHERE ctx.deletedAt IS NULL AND (ctx)-[:HAS_PULSE]->(p2)
     WITH p1, p2, collect(DISTINCT ctx.title) AS sharedContexts
     // Authorship lives on TWO live edges: INITIATED_BY (assistant/doc-ingest
     // paths, incl. attribution to extracted persons) and CREATED_BY (dashboard
@@ -84,7 +91,7 @@ export async function collectPulsePairEvidence(
     WITH sharedContexts, sharedAuthors, count(DISTINCT rl) AS priorResonanceLinks
     RETURN sharedContexts, sharedAuthors, priorResonanceLinks
     `,
-    { p1Id, p2Id }
+    { p1Id, p2Id, spaceId }
   )
 
   if (!Array.isArray(rows) || rows.length === 0) {

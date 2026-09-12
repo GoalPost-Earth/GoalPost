@@ -1,58 +1,64 @@
 /**
- * Manual resonance discovery API
- * POST /api/resonance/discover
+ * Manual resonance discovery API (GOAL-368)
+ * POST /api/resonance/discover  { fieldContextId }
  *
- * Manually triggers resonance discovery
- * Can be space-scoped or global
- * Creates SUGGESTIONS (ResonanceSuggestion nodes) instead of direct links
+ * Starts, on demand, the sweep a member would otherwise wait for the nightly
+ * cron to run. Triggered from a field, it sweeps that field's whole Space:
+ * within-field pairs for every root field plus cross-field pairs inside the
+ * Space (ADR-020). Creates `pending` ResonanceSuggestions for human review
+ * (ADR-004) — never links.
+ *
+ * One manual sweep per Space per cooldown window (429 otherwise). Global
+ * discovery stays cron-only (src/app/api/cron/discover-resonances), which
+ * ignores this cooldown entirely.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { discoverResonancesForSpace } from '@/lib/resonance/discovery/pattern-detector'
-import { generatePulseEmbeddings } from '@/lib/resonance/embeddings/pulse-embedder'
-import { initGraph } from '@/modules/graph'
 import { resolveAuthenticatedUserId } from '@/app/api/auth/utils'
 import { getSession, initializeDB } from '@/app/api/auth/neo4j'
 import { canEditContent } from '@/lib/permissions/space-permissions'
+import {
+  MANUAL_SWEEP_BUDGET_MS,
+  MANUAL_SWEEP_COOLDOWN_SECONDS,
+  claimManualResonanceSweep,
+  finishManualResonanceSweep,
+  resolveFieldSweepScope,
+  runManualResonanceSweep,
+  type ManualSweepRefusal,
+} from '@/lib/resonance/discovery/manual-sweep'
 
-interface DiscoverRequest {
-  spaceId?: string // Optional: if provided, discovery is scoped to this space only
-  lastRunTimestamp?: string // Optional: only discover for pulses created after this timestamp
+// The sweep (embeddings + one LLM call per pulse with candidates) runs inside
+// this request, bounded by MANUAL_SWEEP_BUDGET_MS; 300s is the plan ceiling.
+export const dynamic = 'force-dynamic'
+export const maxDuration = 300
+
+const COOLDOWN_MESSAGES: Record<ManualSweepRefusal, string> = {
+  space_running: 'Resonance discovery is already running for this space.',
+  space_cooldown: 'Resonance discovery ran recently for this space.',
+  user_running: 'You already have resonance discovery running in another space.',
 }
 
 export async function POST(request: NextRequest) {
+  const startedAt = Date.now()
   try {
-    // Handle empty request body gracefully
-    let body: DiscoverRequest = {}
+    let fieldContextId: unknown
     try {
       const text = await request.text()
-      if (text && text.trim()) {
-        body = JSON.parse(text)
-      }
+      fieldContextId = text.trim() ? JSON.parse(text)?.fieldContextId : null
     } catch {
-      // If parsing fails, use empty object as default
-      console.log(
-        '[Resonance Discovery API] No valid JSON body, using defaults'
-      )
+      fieldContextId = null
     }
-
-    const { spaceId, lastRunTimestamp } = body
-
-    // Manual discovery reads pulse content and writes suggestions within a
-    // Space, so it requires an authenticated caller who can edit that Space.
-    // Global (no-spaceId) discovery is a system sweep — it stays cron-only
-    // (src/app/api/cron/discover-resonances) and is rejected here, otherwise
-    // any caller could trigger a full-graph scan and seed suggestions DB-wide.
-    if (!spaceId) {
+    if (typeof fieldContextId !== 'string' || !fieldContextId) {
       return NextResponse.json(
         {
           success: false,
           error:
-            'spaceId is required. Global discovery runs only as a scheduled job.',
+            'fieldContextId is required. Global discovery runs only as a scheduled job.',
         },
         { status: 400 }
       )
     }
+
     const userId = resolveAuthenticatedUserId(request)
     if (!userId) {
       return NextResponse.json(
@@ -60,105 +66,99 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+
+    // The sweep reads pulse content and writes suggestions across the whole
+    // Space, so it requires edit rights on that Space. An unknown or deleted
+    // field answers the same 403 as a field the caller can't edit.
+    const scope = await resolveFieldSweepScope(fieldContextId)
     initializeDB()
     const permSession = getSession()
+    let allowed = false
     try {
-      const allowed = await canEditContent(permSession, userId, spaceId)
-      if (!allowed) {
-        return NextResponse.json(
-          { success: false, error: 'Forbidden' },
-          { status: 403 }
-        )
-      }
+      allowed =
+        !!scope && (await canEditContent(permSession, userId, scope.spaceId))
     } finally {
       await permSession.close()
     }
-
-    console.log('[Resonance Discovery API] Starting discovery workflow...', {
-      scope: `space: ${spaceId}`,
-      lastRunTimestamp: lastRunTimestamp || 'all pulses',
-    })
-
-    // Step 1: Generate embeddings for pulses that don't have them
-    const graph = await initGraph()
-
-    const pulsesWithoutEmbeddings = await graph.query<{ id: string }>(
-      `
-      MATCH (:Space {id: $spaceId})-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PULSE]->(p:FieldPulse)
-      WHERE p.embedding IS NULL
-      RETURN p.id as id
-      LIMIT 100
-    `,
-      { spaceId }
-    )
-
-    // Neo4jGraph returns plain array, not {records: []}
-    if (
-      Array.isArray(pulsesWithoutEmbeddings) &&
-      pulsesWithoutEmbeddings.length > 0
-    ) {
-      const pulseIds = pulsesWithoutEmbeddings.map((r) => r.id)
-      console.log(
-        `[Resonance Discovery API] Generating embeddings for ${pulseIds.length} pulses...`
-      )
-
-      for (const pulseId of pulseIds) {
-        try {
-          await generatePulseEmbeddings(pulseId)
-          console.log(
-            `[Resonance Discovery API] ✓ Generated embeddings for ${pulseId}`
-          )
-        } catch (error) {
-          console.error(
-            `[Resonance Discovery API] ✗ Failed to generate embeddings for ${pulseId}:`,
-            error
-          )
-        }
-      }
-    } else {
-      console.log(
-        '[Resonance Discovery API] All pulses already have embeddings'
+    if (!scope || !allowed) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden' },
+        { status: 403 }
       )
     }
 
-    // Step 2: Run resonance discovery
-    console.log(
-      '[Resonance Discovery API] Discovering resonance suggestions...'
-    )
+    const claim = await claimManualResonanceSweep(scope.spaceId, userId)
+    if (!claim) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden' },
+        { status: 403 }
+      )
+    }
+    if (!claim.claimed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: COOLDOWN_MESSAGES[claim.reason],
+          reason: claim.reason,
+          retryAfterSeconds: claim.retryAfterSeconds,
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': String(claim.retryAfterSeconds) },
+        }
+      )
+    }
 
-    const resonances = await discoverResonancesForSpace(
-      spaceId,
-      lastRunTimestamp
-    )
-
-    console.log(
-      `[Resonance Discovery API] Discovered ${resonances.length} resonance suggestions`
-    )
-
-    return NextResponse.json({
-      success: true,
-      message: 'Resonance discovery completed (suggestions created)',
-      scope: spaceId,
-      suggestionsCreated: resonances.length,
-      suggestions: resonances.map((r) => ({
-        id: r.linkId,
-        contextId: r.contextId,
-        label: r.label,
-        description: r.description,
-        sourcePulseId: r.sourcePulseId,
-        targetPulseId: r.targetPulseId,
-        confidence: r.confidence,
-        evidence: r.evidence,
-      })),
-      timestamp: new Date().toISOString(),
+    console.log('[Resonance Discovery API] Manual sweep started', {
+      spaceId: scope.spaceId,
+      fieldContextId,
     })
+
+    let failed = true
+    try {
+      const result = await runManualResonanceSweep({
+        spaceId: scope.spaceId,
+        rootContextId: scope.rootContextId,
+        triggerContextId: fieldContextId,
+        actorUserId: userId,
+        deadline: startedAt + MANUAL_SWEEP_BUDGET_MS,
+      })
+      failed = false
+
+      console.log('[Resonance Discovery API] Manual sweep finished', {
+        spaceId: scope.spaceId,
+        durationMs: Date.now() - startedAt,
+        ...result,
+      })
+
+      return NextResponse.json({
+        success: true,
+        ...result,
+        cooldownSeconds: MANUAL_SWEEP_COOLDOWN_SECONDS,
+        timestamp: new Date().toISOString(),
+      })
+    } finally {
+      try {
+        // A thrown sweep shrinks the Space's cooldown to a short retry window;
+        // a finished one (even cut short by the budget) keeps the full one.
+        await finishManualResonanceSweep(scope.spaceId, userId, { failed })
+      } catch (finishErr) {
+        // Only the "still running" wording and the failed-sweep retry window
+        // depend on this; both claims lapse on their own.
+        console.warn(
+          '[Resonance Discovery API] Could not mark sweep finished:',
+          finishErr
+        )
+      }
+    }
   } catch (error: unknown) {
+    // Logged in full; the client gets a generic message — Neo4j / OpenAI
+    // error text is not for members' eyes.
     console.error('[Resonance Discovery API] Error:', error)
     return NextResponse.json(
       {
         success: false,
-        error:
-          error instanceof Error ? error.message : 'Unknown error occurred',
+        error: 'Resonance discovery failed.',
         timestamp: new Date().toISOString(),
       },
       { status: 500 }

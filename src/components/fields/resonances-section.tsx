@@ -101,11 +101,11 @@ export function ResonancesSection({
           disabled={isDiscoveringResonances}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gp-accent-glow/40 bg-gp-accent-glow/10 hover:bg-gp-accent-glow/20 text-gp-ink-strong dark:text-white transition-colors text-xs font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gp-accent-glow/10 cursor-pointer"
           aria-label="Discover resonances"
-          // Discovery scans the whole parent Space's pulses (WF-06), so it
-          // isn't gated on this field's pulse count the way manual linking
-          // is — a field with few pulses can still surface cross-field
-          // resonances in the same Space.
-          title="Let AI suggest resonances across this space"
+          // Discovery sweeps every field in the parent Space, including pairs
+          // between fields (WF-06, GOAL-368), so it isn't gated on this
+          // field's pulse count the way manual linking is — a field with few
+          // pulses can still surface cross-field resonances.
+          title="Let AI look for resonances across every field in this space"
         >
           <span
             className={cn(

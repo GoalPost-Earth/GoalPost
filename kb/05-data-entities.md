@@ -183,6 +183,18 @@ Same fields as MeSpace.
 
 **Authorization:** Owner or any member can read. Write depends on membership role.
 
+**Manual-sweep bookkeeping (both Space labels, GOAL-368):** not in the SDL —
+written only by raw Cypher in `src/lib/resonance/discovery/manual-sweep.ts`.
+
+| Field                     | Type     | Notes                                                       |
+| ------------------------- | -------- | ----------------------------------------------------------- |
+| resonanceSweepStartedAt   | datetime | Last manual discovery sweep claim; the 10-min cooldown runs from here |
+| resonanceSweepFinishedAt  | datetime | Set when that sweep returns; null while it runs              |
+| resonanceSweepLock        | string   | Throwaway lock-forcing write — nothing reads it              |
+
+The same three properties are written on the triggering member's `Person`
+(one in-flight manual sweep per member). They are not in the SDL either.
+
 ---
 
 ### SpaceMembership

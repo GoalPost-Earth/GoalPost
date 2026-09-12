@@ -141,6 +141,38 @@ WF-12: Promise Weave Authoring           (Member weaves pulses + a person into a
 7. Creates `ResonanceLink` nodes between pulse pairs with confidence and evidence.
 8. Links are created with status `pending` — awaiting human review.
 
+### Manual trigger (GOAL-368)
+
+**Actor:** Space owner / ADMIN / MEMBER (`canEditContent`), from a FieldContext
+
+Imports and uploads run a context-scoped discovery pass when they finish, but
+an import that has to defer it leaves the nightly cron as its only sweep. A
+member who doesn't want to wait can start the sweep themselves:
+
+1. Press **Discover** — in the studio canvas action bar (both Dashboard and
+   Bloom views) or the Resonances section header. Hidden for GUESTs.
+2. `POST /api/resonance/discover { fieldContextId }` resolves the field's Space,
+   re-gates `canEditContent`, and claims the Space's cooldown. That is 10 min
+   and one sweep per Space, shared by every field's button, plus one in-flight
+   sweep per member. A refused press gets 429 with `reason` (`space_running` /
+   `space_cooldown` / `user_running`) and `retryAfterSeconds`; the UI shows it
+   as a notice, not an error. A sweep that fails leaves only a 60s wait.
+3. The sweep embeds the Space's un-embedded pulses, then for every root field —
+   the triggering field first — runs the within-field pass and a cross-field
+   pass against the Space's other fields (ADR-020). It stops starting new work
+   after 240s. Fields it didn't reach get their within-field pass from the
+   nightly run, but only another manual sweep covers their cross-field pairs.
+4. New suggestions land `pending` (ADR-004). The completion toast reports the
+   count and has a **Review** action that opens the Space's review queue
+   (the new suggestions may be anchored on other fields, so this field's
+   Suggestions pill / Pending badge can stay at zero); counts refresh. Review
+   is WF-07.
+5. A `Log` (`metadata.event: 'resonance_discovery_run'`, `trigger: 'manual'`)
+   is written when the sweep created suggestions.
+
+The nightly cron ignores the manual cooldown: a manual sweep never delays or
+replaces it.
+
 ---
 
 ## WF-07 — Human Resonance Review

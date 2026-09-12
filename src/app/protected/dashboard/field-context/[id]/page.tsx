@@ -92,6 +92,7 @@ import {
 import {
   emitResonanceSuggestionsChanged,
   onOpenResonanceSuggestions,
+  onResonanceDiscoveryFinished,
 } from '@/lib/simulation/resonance-review-events'
 import { deriveCanEditContent } from '@/hooks/use-field-context-permissions'
 import { useRouteFocalScope } from '@/lib/focal-entity/use-route-focal-scope'
@@ -331,30 +332,43 @@ export default function FieldContextDetailsPage() {
   useEffect(() => {
     if (!contextId) return
     return onOpenResonanceSuggestions((detail) => {
-      if (detail.fieldContextId !== contextId) return
+      // The queue is Space-wide, so a request scoped to this Space (a sweep's
+      // completion toast) is ours even if it was started from a sibling field.
+      const forThisSpace = !!detail.spaceId && detail.spaceId === spaceId
+      if (detail.fieldContextId !== contextId && !forThisSpace) return
       openSuggestionsModal()
     })
-  }, [contextId, openSuggestionsModal])
+  }, [contextId, spaceId, openSuggestionsModal])
 
+  // Shared with the studio action bar's Discover: both start the same
+  // Space-wide sweep (GOAL-368) and show the same in-flight state.
   const { triggerDiscovery, isLoading: isDiscoveringResonances } =
-    useResonanceDiscovery({
-      spaceId,
-      onSuccess: () => {
-        setIsDiscoverModalOpen(true)
-        void refetchSuggestions()
-        // A sweep mints new `pending` suggestions — keep the badge honest, and
-        // hand the fresh number to the action bar's copy of it rather than
-        // making it fetch the same count again.
-        void refetchPendingSuggestionCount().then((pendingCount) => {
-          if (!contextId || !spaceId) return
-          emitResonanceSuggestionsChanged({
-            fieldContextId: contextId,
-            spaceId,
-            pendingCount,
-          })
+    useResonanceDiscovery({ fieldContextId: contextId, spaceId })
+
+  // A sweep started from EITHER entry point mints new `pending` suggestions
+  // somewhere in this Space — keep the badge honest, and hand the fresh number
+  // to the action bar's copy of it rather than making it fetch the same count
+  // again. The review list is lazy, so only refresh it when it's showing.
+  useEffect(() => {
+    if (!contextId || !spaceId) return
+    return onResonanceDiscoveryFinished((detail) => {
+      if (detail.spaceId !== spaceId) return
+      if (isDiscoverModalOpen) void refetchSuggestions()
+      void refetchPendingSuggestionCount().then((pendingCount) => {
+        emitResonanceSuggestionsChanged({
+          fieldContextId: contextId,
+          spaceId,
+          pendingCount,
         })
-      },
+      })
     })
+  }, [
+    contextId,
+    spaceId,
+    isDiscoverModalOpen,
+    refetchSuggestions,
+    refetchPendingSuggestionCount,
+  ])
 
   // Supply the resolved FieldContext title to the focal-entity primitive so the
   // assistant can speak of it by name.
@@ -1546,9 +1560,7 @@ export default function FieldContextDetailsPage() {
             onAddPerson={() => setIsAddPersonModalOpen(true)}
             onAddResonance={() => setIsResonanceLinkModalOpen(true)}
             onDiscoverResonances={
-              canEditContent && spaceId
-                ? () => void triggerDiscovery()
-                : undefined
+              canEditContent && spaceId ? triggerDiscovery : undefined
             }
             isDiscoveringResonances={isDiscoveringResonances}
             pendingSuggestionCount={pendingSuggestionCount}

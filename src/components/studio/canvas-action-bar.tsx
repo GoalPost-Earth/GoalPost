@@ -20,6 +20,7 @@ import { routeHasCanvasScope } from './canvas-scope'
 import { FieldContextUploadAction } from './field-context-upload-action'
 import { NestedFieldAction } from './nested-field-action'
 import { ResonanceSuggestionsAction } from './resonance-suggestions-action'
+import { ResonanceDiscoverAction } from './resonance-discover-action'
 import { Divider, ViewToggle } from './canvas-view-toggle'
 
 /**
@@ -28,7 +29,8 @@ import { Divider, ViewToggle } from './canvas-view-toggle'
  * The right-hand "create" cluster is contextual — it surfaces the
  * single action that makes sense at the user's current level:
  *  - Inside a FieldContext → Upload document + Add pulse + Add nested field
- *    (plus the review-suggestions entry, when any are pending)
+ *    + Discover resonances (editors), plus the review-suggestions entry
+ *    when any are pending
  *  - Inside a Space (MeSpace/WeSpace) → Add field context
  *  - Anywhere else → Create MeSpace / WeSpace
  *
@@ -145,6 +147,11 @@ export const StudioCanvasActionBar: FC = () => {
             it costs nothing on every other surface — and unlike the in-page
             badge it is reachable from Bloom Exploration too (GOAL-348). */}
         <ResonanceSuggestionsAction />
+
+        {/* Manual discovery sweep (GOAL-368) — next to review, since its
+            output lands there. Self-gates on a route-sourced FieldContext,
+            a resolved Space and canEditContent. */}
+        <ResonanceDiscoverAction />
 
         {/* Always mounted — the component self-gates on focal source and
             also keeps its own `pinnedFieldContextId` so an in-flight upload

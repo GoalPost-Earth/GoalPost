@@ -370,6 +370,13 @@ Scheduled (cron) → Running → Completed
                            → Failed
 ```
 
+A **manual** sweep (GOAL-368) has no job node. Its only state is two
+properties, on both the Space and the member's Person:
+`resonanceSweepStartedAt` (claimed) and `resonanceSweepFinishedAt` (null while
+running). The Space is in cooldown for 10 minutes from the claim, or 60 seconds
+if the sweep threw. The member can't start another sweep until theirs finishes,
+or until 300s pass if it was killed. See kb/03 WF-06 and ADR-020.
+
 ---
 
 ## Assistant Mode
