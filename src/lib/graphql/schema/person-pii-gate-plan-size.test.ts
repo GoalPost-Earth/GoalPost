@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { Neo4jGraphQL } from '@neo4j/graphql'
-import { graphql, type GraphQLSchema } from 'graphql'
+import { graphql, print, type GraphQLSchema } from 'graphql'
+import {
+  GET_LOGGED_IN_USER,
+  GET_SHELL_USER,
+} from '@/app/graphql/queries/DASHBOARD_QUERIES'
 
 /**
  * GOAL-275 plan-size guard — no database required.
@@ -122,11 +126,15 @@ beforeAll(async () => {
 }, 120_000)
 
 /** Compiles a query and returns the Cypher the library would have run. */
-async function compile(source: string): Promise<string> {
+async function compile(
+  source: string,
+  variableValues?: Record<string, unknown>
+): Promise<string> {
   captured.length = 0
   const res = await graphql({
     schema,
     source,
+    variableValues,
     contextValue: { jwt: { user: { id: 'caller-1' } } },
   })
   expect(res.errors).toBeUndefined()
@@ -218,5 +226,71 @@ describe('GOAL-275 gate — emitted plan size', () => {
       query { people(where: { id_EQ: "p1" }) { id firstName lastName name photo } }
     `)
     expect(countExists(cypher)).toBe(0)
+  }, 120_000)
+})
+
+/**
+ * GOAL-371 — the app-shell bootstrap document.
+ *
+ * `UserDataProvider` runs one query on app init, ahead of the dashboard's own
+ * documents, purely to learn the caller's MeSpace id. It used to send
+ * GET_LOGGED_IN_USER, PII block and all, which dragged the whole
+ * `PersonPrivateProfile` gate onto the critical path for the sake of a single
+ * id. Splitting GET_SHELL_USER out of it dropped the emitted Cypher from
+ * 45 `EXISTS {` / 9.4k chars to 4 / 1.6k, and `CYPHER replan=force` on dev from
+ * 702–761 ms to 118–141 ms (118 dbHits → 53).
+ *
+ * (That read is skipped while `localStorage.meSpaceId` is set, so it is a cold-
+ * session cost rather than a per-navigation one — GOAL-371's premise that it
+ * fired on every protected page load did not survive measurement.)
+ *
+ * These tests compile the *shipped* documents — imported, not copied — so
+ * re-adding `privateProfile` to the shell read fails here rather than silently
+ * putting the gate back on every protected page load.
+ */
+describe('GOAL-371 shell document — plan size', () => {
+  const VARS = { id: 'p1' }
+
+  it('carries no PII gate at all', async () => {
+    const cypher = await compile(print(GET_SHELL_USER), VARS)
+
+    // The gate's two distinctive branches. Zero occurrences of either means
+    // `PersonPrivateProfile` is not in the selection set, which is the point.
+    expect(cypher.split('[:CREATED_BY]->').length - 1).toBe(0)
+    expect(cypher.split('[:HAS_PERSON]-').length - 1).toBe(0)
+
+    // Measured at 4: the MeSpace owner rule (1) plus the WeSpace
+    // owner-or-member rule (3). The ticket's budget is 16; anything near it
+    // means a gated selection crept back in.
+    expect(countExists(cypher)).toBeLessThanOrEqual(16)
+  }, 120_000)
+
+  it('is dramatically cheaper than the profile document it was split from', async () => {
+    const shell = await compile(print(GET_SHELL_USER), VARS)
+    const full = await compile(print(GET_LOGGED_IN_USER), VARS)
+
+    // Guard the guard: if GET_LOGGED_IN_USER ever stopped selecting PII the
+    // comparison below would pass for the wrong reason.
+    expect(countExists(full)).toBeGreaterThan(30)
+
+    expect(countExists(shell)).toBeLessThan(countExists(full) / 2)
+    expect(shell.length).toBeLessThan(3_000)
+  }, 120_000)
+
+  it('still resolves ownsSpaces through the Space authorization filters', async () => {
+    const cypher = await compile(print(GET_SHELL_USER), VARS)
+
+    // Space-based authorization is the one rule the shell read must keep:
+    // MeSpace owner-only, WeSpace owner-or-member (kb/02-user-roles.md).
+    expect(cypher).toContain('(this1)<-[:OWNS]-')
+    expect(cypher).toContain('[:HAS_MEMBER]->')
+
+    // And the caller filter still precedes the subquery, so the id index seek
+    // survives — same invariant the gated query is held to above.
+    const matchIndex = cypher.indexOf('MATCH (this:Person)')
+    const whereIndex = cypher.indexOf('WHERE this.id =')
+    const callIndex = cypher.indexOf('CALL {')
+    expect(whereIndex).toBeGreaterThan(matchIndex)
+    expect(whereIndex).toBeLessThan(callIndex)
   }, 120_000)
 })
