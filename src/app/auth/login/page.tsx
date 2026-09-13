@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SIGNUP_DISABLED } from '@/constants'
 import { sanitizeReturnTo } from '@/lib/auth/safe-return-to'
+import { seedAccessToken } from '@/lib/auth/access-token-client'
 
 function LoginPage() {
   const { setUser } = useApp()
@@ -48,8 +49,17 @@ function LoginPage() {
         setUser(data.user)
       }
       if (data.token) {
+        // GOAL-375: seed the in-memory bearer cache from the login response
+        // itself. The token is in hand at this exact moment, so the first
+        // Apollo query after sign-in no longer pays a round-trip to
+        // /api/auth/access-token just to be handed it straight back. Must run
+        // AFTER setUser above, which invalidates the cache on every user swap.
+        seedAccessToken(data.token, data.expiresAt)
         // The `accessToken` cookie is set by /api/auth/login itself —
-        // HttpOnly, scoped to the token's real 30-minute TTL.
+        // HttpOnly, scoped to the token's real 30-minute TTL. The localStorage
+        // write below is the pre-existing legacy `token` key (kb/02), still
+        // read by protected/dashboard/import; the bearer cache above does not
+        // depend on it and GOAL-375 does not extend it.
         localStorage.setItem('token', data.token)
       }
       if (data.refreshToken) {

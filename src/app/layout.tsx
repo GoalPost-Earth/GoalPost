@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { ThemeProvider } from 'next-themes'
 import { AppProvider } from '@/contexts'
 import { ApolloWrapper } from '@/app/lib/apollo-wrapper'
+import { AccessTokenBootstrap } from '@/components/auth/AccessTokenBootstrap'
 import { resolveAppBaseUrl } from '@/lib/url/app-base-url'
 import './globals.css'
 
@@ -121,6 +122,13 @@ export default async function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        {/* GOAL-375: kick the bearer-token hop off here, during HTML parse,
+            so it overlaps the shell JS download + hydration instead of
+            queueing behind them. No-ops for a logged-out visitor. Placed
+            BEFORE the theme bootstrapper — the point is to get a request on
+            the wire as early as possible, and the theme script is a
+            synchronous localStorage read that costs a tick. */}
+        <AccessTokenBootstrap nonce={nonce} />
         <script
           id="gp-theme-init"
           nonce={nonce}

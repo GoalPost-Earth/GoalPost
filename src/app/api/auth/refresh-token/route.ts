@@ -30,9 +30,17 @@ async function handleRefresh(request: NextRequest) {
     )
   }
 
+  // `expiresAt` (unix seconds) rides along with the token so any caller can
+  // cache the bearer for its real lifetime rather than re-asking every 60s
+  // (GOAL-375). Not a secret — it describes the token in this same body, and
+  // the cookie set just below. Nothing in `src/` calls this route today (the
+  // access-token route refreshes internally and reads `expiresAt` straight
+  // off `tryRefreshAccessToken`); the field is here so the three token-issuing
+  // routes keep one response shape.
   const response = NextResponse.json({
     accessToken: result.accessToken,
     refreshToken: result.refreshToken,
+    expiresAt: result.expiresAt,
   })
   setAuthCookies(response, result)
   return response

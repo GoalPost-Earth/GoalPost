@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useApp } from '@/contexts'
+import { seedAccessToken } from '@/lib/auth/access-token-client'
 
 function SignupPage() {
   const {
@@ -62,6 +63,13 @@ function SignupPage() {
           localStorage.setItem('user', JSON.stringify(data.user))
         }
         if (data.token) {
+          // GOAL-375: seed the in-memory bearer cache from the signup
+          // response so the first query after sign-up skips the
+          // /api/auth/access-token round-trip. Runs after setUser, which
+          // invalidates on user swap.
+          seedAccessToken(data.token, data.expiresAt)
+          // Pre-existing legacy `token` key (kb/02), read by
+          // protected/dashboard/import. Untouched by GOAL-375.
           localStorage.setItem('token', data.token)
         }
         if (data.refreshToken) {

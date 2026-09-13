@@ -36,6 +36,24 @@ import {
  *      on the response. The session is genuinely over; clearing the
  *      unverifiable cookie stops the client from re-sending it on a loop,
  *      and the client clears local state + bounces to /auth/login.
+ *
+ * COST OF EACH PATH — measured on dev, 2026-09-13 (GOAL-375), warm Next
+ * server, Neo4j Aura dev, 5 reps each, medians:
+ *
+ *   Path 1 (JWT signature check only)  ......................    9 ms
+ *   Path 2 (refresh)                   ....................  ~980 ms
+ *     └ bcryptjs compare, 12 rounds ....................  434 ms
+ *     └ bcryptjs hash (rotation), 12 rounds ............  429 ms
+ *     └ Neo4j read  (Person-by-indexed-id)  ............   12 ms
+ *     └ Neo4j write (refresh-token rotation)  ..........  ~13 ms
+ *
+ * So the expensive path is ~91% bcrypt and ~2.5% Neo4j — bcryptjs is a pure-JS
+ * implementation, so 12 rounds costs ~430 ms per operation with no native
+ * acceleration. Path 1 must therefore stay the fast path: the JWT signature
+ * check is ~100× cheaper than the bcrypt verification, and this route is hit
+ * on every page load and every background poll. It already short-circuits
+ * correctly — the bcrypt compare below runs ONLY when the access cookie is
+ * missing, expired, or unverifiable — and it must stay that way.
  */
 export async function GET(req: NextRequest) {
   const accessToken = req.cookies.get('accessToken')?.value
@@ -43,8 +61,12 @@ export async function GET(req: NextRequest) {
   // Path 1: cookie present and fully valid → hand it straight back.
   if (accessToken) {
     try {
-      verifyJWT(accessToken)
-      return NextResponse.json({ accessToken })
+      // Returns the decoded payload; `exp` (unix seconds) goes back in the
+      // body so the client can cache the bearer for its real remaining life
+      // instead of re-asking every 60s (GOAL-375). Not a secret — it is a
+      // claim of the token sitting in the same response.
+      const decoded = verifyJWT(accessToken) as { exp?: number }
+      return NextResponse.json({ accessToken, expiresAt: decoded?.exp })
     } catch {
       // Expired, wrong-signature, or malformed — fall through to refresh.
       // The refresh token (not this cookie) is the security boundary.
@@ -54,7 +76,10 @@ export async function GET(req: NextRequest) {
   // Path 2: no usable access cookie — try to refresh transparently.
   const refresh = await tryRefreshAccessToken(req)
   if (refresh.ok) {
-    const response = NextResponse.json({ accessToken: refresh.accessToken })
+    const response = NextResponse.json({
+      accessToken: refresh.accessToken,
+      expiresAt: refresh.expiresAt,
+    })
     setAuthCookies(response, refresh)
     return response
   }
