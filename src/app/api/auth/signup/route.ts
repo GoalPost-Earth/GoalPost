@@ -6,6 +6,7 @@ import { getOrCreateMeSpace } from '@/lib/validation/space-validation'
 import { z } from 'zod'
 import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
 import { normalizeEmail } from '@/lib/auth/normalize-email'
+import { ACCESS_TOKEN_TTL_SECONDS, REFRESH_TOKEN_TTL_SECONDS } from '../refresh'
 
 const signupSchema = z.object({
   email: z.string().email(),
@@ -166,6 +167,7 @@ export async function POST(req: NextRequest) {
 
       // ownsSpaces is intentionally excluded from the JWT to keep the cookie small.
       // It is still returned in the response body for client-side caching.
+      const expiresAt = Math.floor(Date.now() / 1000) + ACCESS_TOKEN_TTL_SECONDS
       const token = signJWT({
         user: {
           id: user.id,
@@ -174,7 +176,7 @@ export async function POST(req: NextRequest) {
           lastName: user.lastName,
           roles: user.roles,
         },
-        expiresAt: Math.floor(Date.now() / 1000) + 60 * 30, // 30 minutes
+        expiresAt,
       })
 
       // Compound format `${userId}.${secret}` — the refresh-token route uses
@@ -193,15 +195,21 @@ export async function POST(req: NextRequest) {
         {
           personId,
           refreshToken: hashedRefreshToken,
-          refreshTokenExp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30, // 30 days
+          refreshTokenExp:
+            Math.floor(Date.now() / 1000) + REFRESH_TOKEN_TTL_SECONDS,
         }
       )
 
+      // Same token in the body as in the cookie (GOAL-375) — see the note in
+      // the login route. The body copy exists purely so the page can seed its
+      // in-memory bearer cache and skip the /api/auth/access-token hop on its
+      // first query. Memory only; never localStorage.
       const response = NextResponse.json(
         {
           message: 'User created',
           user,
           token,
+          expiresAt,
           refreshToken,
         },
         { status: 201 }
@@ -212,7 +220,7 @@ export async function POST(req: NextRequest) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 30, // 30 minutes
+        maxAge: ACCESS_TOKEN_TTL_SECONDS,
         path: '/',
       })
 
@@ -220,7 +228,7 @@ export async function POST(req: NextRequest) {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24 * 30, // 30 days
+        maxAge: REFRESH_TOKEN_TTL_SECONDS,
         path: '/',
       })
 

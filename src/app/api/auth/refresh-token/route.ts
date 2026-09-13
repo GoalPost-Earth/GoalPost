@@ -30,9 +30,14 @@ async function handleRefresh(request: NextRequest) {
     )
   }
 
+  // `expiresAt` (epoch seconds, GOAL-375) lets the browser cache the token for
+  // its real lifetime rather than a flat 60s. It is not a secret — it is the
+  // `exp` claim of the token in the same body, which is itself the same token
+  // as the cookie set below.
   const response = NextResponse.json({
     accessToken: result.accessToken,
     refreshToken: result.refreshToken,
+    expiresAt: result.expiresAt,
   })
   setAuthCookies(response, result)
   return response

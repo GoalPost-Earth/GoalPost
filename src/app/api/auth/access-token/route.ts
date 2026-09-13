@@ -36,6 +36,33 @@ import {
  *      on the response. The session is genuinely over; clearing the
  *      unverifiable cookie stops the client from re-sending it on a loop,
  *      and the client clears local state + bounces to /auth/login.
+ *
+ * COST OF EACH PATH — measured 2026-09-13 against the dev Aura instance,
+ * medians of 20 reps (GOAL-375):
+ *
+ *   verifyJWT (HS256 signature check)          0.118 ms  ← path 1, whole cost
+ *   Neo4j Person-by-id read (indexed MATCH)   14.1 ms
+ *   bcrypt.compare, cost 12                  431.1 ms
+ *   bcrypt.hash, cost 12 (rotation)          431.3 ms
+ *   Neo4j rotation write                      14.8 ms
+ *   -----------------------------------------------------
+ *   path 1 total                               0.12 ms
+ *   path 2 total                             891 ms       (~7500× path 1)
+ *
+ * The two bcrypt operations are 97% of a refresh; Neo4j is ~3%. That single
+ * fact is why the fast path above matters so much and why it must stay
+ * first: the bcrypt verify runs ONLY when the access cookie is missing,
+ * expired or unverifiable — never on a call a valid cookie could answer.
+ * (GOAL-323's logout route splits the same way, reaching for
+ * `resolveUserIdFromRefreshCookie` only once the access token has lapsed.)
+ *
+ * It also explains the ticket's 0.4–2.1 s spread for this hop: a warm call
+ * with a live cookie is path 1 and costs nothing measurable, while any call
+ * landing on path 2 pays ~0.9 s of deliberate key-stretching that cannot be
+ * optimised away without weakening the refresh credential. So GOAL-375
+ * attacks WHEN the hop happens — in parallel with the page's JS via the
+ * head bootstrap, and once per token lifetime rather than once per minute —
+ * rather than what path 2 costs.
  */
 export async function GET(req: NextRequest) {
   const accessToken = req.cookies.get('accessToken')?.value
@@ -43,8 +70,11 @@ export async function GET(req: NextRequest) {
   // Path 1: cookie present and fully valid → hand it straight back.
   if (accessToken) {
     try {
-      verifyJWT(accessToken)
-      return NextResponse.json({ accessToken })
+      // `exp` comes back from the verify we were already doing, so the
+      // client can size its token cache to the token's real lifetime
+      // (GOAL-375) without this route doing any extra work.
+      const decoded = verifyJWT(accessToken) as { exp?: number }
+      return NextResponse.json({ accessToken, expiresAt: decoded?.exp })
     } catch {
       // Expired, wrong-signature, or malformed — fall through to refresh.
       // The refresh token (not this cookie) is the security boundary.
@@ -54,7 +84,10 @@ export async function GET(req: NextRequest) {
   // Path 2: no usable access cookie — try to refresh transparently.
   const refresh = await tryRefreshAccessToken(req)
   if (refresh.ok) {
-    const response = NextResponse.json({ accessToken: refresh.accessToken })
+    const response = NextResponse.json({
+      accessToken: refresh.accessToken,
+      expiresAt: refresh.expiresAt,
+    })
     setAuthCookies(response, refresh)
     return response
   }

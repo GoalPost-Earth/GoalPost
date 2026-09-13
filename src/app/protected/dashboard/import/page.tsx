@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useApp, usePageContext } from '@/contexts'
+import { authorizationHeaders } from '@/lib/auth/access-token-client'
 
 type UploadType = 'we-space' | 'field-context' | 'pulse'
 
@@ -459,14 +460,19 @@ export default function DashboardImportPage() {
       setResult(null)
       setPreview(preview)
 
-      const token =
-        typeof window !== 'undefined' ? localStorage.getItem('token') : null
+      // ADR-013 bearer dance via the shared helper. This used to read the
+      // legacy localStorage `token` key — a copy written once at login and
+      // never refreshed, so an import attempted more than 30 minutes into a
+      // session sent an expired bearer and 401'd. GOAL-375 removed the last
+      // writer of that key; `authorizationHeaders()` resolves a live token
+      // (from cache, or refreshed server-side) instead.
+      const authHeaders = await authorizationHeaders()
 
       const response = await fetch('/api/import/xlsx', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...authHeaders,
         },
         body: JSON.stringify({
           userId: user.id,

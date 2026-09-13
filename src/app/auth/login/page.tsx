@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { SIGNUP_DISABLED } from '@/constants'
 import { sanitizeReturnTo } from '@/lib/auth/safe-return-to'
+import { seedAccessToken } from '@/lib/auth/access-token-client'
 
 function LoginPage() {
   const { setUser } = useApp()
@@ -42,6 +43,12 @@ function LoginPage() {
         }
       )
       const data = await res.json()
+      // ORDER IS LOAD-BEARING: `setUser` → `setUserAndPersist` →
+      // `invalidateAccessTokenCache()`, which wipes the cache. The
+      // `seedAccessToken` below must therefore run AFTER it. Swap these two
+      // blocks and the seed is silently discarded — no type error, no test
+      // failure, just the /api/auth/access-token hop quietly coming back on
+      // the first query after login (GOAL-375).
       if (data.user) {
         // setUser handles both state update and localStorage persistence
         // including meSpaceId extraction from ownsSpaces
@@ -49,11 +56,17 @@ function LoginPage() {
       }
       if (data.token) {
         // The `accessToken` cookie is set by /api/auth/login itself —
-        // HttpOnly, scoped to the token's real 30-minute TTL.
-        localStorage.setItem('token', data.token)
-      }
-      if (data.refreshToken) {
-        localStorage.setItem('refreshToken', data.refreshToken)
+        // HttpOnly, scoped to the token's real 30-minute TTL. The copy in
+        // the body seeds the in-memory bearer cache (GOAL-375) so the first
+        // GraphQL query on the page we're about to navigate to goes out with
+        // a bearer already attached, instead of stopping to ask
+        // /api/auth/access-token for the token we are holding right here.
+        //
+        // Deliberately NOT localStorage: that legacy `token` key was a
+        // write-once copy that went stale on the first 30-minute expiry and
+        // survived in the tab across a session swap. The cache is memory-only
+        // and self-expiring.
+        seedAccessToken(data.token, data.expiresAt)
       }
       if (!res.ok) {
         setError(data.error || 'Login failed')

@@ -11,6 +11,14 @@ export type RefreshResult =
       ok: true
       accessToken: string
       refreshToken: string
+      /**
+       * Epoch SECONDS at which `accessToken` expires — computed just before
+       * signing, so it is at or slightly before the token's own `exp` claim
+       * and can never overstate the token's life. Returned to the browser
+       * (GOAL-375) so the client-side token cache sizes itself from the
+       * server's value rather than its own decode of the payload.
+       */
+      expiresAt: number
     }
   | {
       ok: false
@@ -166,6 +174,7 @@ export async function tryRefreshAccessToken(
       }
     }
 
+    const accessTokenExpiresAt = nowSeconds + ACCESS_TOKEN_TTL_SECONDS
     const newAccessToken = signJWT({
       user: {
         id: user.id,
@@ -174,7 +183,7 @@ export async function tryRefreshAccessToken(
         lastName: user.lastName,
         roles: user.roles,
       },
-      expiresAt: nowSeconds + ACCESS_TOKEN_TTL_SECONDS,
+      expiresAt: accessTokenExpiresAt,
     })
 
     // Rotate so a leaked refresh token has a single-use window before the
@@ -200,6 +209,7 @@ export async function tryRefreshAccessToken(
       ok: true,
       accessToken: newAccessToken,
       refreshToken: newRawRefreshToken,
+      expiresAt: accessTokenExpiresAt,
     }
   } catch (err) {
     console.error('Refresh token error:', err)

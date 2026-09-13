@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useApp } from '@/contexts'
+import { seedAccessToken } from '@/lib/auth/access-token-client'
 
 function SignupPage() {
   const {
@@ -56,16 +57,23 @@ function SignupPage() {
       if (!res.ok) {
         setError(data.error || 'Sign up failed')
       } else {
-        // Log user in with returned user data and tokens
+        // Log user in with returned user data and tokens.
+        // ORDER IS LOAD-BEARING: `setUser` invalidates the bearer cache (see
+        // AppContext.setUserAndPersist), so `seedAccessToken` below must stay
+        // after it or the seed is silently wiped (GOAL-375).
         if (data.user) {
           setUser(data.user)
           localStorage.setItem('user', JSON.stringify(data.user))
         }
         if (data.token) {
-          localStorage.setItem('token', data.token)
-        }
-        if (data.refreshToken) {
-          localStorage.setItem('refreshToken', data.refreshToken)
+          // Memory-only bearer seed (GOAL-375) — the HttpOnly `accessToken`
+          // cookie set by /api/auth/signup stays the credential; this just
+          // saves the dashboard's first query a /api/auth/access-token hop.
+          // The old localStorage `token` / `refreshToken` writes are gone: a
+          // never-refreshed copy of a 30-minute token is a stale-auth bug,
+          // and a 30-day refresh credential does not belong in JS-readable
+          // storage at all.
+          seedAccessToken(data.token, data.expiresAt)
         }
         // Redirect to the canvas Dashboard — the first page after signup.
         router.push('/protected/dashboard')

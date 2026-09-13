@@ -2,7 +2,14 @@
 
 import { ApolloLink, ApolloClient, InMemoryCache } from '@apollo/client'
 import { ApolloProvider } from '@apollo/client/react'
-import { ERROR_POLICY, authLink, httpLink, retryLink } from './apollo-functions'
+import {
+  ERROR_POLICY,
+  authLink,
+  httpLink,
+  isUnauthenticatedError,
+  retryLink,
+} from './apollo-functions'
+import { handleUnauthenticatedResponse } from '@/lib/auth/access-token-client'
 
 import { onError } from '@apollo/client/link/error'
 import { useMemo } from 'react'
@@ -47,6 +54,16 @@ export function ApolloWrapper({
         }
         if (networkError) {
           console.error('[Network error]:', networkError)
+        }
+
+        // GOAL-375: the bearer cache now follows the token's real 30-minute
+        // lifetime instead of a flat 60s, so it needs to be told when a
+        // request went out with a token the server refused — otherwise a
+        // session revoked mid-lifetime would keep failing silently until the
+        // token expired. Re-resolving here either recovers (stale bearer,
+        // live refresh cookie) or bounces to /auth/login (session over).
+        if (isUnauthenticatedError({ graphQLErrors, networkError })) {
+          handleUnauthenticatedResponse()
         }
       }),
     []

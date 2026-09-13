@@ -50,18 +50,35 @@ Defined in `src/lib/permissions/space-permissions.ts`:
 
 - **JWT-based** — custom implementation (not a third-party provider)
 - User token contains `user.id`, used for all authorization checks
-- Token stored in localStorage (`token`) and cookie (`accessToken`)
+- Access token lives in the HttpOnly `accessToken` cookie (the credential) and
+  in a **memory-only** client cache (`src/lib/auth/access-token-client.ts`),
+  which is what supplies the `Authorization: Bearer` header ADR-013 requires.
+  **Neither token is in localStorage** — the legacy `token` / `refreshToken`
+  keys were removed in GOAL-375. A never-refreshed copy of a 30-minute token is
+  a stale-auth bug, and a 30-day refresh credential must not be JS-readable.
+  `clearLocalSession()` still deletes both keys so old tabs get swept.
+- The cache holds a token until `exp − 60s` (decoded client-side for scheduling
+  only — the server verifies every signature), so background polls don't
+  re-fetch a token that is still good. Login / signup / refresh return the token
+  and its `expiresAt` in the response body to seed it without a round-trip.
 - Refresh token rotation supported (`refreshToken`, `refreshTokenExp`, `refreshTokenRevoked`)
 - Auth state managed via `AppContext` in `src/contexts/AppContext.tsx`
 
 ### Auth Flow
 
 ```
-Sign Up → Login → JWT issued → Token stored (localStorage + cookie)
+Sign Up → Login → JWT issued → HttpOnly cookie set + token seeded into the
+                               in-memory bearer cache (never localStorage)
     → User data fetched via GraphQL (GET_LOGGED_IN_USER)
     → MeSpace ID cached in localStorage
     → Protected routes check isAuthenticated
 ```
+
+On a fresh load of a protected page, `middleware.ts` sets `x-gp-auth-boot: 1`
+when a session cookie is present, and the root layout emits a nonce'd inline
+`<script>` that starts `GET /api/auth/access-token` during HTML parse. The
+first `getAccessToken()` adopts that in-flight promise, so the hop runs
+alongside hydration rather than after it (GOAL-375).
 
 ### Password Reset
 

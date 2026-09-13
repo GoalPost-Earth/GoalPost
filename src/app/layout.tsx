@@ -91,7 +91,22 @@ export default async function RootLayout({
   // Set by middleware.ts on the request. Both theme bootstrappers below run
   // before hydration, so under `script-src 'strict-dynamic'` they execute only
   // when they carry this nonce.
-  const nonce = (await headers()).get('x-nonce') ?? undefined
+  const requestHeaders = await headers()
+  const nonce = requestHeaders.get('x-nonce') ?? undefined
+  // GOAL-375: middleware decides this (it has the pathname and the HttpOnly
+  // cookies). '1' only for a /protected page request that plausibly carries
+  // a session.
+  //
+  // The `nonce` conjunct is not belt-and-braces — it is the gate. Some paths
+  // are excluded by `config.matcher` yet still render this layout (Next's 404
+  // for `/api-docs`, for instance), and on those the middleware never ran, so
+  // `x-gp-auth-boot` would be whatever the client sent. A nonce can only come
+  // from the middleware, so requiring it means a forged header reaches
+  // nothing. (A nonce-less inline script would be CSP-blocked on any path
+  // that has a CSP anyway, but this makes the invariant true rather than
+  // incidental.)
+  const shouldBootAuth =
+    !!nonce && requestHeaders.get('x-gp-auth-boot') === '1'
 
   const themeInitScript = `(() => {
     try {
@@ -104,6 +119,46 @@ export default async function RootLayout({
       }
     } catch (_) {
       // no-op
+    }
+  })();`
+
+  // GOAL-375: take `GET /api/auth/access-token` off the first-render critical
+  // path. Apollo needs the token as a bearer (ADR-013) but it lives in an
+  // HttpOnly cookie, so the client must ask for it — and before this, that ask
+  // started only once the React bundle had downloaded, hydrated, and run
+  // authLink, putting a 0.4–2.1s cookie-verify hop IN FRONT of the very first
+  // GraphQL request. Starting the fetch from the document <head> moves it to
+  // parallel with the JS it used to wait for; by the time `getAccessToken()`
+  // runs it adopts this promise (see `takeAuthBoot` in access-token-client.ts)
+  // instead of issuing a request of its own.
+  //
+  // Parked as a promise rather than a value, and the module deletes the
+  // global as it adopts it. That is hygiene, not a security boundary — a
+  // promise is multi-subscriber, and any same-origin script could call this
+  // cookie-authenticated endpoint itself regardless. The self-clear below
+  // bounds how long a resolved token sits on `window` if, on some route,
+  // nothing ever consumes it. No token text is logged or persisted here.
+  const authBootScript = `(() => {
+    try {
+      window.__GP_AUTH_BOOT__ = fetch('/api/auth/access-token', {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: { accept: 'application/json' },
+      }).then(function (res) {
+        if (res.status !== 200) return { status: res.status };
+        return res.json().then(function (data) {
+          return {
+            status: 200,
+            accessToken: data && data.accessToken,
+            expiresAt: data && data.expiresAt,
+          };
+        });
+      }).catch(function () { return null; });
+      setTimeout(function () {
+        delete window.__GP_AUTH_BOOT__;
+      }, 30000);
+    } catch (_) {
+      // no-op — getAccessToken() falls back to fetching normally
     }
   })();`
 
@@ -121,6 +176,13 @@ export default async function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        {shouldBootAuth && (
+          <script
+            id="gp-auth-boot"
+            nonce={nonce}
+            dangerouslySetInnerHTML={{ __html: authBootScript }}
+          />
+        )}
         <script
           id="gp-theme-init"
           nonce={nonce}

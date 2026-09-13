@@ -2,7 +2,36 @@ import { HttpLink } from '@apollo/client'
 import { setContext } from '@apollo/client/link/context'
 import { onError } from '@apollo/client/link/error'
 import { RetryLink } from '@apollo/client/link/retry'
-import { getAccessToken } from '@/lib/auth/access-token-client'
+import {
+  getAccessToken,
+  handleUnauthenticatedResponse,
+} from '@/lib/auth/access-token-client'
+
+/**
+ * Did this response say "your bearer wasn't accepted"?
+ *
+ * `/api/graphql` does NOT 401 on a bad bearer — `apollo-server.ts` verifies
+ * the token, leaves `jwt` null when verification fails, and Neo4jGraphQL's
+ * `@authentication` directive then raises a GraphQL error on an HTTP 200.
+ * So the string is the signal available, and it is the same one users saw
+ * when a `JWT_SECRET` rotation wedged them ("Unauthenticated" loading
+ * spaces). A 401/403 network error is checked too, for the REST routes that
+ * share this client's token.
+ *
+ * A false positive costs one extra `/api/auth/access-token` call; a false
+ * negative costs the user a wedged session, so this errs towards matching.
+ */
+export function isUnauthenticatedError(error: {
+  graphQLErrors?: ReadonlyArray<{ message: string }>
+  networkError?: unknown
+}): boolean {
+  const status = (error.networkError as { statusCode?: number } | undefined)
+    ?.statusCode
+  if (status === 401 || status === 403) return true
+  return !!error.graphQLErrors?.some((e) =>
+    /unauthenticated/i.test(e?.message ?? '')
+  )
+}
 
 export const ERROR_POLICY = 'all'
 
@@ -72,6 +101,13 @@ export const errorLink = onError((error) => {
     })
   }
   if (networkError) console.error(`[Network error]: ${networkError}`)
+
+  // GOAL-375: the token cache now holds a token for its real 30-minute
+  // lifetime, so it can no longer rely on a 60s TTL to notice that the
+  // session died underneath it. This is what notices instead.
+  if (isUnauthenticatedError({ graphQLErrors, networkError })) {
+    handleUnauthenticatedResponse()
+  }
 })
 
 /**
