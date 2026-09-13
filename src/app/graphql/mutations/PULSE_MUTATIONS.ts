@@ -204,6 +204,7 @@ export const UPDATE_RESOURCE_PULSE_MUTATION = graphql(`
         status
         why
         location
+        sourceUrl
         time
         createdAt
         createdBy {
