@@ -2924,12 +2924,6 @@ export type CreateDocumentIngestThreadsMutationResponse = {
   info: CreateInfo
 }
 
-export type CreateFieldContextEdgesMutationResponse = {
-  __typename?: 'CreateFieldContextEdgesMutationResponse'
-  fieldContextEdges: Array<FieldContextEdge>
-  info: CreateInfo
-}
-
 export type CreateFieldContextsMutationResponse = {
   __typename?: 'CreateFieldContextsMutationResponse'
   fieldContexts: Array<FieldContext>
@@ -5076,11 +5070,29 @@ export type FieldContext = {
    * between entities, and the canvas does not draw the context in-field. An
    * earlier draft included them and returned 137k rows for a 135-entity field.
    *
-   * `collect(DISTINCT entity)` is load-bearing — this graph carries duplicate
-   * containment edges, and a non-distinct scope multiplies every result by their
-   * fan-out. The relationship list is a fixed, code-controlled disjunction rather
-   * than a bare `-[r]-`, keeping the traversal bounded, and `LIMIT` caps a
-   * pathological field rather than letting one stall the canvas.
+   * The second endpoint is checked with a containment EXISTS rather than
+   * collected into a list and tested with `IN`. The list form scans the whole
+   * list per candidate row, so its cost tracked the entities' total out-degree —
+   * including edges leaving the field, which `LIMIT` cannot bound because those
+   * rows never reach the limit. Measured on the largest real field (370
+   * entities, 732 edges): 524ms list vs 215ms existence check, same 5,171
+   * dbHits. `ORDER BY` before `LIMIT` matters too — without it a field over the
+   * cap paints a different edge set on every load.
+   *
+   * `WEAVES` / `WOVEN_FOR` are deliberately absent from the disjunction: both
+   * originate at `:PromiseWeave`, which is reached by `HAS_WEAVE` and so is
+   * never in scope. Including them was dead traversal, and widening scope to
+   * reach them would step around `PromiseWeave`'s own authorization.
+   *
+   * SCOPE CAVEAT: entities reached only through the parent Space — its owner and
+   * members — are not in scope unless they also carry `HAS_PERSON` on this
+   * context. Edges to them still come from the hand-built families in
+   * `bloom-graph-builder.ts`, which is why those are layered rather than retired.
+   *
+   * COUPLING: `label` surfaces `CONNECTED_TO.why`, which is gated PII on
+   * `PersonPrivateProfile`. That gate's `contexts_SOME` branch grants exactly the
+   * caller who passed this type's READ filter, so today the two agree. If that
+   * rule is ever tightened, this field must be tightened with it.
    */
   edges?: Maybe<Array<FieldContextEdge>>
   emergentName?: Maybe<Scalars['String']['output']>
@@ -6378,91 +6390,6 @@ export type FieldContextEdge = {
   toId: Scalars['String']['output']
   /** Neo4j relationship type, e.g. INITIATED_BY, MENTIONED_IN, CONNECTED_TO. */
   type: Scalars['String']['output']
-}
-
-export type FieldContextEdgeAggregate = {
-  __typename?: 'FieldContextEdgeAggregate'
-  count: Count
-  node: FieldContextEdgeAggregateNode
-}
-
-export type FieldContextEdgeAggregateNode = {
-  __typename?: 'FieldContextEdgeAggregateNode'
-  fromId: StringAggregateSelection
-  label: StringAggregateSelection
-  toId: StringAggregateSelection
-  type: StringAggregateSelection
-}
-
-export type FieldContextEdgeAggregateSelection = {
-  __typename?: 'FieldContextEdgeAggregateSelection'
-  count: Scalars['Int']['output']
-  fromId: StringAggregateSelection
-  label: StringAggregateSelection
-  toId: StringAggregateSelection
-  type: StringAggregateSelection
-}
-
-export type FieldContextEdgeCreateInput = {
-  fromId: Scalars['String']['input']
-  label?: InputMaybe<Scalars['String']['input']>
-  toId: Scalars['String']['input']
-  type: Scalars['String']['input']
-}
-
-export type FieldContextEdgeEdge = {
-  __typename?: 'FieldContextEdgeEdge'
-  cursor: Scalars['String']['output']
-  node: FieldContextEdge
-}
-
-/** Fields to sort FieldContextEdges by. The order in which sorts are applied is not guaranteed when specifying many fields in one FieldContextEdgeSort object. */
-export type FieldContextEdgeSort = {
-  fromId?: InputMaybe<SortDirection>
-  label?: InputMaybe<SortDirection>
-  toId?: InputMaybe<SortDirection>
-  type?: InputMaybe<SortDirection>
-}
-
-export type FieldContextEdgeUpdateInput = {
-  fromId_SET?: InputMaybe<Scalars['String']['input']>
-  label_SET?: InputMaybe<Scalars['String']['input']>
-  toId_SET?: InputMaybe<Scalars['String']['input']>
-  type_SET?: InputMaybe<Scalars['String']['input']>
-}
-
-export type FieldContextEdgeWhere = {
-  AND?: InputMaybe<Array<FieldContextEdgeWhere>>
-  NOT?: InputMaybe<FieldContextEdgeWhere>
-  OR?: InputMaybe<Array<FieldContextEdgeWhere>>
-  fromId_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  fromId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  fromId_EQ?: InputMaybe<Scalars['String']['input']>
-  fromId_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  fromId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  label_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  label_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  label_EQ?: InputMaybe<Scalars['String']['input']>
-  label_IN?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>
-  label_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  toId_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  toId_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  toId_EQ?: InputMaybe<Scalars['String']['input']>
-  toId_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  toId_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-  type_CONTAINS?: InputMaybe<Scalars['String']['input']>
-  type_ENDS_WITH?: InputMaybe<Scalars['String']['input']>
-  type_EQ?: InputMaybe<Scalars['String']['input']>
-  type_IN?: InputMaybe<Array<Scalars['String']['input']>>
-  type_STARTS_WITH?: InputMaybe<Scalars['String']['input']>
-}
-
-export type FieldContextEdgesConnection = {
-  __typename?: 'FieldContextEdgesConnection'
-  aggregate: FieldContextEdgeAggregate
-  edges: Array<FieldContextEdgeEdge>
-  pageInfo: PageInfo
-  totalCount: Scalars['Int']['output']
 }
 
 export type FieldContextFieldContextParentContextAggregateSelection = {
@@ -13431,7 +13358,6 @@ export type Mutation = {
   createDeleteFieldContextResponses: CreateDeleteFieldContextResponsesMutationResponse
   createDeletePersonConnectionResponses: CreateDeletePersonConnectionResponsesMutationResponse
   createDocumentIngestThreads: CreateDocumentIngestThreadsMutationResponse
-  createFieldContextEdges: CreateFieldContextEdgesMutationResponse
   createFieldContexts: CreateFieldContextsMutationResponse
   createGoalPulses: CreateGoalPulsesMutationResponse
   createIngestDocumentResponses: CreateIngestDocumentResponsesMutationResponse
@@ -13504,7 +13430,6 @@ export type Mutation = {
    * context node and orphaned all nested content.
    */
   deleteFieldContext: DeleteFieldContextResponse
-  deleteFieldContextEdges: DeleteInfo
   deleteGoalPulses: DeleteInfo
   deleteIngestDocumentResponses: DeleteInfo
   deleteMarkNotificationResponses: DeleteInfo
@@ -13665,7 +13590,6 @@ export type Mutation = {
   updateDeleteFieldContextResponses: UpdateDeleteFieldContextResponsesMutationResponse
   updateDeletePersonConnectionResponses: UpdateDeletePersonConnectionResponsesMutationResponse
   updateDocumentIngestThreads: UpdateDocumentIngestThreadsMutationResponse
-  updateFieldContextEdges: UpdateFieldContextEdgesMutationResponse
   updateFieldContexts: UpdateFieldContextsMutationResponse
   updateGoalPulses: UpdateGoalPulsesMutationResponse
   updateIngestDocumentResponses: UpdateIngestDocumentResponsesMutationResponse
@@ -13771,10 +13695,6 @@ export type MutationCreateDeletePersonConnectionResponsesArgs = {
 
 export type MutationCreateDocumentIngestThreadsArgs = {
   input: Array<DocumentIngestThreadCreateInput>
-}
-
-export type MutationCreateFieldContextEdgesArgs = {
-  input: Array<FieldContextEdgeCreateInput>
 }
 
 export type MutationCreateFieldContextsArgs = {
@@ -13914,10 +13834,6 @@ export type MutationDeleteDocumentIngestThreadsArgs = {
 
 export type MutationDeleteFieldContextArgs = {
   contextId: Scalars['ID']['input']
-}
-
-export type MutationDeleteFieldContextEdgesArgs = {
-  where?: InputMaybe<FieldContextEdgeWhere>
 }
 
 export type MutationDeleteGoalPulsesArgs = {
@@ -14126,11 +14042,6 @@ export type MutationUpdateDeletePersonConnectionResponsesArgs = {
 export type MutationUpdateDocumentIngestThreadsArgs = {
   update?: InputMaybe<DocumentIngestThreadUpdateInput>
   where?: InputMaybe<DocumentIngestThreadWhere>
-}
-
-export type MutationUpdateFieldContextEdgesArgs = {
-  update?: InputMaybe<FieldContextEdgeUpdateInput>
-  where?: InputMaybe<FieldContextEdgeWhere>
 }
 
 export type MutationUpdateFieldContextsArgs = {
@@ -20352,10 +20263,6 @@ export type Query = {
    */
   documentsByFieldContext: Array<Document>
   documentsConnection: DocumentsConnection
-  fieldContextEdges: Array<FieldContextEdge>
-  /** @deprecated Please use the explicit field "aggregate" inside "fieldContextEdgesConnection" instead */
-  fieldContextEdgesAggregate: FieldContextEdgeAggregateSelection
-  fieldContextEdgesConnection: FieldContextEdgesConnection
   fieldContexts: Array<FieldContext>
   /** @deprecated Please use the explicit field "aggregate" inside "fieldContextsConnection" instead */
   fieldContextsAggregate: FieldContextAggregateSelection
@@ -20776,24 +20683,6 @@ export type QueryDocumentsConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<DocumentSort>>
   where?: InputMaybe<DocumentWhere>
-}
-
-export type QueryFieldContextEdgesArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>
-  offset?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldContextEdgeSort>>
-  where?: InputMaybe<FieldContextEdgeWhere>
-}
-
-export type QueryFieldContextEdgesAggregateArgs = {
-  where?: InputMaybe<FieldContextEdgeWhere>
-}
-
-export type QueryFieldContextEdgesConnectionArgs = {
-  after?: InputMaybe<Scalars['String']['input']>
-  first?: InputMaybe<Scalars['Int']['input']>
-  sort?: InputMaybe<Array<FieldContextEdgeSort>>
-  where?: InputMaybe<FieldContextEdgeWhere>
 }
 
 export type QueryFieldContextsArgs = {
@@ -27346,12 +27235,6 @@ export type UpdateDocumentIngestThreadsMutationResponse = {
   info: UpdateInfo
 }
 
-export type UpdateFieldContextEdgesMutationResponse = {
-  __typename?: 'UpdateFieldContextEdgesMutationResponse'
-  fieldContextEdges: Array<FieldContextEdge>
-  info: UpdateInfo
-}
-
 export type UpdateFieldContextsMutationResponse = {
   __typename?: 'UpdateFieldContextsMutationResponse'
   fieldContexts: Array<FieldContext>
@@ -31367,18 +31250,6 @@ export type GetAllPulsesQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
   resourcePulses: Array<{
     __typename: 'ResourcePulse'
@@ -31388,18 +31259,6 @@ export type GetAllPulsesQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
   storyPulses: Array<{
     __typename: 'StoryPulse'
@@ -31409,18 +31268,6 @@ export type GetAllPulsesQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
   coreValuePulses: Array<{
     __typename: 'CoreValuePulse'
@@ -31430,18 +31277,6 @@ export type GetAllPulsesQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
 }
 
@@ -31459,18 +31294,6 @@ export type GetAllPulsesByContextQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
   resourcePulses: Array<{
     __typename: 'ResourcePulse'
@@ -31480,18 +31303,6 @@ export type GetAllPulsesByContextQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
   storyPulses: Array<{
     __typename: 'StoryPulse'
@@ -31501,18 +31312,6 @@ export type GetAllPulsesByContextQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
   coreValuePulses: Array<{
     __typename: 'CoreValuePulse'
@@ -31522,18 +31321,6 @@ export type GetAllPulsesByContextQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
 }
 
@@ -31551,18 +31338,6 @@ export type GetAllPulsesBySpaceQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
   resourcePulses: Array<{
     __typename: 'ResourcePulse'
@@ -31572,18 +31347,6 @@ export type GetAllPulsesBySpaceQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
   storyPulses: Array<{
     __typename: 'StoryPulse'
@@ -31593,18 +31356,6 @@ export type GetAllPulsesBySpaceQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
   coreValuePulses: Array<{
     __typename: 'CoreValuePulse'
@@ -31614,18 +31365,6 @@ export type GetAllPulsesBySpaceQuery = {
     createdAt: any
     intensity?: number | null
     context: Array<{ __typename?: 'FieldContext'; id: string; title: string }>
-    createdBy: Array<{
-      __typename?: 'Person'
-      id: string
-      firstName: string
-      lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
-    }>
   }>
 }
 
@@ -31726,35 +31465,9 @@ export type GetAllMeSpacesQuery = {
       id: string
       firstName: string
       lastName: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
-    members: Array<{
-      __typename?: 'SpaceMembership'
-      id: string
-      role: SpaceRole
-      addedAt: any
-      member: Array<{
-        __typename?: 'Person'
-        id: string
-        firstName: string
-        lastName: string
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
-      }>
-    }>
-    contexts: Array<{
-      __typename?: 'FieldContext'
-      id: string
-      title: string
-      createdAt: any
-    }>
+    members: Array<{ __typename?: 'SpaceMembership'; id: string }>
+    contexts: Array<{ __typename?: 'FieldContext'; id: string }>
   }>
 }
 
@@ -31773,36 +31486,9 @@ export type GetAllWeSpacesQuery = {
       id: string
       firstName: string
       lastName: string
-      name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
-    members: Array<{
-      __typename?: 'SpaceMembership'
-      id: string
-      role: SpaceRole
-      addedAt: any
-      member: Array<{
-        __typename?: 'Person'
-        id: string
-        firstName: string
-        lastName: string
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
-      }>
-    }>
-    contexts: Array<{
-      __typename?: 'FieldContext'
-      id: string
-      title: string
-      createdAt: any
-    }>
+    members: Array<{ __typename?: 'SpaceMembership'; id: string }>
+    contexts: Array<{ __typename?: 'FieldContext'; id: string }>
   }>
 }
 
@@ -43858,42 +43544,6 @@ export const GetAllPulsesDocument = {
                     ],
                   },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
@@ -43917,42 +43567,6 @@ export const GetAllPulsesDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -43982,42 +43596,6 @@ export const GetAllPulsesDocument = {
                     ],
                   },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
@@ -44041,42 +43619,6 @@ export const GetAllPulsesDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44162,42 +43704,6 @@ export const GetAllPulsesByContextDocument = {
                     ],
                   },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
@@ -44249,42 +43755,6 @@ export const GetAllPulsesByContextDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44342,42 +43812,6 @@ export const GetAllPulsesByContextDocument = {
                     ],
                   },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
@@ -44429,42 +43863,6 @@ export const GetAllPulsesByContextDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44616,42 +44014,6 @@ export const GetAllPulsesBySpaceDocument = {
                     ],
                   },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
@@ -44766,42 +44128,6 @@ export const GetAllPulsesBySpaceDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44922,42 +44248,6 @@ export const GetAllPulsesBySpaceDocument = {
                     ],
                   },
                 },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
-                    ],
-                  },
-                },
               ],
             },
           },
@@ -45072,42 +44362,6 @@ export const GetAllPulsesBySpaceDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                    ],
-                  },
-                },
-                {
-                  kind: 'Field',
-                  name: { kind: 'Name', value: 'createdBy' },
-                  selectionSet: {
-                    kind: 'SelectionSet',
-                    selections: [
-                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'firstName' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'lastName' },
-                      },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45626,23 +44880,6 @@ export const GetAllMeSpacesDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45653,49 +44890,6 @@ export const GetAllMeSpacesDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'addedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'member' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'firstName' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'lastName' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45706,11 +44900,6 @@ export const GetAllMeSpacesDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
                     ],
                   },
                 },
@@ -45757,24 +44946,6 @@ export const GetAllWeSpacesDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
-                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45785,49 +44956,6 @@ export const GetAllWeSpacesDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'role' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'addedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'member' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'firstName' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'lastName' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45838,11 +44966,6 @@ export const GetAllWeSpacesDocument = {
                     kind: 'SelectionSet',
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
-                      { kind: 'Field', name: { kind: 'Name', value: 'title' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'createdAt' },
-                      },
                     ],
                   },
                 },
