@@ -3,6 +3,7 @@ import type { Driver } from 'neo4j-driver'
 import { anchorDocument } from './document-storage'
 import {
   DOCUMENT_INGEST_STATUS,
+  INGEST_EXTRACTION_FAILED_MESSAGE,
   INGEST_UNEXPECTED_FAILURE_MESSAGE,
   MAX_IN_FLIGHT_INGESTS_PER_USER,
   countInFlightIngestsForUser,
@@ -293,11 +294,27 @@ export async function handleIngestDocument(
     return { ok: false, reason: run.reason, error: run.error }
   }
 
-  await markDocumentIngestComplete({
-    driver: deps.driver,
-    documentId: enqueued.documentId,
-    ...countExecutedToolCalls(run.executedToolCalls),
-  })
+  // GOAL-367: a terminal status is not enough — it has to be the RIGHT one.
+  // `run.ok` stays true when the extractor itself was refused (quota, rate
+  // limit, timeout), and COMPLETE on that is strictly worse than FAILED: the
+  // document reads finished with a null status message, so the ingest chip
+  // shows nothing wrong while the cron (PENDING only) and the stalled sweep
+  // (PROCESSING only) both step over it and `ingestAttempts` never leaves 0.
+  // Same correction as the cron worker and the import path, kept here so the
+  // three entry points cannot drift on what a failed extraction looks like.
+  if (run.extractionFailed) {
+    await markDocumentIngestFailed({
+      driver: deps.driver,
+      documentId: enqueued.documentId,
+      statusMessage: INGEST_EXTRACTION_FAILED_MESSAGE,
+    })
+  } else {
+    await markDocumentIngestComplete({
+      driver: deps.driver,
+      documentId: enqueued.documentId,
+      ...countExecutedToolCalls(run.executedToolCalls),
+    })
+  }
 
   return {
     ok: true,

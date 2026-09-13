@@ -42,6 +42,13 @@ import { useArticleImportJobList } from './use-article-import-job-list'
  * because the hook has to ask (sessionStorage first, then the server) before
  * "no job" is a fact rather than a guess.
  *
+ * GOAL-366 added the sheet-level notice in the preview step: a sheet with no
+ * `source_url` column still imports exactly as it always did, but every pulse
+ * then links to the address we read it from, and nothing said that column
+ * existed. Which link a pulse points at is NOT a choice offered here — that is
+ * parked on a data-retention decision, because picking `url` would leave the
+ * member's `source_url` value with nowhere to go.
+ *
  * Rendered through a portal to `document.body` (GOAL-327). The field-context
  * page that owns this modal is mounted inside `CanvasHost`'s per-view
  * visibility cascade, which flips the whole dashboard subtree to
@@ -61,6 +68,12 @@ interface ImportArticlesModalProps {
   onClose: () => void
   /** Called as rows land — parent refetches pulses/people. */
   onImported: () => void
+  /**
+   * Called the moment a sheet is queued, before any row has landed (GOAL-365)
+   * — the page's status section polls the same list and goes quiet the same
+   * way, and without this it would learn about the job only on close.
+   */
+  onJobQueued: () => void
 }
 
 export function ImportArticlesModal({
@@ -68,6 +81,7 @@ export function ImportArticlesModal({
   fieldContextId,
   onClose,
   onImported,
+  onJobQueued,
 }: ImportArticlesModalProps) {
   const [hasPreview, setHasPreview] = useState(false)
   const [fileName, setFileName] = useState('')
@@ -106,13 +120,20 @@ export function ImportArticlesModal({
   // sessionStorage or the list); on its own it made a second concurrent import
   // invisible here while the page showed it plainly.
   //
-  // `refreshKey` is fixed: this list is only ever read while the modal is open
-  // and its own poll already keeps it current, so there is no outside event to
-  // force a refetch on. `onRowsLanded` is shared with the tracked job's hook —
-  // both mean the same thing to the page, which is "the field changed".
+  // `refreshKey` is bumped on every submit (see `handleSubmit`). The list's
+  // poll stops as soon as nothing it can see is in flight, so a modal opened
+  // over a quiet field holds a dead poll — and its first, empty response — for
+  // the rest of its life. "Import another sheet" queues the second import
+  // without ever closing the modal, so on that path the first sheet's job
+  // never reached `fieldJobs` and the panel was back to speaking for one job
+  // while the page listed both: this ticket's bug by another route. Re-keying
+  // restarts the poll at the moment the job being replaced becomes one of the
+  // "others". `onRowsLanded` is shared with the tracked job's hook — both mean
+  // the same thing to the page, "the field changed".
+  const [listRefreshKey, setListRefreshKey] = useState(0)
   const { jobs: fieldJobs } = useArticleImportJobList({
     fieldContextId,
-    refreshKey: 0,
+    refreshKey: listRefreshKey,
     onRowsLanded: onImported,
   })
 
@@ -122,53 +143,6 @@ export function ImportArticlesModal({
   // identically and should read the same way.
   const lacksSourceUrlColumn =
     validRows.length > 0 && validRows.every((candidate) => !candidate.sourceUrl)
-
-  /**
-   * GOAL-366 — which column the imported pulses should point at.
-   *
-   * Only a real choice when the sheet gave us two links that actually differ.
-   * A row whose `source_url` repeats its `url` (some sheets fill both with the
-   * same address) is not two options, and neither is a sheet with one link
-   * column — there the single link is both what we read and what the pulse
-   * shows, which is how every pre-GOAL-355 sheet already behaves.
-   */
-  const [displayLink, setDisplayLink] = useState<'source_url' | 'url'>(
-    'source_url'
-  )
-  const hasTwoDistinctLinks = useMemo(
-    () =>
-      validRows.some(
-        (candidate) =>
-          candidate.sourceUrl && candidate.sourceUrl !== candidate.url
-      ),
-    [validRows]
-  )
-
-  /**
-   * The rows as they will actually be submitted.
-   *
-   * Choosing `url` drops `sourceUrl` rather than copying the url over it: the
-   * pulse's `location` already falls back to `url` when there is no
-   * `source_url`, so dropping produces the requested display without writing
-   * the address we fetched into a property that means "where the member found
-   * it". The trade — the unpicked link is not kept — is the one deliberately
-   * accepted for this over threading a display flag through the queue; the
-   * fieldset says so before they confirm.
-   *
-   * The fetch target is never touched. `url` is what the worker reads, and no
-   * choice here can change that.
-   */
-  const rowsToImport = useMemo(
-    () =>
-      displayLink === 'url' && hasTwoDistinctLinks
-        ? validRows.map((candidate) => {
-            const next = { ...candidate }
-            delete next.sourceUrl
-            return next
-          })
-        : validRows,
-    [displayLink, hasTwoDistinctLinks, validRows]
-  )
 
   const inFlight = job !== null && isArticleImportInFlight(job.status)
   // Everything else this member has running here. Excluding the tracked job by
@@ -206,7 +180,6 @@ export function ImportArticlesModal({
     setValidRows([])
     setRowErrors([])
     setPickError(null)
-    setDisplayLink('source_url')
     setSupersededJobId(null)
     clear()
   }, [clear])
@@ -220,6 +193,22 @@ export function ImportArticlesModal({
     if (!inFlight && !isRecovering) reset()
     onClose()
   }, [inFlight, isRecovering, isSubmitting, onClose, reset])
+
+  /**
+   * Queue the previewed rows, then re-read the field's job list — here and on
+   * the page behind, which polls the same list and goes quiet the same way.
+   *
+   * Submitting is the one moment the list is guaranteed to be behind: it has
+   * just gained a job, and the import it replaces as the tracked one has just
+   * become an "other" this panel has to name. `submit` resolves after the 202,
+   * so by now the server can see both. A failed submit re-reads for nothing,
+   * which is cheaper than working out whether it needed to.
+   */
+  const handleSubmit = useCallback(async () => {
+    await submit(validRows)
+    setListRefreshKey((key) => key + 1)
+    onJobQueued()
+  }, [onJobQueued, submit, validRows])
 
   const handleFileSelected = useCallback(async (picked: File | null) => {
     if (!picked) return
@@ -365,7 +354,7 @@ export function ImportArticlesModal({
                 reported it as a bug twice, on two different sheets, because
                 nothing here mentioned the column existed. Said once for the
                 sheet rather than per row: it is a property of the file. */}
-            {!lacksSourceUrlColumn ? null : (
+            {lacksSourceUrlColumn && (
               <div className="shrink-0 flex items-start gap-2 rounded-xl border border-gp-glass-border bg-gp-glass-bg/40 px-3 py-2 text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
                 <span
                   className="material-symbols-outlined text-[14px] shrink-0 text-gp-ink-muted"
@@ -382,58 +371,11 @@ export function ImportArticlesModal({
               </div>
             )}
 
-            {/* GOAL-366 — the choice only exists when the sheet actually gave
-                us two different links to choose between. One link column has
-                nothing to decide: that link is both what we read and what the
-                pulse points at, which is how every pre-GOAL-355 sheet already
-                behaves. Offering a picker there would be a control whose only
-                setting is the one it already has. */}
-            {hasTwoDistinctLinks && (
-              <fieldset className="shrink-0 rounded-xl border border-gp-glass-border bg-gp-glass-bg/40 px-3 py-2.5 min-w-0">
-                <legend className="px-1 text-[11px] font-semibold text-gp-ink-strong dark:text-white">
-                  Which link should each pulse point at?
-                </legend>
-                <p className="mb-2 text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                  We always read the <span className="font-semibold">url</span>{' '}
-                  column — that choice is not affected.
-                </p>
-                <div className="flex flex-col gap-1.5 sm:flex-row sm:gap-4">
-                  {(
-                    [
-                      ['source_url', 'The source_url column'],
-                      ['url', 'The url column, same as we read'],
-                    ] as const
-                  ).map(([value, label]) => (
-                    <label
-                      key={value}
-                      className="flex items-center gap-2 text-[11px] text-gp-ink-strong dark:text-white min-w-0 cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="display-link"
-                        value={value}
-                        checked={displayLink === value}
-                        onChange={() => setDisplayLink(value)}
-                        className="shrink-0 accent-gp-primary"
-                      />
-                      <span className="truncate">{label}</span>
-                    </label>
-                  ))}
-                </div>
-                {displayLink === 'url' && (
-                  <p className="mt-2 text-[11px] text-gp-ink-muted dark:text-gp-ink-soft">
-                    The source_url values will not be kept — re-import to get
-                    them back.
-                  </p>
-                )}
-              </fieldset>
-            )}
-
             <div className="overflow-y-auto min-h-0 space-y-2 pr-1">
               {rowErrors.map((rowError) => (
                 <RowIssueCard key={`err-${rowError.row}`} error={rowError} />
               ))}
-              {rowsToImport.map((row) => (
+              {validRows.map((row) => (
                 <PreviewRowCard key={`row-${row.row}`} row={row} />
               ))}
             </div>
@@ -500,7 +442,7 @@ export function ImportArticlesModal({
               </button>
               <button
                 type="button"
-                onClick={() => void submit(rowsToImport)}
+                onClick={() => void handleSubmit()}
                 disabled={isSubmitting || validRows.length === 0}
                 className="px-5 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >

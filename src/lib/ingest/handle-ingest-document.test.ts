@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { driver } from '@/lib/neo4j/driver'
 import { createMemoryBlobStore } from './blob-store'
 import { seedAndIngest } from './__test-utils__/handle-ingest-document-helper'
+import { INGEST_EXTRACTION_FAILED_MESSAGE } from './document-ingest-queue'
 import type { ExtractionModelClient } from './extraction-model-invoker'
 
 /**
@@ -210,12 +211,24 @@ describe('handleIngestDocument — end-to-end orchestration (Slice 1)', () => {
 
     const session = driver.session()
     try {
-      // Document still persists
+      // Document still persists — and, GOAL-367, persists as FAILED. This
+      // assertion used to stop at "the node is still there", which was true
+      // of the bug too: the document survived, stamped COMPLETE with a null
+      // status message, so no chip flagged it and neither cron could reach it
+      // (one claims PENDING, the stalled sweep touches PROCESSING). Storing a
+      // terminal status is not the invariant; storing the RIGHT one is.
       const docRows = await session.run(
-        `MATCH (d:ResourcePulse {id: $docId}) RETURN d.sourceFilename AS filename`,
+        `MATCH (d:ResourcePulse {id: $docId})
+         RETURN d.sourceFilename AS filename,
+                d.ingestStatus AS status,
+                d.ingestStatusMessage AS message`,
         { docId: result.documentId }
       )
       expect(docRows.records).toHaveLength(1)
+      expect(docRows.records[0].get('status')).toBe('FAILED')
+      expect(docRows.records[0].get('message')).toBe(
+        INGEST_EXTRACTION_FAILED_MESSAGE
+      )
 
       // Assistant turn carries a failure message, no tool-call parts
       const turnRows = await session.run(

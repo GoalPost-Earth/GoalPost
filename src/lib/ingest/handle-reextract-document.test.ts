@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { driver } from '@/lib/neo4j/driver'
 import { createMemoryBlobStore } from './blob-store'
+import { INGEST_EXTRACTION_FAILED_MESSAGE } from './document-ingest-queue'
 import {
   reExtractWithSingleClient,
   seedAndIngest,
@@ -285,7 +286,7 @@ describe('handleReExtractDocument — slice 6', () => {
   )
 
   itIf(true)(
-    'failure-path re-extract: model throws → success-shaped result with empty pendingApprovals, no tool-call parts, Document persists, Log captures the failure outcome',
+    'failure-path re-extract: model throws → success-shaped result with empty pendingApprovals, no tool-call parts, an already-COMPLETE Document keeps COMPLETE (GOAL-367), Log captures the failure outcome',
     async () => {
       if (!neo4jAvailable) return
       const blobStore = createMemoryBlobStore()
@@ -352,6 +353,84 @@ describe('handleReExtractDocument — slice 6', () => {
           logRows.records[0].get('metadata') as string
         ) as { outcome?: string }
         expect(metadata.outcome).toBe('failure')
+
+        // GOAL-367 — this document was COMPLETE before the re-extract, and a
+        // refused re-read must NOT drag it down to FAILED. Its earlier
+        // extraction is still in the graph and still rendered on the row, so
+        // "could not read anything out of it" would be false copy sitting
+        // directly above the entities it did read. The refusal is reported
+        // through the thread and the Log outcome asserted above, not by
+        // rewriting the status of a document that is fine.
+        const docRows = await session.run(
+          `MATCH (d:ResourcePulse {id: $documentId})
+           RETURN d.ingestStatus AS status, d.ingestStatusMessage AS message`,
+          { documentId: upload.documentId }
+        )
+        expect(docRows.records).toHaveLength(1)
+        expect(docRows.records[0].get('status')).toBe('COMPLETE')
+        expect(docRows.records[0].get('message')).toBeNull()
+      } finally {
+        await session.close()
+      }
+    }
+  )
+
+  itIf(true)(
+    'GOAL-367: a re-extract that is refused again leaves an already-FAILED document FAILED, so the recovery path survives a provider outage',
+    async () => {
+      if (!neo4jAvailable) return
+      const blobStore = createMemoryBlobStore()
+      const refusingClient: ExtractionModelClient = async () => {
+        // The shape a monthly spend cap actually produces.
+        throw new Error('429 RESOURCE_EXHAUSTED: monthly spend limit reached')
+      }
+
+      // Upload during the outage — lands FAILED (the upload-path half of the
+      // same fix), which is the state a member sees and tries to recover from.
+      const upload = await seedAndIngest(
+        { driver, blobStore, modelClient: refusingClient },
+        {
+          currentUserId: ids.user,
+          fieldContextId: ids.fieldContext,
+          filename: 'capped.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from('Anything at all.', 'utf8'),
+          hint: null,
+        }
+      )
+      expect(upload.ok).toBe(true)
+      if (!upload.ok) throw new Error('unreachable')
+
+      const session = driver.session()
+      try {
+        const before = await session.run(
+          `MATCH (d:ResourcePulse {id: $id}) RETURN d.ingestStatus AS status`,
+          { id: upload.documentId }
+        )
+        expect(before.records[0].get('status')).toBe('FAILED')
+
+        // The member hits Re-extract while the cap is still in force. This is
+        // the exact move the ticket's own remedy tells them to make, so it is
+        // the one that must not destroy the state that made it possible.
+        const reExtract = await reExtractWithSingleClient(
+          { driver, blobStore, modelClient: refusingClient },
+          { currentUserId: ids.user, documentId: upload.documentId }
+        )
+        expect(reExtract.ok).toBe(true)
+
+        const after = await session.run(
+          `MATCH (d:ResourcePulse {id: $id})
+           RETURN d.ingestStatus AS status, d.ingestStatusMessage AS message`,
+          { id: upload.documentId }
+        )
+        // Before the fix this read COMPLETE with a null message: the retry
+        // silently consumed its own recovery state, and nothing — not the
+        // chip, not the cron, not the stalled sweep — could reach the
+        // document again.
+        expect(after.records[0].get('status')).toBe('FAILED')
+        expect(after.records[0].get('message')).toBe(
+          INGEST_EXTRACTION_FAILED_MESSAGE
+        )
       } finally {
         await session.close()
       }
