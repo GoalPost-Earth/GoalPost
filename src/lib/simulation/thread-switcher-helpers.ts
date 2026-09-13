@@ -11,8 +11,9 @@ import type { ThreadSummary } from './conversation-thread-client'
 
 /**
  * Display title for a thread row. Falls back through:
- *   1. Persisted title (`Ingest: <filename>` or any user-named thread)
- *   2. "Ingest" sentinel for ingest threads with no title
+ *   1. Persisted title (`Ingest: <filename>`, `Import: 12 articles`, or any
+ *      user-named thread)
+ *   2. A kind sentinel for a titleless ingest / import thread
  *   3. The first user turn's snippet, trimmed to 60 chars
  *   4. Generic "Conversation"
  *
@@ -24,6 +25,11 @@ export function deriveDisplayTitle(thread: Pick<ThreadSummary, 'title' | 'kind' 
   const trimmed = (thread.title ?? '').trim()
   if (trimmed.length > 0) return trimmed
   if (thread.kind === 'ingest') return 'Ingest'
+  // GOAL-359 — a bulk article import opens its own thread, and is always
+  // titled at creation. This is the same belt-and-braces the ingest line above
+  // is: a thread whose title write somehow lost must still name its kind
+  // rather than fall through to the synthesized user turn.
+  if (thread.kind === 'import') return 'Import'
   const snippet = (thread.snippet ?? '').trim()
   if (snippet.length > 0) {
     return snippet.length > 60 ? `${snippet.slice(0, 57)}…` : snippet

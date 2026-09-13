@@ -184,6 +184,24 @@ export function ImportArticlesModal({
     clear()
   }, [clear])
 
+  /**
+   * GOAL-359 — queue the batch, then step out of the way.
+   *
+   * A successful submit opens a chat thread dedicated to this import (the hook
+   * emits the event; the studio shell hydrates the assistant into it), and that
+   * thread is now the place to watch it from. Leaving the modal up would park a
+   * second progress panel directly over the one the member was just handed.
+   *
+   * Only on success, and only when a thread actually opened: a submit that
+   * failed has an error to show, and an import with no thread still needs the
+   * panel below. Nothing is reset on the way out — the job is in flight, so
+   * reopening Import Articles still recovers straight into it (GOAL-357).
+   */
+  const handleSubmit = useCallback(async () => {
+    const threadId = await submit(validRows)
+    if (threadId) onClose()
+  }, [onClose, submit, validRows])
+
   const handleClose = useCallback(() => {
     if (isSubmitting) return
     // A finished import is dismissed for good; one still running is only

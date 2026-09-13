@@ -891,6 +891,129 @@ export async function listArticleImportJobsForRequester(
   }
 }
 
+/** A recent import of the requester's, with its field resolved by name. */
+export interface RecentArticleImportJobEntry extends ArticleImportJobListEntry {
+  /**
+   * Title of the enclosing FieldContext. A NAME, because the only consumer is
+   * the chat assistant and kb/07 Rule 3 forbids handing the model a bare id to
+   * relay. Nullable only defensively — a job whose context is missing, deleted
+   * or no longer visible is filtered out entirely rather than returned unnamed.
+   */
+  fieldContextTitle: string | null
+}
+
+/**
+ * The requester's most recent imports across every field, newest first
+ * (GOAL-359).
+ *
+ * `listArticleImportJobsForRequester` above answers "what is happening in THIS
+ * field", which is what the field-context status section needs. The assistant
+ * needs the other question — "what imports do I have running" — because chat is
+ * reachable from anywhere, including surfaces with no active field at all, and
+ * "how's my import going?" must not depend on the member having navigated back
+ * to the right field first.
+ *
+ * Anchored on the `Person` id index and expanded backwards along `REQUESTED_BY`
+ * rather than scanning `:ArticleImportJob`: one member's jobs are a handful of
+ * edges, the label is every job the platform has ever run. `DISTINCT j`
+ * absorbs a duplicated edge, and the field title is collected rather than
+ * joined so a duplicate `HAS_IMPORT_JOB` cannot fan the row out.
+ *
+ * The context match is a HARD filter on two counts, and both are load-bearing.
+ *
+ * Soft-deleted (GOAL-319): an import under a deleted field is unreachable from
+ * every other surface — the drain skips it, the status section never lists it —
+ * so surfacing it in chat alone would have the assistant announce a running
+ * import for a subtree the member deleted.
+ *
+ * Still-visible: `REQUESTED_BY` scopes the JOB, and the row counts are the
+ * member's own work either way, but `FieldContext.title` is Space-owned content
+ * whose access inherits from the Space (kb/02-user-roles.md). This is the first
+ * import read to project it, and it is reachable from any chat surface with no
+ * scope at all, so without the check a member removed from a WeSpace would keep
+ * reading that field's *current* name from one question forever — including a
+ * rename made after they left.
+ */
+export async function listRecentArticleImportJobsForUser(
+  driver: Driver,
+  userId: string,
+  limit = MAX_LISTED_ARTICLE_IMPORT_JOBS
+): Promise<RecentArticleImportJobEntry[]> {
+  if (!userId) return []
+  const session = driver.session()
+  try {
+    const result = await session.executeRead(async (tx) =>
+      tx.run(
+        `
+        MATCH (p:Person {id: $userId})<-[:REQUESTED_BY]-(j:ArticleImportJob)
+        WITH DISTINCT p, j
+        // Not OPTIONAL. Every sibling read treats a soft-deleted context as a
+        // hard filter (listArticleImportJobsForRequester,
+        // countInFlightArticleImportsForUser, createArticleImportJob), and
+        // an import under one is unreachable from every other surface — no
+        // drain claims it, no status section lists it. Reporting it in chat
+        // alone would have the assistant announce "the import into a field is
+        // underway" for a subtree the member deleted.
+        MATCH (c:FieldContext)-[:HAS_IMPORT_JOB]->(j)
+          WHERE c.deletedAt IS NULL
+            // Same OWNS / HAS_MEMBER pair loadEditableContext gates the enqueue
+            // on. EXISTS-wrapped so a Space with two membership rows can't fan
+            // this row out, and re-checked at READ time rather than trusted
+            // from enqueue time — the point is to notice a membership that has
+            // since been revoked.
+            AND EXISTS {
+              MATCH (space:Space)-[:HAS_CONTEXT]->(c)
+              WHERE (p)-[:OWNS]->(space)
+                 OR EXISTS {
+                   MATCH (space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(p)
+                 }
+            }
+        // collect(...)[0] rather than a join, so a duplicated HAS_IMPORT_JOB
+        // edge cannot fan one job into two rows.
+        WITH j, collect(c.title)[0] AS fieldContextTitle
+        // ORDER BY + LIMIT sit BELOW the filter, and have to. Bounding first
+        // would be cheaper — collect() is a blocking EagerAggregation, so a Top
+        // above it cannot push down, and on a 600-job fixture the pushed-down
+        // form measured 1,863 dbHits against 4,833. But the filter above is now
+        // a hard MATCH, so taking the five newest jobs BEFORE it can hand back
+        // three rows, or none, while the member has five visible imports. Cost
+        // here is O(the member's visible jobs), which FINISHED_JOB_RETENTION_DAYS
+        // already bounds at 30 days; a wrong answer is not bounded by anything.
+        //
+        // coalesce: null sorts LARGEST in Neo4j, so a corrupt job with no
+        // createdAt would otherwise pin to the top as "newest". Sink it.
+        ORDER BY coalesce(j.createdAt, datetime({epochMillis: 0})) DESC
+        LIMIT toInteger($limit)
+        RETURN j.id AS jobId,
+               j.status AS status,
+               j.statusMessage AS statusMessage,
+               j.totalRows AS totalRows,
+               coalesce(j.rowOutcomes, []) AS rowOutcomes,
+               j.createdAt.epochMillis AS createdAtMs,
+               j.statusUpdatedAt.epochMillis AS statusUpdatedAtMs,
+               fieldContextTitle
+        `,
+        { userId, limit }
+      )
+    )
+    return result.records.map((record) => ({
+      jobId: record.get('jobId') as string,
+      status:
+        (record.get('status') as ArticleImportStatus) ??
+        ARTICLE_IMPORT_STATUS.pending,
+      statusMessage: (record.get('statusMessage') as string | null) ?? null,
+      totalRows: Number(record.get('totalRows') ?? 0),
+      outcomes: parseOutcomes(record.get('rowOutcomes')),
+      createdAtMs: Number(record.get('createdAtMs') ?? 0),
+      statusUpdatedAtMs: Number(record.get('statusUpdatedAtMs') ?? 0),
+      fieldContextTitle:
+        (record.get('fieldContextTitle') as string | null) ?? null,
+    }))
+  } finally {
+    await session.close()
+  }
+}
+
 /**
  * Read a job for the member polling it. Scoped to the requester by the
  * `REQUESTED_BY` edge — the person who submitted the sheet is the only one who

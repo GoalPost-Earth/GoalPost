@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { chatApiAuthHeaders } from '@/lib/simulation/conversation-thread-client'
+import { emitOpenAssistantThread } from '@/lib/simulation/assistant-panel-events'
 import {
   ARTICLE_IMPORT_STATUS,
   isArticleImportInFlight,
@@ -112,7 +113,13 @@ export interface UseArticleImportJob {
   isRecovering: boolean
   isSubmitting: boolean
   error: string | null
-  submit: (rows: ArticleImportRowInput[]) => Promise<void>
+  /**
+   * Queue a batch. Resolves with the id of the chat thread the import opened
+   * (GOAL-359), or `null` when the submit failed or no thread could be opened —
+   * so the caller can hand the member over to that thread and knows when there
+   * is nothing to hand them over to.
+   */
+  submit: (rows: ArticleImportRowInput[]) => Promise<string | null>
   /** Forget the finished job so the modal can start a fresh import. */
   clear: () => void
   setError: (message: string | null) => void
@@ -324,8 +331,8 @@ export function useArticleImportJob({
   }, [adoptJobId, fieldContextId, jobId])
 
   const submit = useCallback(
-    async (rows: ArticleImportRowInput[]) => {
-      if (rows.length === 0) return
+    async (rows: ArticleImportRowInput[]): Promise<string | null> => {
+      if (rows.length === 0) return null
       setIsSubmitting(true)
       setError(null)
       try {
@@ -337,7 +344,7 @@ export function useArticleImportJob({
           body: JSON.stringify({ fieldContextId, rows }),
         })
         const body = (await res.json().catch(() => null)) as
-          | { jobId?: string; error?: string }
+          | { jobId?: string; threadId?: string | null; error?: string }
           | null
 
         if (res.status === 429) {
@@ -375,11 +382,21 @@ export function useArticleImportJob({
           })
           adoptJobId(body.jobId)
           setIsRecovering(false)
-          return
+          // GOAL-359 — hand the member over to the thread the import opened,
+          // so following it is a place they can sit in rather than a modal
+          // they have to keep reopening. The studio shell listens for this and
+          // hydrates the assistant into that thread.
+          const threadId =
+            typeof body.threadId === 'string' && body.threadId
+              ? body.threadId
+              : null
+          if (threadId) emitOpenAssistantThread(threadId)
+          return threadId
         }
         throw new Error(body?.error ?? `Import failed (${res.status}).`)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Import failed.')
+        return null
       } finally {
         setIsSubmitting(false)
       }
