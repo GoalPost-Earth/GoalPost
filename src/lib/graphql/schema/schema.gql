@@ -591,26 +591,80 @@ GET_LOGGED_IN_USER — which fires on every protected page — sat at the bottom
 of that table and blew the 60 s `maxDuration` on `/api/graphql`
 (src/app/api/graphql/route.ts), which is what surfaced as the profile page
 hanging forever. A TYPE-level filter is emitted exactly ONCE regardless of how
-many fields are selected, so the cost is now flat in field count: this schema
-now emits 29 EXISTS whether the caller selects one gated field or all twelve
-(`person-pii-gate-plan-size.test.ts` asserts that equality). End to end on the
-same fixture, GET_PERSON_PROFILE went from 20,442 ms cold / 168 dbHits /
-38,761 characters of Cypher to 1,553 ms / 33 dbHits / 7,510 characters.
+many fields are selected, so the cost is now flat in field count — the same
+number of EXISTS whether the caller selects one gated field or all twelve
+(`person-pii-gate-plan-size.test.ts` asserts that equality; it was 29 under
+GOAL-275 and is 4 since GOAL-372, below). End to end on the same fixture,
+GET_PERSON_PROFILE went from 20,442 ms cold / 168 dbHits / 38,761 characters of
+Cypher to 1,553 ms / 33 dbHits / 7,510 characters.
 
-Rejected alternative, for the record: keeping the fields on `Person` and
-pointing their filters at a single `@cypher` Boolean gate. That does cut
-planning, but `@neo4j/graphql` emits a cypher-field filter as
-`MATCH (this:Person) CALL { … } WITH * WHERE this.id = $param`, and Neo4j will
-NOT push a predicate below a `CALL` subquery (measured: 3 dbHits with the
-predicate before the CALL, 3,021 after). The gate therefore ran for every
-Person in the database on a single-row lookup — 168 dbHits became 146,453,
-scaling with database size. A type-level filter stays declarative and inlines
-into the `WHERE`, so the index seek survives.
+HOW THE GATE COMPILES (GOAL-372) — the filter below is a single `@cypher`
+Boolean, `callerCanRead`, not a nested `where`. The five branches used to be
+written declaratively (`ownsSpaces_SOME: { OR: [...] }` and friends); the
+library expanded that into ~29 nested `EXISTS {` blocks at every selection
+site, and Neo4j's planning cost is super-linear in predicate count (ADR-010).
+One compact predicate the library inlines verbatim costs 4.
+
+The deterministic part of the measurement — same numbers on every run, on any
+machine:
+
+  | document           | EXISTS  | emitted Cypher   |
+  | GET_PERSON_PROFILE | 65 → 40 | 12,782 → 10,684  |
+  | GET_LOGGED_IN_USER | 45 → 20 |  9,428 →  7,332  |
+  | GET_ALL_ME_SPACES  | 77 → 27 | 13,135 →  8,366  |
+
+and dbHits on dev, which also reproduce exactly: an unbounded
+`people { privateProfile { email } }` over all 639 Person nodes goes
+14,439 → 10,744 (−26%); the noisiest single DENY case (a CONNECTED_TO-only
+caller) 157 → 73 (−53%). A single-row lookup goes 2 → 4, the +2 being the
+caller's own index seek.
+
+BE CAREFUL WITH WALL CLOCK HERE. Cold planning (`CYPHER replan=force`) improves
+— ~18–35% across the three documents, order-alternated, n=21 — but dev is a
+shared Aura instance and an independent reviewer measured the same statements
+as flat. Treat the millisecond figure as noisy and the EXISTS / dbHits figures
+as the evidence. With a WARM plan cache, which is what production is in
+essentially all the time, both versions are 24–25 ms and indistinguishable.
+
+So the case for this change is HEADROOM, not latency: predicate count is what
+went super-linear and blew the 60 s `maxDuration` under GOAL-275 at 302 EXISTS,
+and this removes ~25 predicates from every Person selection site.
+
+(The EXISTS that remain belong to the Space / FieldContext / SpaceMembership
+visibility rules reached through `ownsSpaces` / `memberOf` / `contexts`, not to
+this gate.)
+
+WHY A `@cypher` FIELD IS SAFE IN A FILTER *HERE*, AND ONLY HERE. ADR-010's
+second rule says not to do this, and that rule still stands for every other
+type. The library emits a cypher-field filter as
+`MATCH (n:Label) CALL { <gate> } WITH * WHERE <gate result> = true`, and Neo4j
+will NOT push a predicate below a `CALL` subquery. On a type with a root query
+— `Person`, say — nothing has narrowed the rows before the CALL opens, so the
+gate runs once per node of that label: a single-row lookup measured 168 dbHits
+declaratively and 146,453 through the CALL, scaling with database size. That is
+why these fields are not on `Person`.
+
+The exception this type qualifies for is narrow and testable:
+`@query(read: false, aggregate: false)` means `PersonPrivateProfile` has no
+root query, and it is reachable ONLY through `Person.privateProfile` on an
+already-resolved `Person`. The caller's own `where` has therefore already been
+applied, on the initial MATCH, before any CALL opens. Re-proven with PROFILE on
+dev rather than assumed: exactly 1 row enters the gate CALL, every node access
+is a `NodeUniqueIndexSeek` and there is no `NodeByLabelScan` anywhere in the
+plan; a single-row lookup goes from 2 to 4 total dbHits, the +2 being the
+caller's own index seek. `person-pii-gate-plan-size.test.ts` pins the ordering
+that makes this true ("applies the caller filter BEFORE the gate").
+
+If you add a root query to this type, or reach it any other way, this argument
+evaporates and the gate becomes a full label scan. Re-measure before you do.
 
 AUTHORIZATION — the policy is byte-for-byte the rule that used to be
 duplicated on 14 fields, and is documented in full on `Person` above. A read is
 authorized when the caller is the person, created them, shares a Space with
-them, or can view a FieldContext holding them.
+them, or can view a FieldContext holding them. GOAL-372 changed how that rule
+compiles, never who it admits: checked on dev across all 12 user accounts ×
+all 639 `:Person` nodes (7,668 pairs), old rule and new predicate granted the
+same 399 and disagreed on none.
 
 Two consequences of the `contexts_SOME` branch worth stating, both unchanged
 from the original rule and both covered by
@@ -640,45 +694,7 @@ type PersonPrivateProfile
   @subscription(events: [])
   @authorization(
     filter: [
-      {
-        operations: [READ]
-        where: {
-          node: {
-            OR: [
-              { id_EQ: "$jwt.user.id" }
-              { createdBy_SOME: { id_EQ: "$jwt.user.id" } }
-              {
-                ownsSpaces_SOME: {
-                  OR: [
-                    { owner_SOME: { id_EQ: "$jwt.user.id" } }
-                    { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
-                  ]
-                }
-              }
-              {
-                memberOf_SOME: {
-                  space_SOME: {
-                    OR: [
-                      { owner_SOME: { id_EQ: "$jwt.user.id" } }
-                      { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
-                    ]
-                  }
-                }
-              }
-              {
-                contexts_SOME: {
-                  OR: [
-                    { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                    { meSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } }
-                    { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                    { weSpace_SOME: { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } } }
-                  ]
-                }
-              }
-            ]
-          }
-        }
-      }
+      { operations: [READ], where: { node: { callerCanRead_EQ: true } } }
     ]
   ) {
   """
@@ -781,6 +797,122 @@ type PersonPrivateProfile
   createdBy: [Person!]!
     @relationship(type: "CREATED_BY", direction: OUT, nestedOperations: [], aggregate: false)
     @selectable(onRead: false, onAggregate: false)
+
+  """
+  GOAL-372 — the whole GOAL-275 branch table (kb/02-user-roles.md, "Person PII
+  — the `privateProfile` gate") as ONE Cypher predicate. It exists only to be
+  referenced by the `@authorization` filter on this type; it is not part of the
+  public surface (see the directives below and the long note on the type).
+
+  This is a byte-for-byte restatement of the five declarative branches it
+  replaced — it changes HOW the rule compiles, never WHO it admits:
+
+    1. self          `this.id = $jwt.user.id`
+    2. createdBy     `(this)-[:CREATED_BY]->(caller)`
+    3. ownsSpaces    a Space `this` OWNS that the caller can see
+    4. memberOf      a Space `this` belongs to that the caller can see
+    5. contexts      a Space holding a FieldContext that HAS_PERSON `this`
+
+  Directions are the ones the relationship fields above declare, and the ones
+  the data actually carries (verified on dev):
+  `(:Person)-[:OWNS]->(:Space)`, `(:Space)-[:HAS_MEMBER]->(:SpaceMembership)`,
+  `(:SpaceMembership)-[:IS_MEMBER]->(:Person)`,
+  `(:FieldContext)-[:HAS_PERSON]->(:Person)`,
+  `(:Space)-[:HAS_CONTEXT]->(:FieldContext)`,
+  `(:Person)-[:CREATED_BY]->(:Person)`.
+
+  Written as three explicit two-hop patterns rather than one variable-length
+  `*1..2` reach: the variable-length form has to be undirected to cover all
+  three shapes, which makes its exactness an accident of which label pairs
+  happen to carry those types today. Spelling the patterns out pins the
+  directions in the source, where a reviewer can check them against the table
+  above.
+
+  `WHERE (s:MeSpace OR s:WeSpace)` is not decoration. The declarative rule this
+  replaced compiled to `(s:Space:MeSpace)` / `(s:Space:WeSpace)` — it required
+  the subtype label — so matching a bare `:Space` here would WIDEN the gate on
+  any Space node missing its subtype. It is a no-op on today's data (no `:Space`
+  node lacks a subtype) and is meant to stay that way.
+
+  Kept as a `WHERE` rather than the tidier label expression
+  `(s:Space&(MeSpace|WeSpace))` for two reasons. It reads the same as the
+  `CAN_READ_PII` twin below, and it sidesteps a real Cypher restriction: Neo4j
+  refuses to mix `&`/`|` label-expression symbols with colon-separated labels
+  within one expression scope, and the library emits colon form
+  (`this2:Space:MeSpace`) for the sibling Space rules. Measured, so state it
+  accurately: two `EXISTS` blocks in ONE expression, one of each form, is a hard
+  `SyntaxError`; two separate top-level `MATCH` clauses is accepted. The
+  library's current emission happens to fall on the safe side, and a reviewer
+  built the label-expression variant and ran it successfully with identical
+  dbHits — so this is a readability + future-proofing choice, not a bug fix.
+
+  Two boundaries the pattern encodes rather than comments:
+    • `HAS_CONTEXT` is named explicitly, so a soft-deleted FieldContext
+      (GOAL-319 re-points the Space edge to `HAS_DELETED_CONTEXT`) grants no
+      reach, and `HAS_SUBCONTEXT` grants none on its own — a nested
+      sub-context (GOAL-295) still unlocks, because it carries its own
+      `HAS_CONTEXT` edge to the Space.
+    • The caller-side test is reach only — OWNS or any `SpaceMembership` — with
+      no `role` check, so a GUEST reads exactly like an ADMIN (kb/02). There is
+      deliberately no `CONNECTED_TO` branch: an edge records a claim by its
+      author, never the far endpoint's consent.
+
+  The caller is matched as a node first, so an unauthenticated or unknown
+  `$jwt.user.id` yields no row, the field resolves null, `callerCanRead_EQ:
+  true` fails, and the gate closes. Fail-closed is the default, not a branch.
+
+  KEEP IN SYNC with `CAN_READ_PII` in
+  `src/modules/agent/tools/person-search.tool.ts` — the assistant reads
+  `:Person` properties in raw Cypher, underneath GraphQL, so it carries its own
+  hand port of this same predicate (pinned by
+  `person-search-pii.integration.test.ts`). The two are deliberately written in
+  the same shape so they can be diffed branch by branch.
+
+  ONE KNOWN DIVERGENCE, checked as part of GOAL-372 and left alone: the tool's
+  port matches a bare `(s:Space)` and omits the `(s:MeSpace OR s:WeSpace)`
+  guard above. The two agree on every (caller, person) pair on dev — 399 grants
+  each, 0 disagreements — because no `:Space` node exists without a subtype
+  label, and both the `Space` interface and `@node(labels:)` make one hard to
+  create. Do not read this as "the guard is optional here"; it is a gap that
+  only stays closed by that invariant.
+  """
+  callerCanRead: Boolean!
+    @selectable(onRead: false, onAggregate: false)
+    @cypher(
+      statement: """
+      MATCH (caller:Person)
+      WHERE caller.id = $jwt.user.id
+      RETURN (
+        /* 1. self */
+        this.id = caller.id
+        /* 2. createdBy — the caller's own imported / ingested contact */
+        OR EXISTS { (this)-[:CREATED_BY]->(caller) }
+        /* 3. ownsSpaces — a Space the person OWNS that the caller can see */
+        OR EXISTS {
+          MATCH (this)-[:OWNS]->(s:Space)
+          WHERE (s:MeSpace OR s:WeSpace)
+            AND ((caller)-[:OWNS]->(s)
+                 OR (s)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(caller))
+        }
+        /* 4. memberOf — a Space the person BELONGS TO that the caller can see */
+        OR EXISTS {
+          MATCH (this)<-[:IS_MEMBER]-(:SpaceMembership)<-[:HAS_MEMBER]-(s:Space)
+          WHERE (s:MeSpace OR s:WeSpace)
+            AND ((caller)-[:OWNS]->(s)
+                 OR (s)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(caller))
+        }
+        /* 5. contexts — a FieldContext holding the person that the caller can
+           view. HAS_CONTEXT only, so a soft-deleted context grants nothing. */
+        OR EXISTS {
+          MATCH (this)<-[:HAS_PERSON]-(:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+          WHERE (s:MeSpace OR s:WeSpace)
+            AND ((caller)-[:OWNS]->(s)
+                 OR (s)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(caller))
+        }
+      ) AS ok
+      """
+      columnName: "ok"
+    )
 }
 
 """
