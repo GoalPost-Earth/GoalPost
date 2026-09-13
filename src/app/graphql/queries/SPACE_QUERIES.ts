@@ -43,6 +43,14 @@ export const GET_USER_WE_SPACES_QUERY = graphql(`
 /**
  * Get space members with their roles
  * Query a space by ID and return its members with their roles
+ *
+ * GOAL-370: this document and the three below it have no consumer today, so
+ * none of them rendered the `privateProfile { id email }` they selected. The
+ * selections are gone rather than left as a trap — whoever revives one of
+ * these would inherit a full copy of the PersonPrivateProfile gate per site
+ * (ADR-010) without ever asking for PII. A revived consumer that genuinely
+ * needs an email should add the selection back deliberately, the way
+ * GET_SPACE_DETAILS does for the permissions modal.
  */
 export const GET_SPACE_MEMBERS_QUERY = graphql(`
   query GetSpaceMembers($spaceId: ID!) {
@@ -58,10 +66,6 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
           firstName
           lastName
           name
-          privateProfile {
-            id
-            email
-          }
         }
       }
     }
@@ -77,10 +81,6 @@ export const GET_SPACE_MEMBERS_QUERY = graphql(`
           firstName
           lastName
           name
-          privateProfile {
-            id
-            email
-          }
         }
       }
     }
@@ -103,10 +103,6 @@ export const GET_WE_SPACE_DETAILS_QUERY = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
       members {
         id
@@ -117,10 +113,6 @@ export const GET_WE_SPACE_DETAILS_QUERY = graphql(`
           firstName
           lastName
           name
-          privateProfile {
-            id
-            email
-          }
         }
       }
       contexts {
@@ -149,10 +141,6 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
       members {
         id
@@ -163,10 +151,6 @@ export const GET_ME_SPACE_DETAILS_QUERY = graphql(`
           firstName
           lastName
           name
-          privateProfile {
-            id
-            email
-          }
         }
       }
       contexts {
@@ -194,10 +178,6 @@ export const GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY = graphql(`
         lastName
         name
         photo
-        privateProfile {
-          id
-          email
-        }
       }
       members {
         id
@@ -208,10 +188,6 @@ export const GET_WE_SPACE_MEMBERS_WITH_CONNECTIONS_QUERY = graphql(`
           lastName
           name
           photo
-          privateProfile {
-            id
-            email
-          }
         }
       }
     }

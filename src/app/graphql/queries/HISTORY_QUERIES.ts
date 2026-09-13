@@ -3,6 +3,18 @@ import { graphql } from '@/gql'
 /**
  * Query to fetch all pulses for the history page
  * Includes GoalPulse, ResourcePulse, StoryPulse, and CoreValuePulse with their contexts and initiators
+ *
+ * GOAL-370: `createdBy` carries identity only — `id` / `firstName` /
+ * `lastName` / `name` — never `privateProfile`. Each sub-query is planned on
+ * its own, and the PII selection added a full copy of the PersonPrivateProfile
+ * gate to all four: 50 EXISTS blocks and ~515 ms of planning each, measured on
+ * dev, against ~100 dbHits of real work (ADR-010). Same for the two scoped
+ * variants below.
+ *
+ * `createdBy` itself is currently read by nobody — `active-pulses.tsx` is the
+ * only consumer of these three documents and it renders no author line. It is
+ * kept because an author line is the obvious next thing these cards grow, and
+ * the identity fields are cheap; the gate was not.
  */
 export const GET_ALL_PULSES = graphql(`
   query GetAllPulses {
@@ -22,10 +34,6 @@ export const GET_ALL_PULSES = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     resourcePulses {
@@ -44,10 +52,6 @@ export const GET_ALL_PULSES = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     storyPulses {
@@ -66,10 +70,6 @@ export const GET_ALL_PULSES = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     coreValuePulses {
@@ -88,10 +88,6 @@ export const GET_ALL_PULSES = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
   }
@@ -125,10 +121,6 @@ export const GET_ALL_PULSES_BY_CONTEXT = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     resourcePulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -147,10 +139,6 @@ export const GET_ALL_PULSES_BY_CONTEXT = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     storyPulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -169,10 +157,6 @@ export const GET_ALL_PULSES_BY_CONTEXT = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     coreValuePulses(where: { context_SOME: { id_EQ: $contextId } }) {
@@ -191,10 +175,6 @@ export const GET_ALL_PULSES_BY_CONTEXT = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
   }
@@ -237,10 +217,6 @@ export const GET_ALL_PULSES_BY_SPACE = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     resourcePulses(
@@ -268,10 +244,6 @@ export const GET_ALL_PULSES_BY_SPACE = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     storyPulses(
@@ -299,10 +271,6 @@ export const GET_ALL_PULSES_BY_SPACE = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     coreValuePulses(
@@ -330,10 +298,6 @@ export const GET_ALL_PULSES_BY_SPACE = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
   }
@@ -456,6 +420,16 @@ export const GET_ALL_FIELD_CONTEXTS = graphql(`
 
 /**
  * Query to fetch all MeSpaces with their contexts and members
+ *
+ * GOAL-370: deliberately selects no `privateProfile` and no nested
+ * `members.member`. The cards render the owner's name, `members.length` and
+ * `contexts.length` — nothing else — and every `privateProfile` selection site
+ * makes @neo4j/graphql emit another full copy of the PersonPrivateProfile
+ * gate, whose planning cost is super-linear in predicate count (ADR-010).
+ * Owner + member + the nested member hop cost 77 EXISTS blocks and 1.5 s of
+ * planning for ~100 dbHits of work. A surface that needs a member's identity
+ * asks for it through its own document (GET_SPACE_DETAILS).
+ * `dashboard-list-plan-size.test.ts` fails if a selection comes back.
  */
 export const GET_ALL_ME_SPACES = graphql(`
   query GetAllMeSpaces {
@@ -468,24 +442,10 @@ export const GET_ALL_ME_SPACES = graphql(`
         id
         firstName
         lastName
-        privateProfile {
-          id
-          email
-        }
       }
       members {
         id
         role
-        addedAt
-        member {
-          id
-          firstName
-          lastName
-          privateProfile {
-            id
-            email
-          }
-        }
       }
       contexts {
         id
@@ -498,6 +458,9 @@ export const GET_ALL_ME_SPACES = graphql(`
 
 /**
  * Query to fetch all WeSpaces with their contexts and members
+ *
+ * Same GOAL-370 trim as GET_ALL_ME_SPACES above — see that comment for why the
+ * owner's and members' `privateProfile` is not selected here.
  */
 export const GET_ALL_WE_SPACES = graphql(`
   query GetAllWeSpaces {
@@ -511,24 +474,10 @@ export const GET_ALL_WE_SPACES = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
       members {
         id
         role
-        addedAt
-        member {
-          id
-          firstName
-          lastName
-          privateProfile {
-            id
-            email
-          }
-        }
       }
       contexts {
         id
