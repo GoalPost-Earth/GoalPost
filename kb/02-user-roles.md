@@ -86,11 +86,75 @@ All types use `@authorization` directives that filter data based on `$jwt.user.i
 
 - **MeSpace**: Only returns if `owner` matches current user
 - **WeSpace**: Returns if user is owner OR a member
-- **FieldContext**: Returns if user owns/is member of the parent Space (checks both MeSpace and WeSpace paths)
+- **FieldContext**: Returns if user owns/is member of the parent Space
 - **Pulse types**: Same as FieldContext (inherit from parent context's space)
 - **SpaceMembership**: Only returns if user is owner/member of the associated space
 - **Person**: the open directory fields (`id`, `firstName`, `lastName`, `name`, `photo`) are readable by any authenticated user, so people stay findable by name across Spaces. All PII is gated — see below.
 - **Log**: Readable by any authenticated user
+
+### Space visibility — the `SpaceAuthAnchor` shape (GOAL-373)
+
+`FieldContext`, `SpaceMembership` and all five pulse types all ask the same
+question — *is the caller the owner of, or any member of, the Space this node
+hangs off?* — and the shape that question is written in dominates the planning
+cost of every dashboard list document.
+
+The rule is anchored on **`SpaceAuthAnchor`**, a GraphQL type over
+`@node(labels: ["Space"])` that exists only to be named by these filters:
+
+```graphql
+spaces_SOME: {
+  OR: [
+    { owner_SOME: { id_EQ: "$jwt.user.id" } }
+    { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+  ]
+}
+```
+
+Things that trip people up:
+
+- **The policy has not changed** and must not. Owner **or any member, any role,
+  GUEST included**, for READ, on every one of those types. This is a *reach*
+  test, not a role test — the role-checked rules are the `validate` blocks in
+  the operation matrix below, and they stay declarative on
+  `meSpace` / `weSpace`.
+- **The `Space` INTERFACE cannot carry this rule.** `@neo4j/graphql` expands an
+  interface-typed relationship filter once per implementing type, so
+  `space_SOME` over `Space` emits `(:Space:MeSpace)` OR `(:Space:WeSpace)` —
+  byte-identical Cypher to naming `meSpace_SOME` and `weSpace_SOME` by hand.
+  Only a **concrete** type over the shared `:Space` label collapses it. Measured
+  GOAL-373: `FieldContext` 10 → 4 `EXISTS`, 19 → 12 dbHits on a single-row read;
+  a post-trim `GET_ALL_PULSES` sub-query 21 → 9 `EXISTS` and ~350 ms → ~175 ms
+  to plan under `CYPHER replan=force` (median of 5), and
+  `meSpaces { contexts { pulses } }` 1,323 ms → 598 ms.
+- **A `@cypher` Boolean gate does NOT work here** — see ADR-010. It was
+  prototyped and rejected on measurement: 238 rows into the `CALL` instead of 1,
+  and 19 → 2,146 dbHits on a single-row `FieldContext` lookup.
+- **`SpaceAuthAnchor` is not a read surface.** No root query, no mutations, and
+  every field that points at it carries `@selectable(onRead: false,
+  onAggregate: false)` *and* `aggregate: false`. `@selectable` alone is not
+  enough — it leaves `spacesAggregate` and `spacesConnection` on the parent, and
+  the connection projects the Space itself, which a MeSpace *member* is not
+  allowed to read. It also carries the same READ filter itself, as defence in
+  depth. Verify that against `printSchema`, never against the directive list.
+- **It anchors on `HAS_CONTEXT` / `HAS_MEMBER`, never `HAS_DELETED_CONTEXT`.**
+  That is what keeps soft-deleted fields (GOAL-319) invisible while nested
+  sub-contexts (GOAL-295), which keep their own `HAS_CONTEXT` edge, stay
+  visible.
+- **Raw-Cypher readers restate this policy themselves** and are NOT covered by
+  it: `viewablePulsePredicate`, the assistant's `search_field_context`, and
+  `query_for_bloom`'s Space anchoring. Change the branch table here and you must
+  change them too.
+
+Pinned by `space-visibility-plan-size.test.ts` (plan size + read surface, no DB)
+and `space-visibility-read-auth.integration.test.ts` (minted JWTs against dev:
+outsider sees none of the four types, GUEST sees all four, an owner sees their
+own MeSpace and nobody else's).
+
+Still on the four-branch `meSpace_SOME` / `weSpace_SOME` form, out of GOAL-373's
+scope: `Document`, `ResonanceLink`, `PromiseWeave`, `Organization`, `Log`, and
+branches 3-5 of `PersonPrivateProfile` below. The rewrite is mechanical; it just
+has not been measured on those surfaces.
 
 ### Person PII — the `privateProfile` gate (GOAL-275)
 
