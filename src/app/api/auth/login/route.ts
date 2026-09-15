@@ -11,6 +11,7 @@ import {
 import { clientIp, rateLimit, rateLimited } from '@/lib/auth/rate-limit'
 import { normalizeEmail } from '@/lib/auth/normalize-email'
 import { sanitizeReturnTo } from '@/lib/auth/safe-return-to'
+import { ACCESS_TOKEN_TTL_SECONDS } from '../refresh'
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -110,9 +111,10 @@ export async function POST(req: NextRequest) {
 
     // ownsSpaces is intentionally excluded from the JWT to keep the cookie small.
     // It is still returned in the response body for client-side caching.
+    const expiresAt = Math.floor(Date.now() / 1000) + ACCESS_TOKEN_TTL_SECONDS
     const token = signJWT({
       user: { id, ...rest },
-      expiresAt: Math.floor(Date.now() / 1000) + 60 * 30,
+      expiresAt,
     })
     // Compound format `${userId}.${secret}` — the refresh-token route uses
     // the userId prefix to look up the Person by indexed id rather than
@@ -135,10 +137,19 @@ export async function POST(req: NextRequest) {
       }
     )
 
+    // `expiresAt` (unix seconds) accompanies the token the body already
+    // returned, so the client can seed its in-memory bearer cache and skip
+    // the /api/auth/access-token round-trip on the first query after login
+    // (GOAL-375). Nothing new is exposed — it describes the token in this
+    // same body, which is also the cookie being set just below. Note it is
+    // computed here, independently of the `exp` claim `signJWT` derives from
+    // its own `expiresIn`; the two agree because both read the same second,
+    // and the client takes whichever is EARLIER rather than trusting this.
     const response = NextResponse.json(
       {
         user: { id, ...rest, ownsSpaces },
         token,
+        expiresAt,
         refreshToken,
         returnTo,
       },
@@ -150,7 +161,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 30, // 30 minutes
+      maxAge: ACCESS_TOKEN_TTL_SECONDS, // 30 minutes
       path: '/',
     })
 

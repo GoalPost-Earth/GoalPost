@@ -15,6 +15,17 @@ import {
 } from '@/lib/permissions/pulse-visibility'
 import { driver } from '@/lib/neo4j/driver'
 import {
+  isArticleImportInFlight,
+  summarizeArticleOutcomes,
+} from '@/lib/imports/article-import'
+import {
+  IMPORT_STATUS_TOOL_NAME,
+  MAX_CHAT_IMPORT_REPORTS,
+  describeArticleImportForChat,
+  summarizeChatImports,
+} from '@/lib/imports/article-import-chat'
+import { listRecentArticleImportJobsForUser } from '@/lib/imports/article-import-queue'
+import {
   buildPendingApprovalResult,
   createApprovalHash,
   MAX_PROPOSED_WEAVE_PULSES,
@@ -2686,6 +2697,84 @@ export async function buildSimulationChatTools(
           })
         } catch (error) {
           return toErrorResult('Failed to run Graph RAG retrieval', error)
+        }
+      },
+    }),
+
+    /**
+     * GOAL-359 — the assistant's read into bulk article import state.
+     *
+     * The client reported that chat had no visibility into an in-progress
+     * import at all, so asking "how far along is it?" got nowhere and the only
+     * way to check was reopening the import status modal. This reads the same
+     * `:ArticleImportJob` nodes that modal polls, so the two can't disagree.
+     *
+     * Registered unconditionally rather than behind session state (contrast
+     * `get_focal_entity`, kb/07 Rule 4): the useful path here is "the member's
+     * own recent imports", which is answerable from any surface — chat is
+     * reachable from the dashboard root, and a member asking about their import
+     * from there must not be told to go find the right field first. With no
+     * imports it returns `found: false` and a plain sentence, which is a real
+     * answer rather than a misfire.
+     *
+     * The result is names and counts only — no job ids, no field ids, no
+     * statuses in their raw `PENDING`/`PROCESSING` spelling (kb/07 Rule 1 + 3).
+     */
+    [IMPORT_STATUS_TOOL_NAME]: tool({
+      description:
+        "Check the state of the current user's bulk article imports — the spreadsheets of articles they have uploaded into a field. Returns how many rows have been imported versus how many are still queued, per import, newest first. Use this whenever the user asks about an import, an upload, a batch of articles, a spreadsheet they submitted, or how far along any of those are. Report the counts and the percentage back in plain language.",
+      // No arguments, deliberately. An earlier revision took an optional
+      // `jobId` so an answer inside an import's own thread could scope itself
+      // to that import — but the model can never supply one: the chat route's
+      // `convertToAISDKMessages` flattens hydrated turns to their text parts,
+      // so the seeded tool call's input never reaches the model's context. A
+      // parameter the model provably cannot fill is a parameter it will
+      // hallucinate. Scoping an in-thread answer to its own import needs a
+      // persisted job-to-thread link injected from session state (the
+      // `ctx.fieldContextId` pattern in kb/07 Rule 5), not an argument.
+      inputSchema: z.object({}),
+      execute: async () => {
+        logToolDispatch(IMPORT_STATUS_TOOL_NAME, ctx, {})
+        if (!ctx.currentUserId) {
+          return {
+            found: false,
+            imports: [],
+            message:
+              'Could not identify current user. Please log in and try again.',
+          }
+        }
+        try {
+          const entries = await listRecentArticleImportJobsForUser(
+            driver,
+            ctx.currentUserId,
+            MAX_CHAT_IMPORT_REPORTS
+          )
+          // In-flight first, then newest. The query orders by recency, which on
+          // its own answers "how is my import going?" with up to five
+          // sentences, four of them about batches that finished days ago. What
+          // is still running is what was asked about.
+          const ranked = [
+            ...entries.filter((entry) => isArticleImportInFlight(entry.status)),
+            ...entries.filter(
+              (entry) => !isArticleImportInFlight(entry.status)
+            ),
+          ]
+          const imports = ranked.map((entry) =>
+            describeArticleImportForChat({
+              status: entry.status,
+              statusMessage: entry.statusMessage,
+              processedRows: entry.outcomes.length,
+              summary: summarizeArticleOutcomes(entry.outcomes, entry.totalRows),
+              fieldContextTitle: entry.fieldContextTitle,
+            })
+          )
+          return {
+            found: imports.length > 0,
+            imports,
+            message: summarizeChatImports(imports),
+          }
+        } catch (error) {
+          return toErrorResult('Failed to read import status', error)
         }
       },
     }),

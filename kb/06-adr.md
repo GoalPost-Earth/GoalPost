@@ -159,7 +159,20 @@
   predicate below a `CALL` subquery, so the gate runs for every node of that
   label instead of the one the caller asked for (measured: 168 → 146,453 dbHits
   on a single-row lookup). Declarative filters inline into the `WHERE` and keep
-  the index seek.
+  the index seek. Re-confirmed on the space-visibility rule (GOAL-373), where
+  the same technique was prototyped on `FieldContext` and `GoalPulse` and
+  rejected on measurement:
+
+  | single-row lookup      | declarative | `@cypher` gate | rows into `CALL` |
+  | ---------------------- | ----------- | -------------- | ---------------- |
+  | `fieldContexts(id_EQ)` | 19 dbHits   | 2,146          | 1 → 238          |
+  | `goalPulses(id_EQ)`    | 22 dbHits   | 14,761         | 1 → 1,169        |
+
+  238 and 1,169 are exactly the label counts on that fixture: the gate ran once
+  per node in the database. `PersonPrivateProfile` escapes this only because it
+  has **no root query** — there is no caller `where` to be stranded below the
+  `CALL`. "Does this type have a root query?" is the test for whether the
+  technique is available at all.
 
   **The exception (GOAL-372), and its exact condition.** The rule above is
   really about *which rows reach the CALL*, not about `@cypher` as such. It is
@@ -220,6 +233,30 @@
     label-expression variant does run, so this is a preference, not a
     prohibition — but `WHERE (s:MeSpace OR s:WeSpace)` has no such dependency on
     where the library happens to put things.
+- **To compact a multi-branch rule, collapse the TRAVERSAL, not the predicate —
+  and an interface will not do it.** `@neo4j/graphql` expands an interface-typed
+  relationship filter once per implementing type, so `space_SOME` over the
+  `Space` interface emits `(:Space:MeSpace)` OR `(:Space:WeSpace)` —
+  byte-identical to naming the two relationships by hand (measured GOAL-373: the
+  emitted Cypher matched to the byte). A **concrete** type over the shared label
+  (`SpaceAuthAnchor @node(labels: ["Space"])`) matches it once, which is what
+  actually collapses the disjunction. Measured on a 210-context / 1,890-pulse /
+  3-Space dev fixture, `CYPHER replan=force`:
+
+  | shape                        | `FieldContext` single-row | `GET_ALL_PULSES` sub-query (post-trim docs) |
+  | ---------------------------- | ------------------------- | ------------------------------------------- |
+  | 4 branches (meSpace/weSpace) | 10 `EXISTS`, 19 dbHits    | 21 `EXISTS`, ~350 ms to plan                |
+  | `Space` interface            | 10 `EXISTS` (identical)   | 21 `EXISTS` (identical)                     |
+  | `SpaceAuthAnchor`            | 4 `EXISTS`, 12 dbHits     | 9 `EXISTS`, ~175 ms to plan                 |
+
+  Such a type must be locked down as hard as `PersonPrivateProfile`:
+  `@query(read: false, aggregate: false)`, `@mutation(operations: [])`,
+  `nestedOperations: []`, and on every field pointing at it BOTH
+  `@selectable(onRead: false, onAggregate: false)` **and** `aggregate: false` —
+  `@selectable` alone leaves `<field>Aggregate` and `<field>Connection` on the
+  parent object type, and the connection projects the anchored node. Give it the
+  same `@authorization` filter anyway, and check the result against
+  `printSchema`, not against the directive list.
 
 **Why:** Declarative authorization at the schema level is harder to bypass than middleware. The `@neo4j/graphql` library automatically applies filters to every query, making it impossible to accidentally return unauthorized data.
 

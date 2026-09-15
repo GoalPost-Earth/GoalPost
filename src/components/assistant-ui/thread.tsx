@@ -23,6 +23,8 @@ import { ResonanceSuggestionsToolPart } from '@/components/chat/resonance-sugges
 import { ResonantPulseSuggestionsToolPart } from '@/components/chat/resonant-pulse-suggestions-tool-ui'
 import { READ_TOOL_STATUS_COMPONENTS } from '@/components/chat/tool-status-tool-ui'
 import { BloomOverlayToolPart } from '@/components/chat/bloom-overlay-tool-ui'
+import { ImportProgressToolPart } from '@/components/chat/import-progress-tool-ui'
+import { IMPORT_STATUS_TOOL_NAME } from '@/lib/imports/article-import-chat'
 import { MODE_METADATA } from '@/lib/simulation'
 
 export const Thread: FC = () => {
@@ -132,6 +134,11 @@ const AssistantMessage: FC = () => {
                 suggest_connections: ConnectionSuggestionsToolPart,
                 suggest_resonances: ResonanceSuggestionsToolPart,
                 suggest_resonant_pulses: ResonantPulseSuggestionsToolPart,
+                // GOAL-359: the bulk-import progress meter. Listed after the
+                // spread for the same reason as query_for_bloom — a status
+                // chip saying "Checked your imports" is not the answer the
+                // member opened this thread for.
+                [IMPORT_STATUS_TOOL_NAME]: ImportProgressToolPart,
               },
               Fallback: WriteApprovalToolPart,
             },

@@ -43,9 +43,15 @@ export interface HydratedThread {
   lastTurnAt: string | null
   /** 'default' | 'aiden' | 'braider'. Source of truth for which assistant mode this thread runs in. */
   mode: string
-  /** 'reflective' | 'ingest'. UI uses this to lock the mode selector on ingest threads. */
+  /**
+   * 'reflective' | 'ingest' | 'import'. UI uses this to lock the mode selector
+   * on ingest threads and to chip platform-opened threads in the switcher.
+   */
   kind: string
-  /** Human-readable title (e.g. "Ingest: meeting-notes.pdf"). Null for the implicit reflective thread. */
+  /**
+   * Human-readable title (e.g. "Ingest: meeting-notes.pdf", "Import: 12
+   * articles into Care Practices"). Null for the implicit reflective thread.
+   */
   title: string | null
   messages: UIMessage[]
 }

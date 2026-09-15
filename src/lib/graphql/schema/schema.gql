@@ -1080,6 +1080,105 @@ interface Space {
 }
 
 """
+GOAL-373 — the reach half of the space-visibility rule, as ONE node type
+instead of two.
+
+Every Space carries the shared `:Space` label plus exactly one of `:MeSpace`
+/ `:WeSpace`. The `Space` INTERFACE above cannot exploit that: `@neo4j/graphql`
+expands an interface-typed relationship filter once per implementing type, so
+`space_SOME` / `spaces_SOME` over `Space` emits
+
+    EXISTS { MATCH (this)<-[:HAS_CONTEXT]-(:Space:MeSpace) WHERE … }
+    OR
+    EXISTS { MATCH (this)<-[:HAS_CONTEXT]-(:Space:WeSpace) WHERE … }
+
+— byte-identical to naming `meSpace_SOME` and `weSpace_SOME` by hand (measured
+GOAL-373, variant C). A CONCRETE type over `@node(labels: ["Space"])` matches
+the shared label once, so the disjunction really does collapse. Measured on a
+210-context / 1,890-pulse / 3-Space dev fixture, `CYPHER replan=force`, median
+of 5 runs: the `FieldContext` READ filter went 10 → 4 `EXISTS` and 19 → 12
+dbHits on a single-row read; each post-trim `GET_ALL_PULSES` sub-query 21 → 9
+`EXISTS` and ~350 → ~175 ms to PLAN; `meSpaces { contexts { pulses } }`
+1,323 → 598 ms. Same trick as `PersonPrivateProfile`: a second GraphQL type
+over the same Neo4j node, existing only to give one rule a cheaper shape.
+
+THIS TYPE IS NOT A READ SURFACE, and must never become one:
+
+- `@query(read: false, aggregate: false)` — no `spaceAuthAnchors` root, so it
+  cannot be used to enumerate Spaces around the MeSpace / WeSpace filters.
+- `@mutation(operations: [])` plus `nestedOperations: []` on every relationship
+  that points at it — it is never a write target either.
+- Every field that references it carries `@selectable(onRead: false,
+  onAggregate: false)` AND `aggregate: false`. `@selectable` alone is NOT
+  enough: it drops `spaces` but leaves `spacesAggregate` and
+  `spacesConnection` on the parent object type, and `spacesConnection` would
+  project the Space itself — which a MeSpace MEMBER can read a context of but
+  is not allowed to read the MeSpace of. **Those two directives are the
+  protection**, and they are pinned against the BUILT schema — never against
+  this directive list (kb/02-user-roles.md) — by
+  `space-visibility-plan-size.test.ts`.
+- The type-level filter below is a BACKSTOP, not that protection, and it is
+  deliberately the WEAKER of the two Space rules: owner or any member, because
+  the anchor carries no label discriminator and cannot tell a MeSpace from a
+  WeSpace. If a future library version reinstates one of those projection
+  fields it keeps a total outsider out, but a MeSpace MEMBER would still read
+  the MeSpace node through it, which `MeSpace`'s own owner-only filter forbids.
+  So a reappearing `spaces` / `spacesConnection` / `spacesAggregate` is a LEAK
+  to be closed, not something this filter makes safe. The test fails first.
+
+What IS reachable is `spaces_SOME` in `FieldContextWhere` / `SpaceMembershipWhere`,
+and that adds no new reach. `FieldContextWhere` already has `meSpace_SOME` and
+`weSpace_SOME`; `SpaceMembershipWhere` already has `space_SOME` (note
+`FieldContext.space` is a `@cypher` field and generates no where-input, so
+`FieldContextWhere` never had one). Between them those cover the same
+`id` / `owner` / `members` predicates on the same nodes, and `MeSpaceWhere` /
+`WeSpaceWhere` additionally expose `name`, `description`, `why`, `location`,
+`visibility` and `status`, which this type does not.
+Deliberately declares no scalars beyond `id` so it cannot grow into one, and
+carries `@filterable(byAggregate: false)` on both reference sites so it adds no
+third `<field>Aggregate` where-input — those compile to the ADR-010
+`MATCH (this) CALL { … } WITH * WHERE …` shape.
+
+The anchor is `HAS_CONTEXT` / `HAS_MEMBER` only — NEVER `HAS_DELETED_CONTEXT`
+(GOAL-319). A soft-deleted context has its Space edge re-pointed, so it has no
+`HAS_CONTEXT` edge, so it fails this filter and stays invisible. A nested
+sub-context (GOAL-295) keeps its own `HAS_CONTEXT` edge and stays visible.
+
+The `:Space` label is LOAD-BEARING: this shape is equivalent to the four-branch
+form only because every Space node carries `:Space` plus exactly one of
+`:MeSpace` / `:WeSpace`. A bare `:Space` node would be a container readable
+through `fieldContexts` and every pulse root but invisible to `meSpaces` /
+`weSpaces`. Neo4j cannot express that as a constraint, so it is asserted on the
+live database by `space-visibility-read-auth.integration.test.ts` instead.
+"""
+type SpaceAuthAnchor
+  @node(labels: ["Space"])
+  @query(read: false, aggregate: false)
+  @mutation(operations: [])
+  @authorization(
+    # The Space policy itself (kb/02-user-roles.md, Access Model): owner or any
+    # member, any role. Defence in depth — nothing projects this type today.
+    filter: [
+      {
+        where: {
+          node: {
+            OR: [
+              { owner_SOME: { id_EQ: "$jwt.user.id" } }
+              { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+            ]
+          }
+        }
+      }
+    ]
+  ) {
+  id: ID!
+  owner: [Person!]!
+    @relationship(type: "OWNS", direction: IN, nestedOperations: [])
+  members: [SpaceMembership!]!
+    @relationship(type: "HAS_MEMBER", direction: OUT, nestedOperations: [])
+}
+
+"""
 A personal space owned by one person.
 Can be private (only owner) or shared with specific members.
 Multi-label: ["Space", "MeSpace"]
@@ -1207,11 +1306,15 @@ Authorization: Only accessible if current user is an owner or member of the asso
 type SpaceMembership
   @node(labels: ["SpaceMembership"])
   @authorization(
+    # READ — owner or any member (any role, GUEST included) of the space this
+    # membership hangs off. Anchored on SpaceAuthAnchor (GOAL-373) rather than
+    # the `Space` interface: the interface form expanded to one EXISTS per
+    # implementing label (8 EXISTS), the anchor matches `:Space` once (4).
     filter: [
       {
         where: {
           node: {
-            space_SOME: {
+            spaces_SOME: {
               OR: [
                 # Current user is the owner of the space
                 { owner_SOME: { id_EQ: "$jwt.user.id" } }
@@ -1228,6 +1331,17 @@ type SpaceMembership
   role: SpaceRole!
   addedAt: DateTime!
   member: [Person!]! @relationship(type: "IS_MEMBER", direction: OUT)
+  # Auth anchor only — hidden from every generated object type. `space` below
+  # is the readable edge over the same HAS_MEMBER relationship.
+  spaces: [SpaceAuthAnchor!]!
+    @selectable(onRead: false, onAggregate: false)
+    @filterable(byValue: true, byAggregate: false)
+    @relationship(
+      type: "HAS_MEMBER"
+      direction: IN
+      nestedOperations: []
+      aggregate: false
+    )
   space: [Space!]! @relationship(type: "HAS_MEMBER", direction: IN)
 }
 
@@ -1258,24 +1372,19 @@ type FieldContext
   @authorization(
     # READ — anyone with access to the owning space (Me owner, or We
     # owner + any member regardless of role) can see the FieldContext.
+    # Unchanged policy, compacted shape (GOAL-373): the four meSpace/weSpace
+    # branches collapse onto SpaceAuthAnchor's shared `:Space` label, 10
+    # EXISTS → 4, still inline in the WHERE so the id index seek survives.
     filter: [
       {
         where: {
           node: {
-            OR: [
-              { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-              {
-                meSpace_SOME: {
-                  members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                }
-              }
-              { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-              {
-                weSpace_SOME: {
-                  members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                }
-              }
-            ]
+            spaces_SOME: {
+              OR: [
+                { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+              ]
+            }
           }
         }
       }
@@ -1520,6 +1629,18 @@ type FieldContext
       RETURN a
       """
       columnName: "a"
+    )
+  # Auth anchor only (GOAL-373) — hidden from every generated object type, and
+  # HAS_CONTEXT only, so a soft-deleted context (HAS_DELETED_CONTEXT, GOAL-319)
+  # matches nothing here. `meSpace` / `weSpace` below stay the readable edges.
+  spaces: [SpaceAuthAnchor!]!
+    @selectable(onRead: false, onAggregate: false)
+    @filterable(byValue: true, byAggregate: false)
+    @relationship(
+      type: "HAS_CONTEXT"
+      direction: IN
+      nestedOperations: []
+      aggregate: false
     )
   meSpace: [MeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
   weSpace: [WeSpace!]! @relationship(type: "HAS_CONTEXT", direction: IN)
@@ -1862,21 +1983,16 @@ type GoalPulse implements FieldPulse
       {
         where: {
           node: {
+            # GOAL-373: same policy, anchored on SpaceAuthAnchor's shared
+            # `:Space` label so the four branches are one traversal (11
+            # EXISTS -> 5 on a single-pulse read).
             context_SOME: {
-              OR: [
-                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  meSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  weSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-              ]
+              spaces_SOME: {
+                OR: [
+                  { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                  { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+                ]
+              }
             }
           }
         }
@@ -1982,21 +2098,16 @@ type ResourcePulse implements FieldPulse
       {
         where: {
           node: {
+            # GOAL-373: same policy, anchored on SpaceAuthAnchor's shared
+            # `:Space` label so the four branches are one traversal (11
+            # EXISTS -> 5 on a single-pulse read).
             context_SOME: {
-              OR: [
-                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  meSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  weSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-              ]
+              spaces_SOME: {
+                OR: [
+                  { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                  { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+                ]
+              }
             }
           }
         }
@@ -2299,21 +2410,16 @@ type StoryPulse implements FieldPulse
       {
         where: {
           node: {
+            # GOAL-373: same policy, anchored on SpaceAuthAnchor's shared
+            # `:Space` label so the four branches are one traversal (11
+            # EXISTS -> 5 on a single-pulse read).
             context_SOME: {
-              OR: [
-                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  meSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  weSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-              ]
+              spaces_SOME: {
+                OR: [
+                  { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                  { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+                ]
+              }
             }
           }
         }
@@ -2427,21 +2533,16 @@ type CarePulse implements FieldPulse
       {
         where: {
           node: {
+            # GOAL-373: same policy, anchored on SpaceAuthAnchor's shared
+            # `:Space` label so the four branches are one traversal (11
+            # EXISTS -> 5 on a single-pulse read).
             context_SOME: {
-              OR: [
-                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  meSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  weSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-              ]
+              spaces_SOME: {
+                OR: [
+                  { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                  { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+                ]
+              }
             }
           }
         }
@@ -2532,21 +2633,16 @@ type CoreValuePulse implements FieldPulse
       {
         where: {
           node: {
+            # GOAL-373: same policy, anchored on SpaceAuthAnchor's shared
+            # `:Space` label so the four branches are one traversal (11
+            # EXISTS -> 5 on a single-pulse read).
             context_SOME: {
-              OR: [
-                { meSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  meSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-                { weSpace_SOME: { owner_SOME: { id_EQ: "$jwt.user.id" } } }
-                {
-                  weSpace_SOME: {
-                    members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } }
-                  }
-                }
-              ]
+              spaces_SOME: {
+                OR: [
+                  { owner_SOME: { id_EQ: "$jwt.user.id" } }
+                  { members_SOME: { member_SOME: { id_EQ: "$jwt.user.id" } } }
+                ]
+              }
             }
           }
         }

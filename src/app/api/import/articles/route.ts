@@ -10,6 +10,7 @@ import {
   createArticleImportJob,
   listArticleImportJobsForRequester,
 } from '@/lib/imports/article-import-queue'
+import { createArticleImportThread } from '@/lib/imports/article-import-thread'
 import { kickQueueWorker } from '@/lib/jobs/kick-queue-worker'
 import {
   ARTICLE_EMAIL_SHAPE,
@@ -42,6 +43,13 @@ import {
  * GOAL-292 fixed for document ingestion, and the same fix: enqueue + worker.
  * Nothing here is slow any more, so the raised `maxDuration` is gone.
  */
+
+/**
+ * How long the 202 will wait for the import's chat thread (GOAL-359). Short on
+ * purpose: the thread is a courtesy on top of a batch that is already durably
+ * queued, and the member is staring at a spinner until this returns.
+ */
+const IMPORT_THREAD_BUDGET_MS = 2_500
 
 const articleRowSchema = z.object({
   row: z.number().int().min(2),
@@ -228,9 +236,39 @@ export async function POST(req: Request) {
     )
   }
 
+  // GOAL-359 — the import gets its own chat thread, so following it is a place
+  // the member can sit in rather than a modal they have to keep reopening.
+  // Awaited, not fire-and-forget: the client can only open a thread it is told
+  // about in this response.
+  //
+  // Raced against a budget, because "best-effort" has to cover a STALL and not
+  // just a throw. These are three sequential Neo4j round trips on a route that
+  // was otherwise a fast 202; a slow driver that outlasts the function would
+  // leave the client's `submit` in its catch showing "Import failed." over a
+  // batch that is durably queued and about to run — the worst possible lie for
+  // a ticket about trusting the progress you are shown. On timeout the write
+  // is simply abandoned mid-flight; the thread it may still create is a
+  // harmless extra row in the switcher, and `createArticleImportThread`'s own
+  // catch cleans up the partial case.
+  const threadId = await Promise.race([
+    createArticleImportThread(driver, {
+      userId: currentUserId,
+      jobId,
+      totalRows: parsed.data.rows.length,
+      fieldContextTitle: context.title,
+    }),
+    new Promise<null>((resolve) =>
+      setTimeout(() => resolve(null), IMPORT_THREAD_BUDGET_MS)
+    ),
+  ])
+
   // The batch is durable in the queue either way; the kick starts a worker
   // sweep as soon as the 202 is on the wire instead of waiting for a
   // scheduler tick, which on dev/demo can be the better part of an hour away.
+  //
+  // AFTER the seed, not before: a small import can otherwise reach COMPLETE
+  // while the thread is still being written, and the thread would open
+  // permanently saying "Your import is queued" over a job that had finished.
   kickQueueWorker(req, 'article-imports')
 
   // 202 Accepted: the batch is queued, nothing has been written into the field
@@ -240,6 +278,9 @@ export async function POST(req: Request) {
       jobId,
       status: ARTICLE_IMPORT_STATUS.pending,
       totalRows: parsed.data.rows.length,
+      // Null when the thread could not be opened — the client just doesn't
+      // switch the assistant, and the modal's own progress panel still works.
+      threadId,
     },
     { status: 202 }
   )
