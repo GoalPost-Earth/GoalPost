@@ -6,6 +6,12 @@ import gql from 'graphql-tag'
  * GOAL-275: every PII read goes through `privateProfile`, the single
  * type-level gate. It is null for a caller not authorized for that person, and
  * the attach UI falls back to the open directory identity (name / photo).
+ *
+ * GOAL-370: it is selected on `people` — the roster renders their email and
+ * relationship (person-panel-member-body, and bloom-view's CONNECTED_TO edges)
+ * — and on nothing else. The parent space's owner and members are read for
+ * `id` / `role` / display name only, by all three consumers, so selecting PII
+ * there bought four more copies of the gate (ADR-010) for unrendered data.
  */
 export const GET_FIELD_CONTEXT_PEOPLE = gql`
   query GetFieldContextPeople($contextId: ID!) {
@@ -42,10 +48,6 @@ export const GET_FIELD_CONTEXT_PEOPLE = gql`
           lastName
           name
           photo
-          privateProfile {
-            id
-            email
-          }
         }
         members {
           id
@@ -56,10 +58,6 @@ export const GET_FIELD_CONTEXT_PEOPLE = gql`
             lastName
             name
             photo
-            privateProfile {
-              id
-              email
-            }
           }
         }
       }
@@ -71,10 +69,6 @@ export const GET_FIELD_CONTEXT_PEOPLE = gql`
           lastName
           name
           photo
-          privateProfile {
-            id
-            email
-          }
         }
         members {
           id
@@ -85,10 +79,6 @@ export const GET_FIELD_CONTEXT_PEOPLE = gql`
             lastName
             name
             photo
-            privateProfile {
-              id
-              email
-            }
           }
         }
       }

@@ -30970,11 +30970,6 @@ export type GetFieldContextPeopleQuery = {
         lastName: string
         name: string
         photo?: string | null
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
       }>
       members: Array<{
         __typename?: 'SpaceMembership'
@@ -30987,11 +30982,6 @@ export type GetFieldContextPeopleQuery = {
           lastName: string
           name: string
           photo?: string | null
-          privateProfile?: {
-            __typename?: 'PersonPrivateProfile'
-            id: string
-            email?: string | null
-          } | null
         }>
       }>
     }>
@@ -31005,11 +30995,6 @@ export type GetFieldContextPeopleQuery = {
         lastName: string
         name: string
         photo?: string | null
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
       }>
       members: Array<{
         __typename?: 'SpaceMembership'
@@ -31022,11 +31007,6 @@ export type GetFieldContextPeopleQuery = {
           lastName: string
           name: string
           photo?: string | null
-          privateProfile?: {
-            __typename?: 'PersonPrivateProfile'
-            id: string
-            email?: string | null
-          } | null
         }>
       }>
     }>
@@ -31292,11 +31272,6 @@ export type GetAllPulsesQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   resourcePulses: Array<{
@@ -31313,11 +31288,6 @@ export type GetAllPulsesQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   storyPulses: Array<{
@@ -31334,11 +31304,6 @@ export type GetAllPulsesQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   coreValuePulses: Array<{
@@ -31355,11 +31320,6 @@ export type GetAllPulsesQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
 }
@@ -31384,11 +31344,6 @@ export type GetAllPulsesByContextQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   resourcePulses: Array<{
@@ -31405,11 +31360,6 @@ export type GetAllPulsesByContextQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   storyPulses: Array<{
@@ -31426,11 +31376,6 @@ export type GetAllPulsesByContextQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   coreValuePulses: Array<{
@@ -31447,11 +31392,6 @@ export type GetAllPulsesByContextQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
 }
@@ -31476,11 +31416,6 @@ export type GetAllPulsesBySpaceQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   resourcePulses: Array<{
@@ -31497,11 +31432,6 @@ export type GetAllPulsesBySpaceQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   storyPulses: Array<{
@@ -31518,11 +31448,6 @@ export type GetAllPulsesBySpaceQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   coreValuePulses: Array<{
@@ -31539,11 +31464,6 @@ export type GetAllPulsesBySpaceQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
 }
@@ -31645,28 +31565,11 @@ export type GetAllMeSpacesQuery = {
       id: string
       firstName: string
       lastName: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
       id: string
       role: SpaceRole
-      addedAt: any
-      member: Array<{
-        __typename?: 'Person'
-        id: string
-        firstName: string
-        lastName: string
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
-      }>
     }>
     contexts: Array<{
       __typename?: 'FieldContext'
@@ -31693,28 +31596,11 @@ export type GetAllWeSpacesQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
       id: string
       role: SpaceRole
-      addedAt: any
-      member: Array<{
-        __typename?: 'Person'
-        id: string
-        firstName: string
-        lastName: string
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
-      }>
     }>
     contexts: Array<{
       __typename?: 'FieldContext'
@@ -32821,11 +32707,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -32833,11 +32714,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   resourcePulses: Array<{
@@ -32856,11 +32732,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -32868,11 +32739,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   storyPulses: Array<{
@@ -32889,11 +32755,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -32901,11 +32762,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   carePulses: Array<{
@@ -32922,11 +32778,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -32934,11 +32785,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
   coreValuePulses: Array<{
@@ -32955,11 +32801,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     createdBy: Array<{
       __typename?: 'Person'
@@ -32967,11 +32808,6 @@ export type GetPulseDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
   }>
 }
@@ -33379,11 +33215,6 @@ export type GetSpaceMembersQuery = {
         firstName: string
         lastName: string
         name: string
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
       }>
     }>
   }>
@@ -33402,11 +33233,6 @@ export type GetSpaceMembersQuery = {
         firstName: string
         lastName: string
         name: string
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
       }>
     }>
   }>
@@ -33430,11 +33256,6 @@ export type GetWeSpaceDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
@@ -33447,11 +33268,6 @@ export type GetWeSpaceDetailsQuery = {
         firstName: string
         lastName: string
         name: string
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
       }>
     }>
     contexts: Array<{
@@ -33482,11 +33298,6 @@ export type GetMeSpaceDetailsQuery = {
       firstName: string
       lastName: string
       name: string
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
@@ -33499,11 +33310,6 @@ export type GetMeSpaceDetailsQuery = {
         firstName: string
         lastName: string
         name: string
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
       }>
     }>
     contexts: Array<{
@@ -33533,11 +33339,6 @@ export type GetWeSpaceMembersWithConnectionsQuery = {
       lastName: string
       name: string
       photo?: string | null
-      privateProfile?: {
-        __typename?: 'PersonPrivateProfile'
-        id: string
-        email?: string | null
-      } | null
     }>
     members: Array<{
       __typename?: 'SpaceMembership'
@@ -33550,11 +33351,6 @@ export type GetWeSpaceMembersWithConnectionsQuery = {
         lastName: string
         name: string
         photo?: string | null
-        privateProfile?: {
-          __typename?: 'PersonPrivateProfile'
-          id: string
-          email?: string | null
-        } | null
       }>
     }>
   }>
@@ -42788,23 +42584,6 @@ export const GetFieldContextPeopleDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'photo' },
                             },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
-                            },
                           ],
                         },
                       },
@@ -42847,29 +42626,6 @@ export const GetFieldContextPeopleDocument = {
                                   {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: 'photo' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'privateProfile',
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
                                   },
                                 ],
                               },
@@ -42913,23 +42669,6 @@ export const GetFieldContextPeopleDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'photo' },
                             },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
-                            },
                           ],
                         },
                       },
@@ -42972,29 +42711,6 @@ export const GetFieldContextPeopleDocument = {
                                   {
                                     kind: 'Field',
                                     name: { kind: 'Name', value: 'photo' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: {
-                                      kind: 'Name',
-                                      value: 'privateProfile',
-                                    },
-                                    selectionSet: {
-                                      kind: 'SelectionSet',
-                                      selections: [
-                                        {
-                                          kind: 'Field',
-                                          name: { kind: 'Name', value: 'id' },
-                                        },
-                                        {
-                                          kind: 'Field',
-                                          name: {
-                                            kind: 'Name',
-                                            value: 'email',
-                                          },
-                                        },
-                                      ],
-                                    },
                                   },
                                 ],
                               },
@@ -43934,23 +43650,6 @@ export const GetAllPulsesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -43996,23 +43695,6 @@ export const GetAllPulsesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44058,23 +43740,6 @@ export const GetAllPulsesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44120,23 +43785,6 @@ export const GetAllPulsesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44238,23 +43886,6 @@ export const GetAllPulsesByContextDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44328,23 +43959,6 @@ export const GetAllPulsesByContextDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44418,23 +44032,6 @@ export const GetAllPulsesByContextDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44508,23 +44105,6 @@ export const GetAllPulsesByContextDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44692,23 +44272,6 @@ export const GetAllPulsesBySpaceDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44845,23 +44408,6 @@ export const GetAllPulsesBySpaceDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -44998,23 +44544,6 @@ export const GetAllPulsesBySpaceDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45151,23 +44680,6 @@ export const GetAllPulsesBySpaceDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45686,23 +45198,6 @@ export const GetAllMeSpacesDocument = {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'lastName' },
                       },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45714,48 +45209,6 @@ export const GetAllMeSpacesDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'role' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'addedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'member' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'firstName' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'lastName' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45818,23 +45271,6 @@ export const GetAllWeSpacesDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -45846,48 +45282,6 @@ export const GetAllWeSpacesDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'role' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'addedAt' },
-                      },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'member' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'firstName' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'lastName' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -49510,23 +48904,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -49546,23 +48923,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -49632,23 +48992,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -49668,23 +49011,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -49749,23 +49075,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -49785,23 +49094,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -49866,23 +49158,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -49902,23 +49177,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -49983,23 +49241,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -50019,23 +49260,6 @@ export const GetPulseDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -51457,23 +50681,6 @@ export const GetSpaceMembersDocument = {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'name' },
                             },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
-                            },
                           ],
                         },
                       },
@@ -51543,23 +50750,6 @@ export const GetSpaceMembersDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
                             },
                           ],
                         },
@@ -51646,23 +50836,6 @@ export const GetWeSpaceDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -51699,23 +50872,6 @@ export const GetWeSpaceDetailsDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
                             },
                           ],
                         },
@@ -51821,23 +50977,6 @@ export const GetMeSpaceDetailsDocument = {
                         name: { kind: 'Name', value: 'lastName' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -51874,23 +51013,6 @@ export const GetMeSpaceDetailsDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'name' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
                             },
                           ],
                         },
@@ -51995,23 +51117,6 @@ export const GetWeSpaceMembersWithConnectionsDocument = {
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'photo' } },
-                      {
-                        kind: 'Field',
-                        name: { kind: 'Name', value: 'privateProfile' },
-                        selectionSet: {
-                          kind: 'SelectionSet',
-                          selections: [
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'id' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'email' },
-                            },
-                          ],
-                        },
-                      },
                     ],
                   },
                 },
@@ -52048,23 +51153,6 @@ export const GetWeSpaceMembersWithConnectionsDocument = {
                             {
                               kind: 'Field',
                               name: { kind: 'Name', value: 'photo' },
-                            },
-                            {
-                              kind: 'Field',
-                              name: { kind: 'Name', value: 'privateProfile' },
-                              selectionSet: {
-                                kind: 'SelectionSet',
-                                selections: [
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'id' },
-                                  },
-                                  {
-                                    kind: 'Field',
-                                    name: { kind: 'Name', value: 'email' },
-                                  },
-                                ],
-                              },
                             },
                           ],
                         },

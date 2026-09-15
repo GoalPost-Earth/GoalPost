@@ -217,6 +217,14 @@ export const GET_PULSES_BY_CONTEXT = graphql(`
   }
 `)
 
+/**
+ * GOAL-370: no consumer — the pulse drawer reads GET_PULSE_DETAILS_WITH_CONTEXT
+ * from PULSE_DETAILS_QUERIES.ts — so the ten `privateProfile { id email }`
+ * selections this carried on `initiatedBy` / `createdBy` rendered nowhere.
+ * Each was a full copy of the PersonPrivateProfile gate (ADR-010) waiting for
+ * whoever wired this up; author display needs only the identity fields kept
+ * below.
+ */
 export const GET_PULSE_DETAILS = graphql(`
   query getPulseDetails($pulseId: ID!) {
     goalPulses(where: { id_EQ: $pulseId }) {
@@ -237,20 +245,12 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     resourcePulses(where: { id_EQ: $pulseId }) {
@@ -271,20 +271,12 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     storyPulses(where: { id_EQ: $pulseId }) {
@@ -303,20 +295,12 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     carePulses(where: { id_EQ: $pulseId }) {
@@ -335,20 +319,12 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
     coreValuePulses(where: { id_EQ: $pulseId }) {
@@ -367,20 +343,12 @@ export const GET_PULSE_DETAILS = graphql(`
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
       createdBy {
         id
         firstName
         lastName
         name
-        privateProfile {
-          id
-          email
-        }
       }
     }
   }
