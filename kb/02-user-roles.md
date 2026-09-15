@@ -179,6 +179,36 @@ Otherwise `privateProfile` resolves to **null**; the Person row itself still
 returns, so UI renders the directory identity (name + photo) with a "Private
 profile" notice rather than a not-found.
 
+**How it compiles (GOAL-372).** The branch table above is the policy and has
+not changed. What changed is its shape in the SDL: the five branches were a
+nested declarative `where`, which `@neo4j/graphql` expanded into ~29 `EXISTS {`
+blocks at every selection site. They are now **one** `@cypher` Boolean,
+`PersonPrivateProfile.callerCanRead`, which the library inlines verbatim — 4
+`EXISTS`. GET_PERSON_PROFILE went 65 → 40 `EXISTS`, GET_LOGGED_IN_USER 45 → 20,
+and an unbounded read over all 639 people 14,439 → 10,744 dbHits. (Wall clock is
+*not* the evidence — warm-cache timings are unchanged; see ADR-010.)
+Equivalence was measured, not argued: across all 12 dev user accounts × all 639
+`:Person` nodes (7,668 pairs), old rule and new predicate granted the same 399
+and disagreed on none — and every one of the five branches is the sole reason
+for at least one of those grants, so the comparison is not vacuous.
+
+Two things to know before touching that predicate:
+
+- **The branch table is now enforced by one Cypher pattern per branch**, with
+  the directions the data actually carries — `(:Person)-[:OWNS]->(:Space)`,
+  `(:Space)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(:Person)`,
+  `(:Space)-[:HAS_CONTEXT]->(:FieldContext)-[:HAS_PERSON]->(:Person)`,
+  `(:Person)-[:CREATED_BY]->(:Person)`. Get a direction wrong and you silently
+  change who reads PII, so edit it against the table, not from memory.
+- **A `@cypher` field inside a filter is normally forbidden** (ADR-010) because
+  Neo4j will not push a predicate below a `CALL`. It is safe on *this* type only
+  because `@query(read: false, aggregate: false)` leaves no root query and the
+  type is reachable only through `Person.privateProfile` on an already-matched
+  Person — so the gate runs once per selected Person, never as a label scan.
+  That is proven with PROFILE (1 row into the CALL, no `NodeByLabelScan`,
+  2 → 4 dbHits on a single-row lookup), and it must be re-proven, not assumed,
+  if the type's reachability ever changes.
+
 Notes that trip people up:
 
 - **Role is not part of the test.** Branches 3–5 match *any* membership, so a
@@ -195,7 +225,13 @@ Notes that trip people up:
   `person-search-pii.integration.test.ts`; a null caller is refused outright.
   **When you add a branch to the SDL filter, add it to that constant too** —
   the SDL test does not see the Cypher copy. Treat the branch table as the
-  policy, and audit every new raw-Cypher Person read against it.
+  policy, and audit every new raw-Cypher Person read against it. Since GOAL-372
+  the SDL gate is itself Cypher (`callerCanRead`), deliberately written in the
+  same shape as `CAN_READ_PII`, so the two can now be diffed branch by branch —
+  do that when you change either. They agree on every (caller, person) pair on
+  dev, with **one known divergence**: the tool's port matches a bare
+  `(s:Space)` while the SDL gate requires `(s:MeSpace OR s:WeSpace)`. That is a
+  no-op only because no subtype-less `:Space` node exists.
 - **`CONNECTED_TO` is not a branch.** An edge records a claim by its author,
   never the far endpoint's consent. See `kb/03-workflows.md` and the
   `addPersonToFieldContext` target gate.

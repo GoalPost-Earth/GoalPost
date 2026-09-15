@@ -7,6 +7,8 @@ import { verifyJWT } from '@/app/api/auth/utils'
 import logger from '@/lib/logger'
 import { clientIp } from '@/lib/auth/rate-limit'
 import { createQueryLimitPlugins } from '@/lib/graphql/query-limits'
+import { EXCLUDE_DEPRECATED_FIELDS } from '@/lib/graphql/schema-features'
+import { createGateFieldGuardPlugin } from '@/lib/graphql/gate-field-guard'
 
 export async function initializeApolloServer() {
   logger.info('🚀 Initializing Apollo Server...')
@@ -25,13 +27,9 @@ export async function initializeApolloServer() {
     driver,
     features: {
       authorization: { key: process.env.JWT_SECRET ?? 'jwt' },
-      excludeDeprecatedFields: {
-        implicitEqualFilters: true,
-        implicitSet: true,
-        deprecatedOptionsArgument: true,
-        directedArgument: true,
-        connectOrCreate: true,
-      },
+      // Shared with the schema test suites — see schema-features.ts for why
+      // dropping one of these can widen the generated where-surface.
+      excludeDeprecatedFields: EXCLUDE_DEPRECATED_FIELDS,
     },
   })
 
@@ -54,7 +52,12 @@ export async function initializeApolloServer() {
     // Cost / depth / alias / token ceilings, applied before execution starts.
     // A DoS control, not an authorization one — see query-limits.ts for the
     // measured headroom behind each number.
-    plugins: createQueryLimitPlugins(),
+    //
+    // The gate-field guard IS an authorization-surface control: it rejects the
+    // GOAL-372 PII gate predicate (`callerCanRead_EQ`) in client `where`
+    // inputs, which the SDL cannot hide without breaking its own
+    // `@authorization` directive. See gate-field-guard.ts.
+    plugins: [...createQueryLimitPlugins(), createGateFieldGuardPlugin()],
     // Build responses with the runtime-native Response class. Yoga's default
     // (@whatwg-node/fetch) falls back to a ponyfilled Response when its
     // Next.js detection fails — which it does inside Vercel's function

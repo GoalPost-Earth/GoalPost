@@ -153,14 +153,15 @@
   `@node(labels:)` (locked down with `@query(read: false, aggregate: false)` and
   `@mutation(operations: [])`) and reach it from the open type via a `@cypher`
   field — see `Person.privateProfile` → `PersonPrivateProfile`.
-- **Do not put a `@cypher` field inside an `@authorization` filter.** The
-  library emits it as `MATCH (n) CALL { … } WITH * WHERE <your where>`, and
-  Neo4j will not push a predicate below a `CALL` subquery, so the gate runs for
-  every node of that label instead of the one the caller asked for (measured:
-  168 → 146,453 dbHits on a single-row lookup). Declarative filters inline into
-  the `WHERE` and keep the index seek. Re-confirmed on the space-visibility rule
-  (GOAL-373), where the same technique was prototyped on `FieldContext` and
-  `GoalPulse` and rejected on measurement:
+- **Do not put a `@cypher` field inside an `@authorization` filter** — with one
+  measured exception, below. The library emits it as
+  `MATCH (n) CALL { … } WITH * WHERE <your where>`, and Neo4j will not push a
+  predicate below a `CALL` subquery, so the gate runs for every node of that
+  label instead of the one the caller asked for (measured: 168 → 146,453 dbHits
+  on a single-row lookup). Declarative filters inline into the `WHERE` and keep
+  the index seek. Re-confirmed on the space-visibility rule (GOAL-373), where
+  the same technique was prototyped on `FieldContext` and `GoalPulse` and
+  rejected on measurement:
 
   | single-row lookup      | declarative | `@cypher` gate | rows into `CALL` |
   | ---------------------- | ----------- | -------------- | ---------------- |
@@ -172,6 +173,66 @@
   has **no root query** — there is no caller `where` to be stranded below the
   `CALL`. "Does this type have a root query?" is the test for whether the
   technique is available at all.
+
+  **The exception (GOAL-372), and its exact condition.** The rule above is
+  really about *which rows reach the CALL*, not about `@cypher` as such. It is
+  safe to filter on a `@cypher` Boolean when — and only when — the type carries
+  `@query(read: false, aggregate: false)` **and** is reachable solely through a
+  `@cypher` field on an already-resolved parent. Then the caller's own `where`
+  has been applied on the initial MATCH before any CALL opens, and the gate runs
+  once per selected parent rather than once per node of the label.
+
+  `PersonPrivateProfile.callerCanRead` is the one place that holds today. It
+  compacts the 5-branch GOAL-275 PII rule from ~29 nested `EXISTS` to 4:
+  GET_PERSON_PROFILE 65 → 40 `EXISTS`, GET_LOGGED_IN_USER 45 → 20,
+  GET_ALL_ME_SPACES 77 → 27, with the emitted Cypher 13–36% shorter. On dev
+  data, an unbounded `people { privateProfile { email } }` over 639 Person nodes
+  goes 14,439 → 10,744 dbHits (−26%). Same policy — checked over 7,668
+  (caller, person) pairs on dev, 399 grants either way, zero disagreements.
+
+  **Measure predicate count and dbHits, not milliseconds.** Cold planning
+  (`replan=force`) improves ~18–35% on dev, but dev is a shared Aura instance
+  and that figure did not reproduce for a second reviewer measuring the same
+  statements. With a warm plan cache — production's normal state — both versions
+  are 24–25 ms and indistinguishable. The justification for this exception is
+  HEADROOM against predicate-count growth, which is the thing that actually went
+  super-linear and blew the 60 s `maxDuration` at 302 `EXISTS` under GOAL-275.
+  Do not quote a millisecond delta from this instance as if it were stable.
+
+  **Prove the condition with PROFILE; never assume it.** The evidence that makes
+  this an exception rather than a violation is: exactly 1 row enters the gate
+  CALL, no `NodeByLabelScan` anywhere in the plan, and total dbHits within ~2× of
+  the declarative form (measured 2 → 4 on a single-row lookup). Adding a root
+  query to such a type, or reaching it any other way, silently turns the gate
+  back into a label scan. Do not extend the trick to `FieldContext`, the pulse
+  types, `SpaceMembership` or `WeSpace` on the strength of this note — those are
+  top-level queryable, so the condition does not hold and each needs its own
+  measurement first.
+
+  Two costs to accept going in:
+  - `@filterable(byValue: false)` cannot be used on the gate field.
+    `@authorization` is validated against the same generated `…Where` input the
+    client sees, so hiding the predicate from the client also hides it from the
+    directive and the schema fails to build (`Field "callerCanRead_EQ" is not
+    defined by type`). The gate's `_EQ` therefore stays on the public
+    where-input, and **must be closed with a validation rule instead** —
+    `createGateFieldGuardPlugin()` in `src/lib/graphql/gate-field-guard.ts`,
+    wired in `apollo-server.ts`. Do not rely on the predicate simply not
+    working: v6.6.4 emits a cypher-field filter without binding the variable it
+    compares, so today it dies at Neo4j with `Variable 'var2' not defined`, and
+    an upgrade that fixes that emission would silently make it live. Even live
+    it is information-free — a Boolean about the CALLER'S OWN access, whose
+    answer the caller can already read off the null/non-null projection — but
+    the surface should be closed by design, not by library bug.
+  - Label expressions (`(s:Space&(MeSpace|WeSpace))`) are risky inside these
+    statements, because the library emits colon form (`this2:Space:MeSpace`) for
+    sibling rules in the same query and Neo4j refuses to mix the two notations
+    within one expression scope (two `EXISTS` blocks in one expression, one of
+    each form → hard `SyntaxError`; two separate top-level `MATCH` clauses →
+    accepted). The library's current emission falls on the safe side and the
+    label-expression variant does run, so this is a preference, not a
+    prohibition — but `WHERE (s:MeSpace OR s:WeSpace)` has no such dependency on
+    where the library happens to put things.
 - **To compact a multi-branch rule, collapse the TRAVERSAL, not the predicate —
   and an interface will not do it.** `@neo4j/graphql` expands an interface-typed
   relationship filter once per implementing type, so `space_SOME` over the
