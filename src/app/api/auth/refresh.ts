@@ -11,6 +11,12 @@ export type RefreshResult =
       ok: true
       accessToken: string
       refreshToken: string
+      /**
+       * `exp` of the freshly-minted access token, in unix SECONDS. Returned to
+       * the browser in the JSON body (GOAL-375) so the client-side cache can
+       * hold the bearer for its real lifetime instead of a flat 60s.
+       */
+      expiresAt: number
     }
   | {
       ok: false
@@ -166,6 +172,7 @@ export async function tryRefreshAccessToken(
       }
     }
 
+    const accessTokenExpiresAt = nowSeconds + ACCESS_TOKEN_TTL_SECONDS
     const newAccessToken = signJWT({
       user: {
         id: user.id,
@@ -174,7 +181,7 @@ export async function tryRefreshAccessToken(
         lastName: user.lastName,
         roles: user.roles,
       },
-      expiresAt: nowSeconds + ACCESS_TOKEN_TTL_SECONDS,
+      expiresAt: accessTokenExpiresAt,
     })
 
     // Rotate so a leaked refresh token has a single-use window before the
@@ -200,6 +207,7 @@ export async function tryRefreshAccessToken(
       ok: true,
       accessToken: newAccessToken,
       refreshToken: newRawRefreshToken,
+      expiresAt: accessTokenExpiresAt,
     }
   } catch (err) {
     console.error('Refresh token error:', err)

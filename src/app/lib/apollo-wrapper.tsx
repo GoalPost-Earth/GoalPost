@@ -3,6 +3,7 @@
 import { ApolloLink, ApolloClient, InMemoryCache } from '@apollo/client'
 import { ApolloProvider } from '@apollo/client/react'
 import { ERROR_POLICY, authLink, httpLink, retryLink } from './apollo-functions'
+import { invalidateAccessTokenCache } from '@/lib/auth/access-token-client'
 
 import { onError } from '@apollo/client/link/error'
 import { useMemo } from 'react'
@@ -41,6 +42,20 @@ export function ApolloWrapper({
               `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
             )
           )
+          // GOAL-375: the bearer cache now holds a token for its real
+          // lifetime (up to ~29 min) rather than a flat 60s, so a token the
+          // server REJECTS while it is still unexpired no longer self-heals
+          // on its own — the dominant case being a `JWT_SECRET` rotation or a
+          // preview deploy carrying a different secret, which the
+          // /api/auth/access-token route calls out by name. Yoga returns that
+          // as a 200 carrying `Unauthenticated`, so RetryLink never sees a
+          // status and nothing else would ever drop the cache. Invalidate on
+          // that exact message (NOT on `Forbidden`, which is a legitimate
+          // Space-permission answer and must not churn the token) so the next
+          // operation re-resolves and the route can refresh.
+          if (graphQLErrors.some((e) => e.message === 'Unauthenticated')) {
+            invalidateAccessTokenCache()
+          }
           toast.error('GraphQL Error', {
             description: graphQLErrors[0].message,
           })
