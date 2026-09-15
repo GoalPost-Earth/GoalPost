@@ -10,6 +10,7 @@ import {
   Calendar,
   ExternalLink,
   Layers,
+  Link2,
   MapPin,
   Sparkles,
   Target,
@@ -64,6 +65,7 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
   const [editContent, setEditContent] = useState('')
   const [editWhy, setEditWhy] = useState('')
   const [editLocation, setEditLocation] = useState('')
+  const [editSourceUrl, setEditSourceUrl] = useState('')
   const [editTime, setEditTime] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const {
@@ -110,6 +112,7 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
   const optional = pulse as {
     why?: string | null
     location?: string | null
+    sourceUrl?: string | null
     time?: string | null
   }
   // GOAL-302: when `location` is the durable document-download locator, surface
@@ -117,6 +120,24 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
   // verbatim. The stored value stays untouched; the affordance routes through
   // the current origin's relative path, which re-checks Space access on hit.
   const documentLocation = parseDocumentDownloadLocation(optional.location)
+  // GOAL-363: `sourceUrl` is the resource's true source link — the bulk import
+  // writes it from the sheet's `source_url` column, while the sheet's plain
+  // `url` column lands in `location` (GOAL-355). When both are links the source
+  // link is the one to show, so the redundant import URL is suppressed rather
+  // than printed beside it.
+  //
+  // Only a LINK is suppressed. `location` means "the resource itself"
+  // (kb/05-data-entities.md) and is just as often a street address or a room —
+  // that is the actionable datum and must survive a `sourceUrl` alongside it.
+  // The document-download action is likewise a different affordance (a file,
+  // not a link) and always survives.
+  const sourceUrl = optional.sourceUrl?.trim() || null
+  const locationIsLink = /^(https?:\/\/|www\.)/i.test(
+    optional.location?.trim() ?? ''
+  )
+  const showLocation =
+    Boolean(optional.location?.trim()) &&
+    (Boolean(documentLocation) || !sourceUrl || !locationIsLink)
   // why / location / time are defined on the same three pulse types, so a
   // single guard covers reading them defensively, editing them, and writing
   // the `*_SET` fields back through the matching update inputs.
@@ -157,6 +178,7 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
     setEditContent(pulse.content ?? '')
     setEditWhy(optional.why ?? '')
     setEditLocation(optional.location ?? '')
+    setEditSourceUrl(optional.sourceUrl ?? '')
     setEditTime(optional.time ?? '')
     setIsEditMode(true)
   }
@@ -167,6 +189,7 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
     setEditContent('')
     setEditWhy('')
     setEditLocation('')
+    setEditSourceUrl('')
     setEditTime('')
   }
 
@@ -193,6 +216,20 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
           update.location_SET = editLocation.trim() || null
         }
         update.time_SET = editTime.trim() || null
+      }
+      // GOAL-363: `sourceUrl` is the field the detail view now links, so it has
+      // to be correctable from the same form. It only exists on ResourcePulse.
+      //
+      // Sent ONLY when the member actually changed it. Document ingestion also
+      // writes `sourceUrl` from a background worker (GOAL-344), so blindly
+      // replaying the value snapshotted when the form opened would let a save
+      // that only retitled the pulse silently null out a link the worker set
+      // in the meantime. Same hazard `location_SET` is guarded against above.
+      if (pulse.__typename === 'ResourcePulse') {
+        const nextSourceUrl = editSourceUrl.trim() || null
+        if (nextSourceUrl !== (optional.sourceUrl ?? null)) {
+          update.sourceUrl_SET = nextSourceUrl
+        }
       }
       const variables = { where: { id_EQ: pulseId }, update }
       const typename = pulse.__typename
@@ -437,6 +474,17 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
                 placeholder="Date or timeframe"
                 disabled={isSaving}
               />
+              {resource && (
+                <EditTextInput
+                  className="sm:col-span-2"
+                  id="pulse-edit-source-url"
+                  label="Source link"
+                  value={editSourceUrl}
+                  onChange={setEditSourceUrl}
+                  placeholder="Where this resource came from"
+                  disabled={isSaving}
+                />
+              )}
             </div>
           )}
         </section>
@@ -462,9 +510,19 @@ export const PulseDetailsBody: FC<{ pulseId: string; label?: string }> = ({
         </>
       )}
 
-      {!isEditMode && (optional.location || optional.time) && (
+      {!isEditMode && (sourceUrl || showLocation || optional.time) && (
         <section className="px-6 pb-5 space-y-2">
-          {optional.location &&
+          {sourceUrl && (
+            <div
+              className="flex items-start gap-2 text-xs text-gp-ink-muted dark:text-white/55"
+              title="Source link"
+            >
+              <Link2 className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <LinkifiedText text={sourceUrl} className="min-w-0 break-words" />
+            </div>
+          )}
+          {showLocation &&
+            optional.location &&
             (documentLocation ? (
               // GOAL-302: opaque "Open document" action — never render the raw
               // download URL. The relative path re-checks Space access on hit.

@@ -65,6 +65,7 @@ export const GET_PULSE_DETAILS_WITH_CONTEXT = graphql(`
       intensity
       why
       location
+      sourceUrl
       time
       status
       context {
