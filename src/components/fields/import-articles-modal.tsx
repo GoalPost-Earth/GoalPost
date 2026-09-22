@@ -184,24 +184,6 @@ export function ImportArticlesModal({
     clear()
   }, [clear])
 
-  /**
-   * GOAL-359 — queue the batch, then step out of the way.
-   *
-   * A successful submit opens a chat thread dedicated to this import (the hook
-   * emits the event; the studio shell hydrates the assistant into it), and that
-   * thread is now the place to watch it from. Leaving the modal up would park a
-   * second progress panel directly over the one the member was just handed.
-   *
-   * Only on success, and only when a thread actually opened: a submit that
-   * failed has an error to show, and an import with no thread still needs the
-   * panel below. Nothing is reset on the way out — the job is in flight, so
-   * reopening Import Articles still recovers straight into it (GOAL-357).
-   */
-  const handleSubmit = useCallback(async () => {
-    const threadId = await submit(validRows)
-    if (threadId) onClose()
-  }, [onClose, submit, validRows])
-
   const handleClose = useCallback(() => {
     if (isSubmitting) return
     // A finished import is dismissed for good; one still running is only
@@ -213,20 +195,39 @@ export function ImportArticlesModal({
   }, [inFlight, isRecovering, isSubmitting, onClose, reset])
 
   /**
-   * Queue the previewed rows, then re-read the field's job list — here and on
-   * the page behind, which polls the same list and goes quiet the same way.
+   * Queue the previewed rows, refresh the job list, then step out of the way.
    *
-   * Submitting is the one moment the list is guaranteed to be behind: it has
-   * just gained a job, and the import it replaces as the tracked one has just
-   * become an "other" this panel has to name. `submit` resolves after the 202,
-   * so by now the server can see both. A failed submit re-reads for nothing,
-   * which is cheaper than working out whether it needed to.
+   * Re-read the field's job list — here and on the page behind, which polls the
+   * same list. Submitting is the one moment that list is guaranteed to be
+   * behind: it has just gained a job, and the import it replaces as the tracked
+   * one has just become an "other" this panel has to name. `submit` resolves
+   * after the 202, so by now the server can see both. A failed submit re-reads
+   * for nothing, which is cheaper than working out whether it needed to.
+   *
+   * Then close, but only when a thread actually opened (GOAL-359). A successful
+   * submit opens a chat thread dedicated to this import and that thread is now
+   * the place to watch it from; leaving the modal up would park a second
+   * progress panel over the one the member was just handed. A submit that
+   * failed has an error to show, and an import with no thread still needs the
+   * panel below. Nothing is reset on the way out — the job is in flight, so
+   * reopening Import Articles recovers straight into it (GOAL-357).
+   *
+   * The refresh and the parent notification happen BEFORE the close check, so
+   * they still run for an import that opened no thread.
+   *
+   * NOTE: this function existed twice after a conflict resolution kept both
+   * sides — a duplicate `const` in one scope, so the module would not compile.
+   * The two halves were different features, not copies, and both are required:
+   * `onJobQueued` is a required prop and the `listRefreshKey` bump is part of
+   * this panel's documented contract, while the close is GOAL-359. Merged
+   * rather than picking a winner.
    */
   const handleSubmit = useCallback(async () => {
-    await submit(validRows)
+    const threadId = await submit(validRows)
     setListRefreshKey((key) => key + 1)
     onJobQueued()
-  }, [onJobQueued, submit, validRows])
+    if (threadId) onClose()
+  }, [onClose, onJobQueued, submit, validRows])
 
   const handleFileSelected = useCallback(async (picked: File | null) => {
     if (!picked) return
