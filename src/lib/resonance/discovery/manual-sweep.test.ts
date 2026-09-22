@@ -631,7 +631,9 @@ describe('runManualResonanceSweep', () => {
       for (const call of discoverResonancesForContext.mock.calls) {
         expect(call[0]).toBe(SPACE_ID)
         expect(call[2]).toBeUndefined() // full sweep, not incremental
-        expect(call[3]).toBe(START + BUDGET) // deadline threaded through
+        // GOAL-347 turned this argument into a ResonanceBudget; the sweep's
+        // own deadline is wrapped rather than passed as a bare number.
+        expect(call[3]).toEqual({ deadlineAt: START + BUDGET })
       }
     })
 

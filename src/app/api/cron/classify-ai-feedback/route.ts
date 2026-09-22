@@ -25,10 +25,14 @@ export const maxDuration = 300
 
 export async function GET(request: NextRequest) {
   try {
+    // Fail-CLOSED (GOAL-347). This route runs an LLM classification batch, so
+    // an unset secret would leave it an anonymous model-spend amplifier.
+    // CRON_SECRET is set in all three Vercel environments; local runs need it
+    // in .env.local.
     const authHeader = request.headers.get('authorization')
     const cronSecret = process.env.CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       console.warn(
         '[ClassifyFeedback Cron] Unauthorized cron request attempted'
       )

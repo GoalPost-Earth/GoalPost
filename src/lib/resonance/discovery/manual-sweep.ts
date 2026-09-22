@@ -326,12 +326,13 @@ export async function runManualResonanceSweep(params: {
     if (outOfTime()) break
     try {
       within.push(
-        ...(await discoverResonancesForContext(
-          spaceId,
-          contextId,
-          undefined,
-          deadline
-        ))
+        // GOAL-347 replaced the raw epoch-ms deadline with a ResonanceBudget
+        // on this entry point. The manual sweep keeps its own `deadline`
+        // number (it also drives `outOfTime()` and the embedding deadline), so
+        // it is wrapped here rather than threaded through as a budget.
+        ...(await discoverResonancesForContext(spaceId, contextId, undefined, {
+          deadlineAt: deadline,
+        }))
       )
       if (hasOtherFields && !outOfTime()) {
         crossField.push(

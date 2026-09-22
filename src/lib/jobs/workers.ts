@@ -12,7 +12,7 @@ import {
 } from './queue-config'
 import { generatePulseEmbeddings } from '../resonance/embeddings/pulse-embedder'
 import { enrichPersonFromPulses } from '../resonance/embeddings/person-enricher'
-import { discoverGlobalResonances } from '../resonance/discovery/pattern-detector'
+import { discoverGlobalResonances } from '../resonance/discovery/global-sweep'
 
 // Redis connection options (BullMQ manages the client internally)
 const redisConnection: ConnectionOptions = {
