@@ -115,6 +115,10 @@ export async function POST(request: NextRequest) {
       CREATE (link)-[:SOURCE]->(src)
       CREATE (link)-[:TARGET]->(tgt)
       CREATE (ctx)-[:HAS_RESONANCE]->(link)
+      // Carry the theme across, same idiom as the single-accept route.
+      FOREACH (fr IN [(sug)-[:RESONATES_AS]->(f:FieldResonance) | f] |
+        CREATE (link)-[:RESONATES_AS]->(fr)
+      )
       SET sug.status = 'accepted', sug.acceptedAt = datetime()
       RETURN count(link) AS accepted,
              collect(DISTINCT src.id) + collect(DISTINCT tgt.id) AS pulseIds

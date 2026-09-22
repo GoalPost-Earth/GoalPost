@@ -27,6 +27,11 @@
  *   point, so it is asserted on the mocks), counts arriving as strings still
  *   trip it, and a failed count fails OPEN rather than silently disabling
  *   discovery.
+ * - Phase 2 themes: the Space's existing theme vocabulary reaches the prompt
+ *   (and is absent when there is none), is capped and cached per Space, and
+ *   the FieldResonance node is upserted ONCE per call and threaded onto every
+ *   suggestion write — with both reads failing OPEN, so neither a vocabulary
+ *   read nor a theme write can cost a resonance.
  */
 
 const graphQuery = jest.fn()
@@ -63,18 +68,33 @@ const SIMILARITY_FLOOR = 0.7
 const ADAPTIVE_THRESHOLD_SIGMA = 1.5
 const TTL_MS = 5 * 60 * 1000
 const FALLBACK_TTL_MS = 15 * 1000
+const LABEL_TTL_MS = 5 * 60 * 1000
 const MIN_CONNECTION_CONFIDENCE = 0.75
 
 const SPACE_ID = 'ws_commons'
 const CONTEXT_ID = 'ctx_holding'
 const ANCHOR = 'pulse_anchor'
+const THEME_ID = 'fr_regenerative_commons'
+// The fence the vocabulary block opens with. Anchoring on the marker rather
+// than the surrounding prose keeps these assertions stable when the wording
+// around it is reworded (it was, when the block was fenced and labelled as
+// data to blunt stored prompt injection).
+const VOCABULARY_HEADING = '--- BEGIN EXISTING NAMES ---'
 const START = 1_780_000_000_000
 
 /** Every test uses its own field id — the threshold cache is module-level. */
 let fieldSeq = 0
 const nextFieldId = () => `ctx_field_${(fieldSeq += 1)}`
 
+/** Same for the Space — the theme-vocabulary cache is module-level too. */
+let spaceSeq = 0
+const nextSpaceId = () => `ws_space_${(spaceSeq += 1)}`
+
 // ─── graph stub ─────────────────────────────────────────────────────────────
+
+type LabelRows = Array<{ label: unknown }> | 'throw'
+
+type ThemeRows = Array<{ id: string }> | 'throw'
 
 type PendingRows = Array<{ pending: number | string | null }> | 'throw'
 
@@ -99,6 +119,10 @@ interface GraphStub {
   pending?: PendingRows
   /** `null` models a pulse whose context belongs to no Space. */
   resolvedSpaceId?: string | null
+  /** Rows (or a thrown error) from the Space's existing theme vocabulary. */
+  labels?: LabelRows
+  /** Rows (or a thrown error) from the FieldResonance upsert. */
+  theme?: ThemeRows
 }
 
 let stub: GraphStub
@@ -122,6 +146,18 @@ graphQuery.mockImplementation(
               : stub.resolvedSpaceId,
         },
       ]
+    }
+    if (cypher.includes('RETURN fr.label AS label')) {
+      if (stub.labels === 'throw') {
+        throw new Error('Neo4j connection acquisition timed out')
+      }
+      return stub.labels ?? []
+    }
+    if (cypher.includes('MERGE (space)-[:HAS_FIELD_RESONANCE]')) {
+      if (stub.theme === 'throw') {
+        throw new Error('Neo4j connection acquisition timed out')
+      }
+      return stub.theme ?? [{ id: THEME_ID }]
     }
     if (cypher.includes('count(DISTINCT s) AS pending')) {
       if (stub.pending === 'throw') {
@@ -207,6 +243,23 @@ const writes = () =>
       (cypher as string).includes('CREATE (suggestion:ResonanceSuggestion')
     )
     .map(([, params]) => params as Record<string, unknown>)
+
+const labelFetchCalls = () =>
+  graphQuery.mock.calls.filter(([cypher]) =>
+    (cypher as string).includes('RETURN fr.label AS label')
+  )
+
+const themeUpsertCalls = () =>
+  graphQuery.mock.calls.filter(([cypher]) =>
+    (cypher as string).includes('MERGE (space)-[:HAS_FIELD_RESONANCE]')
+  )
+
+/** The user-role prompt actually handed to the (mocked) analysis provider. */
+const promptText = () => {
+  const call = structuredOutput.mock.calls.at(-1)
+  const messages = call?.[0] as Array<{ role: string; content: string }>
+  return messages.find((m) => m.role === 'user')?.content ?? ''
+}
 
 const pendingPreCheckCalls = () =>
   graphQuery.mock.calls.filter(([cypher]) =>
@@ -689,5 +742,242 @@ describe('pending-degree pre-check', () => {
     ).toBe(true)
     expect(pendingPreCheckCalls()).toHaveLength(0)
     expensiveWorkSkipped()
+  })
+})
+
+// ─── theme vocabulary + FieldResonance node (WF-06 step 6) ──────────────────
+
+/**
+ * Discovery against a FRESH Space and field, so neither module-level cache
+ * (theme vocabulary, similarity threshold) carries state in from another test.
+ */
+function discoverInSpace(spaceId: string, overrides: Partial<GraphStub> = {}) {
+  stub = {
+    scopeContextId: nextFieldId(),
+    similar: [
+      { id: 'pulse_b', content: 'b', similarity: 0.9 },
+      { id: 'pulse_c', content: 'c', similarity: 0.88 },
+    ],
+    estimate: [{ mean: 0.726, sd: 0.07, sampled: 24 }],
+    ...overrides,
+  }
+  return discoverResonancesForPulse(ANCHOR, spaceId)
+}
+
+describe('theme vocabulary fed back to the model', () => {
+  beforeEach(() => {
+    stubPattern([connection(ANCHOR, 'pulse_b', 0.9)])
+  })
+
+  it('offers the Space’s existing theme names and asks for verbatim reuse', async () => {
+    await discoverInSpace(nextSpaceId(), {
+      labels: [{ label: 'Regenerative Commons' }, { label: 'Tool Library' }],
+    })
+
+    expect(promptText()).toContain(VOCABULARY_HEADING)
+    expect(promptText()).toContain('- Regenerative Commons')
+    expect(promptText()).toContain('- Tool Library')
+    expect(promptText()).toContain('REUSE that name')
+  })
+
+  it('appends no vocabulary section at all when the Space has no themes yet', async () => {
+    await discoverInSpace(nextSpaceId(), { labels: [] })
+
+    expect(labelFetchCalls()).toHaveLength(1)
+    expect(promptText()).not.toContain(VOCABULARY_HEADING)
+    expect(promptText()).not.toContain('REUSE that name')
+  })
+
+  it('drops null and blank labels rather than offering empty bullets', async () => {
+    await discoverInSpace(nextSpaceId(), {
+      labels: [
+        { label: 'Regenerative Commons' },
+        { label: null },
+        { label: '   ' },
+        { label: 42 },
+      ],
+    })
+
+    // Only the vocabulary section — the base prompt has bullets of its own.
+    const vocabulary = promptText().split(VOCABULARY_HEADING)[1] ?? ''
+    expect(vocabulary.split('\n').filter((l) => l.startsWith('- '))).toEqual([
+      '- Regenerative Commons',
+    ])
+    expect(vocabulary).not.toContain('- 42')
+  })
+
+  it('caps the read at MAX_LABELS_IN_PROMPT and scopes it to the Space', async () => {
+    const space = nextSpaceId()
+    await discoverInSpace(space, {
+      labels: [{ label: 'Regenerative Commons' }],
+    })
+
+    const [, params] = labelFetchCalls()[0] as [string, Record<string, unknown>]
+    expect(params.spaceId).toBe(space)
+    // LIMIT rejects Neo4j Floats, so the cap must be wrapped in neo4j.int().
+    expect(String(params.limit)).toBe('40')
+  })
+
+  it('fails open to no vocabulary when the label read throws', async () => {
+    const created = await discoverInSpace(nextSpaceId(), { labels: 'throw' })
+
+    expect(promptText()).not.toContain(VOCABULARY_HEADING)
+    expect(created).toHaveLength(1)
+    expect(
+      warnLines().some((line) =>
+        line.includes('Could not read existing theme labels')
+      )
+    ).toBe(true)
+  })
+
+  it('reads a Space’s vocabulary once per sweep, then serves it from cache', async () => {
+    const space = nextSpaceId()
+    await discoverInSpace(space, {
+      labels: [{ label: 'Regenerative Commons' }],
+    })
+    jest.advanceTimersByTime(LABEL_TTL_MS - 1)
+    await discoverInSpace(space, {
+      labels: [{ label: 'Regenerative Commons' }],
+    })
+
+    expect(labelFetchCalls()).toHaveLength(1)
+    expect(promptText()).toContain('- Regenerative Commons')
+  })
+
+  it('re-reads the vocabulary once the 5 minute TTL expires', async () => {
+    const space = nextSpaceId()
+    await discoverInSpace(space, {
+      labels: [{ label: 'Regenerative Commons' }],
+    })
+    jest.advanceTimersByTime(LABEL_TTL_MS + 1)
+    await discoverInSpace(space, {
+      labels: [{ label: 'Regenerative Commons' }, { label: 'Tool Library' }],
+    })
+
+    expect(labelFetchCalls()).toHaveLength(2)
+    expect(promptText()).toContain('- Tool Library')
+  })
+
+  it('caches per Space, so one Space’s themes never leak into another’s prompt', async () => {
+    await discoverInSpace(nextSpaceId(), {
+      labels: [{ label: 'Regenerative Commons' }],
+    })
+    await discoverInSpace(nextSpaceId(), {
+      labels: [{ label: 'Tool Library' }],
+    })
+
+    expect(labelFetchCalls()).toHaveLength(2)
+    expect(promptText()).toContain('- Tool Library')
+    expect(promptText()).not.toContain('- Regenerative Commons')
+  })
+
+  it('evicts an expired Space entry on the next miss', async () => {
+    const stale = nextSpaceId()
+    await discoverInSpace(stale, {
+      labels: [{ label: 'Regenerative Commons' }],
+    })
+
+    jest.advanceTimersByTime(LABEL_TTL_MS + 1)
+    await discoverInSpace(nextSpaceId(), {
+      labels: [{ label: 'Tool Library' }],
+    })
+
+    // Observed the only way a private Map can be: the swept entry serves
+    // nothing afterwards, so the Space re-reads.
+    await discoverInSpace(stale, { labels: [{ label: 'Mutual Repair' }] })
+
+    expect(labelFetchCalls()).toHaveLength(3)
+    expect(promptText()).toContain('- Mutual Repair')
+  })
+})
+
+describe('FieldResonance theme node', () => {
+  it('writes the theme ONCE per call, not once per pair', async () => {
+    stubPattern([
+      connection(ANCHOR, 'pulse_b', 0.97),
+      connection(ANCHOR, 'pulse_c', 0.9),
+      connection(ANCHOR, 'pulse_d', 0.8),
+    ])
+
+    await discoverInSpace(nextSpaceId())
+
+    expect(writes()).toHaveLength(3)
+    expect(themeUpsertCalls()).toHaveLength(1)
+  })
+
+  it('keys the theme on the trimmed, lowercased label and carries the description', async () => {
+    structuredOutput.mockResolvedValue({
+      label: '  Regenerative Commons  ',
+      description: 'Tending shared ground.',
+      pulseConnections: [connection(ANCHOR, 'pulse_b', 0.9)],
+    })
+
+    const space = nextSpaceId()
+    await discoverInSpace(space)
+
+    const [, params] = themeUpsertCalls()[0] as [
+      string,
+      Record<string, unknown>,
+    ]
+    expect(params).toEqual({
+      spaceId: space,
+      labelKey: 'regenerative commons',
+      label: 'Regenerative Commons',
+      description: 'Tending shared ground.',
+    })
+  })
+
+  it('threads the theme id onto every suggestion write', async () => {
+    stubPattern([
+      connection(ANCHOR, 'pulse_b', 0.97),
+      connection(ANCHOR, 'pulse_c', 0.9),
+    ])
+
+    await discoverInSpace(nextSpaceId())
+
+    expect(writes().map((w) => w.fieldResonanceId)).toEqual([
+      THEME_ID,
+      THEME_ID,
+    ])
+  })
+
+  it('never queries for a blank label, and writes the suggestion ungrouped', async () => {
+    structuredOutput.mockResolvedValue({
+      label: '   ',
+      description: 'Tending shared ground.',
+      pulseConnections: [connection(ANCHOR, 'pulse_b', 0.9)],
+    })
+
+    const created = await discoverInSpace(nextSpaceId())
+
+    expect(themeUpsertCalls()).toHaveLength(0)
+    expect(created).toHaveLength(1)
+    expect(writes()[0].fieldResonanceId).toBeNull()
+  })
+
+  it('FAILS OPEN when the theme write throws — a theme hiccup never costs a resonance', async () => {
+    stubPattern([
+      connection(ANCHOR, 'pulse_b', 0.97),
+      connection(ANCHOR, 'pulse_c', 0.9),
+    ])
+
+    const created = await discoverInSpace(nextSpaceId(), { theme: 'throw' })
+
+    expect(created).toHaveLength(2)
+    expect(writes().map((w) => w.fieldResonanceId)).toEqual([null, null])
+    expect(
+      warnLines().some((line) =>
+        line.includes('suggestion will be written ungrouped')
+      )
+    ).toBe(true)
+  })
+
+  it('treats a theme write that returns no row as ungrouped, not as a failure', async () => {
+    stubPattern([connection(ANCHOR, 'pulse_b', 0.9)])
+
+    const created = await discoverInSpace(nextSpaceId(), { theme: [] })
+
+    expect(created).toHaveLength(1)
+    expect(writes()[0].fieldResonanceId).toBeNull()
   })
 })

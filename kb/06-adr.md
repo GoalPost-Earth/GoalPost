@@ -638,3 +638,85 @@ The nightly cron is unchanged — it still sweeps each root field on its own.
 - LLM calls are still metered as `principal: 'system'`, so a manual sweep's cost
   is not attributed to the member who started it. Only the claims above bound
   it.
+
+---
+
+## ADR-021: Discovery Volume Is Bounded at Write Time, and a Theme Is a Node
+
+**Decision:** Resonance discovery bounds how much it proposes, and the pattern
+an LLM finds across a cluster is written once as a `FieldResonance` node rather
+than copied onto every pair.
+
+**Why bounding was needed:** ADR-004 puts a human in the loop on every link.
+That only works if the queue is reviewable. On a 24-article import it was not:
+292 pending suggestions over 60 pulses, one pulse carrying 21. The fixed 0.7
+similarity threshold was the cause — a homogeneous corpus is uniformly similar
+to itself, so that field's *mean* pairwise similarity was 0.726 and discovery
+proposed 170 of the 276 possible pairs. A field wired 62% to itself carries no
+information. (Note that Neo4j rescales raw cosine to `(1+cos)/2`, so `0.7` was
+really raw cosine 0.4 — weaker than it looks.)
+
+**Rules:**
+
+- The similarity cut is derived per field from that field's own pairwise
+  distribution (mean + 1.5 sd), floored at the historic 0.7. No single constant
+  serves both a tight themed field and a broad one.
+- A pulse carries at most 3 `pending` suggestions in a given Space's queue,
+  counted live so the bound holds across on-upload, cron and manual sweeps, and
+  scoped to the writing Space so one Space's backlog never suppresses discovery
+  in another.
+- Connections scored below 0.75 confidence are not written.
+- The within-field path writes only pairs incident to the anchor pulse, matching
+  the cross-field path.
+- An anchor already at the cap short-circuits before the vector search and the
+  LLM call.
+
+**The cap paces, it does not ceiling.** Only `pending` suggestions count, so
+reviewing frees budget and the next sweep proposes what was suppressed. A pulse
+whose queue is never reviewed is skipped by design.
+
+**Why the theme is a node:** WF-06 step 6 always specified `FieldResonance` and
+nothing ever wrote one, so the label and description were flattened onto each
+pair — 31 pairs meant 31 identical paragraphs and nothing in the graph naming
+the theme. Reviewers read that as duplication even though pair-level dedup was
+working correctly. A theme node gives the review queue something to group by,
+which is what makes bulk accept/reject possible, and gives the graph a
+traversable "what runs through this space" anchor.
+
+**The node is written in addition to the per-pair copy, not instead of it.**
+Suggestions and links still carry their own `label` and `description`, so every
+existing read surface keeps working without a join. Retiring the duplication is
+Phase 3 work, once the grouped review surface reads the theme from the node.
+
+**A theme's description is frozen at creation** (`ON CREATE` only). That keeps
+the grouping key stable — a sweep cannot rewrite a theme's wording underneath a
+reviewer mid-review — at the cost that a small early cluster permanently owns
+the phrasing for a theme a later, richer cluster expresses better. Letting a
+reviewer edit it is the intended mitigation and is deferred to Phase 3.
+
+Discovery feeds the Space's existing labels back to the model as a vocabulary
+to reuse verbatim. Without it each run named its theme afresh and one pulse
+accumulated eight near-synonyms, fragmenting the very grouping the node exists
+to provide.
+
+**Trade-offs:**
+
+- Recall drops deliberately. Coverage falls (a 24-pulse field went from every
+  pulse touched to 17 of 24) on the view that a pair which is unremarkable *for
+  its field* is not worth a human decision.
+- The cut is a heuristic, not a calibrated percentile: pairwise similarities are
+  not independent observations, so "mean + 1.5 sd" should not be read as a
+  statistical guarantee.
+- Small fields are cut hardest, since a thin sample gives a noisy sd.
+  `MIN_PULSES_FOR_ADAPTIVE_THRESHOLD` gates this and is the knob to raise if
+  new fields feel empty.
+- The degree cap is read-then-create with no uniqueness constraint, so
+  concurrent sweeps can overshoot it by one — the same accepted residual as the
+  symmetric pair dedup.
+- The theme find-or-create has the same shape: `MERGE` over an unbound pattern
+  with no uniqueness constraint covering `(space, labelKey)`, so two concurrent
+  sweeps can mint two nodes for one Space and label. The vocabulary read
+  de-duplicates by `labelKey` before showing the model, so the visible effect is
+  a split group rather than a repeated name.
+- `scripts/simulate-resonance-policy.mjs` reproduces the measured before/after
+  against any environment and is the evidence behind the constants.

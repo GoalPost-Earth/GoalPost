@@ -194,6 +194,21 @@ export async function POST(
       // create_resonance path (src/lib/chat/hitl.ts).
       CREATE (context)-[:HAS_RESONANCE]->(link)
 
+      // Carry the suggestion's theme across to the confirmed link
+      // (kb/05: ResonanceLink -RESONATES_AS-> FieldResonance). The theme node
+      // is created at discovery time and shared by every pair that expresses
+      // it, so accepting simply re-points — nothing new is minted here. A
+      // suggestion written before themes existed, or one whose theme write
+      // failed, has no RESONATES_AS and this is a no-op.
+      //
+      // Pattern comprehension rather than OPTIONAL MATCH + FOREACH: it cannot
+      // multiply the surrounding rows by construction, and needs no WITH
+      // boundary, so source/target/context stay in scope for the SET below.
+      // Same idiom as accept-bulk.
+      FOREACH (fr IN [(suggestion)-[:RESONATES_AS]->(f:FieldResonance) | f] |
+        CREATE (link)-[:RESONATES_AS]->(fr)
+      )
+
       // Update suggestion status
       SET suggestion.status = 'accepted'
       SET suggestion.acceptedAt = datetime()

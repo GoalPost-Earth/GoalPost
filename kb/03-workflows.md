@@ -137,9 +137,21 @@ WF-12: Promise Weave Authoring           (Member weaves pulses + a person into a
 3. Groups similar pulses into clusters.
 4. Sends clusters to LLM for pattern analysis.
 5. LLM returns: label (e.g., "grief"), description, and connections with confidence scores.
-6. Creates `FieldResonance` node for the pattern (if new).
-7. Creates `ResonanceLink` nodes between pulse pairs with confidence and evidence.
-8. Links are created with status `pending` — awaiting human review.
+6. Finds or creates the `FieldResonance` node for the pattern within the Space
+   (keyed on the normalized label, so a recurring theme reuses one node). The
+   Space's existing labels are offered to the LLM in step 4 as a vocabulary to
+   reuse, so the same theme keeps the same name across runs.
+7. Creates `ResonanceSuggestion` nodes between pulse pairs with confidence and
+   evidence, each pointing at the theme via `RESONATES_AS`. Each suggestion
+   still carries its own copy of the theme's `label` and `description` as well
+   — the node is added alongside that copy, not in place of it (see
+   `kb/05-data-entities.md`). The theme node is resolved lazily, on the first
+   pair actually written, and pruned if the run ends up writing nothing.
+8. Suggestions are created with status `pending` — awaiting human review
+   (ADR-004). Accepting one promotes it to a `ResonanceLink` and carries the
+   same `RESONATES_AS` edge across; no new theme node is minted on accept.
+
+Volume is bounded at write time — see `kb/06-adr.md` ADR-021.
 
 ### Manual trigger (GOAL-368)
 

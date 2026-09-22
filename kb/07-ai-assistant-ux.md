@@ -20,7 +20,7 @@ The rules here exist to prevent specific bugs that have already shipped to users
 
 | Forbidden token in chat       | Use instead                                       |
 | ----------------------------- | ------------------------------------------------- |
-| Raw entity ids (`me_...`, `ws_...`, `ctx_...`, `pulse_...`, person UUIDs) | Human-readable name (`activeSpace.name`, `focalEntity.label`, etc.) |
+| Raw entity ids (`me_...`, `ws_...`, `ctx_...`, `pulse_...`, `rs_...`, `rl_...`, `fr_...`, person UUIDs) | Human-readable name (`activeSpace.name`, `focalEntity.label`, etc.) |
 | `__typename` (e.g. "GoalPulse")                                          | A user-facing label ("goal", "resource", "story") |
 | Internal flags (`approvalRequired`, `pendingApproval`, hash strings)     | Approval is a UI concern, not chat copy           |
 | Cypher fragments, Neo4j labels, GraphQL field names                      | Plain English                                     |

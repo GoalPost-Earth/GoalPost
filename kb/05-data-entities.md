@@ -686,10 +686,52 @@ semantic org discovery is a follow-up (resonance is pulse↔pulse today).
 
 **Neo4j Labels:** `["FieldResonance"]`
 
-| Field       | Type   | Notes                                           |
-| ----------- | ------ | ----------------------------------------------- |
-| label       | string | Indexed — e.g., "grief", "courage", "belonging" |
-| description | string | Optional                                        |
+The named pattern — "Regenerative Commons", "grief", "belonging" — that many
+ResonanceLinks and ResonanceSuggestions express. Written **once per Space at
+discovery time** and reused by every pair that shares it, so the theme is a
+node in the graph and not only a string.
+
+**The per-pair copy still exists.** Each ResonanceSuggestion and ResonanceLink
+continues to carry its own `label` and `description`, so a 31-pair theme is
+still 31 identical paragraphs in the graph — the node is written *in addition
+to* them, not instead of them. That keeps every existing read surface working
+without a join while the grouped review UI is built; retiring the copy is
+Phase 3 work, and until then the node is the grouping key, not the only
+record of the theme.
+
+**Legacy nodes.** Seed tooling (`scripts/seed-build-space.ts`,
+`docs/cypher/seed-dev.cypher`) creates FieldResonance via
+`(FieldContext)-[:HAS_RESONANCE]->(FieldResonance)` with no `labelKey` and no
+`HAS_FIELD_RESONANCE` edge. Those nodes are invisible to both discovery
+helpers: they are never offered as vocabulary, and a theme of the same name
+would be minted alongside them. No live environment carries any today (dev and
+demo both hold zero FieldResonance nodes), so no backfill has been run — but a
+seeded environment needs `labelKey` set and a Space edge derived from the
+context before discovery will converge on those names.
+
+Scoped to one Space: the find-or-create MERGEs on the whole
+`(Space)-[:HAS_FIELD_RESONANCE]->(FieldResonance)` pattern, so two Spaces that
+independently surface "Belonging" get their own nodes and never share one.
+
+| Field       | Type     | Notes                                                                 |
+| ----------- | -------- | --------------------------------------------------------------------- |
+| id          | string   | `fr_<uuid>` — unique constraint                                        |
+| label       | string   | Indexed — display form, e.g. "Regenerative Commons"                    |
+| labelKey    | string   | Indexed — `trim(lower(label))`; the MERGE key, so case/spacing variants collapse to one theme |
+| description | string   | The shared paragraph. Set on CREATE only — an established theme keeps its original wording rather than being rewritten by each run |
+| createdAt   | datetime |                                                                        |
+
+**Relationships:**
+
+- `HAS_FIELD_RESONANCE` ← Space
+- `RESONATES_AS` ← ResonanceLink
+- `RESONATES_AS` ← ResonanceSuggestion (a pending pair carries the same edge, so the review queue can be grouped by theme before anything is accepted)
+
+**Discovery reuses names.** The Space's existing labels are fed back to the
+model as a vocabulary it is told to reuse verbatim when the theme matches.
+Without that, each run named its theme afresh and one pulse accumulated eight
+near-synonyms ("Regenerative Commons", "Stewarded Commons", "Regenerative
+Relating"…), splitting what a reviewer should see as one group.
 
 ---
 

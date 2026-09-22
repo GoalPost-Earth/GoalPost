@@ -124,6 +124,9 @@ export const ALLOWED_RELATIONSHIPS = [
   'SOURCE',
   'TARGET',
   'RESONATES_AS',
+  // Space -> theme. Without this the generator cannot reach a FieldResonance
+  // from its Space, so "what themes run through this space" is a dead end.
+  'HAS_FIELD_RESONANCE',
   // Semantic ontology edges between pulses (and pulse↔person/community).
   // These are the migrated GoalPost ontology relationships — a Goal
   // ENABLES a Story, a Goal DEPENDS_ON a Resource, a Goal is ALIGNED_TO a
@@ -252,7 +255,10 @@ PromiseWeave { id, title, description, status, origin, createdAt, modifiedAt }
   - "origin" is who authored it: "user" (a member), "ai" (proposed by
     discovery, awaiting confirmation), or null (built by the migration).
 
-FieldResonance { label, description } — semantic theme node.
+FieldResonance { id, label, labelKey, description, createdAt } — semantic theme node, scoped to one Space.
+  The named pattern (e.g. "Regenerative Commons") that many ResonanceLinks /
+  ResonanceSuggestions share. Written once at discovery and reused, so it is the
+  right node to group or count resonances by.
 
 ResourcePulse (source-backed) { id, sourceFilename, sourceMimeType, sourceSummary, sourceConcepts, uploadedAt }
   - An uploaded or fetched SOURCE FILE (an article, PDF, note) attached to a
@@ -290,6 +296,11 @@ ResourcePulse (source-backed) { id, sourceFilename, sourceMimeType, sourceSummar
 (ResonanceLink)-[:SOURCE]->(FieldPulse)
 (ResonanceLink)-[:TARGET]->(FieldPulse)
 (ResonanceLink)-[:RESONATES_AS]->(FieldResonance)
+(Space)-[:HAS_FIELD_RESONANCE]->(FieldResonance)        // themes are scoped per Space; one Space's theme is never shared with another
+// NOTE: ResonanceSuggestion also carries RESONATES_AS, but it is deliberately
+// NOT in ALLOWED_LABELS — pending suggestions are not a queryable surface for
+// the assistant, and naming one here would only produce generations the
+// validator rejects.
 (FieldContext)-[:HAS_WEAVE]->(PromiseWeave)
 (PromiseWeave)-[:WEAVES]->(FieldPulse)     // the care point(s) it connects (1..n)
 (PromiseWeave)-[:WOVEN_FOR]->(Person)      // the person it concerns

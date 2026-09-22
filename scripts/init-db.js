@@ -287,6 +287,14 @@ async function initializeDatabase() {
     const propertyIndexes = [
       `CREATE INDEX resonance_label IF NOT EXISTS
        FOR (r:FieldResonance) ON (r.label)`,
+      // Normalized label (trim+lowercase) used as the per-Space theme key, so
+      // case and spacing variants collapse to one FieldResonance.
+      // NOTE: this does NOT back the discovery MERGE — that binds the Space
+      // first and expands HAS_FIELD_RESONANCE, so the planner never seeks by
+      // labelKey. It is here for lookups that start from the label (grouping
+      // and de-duplication queries).
+      `CREATE INDEX resonance_label_key IF NOT EXISTS
+       FOR (r:FieldResonance) ON (r.labelKey)`,
       `CREATE INDEX pulse_createdAt IF NOT EXISTS
        FOR (p:FieldPulse) ON (p.createdAt)`,
       `CREATE INDEX pulse_modifiedAt IF NOT EXISTS
