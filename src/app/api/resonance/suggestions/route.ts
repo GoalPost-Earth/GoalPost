@@ -38,6 +38,13 @@ interface ResonanceSuggestion {
   targetPulseContent: string
   contextId: string
   contextTitle: string
+  /**
+   * The theme this pair expresses (GOAL / Phase 2). Null for a suggestion
+   * written before themes existed, or one whose theme write failed — the
+   * review UI groups those under "Ungrouped" rather than hiding them.
+   */
+  themeId: string | null
+  themeLabel: string | null
 }
 
 export async function GET(request: NextRequest) {
@@ -110,6 +117,10 @@ export async function GET(request: NextRequest) {
       MATCH (suggestion)-[:SOURCE]->(source:FieldPulse)
       MATCH (suggestion)-[:TARGET]->(target:FieldPulse)
       MATCH (context:FieldContext)-[:HAS_SUGGESTION]->(suggestion)
+      // The theme, when the suggestion carries one. OPTIONAL so an ungrouped
+      // suggestion is still returned — a reviewer must never lose a pair
+      // because its theme write failed.
+      OPTIONAL MATCH (suggestion)-[:RESONATES_AS]->(theme:FieldResonance)
 
       // Three guards in one WHERE (Cypher takes a single WHERE per MATCH):
       //
@@ -148,7 +159,9 @@ export async function GET(request: NextRequest) {
         targetPulseId: target.id,
         targetPulseContent: target.content,
         contextId: context.id,
-        contextTitle: context.title
+        contextTitle: context.title,
+        themeId: theme.id,
+        themeLabel: theme.label
       } as suggestion
 
       ORDER BY suggestion.createdAt DESC

@@ -11,6 +11,9 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ResonanceSuggestionItem } from '@/components/ui/resonance-suggestion-item'
+import { ResonanceSuggestionList } from '@/components/ui/resonance-suggestion-list'
+import { ResonanceReviewCarousel } from '@/components/ui/resonance-review-carousel'
+import { groupSuggestionsByTheme } from '@/lib/resonance/group-suggestions'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
@@ -28,6 +31,8 @@ interface Suggestion {
   targetPulseContent: string
   contextId: string
   contextTitle: string
+  themeId?: string | null
+  themeLabel?: string | null
 }
 
 interface ResonanceSuggestionsModalProps {
@@ -44,6 +49,15 @@ interface ResonanceSuggestionsModalProps {
    * When provided, the pending tab shows a threshold + "Accept N" control.
    */
   onAcceptAll?: (minConfidence: number) => Promise<number | void>
+  /**
+   * Take or dismiss every pending pair under one theme. When provided, the
+   * pending tab groups by theme and offers per-group actions — the whole point
+   * of the grouped queue, since a 31-pair theme becomes one decision.
+   */
+  onReviewTheme?: (
+    themeId: string,
+    action: 'accept' | 'decline'
+  ) => Promise<number | void>
 }
 
 type TabStatus = 'pending' | 'accepted' | 'declined'
@@ -58,6 +72,7 @@ export function ResonanceSuggestionsModal({
   onDecline,
   onRefresh,
   onAcceptAll,
+  onReviewTheme,
 }: ResonanceSuggestionsModalProps) {
   const [activeTab, setActiveTab] = useState<TabStatus>('pending')
   const [reviewMode, setReviewMode] = useState(false)
@@ -88,9 +103,35 @@ export function ResonanceSuggestionsModal({
   }
 
   // Filter suggestions by status
+  // Grouped is the default on the pending tab — it is the view that makes a
+  // large queue reviewable. The flat list stays one tap away for anyone who
+  // wants to work pair by pair.
+  const [grouped, setGrouped] = useState(true)
+
   const filteredSuggestions = useMemo(() => {
     return suggestions.filter((s) => s.status === activeTab)
   }, [suggestions, activeTab])
+
+  const themeGroups = useMemo(
+    () =>
+      groupSuggestionsByTheme(
+        filteredSuggestions.map((s) => ({
+          ...s,
+          themeId: s.themeId ?? null,
+          themeLabel: s.themeLabel ?? null,
+        }))
+      ),
+    [filteredSuggestions]
+  )
+
+  // Only group where grouping earns its keep. One group is just a card wrapped
+  // around the same list, and the Accepted/Declined tabs are history rather
+  // than a queue to work through.
+  const showGrouped =
+    grouped &&
+    activeTab === 'pending' &&
+    !reviewMode &&
+    themeGroups.length > 1
 
   // Get current suggestion in review mode
   const currentSuggestion = reviewMode ? filteredSuggestions[reviewIndex] : null
@@ -182,65 +223,19 @@ export function ResonanceSuggestionsModal({
             </DialogDescription>
           </div>
 
-          {/* Review Mode */}
+          {/* Review Mode — one pair at a time, for anyone who wants it */}
           {reviewMode && currentSuggestion && (
-            <div className="space-y-4">
-              {/* Progress */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-slate-600 dark:text-slate-400">
-                  Reviewing {reviewIndex + 1} of {filteredSuggestions.length}
-                </span>
-                <div className="h-1 w-32 bg-slate-200 rounded-full dark:bg-slate-700 overflow-hidden">
-                  <div
-                    className="h-full bg-blue-500 transition-all"
-                    style={{
-                      width: `${((reviewIndex + 1) / filteredSuggestions.length) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Current Suggestion */}
-              <ResonanceSuggestionItem
-                id={currentSuggestion.id}
-                label={currentSuggestion.label}
-                description={currentSuggestion.description}
-                confidence={currentSuggestion.confidence}
-                evidence={currentSuggestion.evidence}
-                sourcePulseId={currentSuggestion.sourcePulseId}
-                sourcePulseContent={currentSuggestion.sourcePulseContent}
-                targetPulseId={currentSuggestion.targetPulseId}
-                targetPulseContent={currentSuggestion.targetPulseContent}
-                contextTitle={currentSuggestion.contextTitle}
-                // Undefined when the viewer lacks `canEditContent` — the item
-                // then renders read-only rather than showing controls the
-                // accept/decline routes would reject (kb/02-user-roles.md).
-                onAccept={onAccept ? handleAccept : undefined}
-                onDecline={onDecline ? handleDecline : undefined}
-                isLoading={actionLoading === currentSuggestion.id}
-              />
-
-              {/* Navigation */}
-              <div className="flex gap-3 justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
-                <Button
-                  variant="outline"
-                  onClick={handlePrevReview}
-                  disabled={reviewIndex === 0}
-                >
-                  ← Previous
-                </Button>
-                <Button variant="ghost" onClick={() => setReviewMode(false)}>
-                  Back to List
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleNextReview}
-                  disabled={reviewIndex === filteredSuggestions.length - 1}
-                >
-                  Next →
-                </Button>
-              </div>
-            </div>
+            <ResonanceReviewCarousel
+              suggestion={currentSuggestion}
+              index={reviewIndex}
+              total={filteredSuggestions.length}
+              onPrev={handlePrevReview}
+              onNext={handleNextReview}
+              onExit={() => setReviewMode(false)}
+              onAccept={onAccept ? handleAccept : undefined}
+              onDecline={onDecline ? handleDecline : undefined}
+              isLoading={actionLoading === currentSuggestion.id}
+            />
           )}
 
           {/* Tab View */}
@@ -273,6 +268,35 @@ export function ResonanceSuggestionsModal({
                   )
                 )}
               </div>
+
+              {/* Group / list switch. Only offered when there is more than one
+                  theme to separate — otherwise it toggles between two
+                  identical views. */}
+              {activeTab === 'pending' &&
+                !reviewMode &&
+                themeGroups.length > 1 && (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="min-w-0 truncate text-xs text-gp-ink-muted">
+                      {grouped
+                        ? `${themeGroups.length} themes`
+                        : `${filteredSuggestions.length} suggestions`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setGrouped((v) => !v)}
+                      data-testid="toggle-grouping"
+                      className="flex shrink-0 items-center gap-1.5 rounded-full border border-gp-glass-border px-3 py-1 text-xs font-medium text-gp-ink-muted transition-colors duration-300 hover:text-gp-primary"
+                    >
+                      <span
+                        aria-hidden="true"
+                        className="material-symbols-outlined text-[16px]"
+                      >
+                        {grouped ? 'format_list_bulleted' : 'workspaces'}
+                      </span>
+                      {grouped ? 'View as list' : 'Group by theme'}
+                    </button>
+                  </div>
+                )}
 
               {/* Bulk accept-by-confidence control (pending tab only) */}
               {activeTab === 'pending' &&
@@ -344,26 +368,15 @@ export function ResonanceSuggestionsModal({
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {filteredSuggestions.map((suggestion) => (
-                    <ResonanceSuggestionItem
-                      key={suggestion.id}
-                      id={suggestion.id}
-                      label={suggestion.label}
-                      description={suggestion.description}
-                      confidence={suggestion.confidence}
-                      evidence={suggestion.evidence}
-                      sourcePulseId={suggestion.sourcePulseId}
-                      sourcePulseContent={suggestion.sourcePulseContent}
-                      targetPulseId={suggestion.targetPulseId}
-                      targetPulseContent={suggestion.targetPulseContent}
-                      contextTitle={suggestion.contextTitle}
-                      onAccept={onAccept ? handleAccept : undefined}
-                      onDecline={onDecline ? handleDecline : undefined}
-                      isLoading={actionLoading === suggestion.id}
-                    />
-                  ))}
-                </div>
+                <ResonanceSuggestionList
+                  grouped={showGrouped}
+                  groups={themeGroups}
+                  suggestions={filteredSuggestions}
+                  actionLoadingId={actionLoading}
+                  onAccept={onAccept ? handleAccept : undefined}
+                  onDecline={onDecline ? handleDecline : undefined}
+                  onReviewTheme={onReviewTheme}
+                />
               )}
 
               {/* Review All Button (for pending tab) */}

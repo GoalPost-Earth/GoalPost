@@ -34,7 +34,8 @@
     "clone:demo-to-dev": "tsx scripts/clone-neo4j.ts demo local",
     "reset:dev-password": "tsx scripts/reset-dev-password.ts",
     "setup:env": "bash scripts/setup-environment.sh",
-    "workers": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx src/lib/jobs/workers.ts"
+    "workers": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx src/lib/jobs/workers.ts",
+    "backfill:resonance-themes": "cross-env DOTENV_CONFIG_PATH=./.env.local tsx scripts/backfill-resonance-themes.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.78",

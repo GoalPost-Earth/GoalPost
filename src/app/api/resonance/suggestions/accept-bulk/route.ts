@@ -2,7 +2,11 @@
  * Bulk-accept resonance suggestions above a confidence threshold
  * POST /api/resonance/suggestions/accept-bulk
  *
- * Body: { spaceId: string, minConfidence: number }  // minConfidence in [0,1]
+ * Body: { spaceId: string, minConfidence: number, fieldResonanceId?: string }
+ *
+ * `minConfidence` is in [0,1]. `fieldResonanceId` is OPTIONAL and narrows the
+ * batch to one theme — the "accept all 31 under Regenerative Commons" action.
+ * Pass it with `minConfidence: 0` to take a whole theme regardless of score.
  *
  * Promotes every PENDING ResonanceSuggestion in the Space whose confidence is
  * >= minConfidence to a confirmed ResonanceLink in one pass — the "type 85% and
@@ -22,6 +26,7 @@ import { createLog } from '@/lib/activity-logs/create-log'
 interface BulkAcceptRequest {
   spaceId?: string
   minConfidence?: number
+  fieldResonanceId?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -39,6 +44,7 @@ export async function POST(request: NextRequest) {
 
     const spaceId = body.spaceId?.trim()
     const minConfidence = Number(body.minConfidence)
+    const fieldResonanceId = body.fieldResonanceId?.trim() || null
 
     if (!spaceId) {
       return NextResponse.json(
@@ -92,7 +98,14 @@ export async function POST(request: NextRequest) {
     }>(
       `
       MATCH (space:Space {id: $spaceId})-[:HAS_SUGGESTION]->(sug:ResonanceSuggestion {status: 'pending'})
+      // Optional theme narrowing. The theme edge is required when an id is
+      // given, so a suggestion that carries no theme is never swept up by a
+      // "accept this whole theme" action.
       WHERE sug.confidence >= $minConfidence
+        AND ($fieldResonanceId IS NULL
+             OR EXISTS {
+               MATCH (sug)-[:RESONATES_AS]->(:FieldResonance {id: $fieldResonanceId})
+             })
       MATCH (ctx:FieldContext)-[:HAS_SUGGESTION]->(sug)
       MATCH (sug)-[:SOURCE]->(src:FieldPulse)
       MATCH (sug)-[:TARGET]->(tgt:FieldPulse)
@@ -123,7 +136,7 @@ export async function POST(request: NextRequest) {
       RETURN count(link) AS accepted,
              collect(DISTINCT src.id) + collect(DISTINCT tgt.id) AS pulseIds
       `,
-      { spaceId, minConfidence, actorId }
+      { spaceId, minConfidence, actorId, fieldResonanceId }
     )
 
     const accepted = Number(promoted?.[0]?.accepted ?? 0)
@@ -137,13 +150,17 @@ export async function POST(request: NextRequest) {
       `
       MATCH (space:Space {id: $spaceId})-[:HAS_SUGGESTION]->(sug:ResonanceSuggestion {status: 'pending'})
       WHERE sug.confidence >= $minConfidence
+        AND ($fieldResonanceId IS NULL
+             OR EXISTS {
+               MATCH (sug)-[:RESONATES_AS]->(:FieldResonance {id: $fieldResonanceId})
+             })
       MATCH (sug)-[:SOURCE]->(src:FieldPulse)
       MATCH (sug)-[:TARGET]->(tgt:FieldPulse)
       MATCH (src)<-[:SOURCE|TARGET]-(:ResonanceLink)-[:SOURCE|TARGET]->(tgt)
       SET sug.status = 'accepted', sug.acceptedAt = datetime()
       RETURN count(sug) AS alreadyLinked
       `,
-      { spaceId, minConfidence }
+      { spaceId, minConfidence, fieldResonanceId }
     )
     const alreadyLinked = Number(clearedRows?.[0]?.alreadyLinked ?? 0)
 
@@ -155,7 +172,9 @@ export async function POST(request: NextRequest) {
         const pct = Math.round(minConfidence * 100)
         await createLog({
           userId: actorId,
-          description: `Accepted ${accepted} resonance${accepted === 1 ? '' : 's'} at ${pct}%+ confidence`,
+          description: fieldResonanceId
+            ? `Accepted ${accepted} resonance${accepted === 1 ? '' : 's'} under one theme`
+            : `Accepted ${accepted} resonance${accepted === 1 ? '' : 's'} at ${pct}%+ confidence`,
           pulseIds,
           metadata: {
             event: 'resonance_bulk_accepted',
@@ -163,6 +182,7 @@ export async function POST(request: NextRequest) {
             minConfidence,
             accepted,
             alreadyLinked,
+            fieldResonanceId,
           },
         })
       } catch (logErr) {
@@ -175,6 +195,7 @@ export async function POST(request: NextRequest) {
       accepted,
       alreadyLinked,
       minConfidence,
+      fieldResonanceId,
       timestamp: new Date().toISOString(),
     })
   } catch (error: unknown) {

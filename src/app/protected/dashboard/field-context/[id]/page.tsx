@@ -298,7 +298,17 @@ export default function FieldContextDetailsPage() {
     acceptSuggestion,
     acceptAllAboveConfidence,
     declineSuggestion,
-  } = useResonanceSuggestions({ spaceId, filter: 'all', enabled: false })
+    reviewTheme,
+  } = useResonanceSuggestions({
+    spaceId,
+    filter: 'all',
+    enabled: false,
+    // Scope the queue to THIS field, so the modal and the badge that opens it
+    // finally answer the same question. Without it the badge counted one field
+    // while the queue listed the whole Space, which read as leftovers from a
+    // deleted field rather than as a different scope.
+    contextId,
+  })
 
   // GOAL-348: the pending count IS the passive indicator, so it must load with
   // the page. It is deliberately a separate, count-only request — the list hook
@@ -1928,6 +1938,20 @@ export default function FieldContextDetailsPage() {
               : undefined
           }
           onDecline={canEditContent ? declineSuggestion : undefined}
+          // Accept or dismiss a whole theme at once — the action the grouped
+          // queue exists for. Gated on canEditContent like every other write
+          // here; a GUEST sees the groups but no group buttons.
+          onReviewTheme={
+            canEditContent
+              ? async (themeId, action) => {
+                  const count = await reviewTheme(themeId, action)
+                  // Accepting mints ResonanceLinks, which belong in the
+                  // Resonances section immediately.
+                  if (action === 'accept') await refetch()
+                  return count
+                }
+              : undefined
+          }
           // The modal awaits onRefresh after EVERY accept / decline / bulk
           // accept, so this is the single place the badge needs re-counting —
           // duplicating it inside each handler above just doubled the request

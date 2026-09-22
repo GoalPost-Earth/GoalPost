@@ -15,13 +15,24 @@ interface Suggestion {
   targetPulseContent: string
   contextId: string
   contextTitle: string
+  /** The theme this pair expresses; null for suggestions written before themes. */
+  themeId: string | null
+  themeLabel: string | null
 }
+
+export type ResonanceSuggestion = Suggestion
 
 interface UseResonanceSuggestionsOptions {
   spaceId: string
   filter?: 'pending' | 'accepted' | 'declined' | 'all'
   enabled?: boolean
   autoRefetch?: boolean
+  /**
+   * Narrow the queue to ONE FieldContext. Without it the queue is the whole
+   * Space while the badge that opens it counts a single field — which is what
+   * made a 117-suggestion import look like 291 leftovers from a deleted field.
+   */
+  contextId?: string
 }
 
 export function useResonanceSuggestions(
@@ -41,6 +52,10 @@ export function useResonanceSuggestions(
       const params = new URLSearchParams({
         spaceId: options.spaceId,
       })
+
+      if (options.contextId) {
+        params.append('contextId', options.contextId)
+      }
 
       // 'all' is an explicit sentinel the route understands (returns every
       // status so the modal's Accepted/Declined tabs populate). A specific
@@ -70,7 +85,7 @@ export function useResonanceSuggestions(
     } finally {
       setLoading(false)
     }
-  }, [options.spaceId, options.filter])
+  }, [options.spaceId, options.filter, options.contextId])
 
   // Auto-fetch on mount and when options change
   useEffect(() => {
@@ -186,6 +201,70 @@ export function useResonanceSuggestions(
     [fetchSuggestions]
   )
 
+  /**
+   * Take or dismiss every pending pair under one theme. This is the action the
+   * grouped review surface exists for: a reviewer facing 31 near-identical
+   * pairs makes one decision instead of 31.
+   *
+   * `minConfidence: 0` on accept because the theme IS the filter here — the
+   * reviewer has read the theme and is deciding about it, not about a score.
+   */
+  const reviewTheme = useCallback(
+    async (fieldResonanceId: string, action: 'accept' | 'decline') => {
+      const endpoint =
+        action === 'accept'
+          ? '/api/resonance/suggestions/accept-bulk'
+          : '/api/resonance/suggestions/decline-bulk'
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            action === 'accept'
+              ? {
+                  spaceId: options.spaceId,
+                  fieldResonanceId,
+                  minConfidence: 0,
+                }
+              : { spaceId: options.spaceId, fieldResonanceId }
+          ),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(
+            errorData.error ||
+              `Failed to ${action} the resonances under this theme`
+          )
+        }
+
+        const data = await response.json()
+        const count = Number(
+          (action === 'accept' ? data.accepted : data.declined) ?? 0
+        )
+
+        if (count > 0) {
+          toast.success(
+            action === 'accept'
+              ? `✨ Accepted ${count} resonance${count === 1 ? '' : 's'}`
+              : `Dismissed ${count} suggestion${count === 1 ? '' : 's'}`
+          )
+        } else {
+          toast.info('Nothing left to review under this theme.')
+        }
+
+        await fetchSuggestions()
+        return count
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Unknown error occurred'
+        toast.error(errorMessage)
+        throw err
+      }
+    },
+    [fetchSuggestions, options.spaceId]
+  )
+
   return {
     suggestions,
     loading,
@@ -194,5 +273,6 @@ export function useResonanceSuggestions(
     acceptSuggestion,
     acceptAllAboveConfidence,
     declineSuggestion,
+    reviewTheme,
   }
 }
