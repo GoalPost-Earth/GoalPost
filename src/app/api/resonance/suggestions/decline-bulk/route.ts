@@ -36,6 +36,7 @@ interface BulkDeclineRequest {
   spaceId?: string
   fieldResonanceId?: string
   minConfidence?: number
+  contextId?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -62,6 +63,11 @@ export async function POST(request: NextRequest) {
 
     const spaceId = body.spaceId?.trim()
     const fieldResonanceId = body.fieldResonanceId?.trim() || null
+    // A theme is Space-scoped and routinely spans several fields, while the
+    // review queue can be scoped to one. Without this the count on a
+    // "Dismiss all N" button and the set the request dismisses are different
+    // numbers.
+    const contextId = body.contextId?.trim() || null
     // Type-check BEFORE coercing. `Number(null)` is 0 — as are `false`, `''`
     // and `[]` — so coercing first would read `{ minConfidence: null }` as a
     // deliberate floor of zero, satisfy the range check and the filter gate
@@ -141,7 +147,12 @@ export async function POST(request: NextRequest) {
     const rows = await graph.query<{ declined: number | string }>(
       `
       MATCH (space:Space {id: $spaceId})-[:HAS_SUGGESTION]->(sug:ResonanceSuggestion {status: 'pending'})
-      WHERE ($fieldResonanceId IS NULL
+      // Anchoring context must still hang off the Space: soft delete re-points
+      // that edge (GOAL-319), and the list route applies the same guard, so
+      // without it a theme action reaches pairs the queue deliberately hides.
+      MATCH (space)-[:HAS_CONTEXT]->(ctx:FieldContext)-[:HAS_SUGGESTION]->(sug)
+      WHERE ($contextId IS NULL OR ctx.id = $contextId)
+        AND ($fieldResonanceId IS NULL
              OR EXISTS {
                MATCH (sug)-[:RESONATES_AS]->(:FieldResonance {id: $fieldResonanceId})
              })
@@ -149,7 +160,7 @@ export async function POST(request: NextRequest) {
       SET sug.status = 'declined', sug.declinedAt = datetime()
       RETURN count(sug) AS declined
       `,
-      { spaceId, fieldResonanceId, minConfidence }
+      { spaceId, fieldResonanceId, minConfidence, contextId }
     )
 
     // count() can round-trip through the LangChain layer as a string.
@@ -182,6 +193,7 @@ export async function POST(request: NextRequest) {
       success: true,
       declined,
       fieldResonanceId,
+      contextId,
       minConfidence,
       timestamp: new Date().toISOString(),
     })

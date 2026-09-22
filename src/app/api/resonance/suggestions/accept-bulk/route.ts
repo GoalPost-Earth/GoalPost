@@ -8,6 +8,14 @@
  * batch to one theme — the "accept all 31 under Regenerative Commons" action.
  * Pass it with `minConfidence: 0` to take a whole theme regardless of score.
  *
+ * `contextId` is OPTIONAL and narrows to one field. A FieldResonance is
+ * Space-scoped and deliberately reused across sweeps, so one theme routinely
+ * spans several FieldContexts — and the review queue can itself be scoped to a
+ * single field. Without this the count on an "Accept all N" button and the set
+ * the request actually takes are answering different questions: a reviewer on a
+ * field page could press "Accept all 40" and mint 85 links, most of them in a
+ * field they were not looking at.
+ *
  * Promotes every PENDING ResonanceSuggestion in the Space whose confidence is
  * >= minConfidence to a confirmed ResonanceLink in one pass — the "type 85% and
  * add all" affordance. Mirrors the single-accept route's write exactly (context
@@ -27,6 +35,7 @@ interface BulkAcceptRequest {
   spaceId?: string
   minConfidence?: number
   fieldResonanceId?: string
+  contextId?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -44,7 +53,22 @@ export async function POST(request: NextRequest) {
 
     const spaceId = body.spaceId?.trim()
     const minConfidence = Number(body.minConfidence)
-    const fieldResonanceId = body.fieldResonanceId?.trim() || null
+    // Present-but-empty must NOT silently degrade into "every theme in the
+    // Space" — that is the same class of accident decline-bulk refuses. A
+    // client that serialises an unset field as '' gets a 400, not a Space-wide
+    // accept.
+    const rawTheme = body.fieldResonanceId
+    if (rawTheme !== undefined && (typeof rawTheme !== 'string' || !rawTheme.trim())) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'fieldResonanceId must be a non-empty string when supplied',
+        },
+        { status: 400 }
+      )
+    }
+    const fieldResonanceId = rawTheme?.trim() ?? null
+    const contextId = body.contextId?.trim() || null
 
     if (!spaceId) {
       return NextResponse.json(
@@ -98,15 +122,22 @@ export async function POST(request: NextRequest) {
     }>(
       `
       MATCH (space:Space {id: $spaceId})-[:HAS_SUGGESTION]->(sug:ResonanceSuggestion {status: 'pending'})
+      // The anchoring context must still hang off the Space by HAS_CONTEXT.
+      // Soft delete re-points that edge to HAS_DELETED_CONTEXT (GOAL-319), so
+      // this is what stops a theme action reaching pairs in a deleted field and
+      // minting links anchored where nothing will ever render them. The list
+      // route applies the same guard.
+      MATCH (space)-[:HAS_CONTEXT]->(ctx:FieldContext)-[:HAS_SUGGESTION]->(sug)
       // Optional theme narrowing. The theme edge is required when an id is
       // given, so a suggestion that carries no theme is never swept up by a
-      // "accept this whole theme" action.
+      // "accept this whole theme" action. Optional field narrowing keeps the
+      // batch to the queue the reviewer was actually looking at.
       WHERE sug.confidence >= $minConfidence
         AND ($fieldResonanceId IS NULL
              OR EXISTS {
                MATCH (sug)-[:RESONATES_AS]->(:FieldResonance {id: $fieldResonanceId})
              })
-      MATCH (ctx:FieldContext)-[:HAS_SUGGESTION]->(sug)
+        AND ($contextId IS NULL OR ctx.id = $contextId)
       MATCH (sug)-[:SOURCE]->(src:FieldPulse)
       MATCH (sug)-[:TARGET]->(tgt:FieldPulse)
       // Skip pairs already joined by a ResonanceLink (either direction).
@@ -136,7 +167,7 @@ export async function POST(request: NextRequest) {
       RETURN count(link) AS accepted,
              collect(DISTINCT src.id) + collect(DISTINCT tgt.id) AS pulseIds
       `,
-      { spaceId, minConfidence, actorId, fieldResonanceId }
+      { spaceId, minConfidence, actorId, fieldResonanceId, contextId }
     )
 
     const accepted = Number(promoted?.[0]?.accepted ?? 0)
@@ -149,18 +180,20 @@ export async function POST(request: NextRequest) {
     const clearedRows = await graph.query<{ alreadyLinked: number | string }>(
       `
       MATCH (space:Space {id: $spaceId})-[:HAS_SUGGESTION]->(sug:ResonanceSuggestion {status: 'pending'})
+      MATCH (space)-[:HAS_CONTEXT]->(ctx:FieldContext)-[:HAS_SUGGESTION]->(sug)
       WHERE sug.confidence >= $minConfidence
         AND ($fieldResonanceId IS NULL
              OR EXISTS {
                MATCH (sug)-[:RESONATES_AS]->(:FieldResonance {id: $fieldResonanceId})
              })
+        AND ($contextId IS NULL OR ctx.id = $contextId)
       MATCH (sug)-[:SOURCE]->(src:FieldPulse)
       MATCH (sug)-[:TARGET]->(tgt:FieldPulse)
       MATCH (src)<-[:SOURCE|TARGET]-(:ResonanceLink)-[:SOURCE|TARGET]->(tgt)
       SET sug.status = 'accepted', sug.acceptedAt = datetime()
       RETURN count(sug) AS alreadyLinked
       `,
-      { spaceId, minConfidence, fieldResonanceId }
+      { spaceId, minConfidence, fieldResonanceId, contextId }
     )
     const alreadyLinked = Number(clearedRows?.[0]?.alreadyLinked ?? 0)
 
@@ -196,6 +229,7 @@ export async function POST(request: NextRequest) {
       alreadyLinked,
       minConfidence,
       fieldResonanceId,
+      contextId,
       timestamp: new Date().toISOString(),
     })
   } catch (error: unknown) {

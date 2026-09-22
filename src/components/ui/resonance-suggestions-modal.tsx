@@ -127,11 +127,16 @@ export function ResonanceSuggestionsModal({
   // Only group where grouping earns its keep. One group is just a card wrapped
   // around the same list, and the Accepted/Declined tabs are history rather
   // than a queue to work through.
+  // Render grouped whenever there is a real theme to group by. Requiring more
+  // than one theme meant a queue of 117 pairs that all share ONE theme — the
+  // worst case this feature exists for — fell back to a flat list with no
+  // "Accept all 117" button. The TOGGLE still needs >1 to be meaningful.
   const showGrouped =
     grouped &&
     activeTab === 'pending' &&
     !reviewMode &&
-    themeGroups.length > 1
+    themeGroups.length > 0 &&
+    themeGroups.some((g) => g.themeId)
 
   // Get current suggestion in review mode
   const currentSuggestion = reviewMode ? filteredSuggestions[reviewIndex] : null
@@ -375,7 +380,20 @@ export function ResonanceSuggestionsModal({
                   actionLoadingId={actionLoading}
                   onAccept={onAccept ? handleAccept : undefined}
                   onDecline={onDecline ? handleDecline : undefined}
-                  onReviewTheme={onReviewTheme}
+                  onReviewTheme={
+                    onReviewTheme
+                      ? async (themeId, action) => {
+                          const result = await onReviewTheme(themeId, action)
+                          // onRefresh is the ONLY caller that re-counts the
+                          // field badge and notifies the action bar. Every
+                          // other action awaits it; without it here the queue
+                          // updates and the badge keeps the pre-action number
+                          // — the exact mismatch this work set out to close.
+                          await onRefresh?.()
+                          return result
+                        }
+                      : undefined
+                  }
                 />
               )}
 

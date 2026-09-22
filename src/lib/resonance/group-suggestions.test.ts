@@ -401,9 +401,11 @@ describe('groupSuggestionsByTheme — the group label', () => {
     ])
   })
 
-  it('names the ungrouped bucket after its first pair when that pair has a label', () => {
-    // Documented consequence of the shared fallback chain: the catch-all is
-    // identified by `themeId === null`, not by its displayed name.
+  it('never names the ungrouped bucket after one of its pairs', () => {
+    // REGRESSION. The shared fallback chain used to name the catch-all after
+    // whichever pair landed first, so a pile of unrelated themeless pairs
+    // rendered as a group called "Shared care" — with that one pair's
+    // paragraph presented as if it described all of them.
     const groups = groupSuggestionsByTheme([
       suggestion({ themeId: null, themeLabel: null, label: 'Shared care' }),
       suggestion({ themeId: null, themeLabel: null, label: 'Shared water' }),
@@ -411,7 +413,7 @@ describe('groupSuggestionsByTheme — the group label', () => {
 
     expect(groups).toHaveLength(1)
     expect(groups[0].themeId).toBeNull()
-    expect(groups[0].label).toBe('Shared care')
+    expect(groups[0].label).toBe(UNGROUPED_LABEL)
   })
 })
 

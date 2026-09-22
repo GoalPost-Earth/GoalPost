@@ -117,10 +117,6 @@ export async function GET(request: NextRequest) {
       MATCH (suggestion)-[:SOURCE]->(source:FieldPulse)
       MATCH (suggestion)-[:TARGET]->(target:FieldPulse)
       MATCH (context:FieldContext)-[:HAS_SUGGESTION]->(suggestion)
-      // The theme, when the suggestion carries one. OPTIONAL so an ungrouped
-      // suggestion is still returned — a reviewer must never lose a pair
-      // because its theme write failed.
-      OPTIONAL MATCH (suggestion)-[:RESONATES_AS]->(theme:FieldResonance)
 
       // Three guards in one WHERE (Cypher takes a single WHERE per MATCH):
       //
@@ -145,6 +141,19 @@ export async function GET(request: NextRequest) {
         AND ($contextId IS NULL OR context.id = $contextId)
         AND ${viewablePulsePredicate('source', 'currentUserId')}
         AND ${viewablePulsePredicate('target', 'currentUserId')}
+
+      // The theme, when the suggestion carries one. OPTIONAL so an ungrouped
+      // suggestion is still returned — a reviewer must never lose a pair
+      // because its theme write failed.
+      //
+      // MUST stay BELOW the WHERE. A WHERE binds to the immediately preceding
+      // clause, so an OPTIONAL MATCH placed above it silently steals the
+      // filter: the guards stop excluding rows and only decide whether the
+      // theme comes back null. That inverted every gate here at once — the
+      // GOAL-293 pulse-visibility predicates, the soft-delete guard, and the
+      // contextId scoping — and surfaced as a 166-in-this-field badge opening
+      // a 477-row queue.
+      OPTIONAL MATCH (suggestion)-[:RESONATES_AS]->(theme:FieldResonance)
 
       RETURN {
         id: suggestion.id,

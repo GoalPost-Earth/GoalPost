@@ -219,14 +219,23 @@ export function useResonanceSuggestions(
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          // contextId goes with it: a theme spans fields, but the queue the
+          // reviewer is looking at may not. Sending it keeps "Accept all 40"
+          // to the 40 they can see rather than every pair under that theme in
+          // the Space.
           body: JSON.stringify(
             action === 'accept'
               ? {
                   spaceId: options.spaceId,
                   fieldResonanceId,
+                  contextId: options.contextId,
                   minConfidence: 0,
                 }
-              : { spaceId: options.spaceId, fieldResonanceId }
+              : {
+                  spaceId: options.spaceId,
+                  fieldResonanceId,
+                  contextId: options.contextId,
+                }
           ),
         })
 
@@ -262,7 +271,7 @@ export function useResonanceSuggestions(
         throw err
       }
     },
-    [fetchSuggestions, options.spaceId]
+    [fetchSuggestions, options.spaceId, options.contextId]
   )
 
   return {

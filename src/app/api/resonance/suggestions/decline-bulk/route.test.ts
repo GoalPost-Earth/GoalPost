@@ -197,6 +197,7 @@ describe('POST /api/resonance/suggestions/decline-bulk', () => {
       expect(res.status).toBe(200)
       expect(writeParams()).toEqual({
         spaceId: SPACE_ID,
+        contextId: null,
         fieldResonanceId: THEME_ID,
         minConfidence: null,
       })
@@ -208,6 +209,7 @@ describe('POST /api/resonance/suggestions/decline-bulk', () => {
       expect(res.status).toBe(200)
       expect(writeParams()).toEqual({
         spaceId: SPACE_ID,
+        contextId: null,
         fieldResonanceId: null,
         minConfidence: 0.8,
       })
@@ -226,6 +228,7 @@ describe('POST /api/resonance/suggestions/decline-bulk', () => {
       // The theme id is trimmed before it reaches the Cypher.
       expect(writeParams()).toEqual({
         spaceId: SPACE_ID,
+        contextId: null,
         fieldResonanceId: THEME_ID,
         minConfidence: 0.9,
       })
@@ -336,6 +339,7 @@ describe('POST /api/resonance/suggestions/decline-bulk', () => {
       expect(res.status).toBe(200)
       expect(writeParams()).toEqual({
         spaceId: SPACE_ID,
+        contextId: null,
         fieldResonanceId: THEME_ID,
         minConfidence: 0,
       })
@@ -487,7 +491,12 @@ describe('POST /api/resonance/suggestions/decline-bulk', () => {
       const cypher = graphQuery.mock.calls[0][0] as string
       // Declining only flips status: nothing is deleted and no link is made.
       expect(cypher).toContain("SET sug.status = 'declined'")
-      expect(cypher).not.toMatch(/DELETE|MERGE \(.*ResonanceLink/i)
+      // Comments stripped first: a relationship NAME containing DELETE
+      // (HAS_DELETED_CONTEXT, which the soft-delete guard references) is not a
+      // DELETE clause, and matching raw text would fail on prose.
+      const clauses = cypher.replace(/\/\/[^\n]*/g, '')
+      expect(clauses).not.toMatch(/\bDETACH\s+DELETE\b|\bDELETE\s+\w/i)
+      expect(clauses).not.toMatch(/MERGE \(.*ResonanceLink/i)
       // Scoped to the Space's own pending queue.
       expect(cypher).toContain('$spaceId')
       expect(cypher).toContain("status: 'pending'")

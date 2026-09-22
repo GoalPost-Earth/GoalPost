@@ -92,12 +92,12 @@ export function ResonanceThemeGroup({
         type="button"
         onClick={() => setExpanded((v) => !v)}
         aria-expanded={expanded}
-        aria-controls={panelId}
+        {...(expanded ? { 'aria-controls': panelId } : {})}
         className="flex w-full min-w-0 items-start gap-3 p-4 text-left transition-colors duration-300 hover:bg-[color-mix(in_srgb,var(--gp-primary)_6%,transparent)] sm:p-5"
       >
         <span
           aria-hidden="true"
-          className="material-symbols-outlined mt-0.5 shrink-0 text-[20px] text-gp-primary"
+          className="material-symbols-outlined mt-0.5 shrink-0 text-[20px] text-gp-ink-muted"
         >
           hub
         </span>
@@ -107,13 +107,21 @@ export function ResonanceThemeGroup({
             <span className="min-w-0 flex-1 truncate text-base font-semibold text-gp-ink-strong">
               {label}
             </span>
-            <span className="shrink-0 rounded-full bg-[color-mix(in_srgb,var(--gp-primary)_12%,transparent)] px-2 py-0.5 text-xs font-semibold text-gp-primary">
+            {/* Ink, not primary, on the tint. `text-gp-primary` over a 12%
+                mix of itself measures ~1.5:1 in the warm theme, whose primary
+                is a pale yellow on a white surface — well under AA. */}
+            <span className="shrink-0 rounded-full bg-[color-mix(in_srgb,var(--gp-primary)_14%,transparent)] px-2 py-0.5 text-xs font-semibold text-gp-ink-strong">
               {count}
             </span>
           </span>
 
+          {/* No `block` class on the clamped span: it overrides the
+              display:-webkit-box that -webkit-line-clamp requires, so the clamp
+              silently does nothing and an 800-character description renders in
+              full — which is most of why the grouped view was still a long
+              scroll. */}
           {description ? (
-            <span className="mt-1 line-clamp-2 block text-sm text-gp-ink-muted">
+            <span className="mt-1 line-clamp-2 text-sm text-gp-ink-muted">
               {description}
             </span>
           ) : null}

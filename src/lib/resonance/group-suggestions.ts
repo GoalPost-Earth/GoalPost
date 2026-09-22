@@ -74,15 +74,33 @@ export function groupSuggestionsByTheme<T extends GroupableSuggestion>(
       if (!existing.description && suggestion.description) {
         existing.description = suggestion.description
       }
+      // Same for the label: a group whose first pair carried a blank theme
+      // label should still show the real name once a later pair supplies it.
+      if (
+        existing.themeId !== null &&
+        existing.label === UNGROUPED_LABEL &&
+        suggestion.themeLabel?.trim()
+      ) {
+        existing.label = suggestion.themeLabel.trim()
+      }
       continue
     }
 
     byTheme.set(key, {
       themeId: suggestion.themeId ?? null,
+      // A themeless pair is NOT a theme. Falling back to its own label named
+      // the catch-all bucket after whichever pair happened to land first, so a
+      // pile of unrelated pairs rendered as a group called "Ethics as Practice"
+      // with one arbitrary paragraph presented as describing all of them.
+      //
+      // Tested for null/undefined, not truthiness: '' is a real theme id here,
+      // same as in the grouping key below.
       label:
-        suggestion.themeLabel?.trim() ||
-        suggestion.label?.trim() ||
-        UNGROUPED_LABEL,
+        suggestion.themeId !== null && suggestion.themeId !== undefined
+          ? suggestion.themeLabel?.trim() ||
+            suggestion.label?.trim() ||
+            UNGROUPED_LABEL
+          : UNGROUPED_LABEL,
       description: suggestion.description ?? '',
       suggestions: [suggestion],
       count: 1,

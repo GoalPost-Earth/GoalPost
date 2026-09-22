@@ -691,23 +691,37 @@ ResonanceLinks and ResonanceSuggestions express. Written **once per Space at
 discovery time** and reused by every pair that shares it, so the theme is a
 node in the graph and not only a string.
 
-**The per-pair copy still exists.** Each ResonanceSuggestion and ResonanceLink
-continues to carry its own `label` and `description`, so a 31-pair theme is
-still 31 identical paragraphs in the graph — the node is written *in addition
-to* them, not instead of them. That keeps every existing read surface working
-without a join while the grouped review UI is built; retiring the copy is
-Phase 3 work, and until then the node is the grouping key, not the only
-record of the theme.
+**The per-pair copy still exists, deliberately.** Each ResonanceSuggestion and
+ResonanceLink continues to carry its own `label` and `description`, so a 31-pair
+theme is still 31 identical paragraphs in the graph — the node is written *in
+addition to* them, not instead of them. The grouped review surface shipped
+without retiring the copy: `group-suggestions.ts` falls back to it for a
+group's label and description, so a pair whose theme write failed still renders
+with its name intact. Retiring it would touch every read surface and remains an
+open follow-up, not pending work inside this phase.
+
+**Backfill.** Queues written before themes existed carry the theme only as the
+denormalized `label` / `description` on each pair, which collapses the grouped
+review surface into a single "Ungrouped" bucket. `scripts/backfill-resonance-themes.ts`
+reconstructs them by grouping on the same normalized `labelKey` the live upsert
+uses, so a backfilled theme and a freshly discovered one of the same name are
+one node. Dry by default, idempotent, purely additive — it adds nodes and edges
+and changes no existing property. **Applied to dev (478 suggestions → 50 themes)
+and demo (292 → 25).**
 
 **Legacy nodes.** Seed tooling (`scripts/seed-build-space.ts`,
 `docs/cypher/seed-dev.cypher`) creates FieldResonance via
 `(FieldContext)-[:HAS_RESONANCE]->(FieldResonance)` with no `labelKey` and no
-`HAS_FIELD_RESONANCE` edge. Those nodes are invisible to both discovery
-helpers: they are never offered as vocabulary, and a theme of the same name
-would be minted alongside them. No live environment carries any today (dev and
-demo both hold zero FieldResonance nodes), so no backfill has been run — but a
-seeded environment needs `labelKey` set and a Space edge derived from the
-context before discovery will converge on those names.
+`HAS_FIELD_RESONANCE` edge. Those nodes are invisible to both discovery helpers:
+they are never offered as vocabulary, and a theme of the same name would be
+minted alongside them. A seeded environment needs `labelKey` set and a Space
+edge derived from the context before discovery converges on those names.
+
+**`labelKey` is not simply `trim(lower(label))`.** It is sanitize (strip control
+characters, backticks and angle brackets, collapse whitespace) → truncate to 60
+→ lowercase, matching `MAX_LABEL_LENGTH` in the discovery path. The backfill
+script must use the identical function, or it mints a theme that matches no
+pair and leaves an orphan behind.
 
 Scoped to one Space: the find-or-create MERGEs on the whole
 `(Space)-[:HAS_FIELD_RESONANCE]->(FieldResonance)` pattern, so two Spaces that
