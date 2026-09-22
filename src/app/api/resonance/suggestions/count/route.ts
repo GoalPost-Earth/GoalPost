@@ -27,7 +27,10 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const spaceId = searchParams.get('spaceId')
-    const contextId = searchParams.get('contextId')
+    // `?contextId=` yields '' rather than null, which would compare against an
+    // empty id and match nothing. Normalize so it reads as "no field filter",
+    // matching the sibling list route.
+    const contextId = searchParams.get('contextId') || null
     const status = searchParams.get('status') || 'pending'
 
     if (!spaceId) {
