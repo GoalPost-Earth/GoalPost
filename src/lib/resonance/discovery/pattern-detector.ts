@@ -12,6 +12,57 @@ import {
   composeEvidenceString,
 } from './evidence-collector'
 
+/**
+ * Resonance volume controls.
+ *
+ * A homogeneous corpus is uniformly similar to itself, so a FIXED similarity
+ * threshold filters almost nothing. Measured on the demo data: a field of 24
+ * imported articles on one theme had a mean pairwise similarity of 0.726 — the
+ * AVERAGE pair already cleared the 0.7 default — and discovery proposed 170 of
+ * the 276 possible pairs. A field wired 62% to itself carries no information,
+ * and no reviewer can work through it one pair at a time.
+ *
+ * SCALE NOTE: Neo4j's `vector.similarity.cosine` and the vector index score
+ * both return raw cosine RESCALED to [0,1] as (1 + cos) / 2 — not raw cosine.
+ * `SIMILARITY_FLOOR = 0.7` is therefore raw cosine 0.4, which for
+ * text-embedding-3-small sits near background for same-domain prose. Every
+ * threshold in this file is on the rescaled scale; compare like for like when
+ * tuning, or a "small" change moves the cut much further than intended.
+ */
+
+/** Hard floor on the rescaled similarity score — the adaptive cut never goes below it. */
+const SIMILARITY_FLOOR = 0.7
+/** Adaptive cut = the field's own pairwise mean + this many standard deviations. */
+const ADAPTIVE_THRESHOLD_SIGMA = 1.5
+/** Below this many embedded pulses a field's distribution is too noisy to adapt against. */
+const MIN_PULSES_FOR_ADAPTIVE_THRESHOLD = 8
+/** Pulses sampled when estimating a field's distribution (the estimate is O(n^2) in pairs). */
+const ADAPTIVE_SAMPLE_SIZE = 40
+/** How long a SUCCESSFUL distribution estimate stays warm, so a sweep estimates once, not per pulse. */
+const ADAPTIVE_THRESHOLD_TTL_MS = 5 * 60 * 1000
+/** How long a FALLBACK (error, or field too small) is held before re-checking. Deliberately short. */
+const ADAPTIVE_THRESHOLD_FALLBACK_TTL_MS = 15 * 1000
+/** Candidates handed to the LLM per anchor pulse. Cluster size drives pattern QUALITY, not volume. */
+const RESONANCE_CANDIDATE_LIMIT = 10
+/**
+ * Max PENDING suggestions any one pulse may carry in a given Space's queue.
+ *
+ * This paces the queue, it does not cap a pulse's resonances permanently: only
+ * `pending` suggestions count, so accepting or declining frees budget and the
+ * next sweep proposes the pairs that were suppressed. The symmetric dedup
+ * blocks only pairs actually written, never ones the cap held back.
+ */
+const MAX_PENDING_SUGGESTIONS_PER_PULSE = 3
+/**
+ * Connections the LLM scores below this are never written.
+ *
+ * Calibrated, not guessed: over the 292 pending suggestions on demo the scores
+ * ran >=0.9: 71, 0.8-0.9: 80, 0.7-0.8: 100, 0.6-0.7: 38, <0.6: 3 — so this cut
+ * drops ~31% of them (292 -> 202) before the degree cap runs. Re-measure with
+ * `scripts/simulate-resonance-policy.mjs` before moving it.
+ */
+const MIN_CONNECTION_CONFIDENCE = 0.75
+
 const ResonancePatternSchema = z.object({
   label: z
     .string()
@@ -42,6 +93,133 @@ export interface DiscoveredResonance {
   targetPulseId: string
   confidence: number
   evidence: string
+}
+
+/**
+ * Per-field similarity cut, cached briefly so a sweep that loops 50 anchor
+ * pulses through `discoverResonancesForPulse` estimates the distribution once
+ * rather than 50 times.
+ */
+const adaptiveThresholdCache = new Map<
+  string,
+  { value: number; expiresAt: number }
+>()
+
+/**
+ * Resolve the similarity cut for one field from THAT FIELD's own pairwise
+ * distribution (mean + ADAPTIVE_THRESHOLD_SIGMA standard deviations), floored
+ * at SIMILARITY_FLOOR.
+ *
+ * Why adaptive rather than a bigger constant: no single number serves both
+ * shapes of field. On demo, a tight themed field sits at mean 0.726 / sd 0.070
+ * (cut lands at 0.831) while a broader one sits at mean 0.668 / sd 0.047 (cut
+ * lands at 0.739). Raising the constant to 0.80 would over-prune the second
+ * field while barely touching the first; deriving it per field prunes each by
+ * how unusual a pair is FOR THAT FIELD, which is the property worth surfacing.
+ *
+ * Fails open to SIMILARITY_FLOOR — a field too small to estimate, or a failed
+ * estimate, keeps today's behavior rather than silently proposing nothing.
+ * A fallback is cached only BRIEFLY (ADAPTIVE_THRESHOLD_FALLBACK_TTL_MS): one
+ * Neo4j blip must not pin a field to the old permissive floor for the whole of
+ * a 240s sweep, which is precisely the flood this change exists to stop.
+ *
+ * The cache is per warm container, so two concurrent lambda instances can hold
+ * different cuts for the same field at the same moment. Harmless — every path
+ * fails open and the cut only decides which candidates reach the LLM — but
+ * don't read this as shared state.
+ */
+async function resolveSimilarityThreshold(
+  scopeContextId: string
+): Promise<number> {
+  const now = Date.now()
+  const cached = adaptiveThresholdCache.get(scopeContextId)
+  if (cached && cached.expiresAt > now) return cached.value
+  // Bounded without a separate sweep: the global discovery job walks every
+  // Space, so a long-lived container would otherwise accumulate one entry per
+  // field on the platform.
+  for (const [key, entry] of adaptiveThresholdCache) {
+    if (entry.expiresAt <= now) adaptiveThresholdCache.delete(key)
+  }
+
+  let threshold = SIMILARITY_FLOOR
+  let estimated = false
+  try {
+    const graph = await initGraph()
+    const rows = await graph.query<{
+      mean: number | string | null
+      sd: number | string | null
+      sampled: number | string | null
+    }>(
+      `MATCH (root:FieldContext {id: $scopeContextId})-[:HAS_SUBCONTEXT*0..10]->(sc:FieldContext)-[:HAS_PULSE]->(p:FieldPulse)
+       WHERE sc.deletedAt IS NULL AND p.deletedAt IS NULL AND p.embedding IS NOT NULL
+       WITH DISTINCT p
+       // Deterministic sample: without an ORDER BY the planner picks whichever
+       // $sampleSize pulses it reaches first, so the "field's own distribution"
+       // — and the cut derived from it — could shift between runs for reasons
+       // no one can reproduce.
+       ORDER BY p.createdAt DESC
+       LIMIT $sampleSize
+       // Collect the embedding VALUE, not the node. Collecting nodes makes
+       // es[i].embedding a fresh property read for BOTH ends of every pair —
+       // 1,560 of 1,940 dbHits on a 40-pulse sample, each pulling a 1536-float
+       // array. Collecting the value reuses what the IS NOT NULL filter
+       // already cached: 1,940 -> 380 dbHits, 110ms -> 16ms, bit-identical
+       // results (PROFILEd on demo).
+       WITH collect(p.embedding) AS es
+       // The 'n AS sampled' in the RETURN below is LOAD-BEARING: it is a
+       // non-aggregate grouping key, which is what makes an under-sized field
+       // yield ZERO rows rather than one row of nulls. Drop it while tidying
+       // and this starts returning mean=null, sd=0. The TS coercion below
+       // would still fail open to the floor, but the guard would be gone.
+       WITH es, size(es) AS n
+       WHERE n >= $minPulses
+       UNWIND range(0, n - 2) AS i
+       UNWIND range(i + 1, n - 1) AS j
+       WITH n, vector.similarity.cosine(es[i], es[j]) AS sim
+       RETURN avg(sim) AS mean, stDevP(sim) AS sd, n AS sampled`,
+      {
+        scopeContextId,
+        sampleSize: neo4j.int(ADAPTIVE_SAMPLE_SIZE),
+        minPulses: neo4j.int(MIN_PULSES_FOR_ADAPTIVE_THRESHOLD),
+      }
+    )
+
+    // The LangChain Neo4jGraph layer can hand integers back as strings, so
+    // coerce rather than trusting the shape.
+    const row = Array.isArray(rows) ? rows[0] : undefined
+    const mean = Number(row?.mean ?? NaN)
+    const sd = Number(row?.sd ?? NaN)
+    if (Number.isFinite(mean) && Number.isFinite(sd)) {
+      threshold = Math.max(
+        SIMILARITY_FLOOR,
+        mean + ADAPTIVE_THRESHOLD_SIGMA * sd
+      )
+      estimated = true
+      console.log(
+        `[Resonance] Field ${scopeContextId}: mean=${mean.toFixed(3)} sd=${sd.toFixed(3)} over ${Number(row?.sampled ?? 0)} sampled pulses -> similarity cut ${threshold.toFixed(3)}`
+      )
+    }
+  } catch (error) {
+    console.warn(
+      '[Resonance] Adaptive threshold estimate failed; using floor:',
+      error instanceof Error ? error.message : error
+    )
+  }
+
+  // A real estimate is stable enough to hold for the full TTL. A fallback —
+  // query error, or a field still under MIN_PULSES_FOR_ADAPTIVE_THRESHOLD —
+  // is re-checked within seconds, so a transient failure costs one permissive
+  // pulse rather than a permissive sweep, and a field that crosses the size
+  // threshold mid-import starts adapting almost immediately.
+  adaptiveThresholdCache.set(scopeContextId, {
+    value: threshold,
+    expiresAt:
+      Date.now() +
+      (estimated
+        ? ADAPTIVE_THRESHOLD_TTL_MS
+        : ADAPTIVE_THRESHOLD_FALLBACK_TTL_MS),
+  })
+  return threshold
 }
 
 /**
@@ -192,7 +370,8 @@ async function createResonanceSuggestionsInDatabase(
   contextId: string,
   spaceId: string,
   pattern: z.infer<typeof ResonancePatternSchema>,
-  scopeContextId: string = contextId
+  scopeContextId: string = contextId,
+  anchorPulseId?: string
 ): Promise<DiscoveredResonance[]> {
   const graph = await initGraph()
 
@@ -203,7 +382,52 @@ async function createResonanceSuggestionsInDatabase(
   // rationale (shared contexts, shared authors, prior resonance neighbors) so
   // admin reviewers see verifiable structure ahead of the prose explanation —
   // first step toward Robert's "graph semantics over vector embeddings" goal.
-  for (const connection of pattern.pulseConnections) {
+  // Volume controls, applied before anything is written:
+  //
+  //  1. ANCHOR-INCIDENT. The LLM is handed a cluster of ~11 pulses and freely
+  //     returns pairs between two OTHER members of it. Those pairs belong to
+  //     whichever run anchors on them — writing them here is what turned a
+  //     24-pulse field into 175 suggestions, since every anchor contributed
+  //     its neighbours' pairs too. The cross-context path has always filtered
+  //     this way (`discoverCrossContextResonancesForPulse`); this brings the
+  //     within-field path in line. Callers without an anchor (none today) keep
+  //     the old behavior.
+  //  2. CONFIDENCE FLOOR. The schema allows 0-1 and nothing filtered, so weak
+  //     guesses reached the review queue alongside strong ones.
+  //  3. STRONGEST FIRST, WITHIN THIS ANCHOR'S RESULTS. The degree cap in the
+  //     write below is first-come, so the best of THESE pairs claim the budget
+  //     first. Note this orders one anchor's connections only — across anchors
+  //     the sweep runs in `createdAt DESC` order, so a strong pair found on a
+  //     later anchor can still lose its slot to weaker pairs already written.
+  //     Making the cap quality-aware (evicting a weaker pending suggestion)
+  //     would need an eviction path and is deliberately not done here.
+  const anchorIncident = pattern.pulseConnections.filter(
+    (connection) =>
+      anchorPulseId === undefined ||
+      connection.sourcePulseId === anchorPulseId ||
+      connection.targetPulseId === anchorPulseId
+  )
+  const eligibleConnections = anchorIncident
+    .filter((connection) => connection.confidence >= MIN_CONNECTION_CONFIDENCE)
+    .sort((a, b) => b.confidence - a.confidence)
+
+  // The anchor id is matched by exact string equality against an id the LLM
+  // echoes back from the prompt. If the model ever truncates or reformats it,
+  // EVERY pair drops here and discovery returns nothing — indistinguishable
+  // from "found nothing" unless we say so.
+  if (
+    anchorPulseId !== undefined &&
+    pattern.pulseConnections.length > 0 &&
+    anchorIncident.length === 0
+  ) {
+    console.warn(
+      `[ResonanceSuggestion] LLM returned ${pattern.pulseConnections.length} connections for anchor ${anchorPulseId} but none referenced it — check the model is echoing pulse ids verbatim.`
+    )
+  }
+
+  let skippedExistingOrCapped = 0
+
+  for (const connection of eligibleConnections) {
     let enrichedEvidence = connection.evidence
     try {
       const graphFacts = await collectPulsePairEvidence(
@@ -261,6 +485,33 @@ async function createResonanceSuggestionsInDatabase(
       WITH space, context, source, target, existing
       WHERE existing IS NULL
 
+      // Per-pulse degree cap: a pulse may anchor at most $maxDegree PENDING
+      // suggestions. Counted LIVE from the graph, not in this process, so the
+      // cap holds across runs — on-upload (GOAL-294), the nightly cron and the
+      // manual sweep (GOAL-368) all feed the same queue. Without it a single
+      // pulse reached 21 pending pairs, which a reviewer reads as the same node
+      // proposed over and over.
+      //
+      // Scoped to THIS Space's queue. On the cross-context path the target
+      // usually lives in another Space, and its backlog there is that Space's
+      // business — counting it would let one Space's unreviewed queue suppress
+      // discovery in another, which cuts against the Space-isolation ADR. What
+      // we are bounding is how often one pulse recurs in the queue being
+      // written to.
+      //
+      // Like the dedup above it this is read-then-create in one statement with
+      // no uniqueness constraint, so two CONCURRENT sweeps can both observe
+      // degree 2 and both create, landing a pulse at 4. Same accepted residual
+      // — the cap paces the queue, it is not a hard invariant.
+      OPTIONAL MATCH (source)<-[:SOURCE|TARGET]-(sourceDeg:ResonanceSuggestion)
+      WHERE sourceDeg.status = 'pending' AND (space)-[:HAS_SUGGESTION]->(sourceDeg)
+      WITH space, context, source, target, count(DISTINCT sourceDeg) AS sourceDegree
+      WHERE sourceDegree < $maxDegree
+      OPTIONAL MATCH (target)<-[:SOURCE|TARGET]-(targetDeg:ResonanceSuggestion)
+      WHERE targetDeg.status = 'pending' AND (space)-[:HAS_SUGGESTION]->(targetDeg)
+      WITH space, context, source, target, count(DISTINCT targetDeg) AS targetDegree
+      WHERE targetDegree < $maxDegree
+
       // Create ResonanceSuggestion
       CREATE (suggestion:ResonanceSuggestion {
         id: 'rs_' + randomUUID(),
@@ -290,6 +541,7 @@ async function createResonanceSuggestionsInDatabase(
         description: pattern.description,
         confidence: connection.confidence,
         evidence: enrichedEvidence,
+        maxDegree: neo4j.int(MAX_PENDING_SUGGESTIONS_PER_PULSE),
       }
     )
 
@@ -309,10 +561,66 @@ async function createResonanceSuggestionsInDatabase(
         confidence: connection.confidence,
         evidence: enrichedEvidence,
       })
+    } else {
+      // The write returns no row for EITHER reason — the pair was already
+      // proposed/confirmed, or an endpoint is at its degree cap. Splitting the
+      // two would mean giving up the single-statement read-then-create, so
+      // they share a counter; the degree cap is the likely cause when a field
+      // keeps reporting skips long after its first sweep.
+      skippedExistingOrCapped += 1
     }
   }
 
+  // One line per call, so a volume complaint is diagnosable: whether the LLM
+  // produced little, whether the filters ate it, or whether the queue is
+  // simply saturated. Without this every one of those looks like "returned 0".
+  console.log(
+    `[ResonanceSuggestion] context=${contextId} anchor=${anchorPulseId ?? 'none'} ` +
+      `llmPairs=${pattern.pulseConnections.length} ` +
+      `droppedNotAnchorIncident=${pattern.pulseConnections.length - anchorIncident.length} ` +
+      `droppedLowConfidence=${anchorIncident.length - eligibleConnections.length} ` +
+      `skippedExistingOrCapped=${skippedExistingOrCapped} ` +
+      `written=${suggestions.length}`
+  )
+
   return suggestions
+}
+
+/**
+ * How many PENDING suggestions this pulse already carries in this Space's
+ * review queue — the same count the degree cap applies at write time.
+ *
+ * Read up-front so a saturated anchor can be skipped BEFORE the LLM call.
+ * Every pair this path writes is anchor-incident, so an anchor already at the
+ * cap cannot produce a single write: running the vector search and the pattern
+ * analysis anyway would spend a model call to be told nothing may be created.
+ * On demo that is not a corner case — 23 of the 24 pulses in one field are
+ * already at or over the cap.
+ *
+ * Fails open (returns 0) so a counting error can never block discovery.
+ */
+async function countPendingSuggestionsForPulse(
+  pulseId: string,
+  spaceId: string
+): Promise<number> {
+  try {
+    const graph = await initGraph()
+    const rows = await graph.query<{ pending: number | string | null }>(
+      `MATCH (space:Space {id: $spaceId})-[:HAS_SUGGESTION]->(s:ResonanceSuggestion)
+       WHERE s.status = 'pending' AND (s)-[:SOURCE|TARGET]->(:FieldPulse {id: $pulseId})
+       RETURN count(DISTINCT s) AS pending`,
+      { pulseId, spaceId }
+    )
+    return Number(
+      (Array.isArray(rows) ? rows[0]?.pending : undefined) ?? 0
+    ) || 0
+  } catch (error) {
+    console.warn(
+      '[Resonance] Pending-degree pre-check failed; continuing:',
+      error instanceof Error ? error.message : error
+    )
+    return 0
+  }
 }
 
 /**
@@ -377,12 +685,42 @@ export async function discoverResonancesForPulse(
     spaceId: foundSpaceId,
   } = pulseResult[0]
 
-  // Find similar pulses WITHIN THE FIELD (root context subtree)
+  // Resolve the Space before doing any expensive work — the saturation
+  // pre-check below needs it, and a pulse with no Space can never produce a
+  // suggestion anyway.
+  const effectiveSpaceId = spaceId || foundSpaceId
+  if (!effectiveSpaceId) {
+    console.warn(
+      `Cannot create suggestions: no space associated with pulse ${pulseId}`
+    )
+    return []
+  }
+
+  // If this pulse's review queue is already full, every pair this call could
+  // write would be refused by the degree cap. Stop here rather than paying for
+  // a vector search and an LLM call to write nothing — and say so, because
+  // "0 new resonances" otherwise reads as "nothing found" when the real answer
+  // is "review what is already queued for this pulse".
+  const pendingForAnchor = await countPendingSuggestionsForPulse(
+    pulseId,
+    effectiveSpaceId
+  )
+  if (pendingForAnchor >= MAX_PENDING_SUGGESTIONS_PER_PULSE) {
+    console.log(
+      `[Resonance] Pulse ${pulseId} already has ${pendingForAnchor} pending suggestions (cap ${MAX_PENDING_SUGGESTIONS_PER_PULSE}) — skipping discovery until some are reviewed.`
+    )
+    return []
+  }
+
+  // Find similar pulses WITHIN THE FIELD (root context subtree). The cut is
+  // derived from this field's own similarity distribution, so a uniformly
+  // similar corpus raises its own bar instead of proposing most of itself.
+  const threshold = await resolveSimilarityThreshold(scopeContextId)
   const similarPulses = await findSimilarPulsesInContext(
     pulseId,
     scopeContextId,
-    0.7,
-    10
+    threshold,
+    RESONANCE_CANDIDATE_LIMIT
   )
 
   if (similarPulses.length === 0) {
@@ -400,15 +738,6 @@ export async function discoverResonancesForPulse(
     return []
   }
 
-  // If spaceId not provided, use the one found from the query
-  const effectiveSpaceId = spaceId || foundSpaceId
-  if (!effectiveSpaceId) {
-    console.warn(
-      `Cannot create suggestions: no space associated with pulse ${pulseId}`
-    )
-    return []
-  }
-
   // Create resonance suggestions in database — the containment guard runs
   // against the same root-subtree scope the candidate search used, so a
   // cross-sub-context pair is written, not silently dropped (GOAL-295).
@@ -416,7 +745,8 @@ export async function discoverResonancesForPulse(
     contextId,
     effectiveSpaceId,
     pattern,
-    scopeContextId
+    scopeContextId,
+    pulseId
   )
 
   return suggestions
@@ -839,6 +1169,25 @@ async function createCrossContextResonanceSuggestion(params: {
     WITH space, context, source, target, existing
     WHERE existing IS NULL
 
+    // Per-pulse degree cap: a pulse may anchor at most $maxDegree PENDING
+    // suggestions. Counted LIVE from the graph, not in this process, so the
+    // cap holds across runs — on-upload (GOAL-294), the nightly cron and the
+    // manual sweep (GOAL-368) all feed the same queue. Without it a single
+    // pulse reached 21 pending pairs, which a reviewer reads as the same node
+    // proposed over and over. Scoped to THIS Space's queue: the target usually
+    // lives in another Space, and letting its backlog there suppress discovery
+    // here would cut against the Space-isolation ADR. Read-then-create like the
+    // dedup above, so concurrent sweeps can overshoot the cap by one — it paces
+    // the queue rather than enforcing a hard invariant.
+    OPTIONAL MATCH (source)<-[:SOURCE|TARGET]-(sourceDeg:ResonanceSuggestion)
+    WHERE sourceDeg.status = 'pending' AND (space)-[:HAS_SUGGESTION]->(sourceDeg)
+    WITH space, context, source, target, count(DISTINCT sourceDeg) AS sourceDegree
+    WHERE sourceDegree < $maxDegree
+    OPTIONAL MATCH (target)<-[:SOURCE|TARGET]-(targetDeg:ResonanceSuggestion)
+    WHERE targetDeg.status = 'pending' AND (space)-[:HAS_SUGGESTION]->(targetDeg)
+    WITH space, context, source, target, count(DISTINCT targetDeg) AS targetDegree
+    WHERE targetDegree < $maxDegree
+
     CREATE (suggestion:ResonanceSuggestion {
       id: 'rs_' + randomUUID(),
       label: $label,
@@ -855,7 +1204,7 @@ async function createCrossContextResonanceSuggestion(params: {
     CREATE (suggestion)-[:TARGET]->(target)
     RETURN suggestion.id as suggestionId
     `,
-    { ...params }
+    { ...params, maxDegree: neo4j.int(MAX_PENDING_SUGGESTIONS_PER_PULSE) }
   )
 
   return Array.isArray(result) && result.length > 0
@@ -892,6 +1241,27 @@ export async function discoverCrossContextResonancesForPulse(
   if (!Array.isArray(sourceRows) || sourceRows.length === 0) return []
   const sourcePulse = sourceRows[0].pulse
 
+  // Same saturation short-circuit as the within-field path: every suggestion
+  // this function writes is incident to the source pulse (target-target pairs
+  // the LLM returns are dropped below), so a source already at the cap cannot
+  // produce one. Skip before the vector search and the model call rather than
+  // letting the write-time cap refuse the results afterwards.
+  const pendingForSource = await countPendingSuggestionsForPulse(
+    sourcePulseId,
+    sourceSpaceId
+  )
+  if (pendingForSource >= MAX_PENDING_SUGGESTIONS_PER_PULSE) {
+    console.log(
+      `[CrossContextResonance] Pulse ${sourcePulseId} already has ${pendingForSource} pending suggestions (cap ${MAX_PENDING_SUGGESTIONS_PER_PULSE}) — skipping cross-field discovery until some are reviewed.`
+    )
+    return []
+  }
+
+  // NOTE: threshold/limit are left at their defaults, so the CROSS-FIELD
+  // search still uses the fixed SIMILARITY_FLOOR while the within-field path
+  // adapts per field. Deliberate — an adaptive cut is derived from one field's
+  // distribution and has no meaning spanning several — but don't read the
+  // adaptive threshold as applying everywhere.
   const similar = await findSimilarPulsesAcrossContexts(
     sourcePulseId,
     accessibleContextIds,
@@ -907,7 +1277,13 @@ export async function discoverCrossContextResonancesForPulse(
   if (!pattern) return []
 
   const created: DiscoveredResonance[] = []
-  for (const connection of pattern.pulseConnections) {
+  // Same floor and ordering as the within-field path: weak guesses are never
+  // written, and the strongest pairs get first claim on each pulse's degree
+  // budget. Anchor-incidence is enforced per connection just below, as before.
+  const rankedConnections = pattern.pulseConnections
+    .filter((connection) => connection.confidence >= MIN_CONNECTION_CONFIDENCE)
+    .sort((a, b) => b.confidence - a.confidence)
+  for (const connection of rankedConnections) {
     // Normalize so the created suggestion always has the upload pulse as SOURCE
     // and a valid cross-context candidate as TARGET. Skip connections that do
     // not involve the source pulse, or whose other end is not one of the
