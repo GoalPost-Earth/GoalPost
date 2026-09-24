@@ -29726,6 +29726,7 @@ export type UpdateResourcePulseMutation = {
       status?: string | null
       why?: string | null
       location?: string | null
+      sourceUrl?: string | null
       time?: string | null
       createdAt: any
       createdBy: Array<{ __typename?: 'Person'; id: string; name: string }>
@@ -32233,6 +32234,7 @@ export type GetPulseDetailsWithContextQuery = {
     intensity?: number | null
     why?: string | null
     location?: string | null
+    sourceUrl?: string | null
     time?: string | null
     status?: string | null
     context: Array<{
@@ -37321,6 +37323,10 @@ export const UpdateResourcePulseDocument = {
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'location' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'sourceUrl' },
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'time' } },
                       {
@@ -47217,6 +47223,7 @@ export const GetPulseDetailsWithContextDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'intensity' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'why' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'location' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'sourceUrl' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'time' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'status' } },
                 {
