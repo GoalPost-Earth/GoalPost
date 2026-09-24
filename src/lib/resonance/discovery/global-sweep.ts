@@ -48,13 +48,26 @@ export interface SweptSpace {
 export interface GlobalSweepResult {
   /** Every suggestion created this pass, across all Spaces reached. */
   resonances: DiscoveredResonance[]
-  /** Per-Space breakdown, in the order the Spaces were processed. */
+  /**
+   * Per-Space breakdown in QUEUE order (least-recently-swept first), not in the
+   * order the pool happened to finish them. Spaces the pass never reached are
+   * absent rather than present-and-empty.
+   */
   spaces: SweptSpace[]
   /** Spaces enumerated for this pass. */
   spacesTotal: number
   /**
    * Spaces processed to completion. A Space the deadline cut short is NOT
    * counted here and keeps its old bookmark, so it leads the queue next pass.
+   *
+   * Deliberately NOT the same as `spaces.length`: a Space that finished its
+   * work but failed the post-hoc budget check is recorded in `spaces` (its
+   * suggestions are real and durable) yet not counted here (its bookmark was
+   * not moved). Since GOAL-376 that gap can be as wide as the pool, because
+   * every Space in flight when the deadline passes is treated that way — so a
+   * pass legitimately reports e.g. `spacesSwept: 12` alongside 15 entries in
+   * `spaces`, and `nightly-sweep.ts` writing one activity Log per entry will
+   * report more logs than Spaces swept. That is correct, not a miscount.
    */
   spacesSwept: number
   /** True when every enumerated Space was processed to completion. */
@@ -75,6 +88,11 @@ export interface GlobalSweepOptions extends ResonanceBudget {
    * reorder the scheduler's queue. Defaults to true.
    */
   stampProgress?: boolean
+  /**
+   * Spaces to sweep at once. Defaults to RESONANCE_SWEEP_CONCURRENCY, then to
+   * DEFAULT_SWEEP_CONCURRENCY. Present so a test can pin the pool size.
+   */
+  concurrency?: number
 }
 
 /**
@@ -105,6 +123,61 @@ async function stampSpaceSwept(
 }
 
 /**
+ * How many Spaces a pass sweeps at once (GOAL-376).
+ *
+ * The sweep is not CPU- or database-bound, it is bound by a remote model call:
+ * one structured-output request per anchor pulse, awaited serially. Measured on
+ * demo, that left a 270s pass covering ONE Space of nineteen, with ten Spaces
+ * never swept at all since the job was first scheduled. Overlapping Spaces
+ * turns that dead wait into coverage without touching the budget.
+ *
+ * Why the unit of concurrency is a SPACE and never a pulse: the suggestion
+ * write is read-then-create with no uniqueness constraint on the pair, and both
+ * the symmetric dedup and the per-pulse degree cap are documented as tolerating
+ * — not preventing — a race between concurrent runs (see
+ * `createResonanceSuggestionsInDatabase`). Those guards only hold while one
+ * field is walked by one worker. A FieldContext belongs to exactly one Space
+ * (verified on dev and demo: zero contexts carry HAS_CONTEXT from two Spaces)
+ * and a Space is claimed by exactly one worker here, so every anchor within a
+ * field stays sequential. Parallelising pulses instead would make the tolerated
+ * duplicate the norm.
+ *
+ * That argument covers the FIELD but NOT the pair, and the difference matters:
+ * a FieldPulse may be held by contexts in two different Spaces (demo and dev
+ * each hold two such pulses, shared by the same two Spaces, which sit adjacent
+ * in this queue). Two workers can therefore anchor the same pair at once, and
+ * the dedup in `createResonanceSuggestionsInDatabase` is global on the pair but
+ * read-then-create. `reserveResonancePair` there is what actually closes that
+ * window; this comment would otherwise be asserting a guarantee the code does
+ * not provide.
+ *
+ * Kept modest by default: demo's Neo4j is a 2GB shared box, and the ceiling
+ * that actually matters is the provider's rate limit, not the pool.
+ */
+const DEFAULT_SWEEP_CONCURRENCY = 4
+/** Upper bound on the env override, so a typo cannot open an unbounded fan-out. */
+const MAX_SWEEP_CONCURRENCY = 16
+
+function resolveSweepConcurrency(override?: number): number {
+  const envValue = process.env.RESONANCE_SWEEP_CONCURRENCY?.trim()
+  const requested =
+    override ?? (envValue ? Number(envValue) : DEFAULT_SWEEP_CONCURRENCY)
+
+  // Integer-strict on purpose. `Number.parseInt` would read "4x" as 4 and a
+  // fractional 2.5 would reach `Array.from({ length: 2.5 })`, which silently
+  // builds 2 workers — a pool size nobody asked for and nobody can see.
+  if (!Number.isInteger(requested) || requested < 1) {
+    console.warn(
+      `[Global Discovery] Ignoring invalid sweep concurrency ${JSON.stringify(
+        override ?? envValue
+      )}; using ${DEFAULT_SWEEP_CONCURRENCY}.`
+    )
+    return DEFAULT_SWEEP_CONCURRENCY
+  }
+  return Math.min(requested, MAX_SWEEP_CONCURRENCY)
+}
+
+/**
  * One resumable pass of resonance discovery across Spaces.
  */
 export async function sweepGlobalResonances(
@@ -115,6 +188,7 @@ export async function sweepGlobalResonances(
     maxSpaces,
     deadlineAt,
     stampProgress = true,
+    concurrency: concurrencyOverride,
   } = options
   const budget: ResonanceBudget = { deadlineAt }
   const graph = await initGraph()
@@ -182,56 +256,96 @@ export async function sweepGlobalResonances(
   )
 
   const allDiscoveredResonances: DiscoveredResonance[] = []
-  const visited: SweptSpace[] = []
+  // Written by queue position rather than appended, so the per-Space breakdown
+  // stays in least-recently-swept order however the pool happens to interleave.
+  // Slots for Spaces the pass never reached stay empty and are dropped below.
+  const visitedSlots: Array<SweptSpace | undefined> = new Array(spaces.length)
   let completedSpaces = 0
+  // The shared queue cursor. Safe without a lock: workers only ever yield at an
+  // `await`, and the read-and-increment below has none.
+  let nextIndex = 0
 
-  for (const { spaceId, spaceName } of spaces) {
-    if (budgetExhausted(budget)) {
-      console.log(
-        `[Global Discovery] Time budget spent after ${completedSpaces}/${spaces.length} spaces; the rest lead the queue next run.`
-      )
-      break
-    }
-    try {
-      console.log(
-        `[Global Discovery] Processing space: ${spaceName} (${spaceId})`
-      )
-      const resonances = await discoverResonancesForSpace(
-        spaceId,
-        lastRunTimestamp,
-        budget
-      )
-      allDiscoveredResonances.push(...resonances)
-      visited.push({ spaceId, spaceName, resonances })
+  const concurrency = Math.min(
+    resolveSweepConcurrency(concurrencyOverride),
+    spaces.length
+  )
+  console.log(
+    `[Global Discovery] Sweeping up to ${concurrency} space(s) at a time.`
+  )
 
-      // ONLY a Space that ran to completion is stamped. The loop guard admits
-      // a Space with milliseconds left, which then breaks at its own first
-      // context guard having done nothing — stamping that would move a Space
-      // that was never actually swept to the BACK of the queue, which is worse
-      // than not resuming at all. Same for a Space cut off mid-context: it
-      // keeps its older bookmark and leads the queue next pass.
-      if (budgetExhausted(budget)) {
+  const sweepWorker = async (): Promise<void> => {
+    for (;;) {
+      if (budgetExhausted(budget)) return
+      const index = nextIndex
+      if (index >= spaces.length) return
+      nextIndex = index + 1
+
+      const { spaceId, spaceName } = spaces[index]
+      try {
         console.log(
-          `[Global Discovery] Space ${spaceId} was cut short by the budget; leaving its bookmark untouched so it leads the queue next run.`
+          `[Global Discovery] Processing space: ${spaceName} (${spaceId})`
         )
-        break
+        const resonances = await discoverResonancesForSpace(
+          spaceId,
+          lastRunTimestamp,
+          budget
+        )
+        allDiscoveredResonances.push(...resonances)
+        visitedSlots[index] = { spaceId, spaceName, resonances }
+
+        // ONLY a Space that ran to completion is stamped. A worker can claim a
+        // Space with milliseconds left, which then stops at its own first
+        // context guard having done nothing — stamping that would move a Space
+        // that was never actually swept to the BACK of the queue, which is
+        // worse than not resuming at all. Same for a Space cut off mid-context:
+        // it keeps its older bookmark and leads the queue next pass.
+        //
+        // Under concurrency this is conservative in a new way: when the budget
+        // expires, EVERY Space still in flight goes unstamped, not just one. A
+        // Space that did finish in time can therefore be swept again next pass.
+        // That trade is deliberate — the cost is repeated model spend on one
+        // pass, whereas the opposite error (stamping a Space that swept
+        // nothing) silently starves it for as long as the bookmark stands.
+        if (budgetExhausted(budget)) {
+          console.log(
+            `[Global Discovery] Space ${spaceId} was cut short by the budget; leaving its bookmark untouched so it leads the queue next run.`
+          )
+          return
+        }
+        completedSpaces += 1
+        if (stampProgress) await stampSpaceSwept(spaceId, resonances.length)
+      } catch (error) {
+        console.error(
+          `[Global Discovery] Failed to process space ${spaceId}:`,
+          error
+        )
+        // Stamp anyway. A Space that throws every pass (bad data, a provider
+        // error on its content) would otherwise stay pinned at the head of the
+        // least-recently-swept queue and starve every Space behind it — the
+        // exact failure this ordering exists to prevent. It counts as completed
+        // for the same reason: the pass is done with it.
+        visitedSlots[index] = { spaceId, spaceName, resonances: [] }
+        completedSpaces += 1
+        if (stampProgress) await stampSpaceSwept(spaceId, 0)
       }
-      completedSpaces += 1
-      if (stampProgress) await stampSpaceSwept(spaceId, resonances.length)
-    } catch (error) {
-      console.error(
-        `[Global Discovery] Failed to process space ${spaceId}:`,
-        error
-      )
-      // Stamp anyway. A Space that throws every pass (bad data, a provider
-      // error on its content) would otherwise stay pinned at the head of the
-      // least-recently-swept queue and starve every Space behind it — the exact
-      // failure this ordering exists to prevent. It counts as completed for the
-      // same reason: the pass is done with it.
-      visited.push({ spaceId, spaceName, resonances: [] })
-      completedSpaces += 1
-      if (stampProgress) await stampSpaceSwept(spaceId, 0)
     }
+  }
+
+  // `Promise.all` is safe to await un-guarded here: `sweepWorker` never
+  // rejects — every unit of work is wrapped — so one poisoned Space cannot
+  // abandon the other workers mid-flight and lose their stamps.
+  await Promise.all(
+    Array.from({ length: concurrency }, () => sweepWorker())
+  )
+
+  const visited = visitedSlots.filter((slot): slot is SweptSpace =>
+    Boolean(slot)
+  )
+
+  if (completedSpaces < spaces.length) {
+    console.log(
+      `[Global Discovery] Stopped after ${completedSpaces}/${spaces.length} spaces; the rest lead the queue next run.`
+    )
   }
 
   // Compared against the capped list, not the full enumeration: a pass that

@@ -251,6 +251,18 @@ The same three properties are written on the triggering member's `Person`
   at once. Deliberately NOT whitelisted in the cypher-generator
   (`schema-context.ts`) — the assistant must never surface deleted content.
 - `HAS_PULSE` → FieldPulse
+
+  **Containment invariants** (relied on by the concurrent resonance sweep,
+  GOAL-376 — neither is enforced by a constraint, both verified in data on dev
+  and demo):
+  - A **FieldContext belongs to exactly one Space**: no context carries
+    `HAS_CONTEXT` from two Spaces. This is what makes a field single-writer when
+    Spaces are swept in parallel.
+  - A **FieldPulse may belong to several**: a pulse can carry `HAS_PULSE` from
+    contexts in two different Spaces (dev and demo each hold two). So *field*
+    containment does not imply *pair* containment — see `kb/06-adr.md` on the
+    global pair dedup, and `nightly-sweep.ts`, which filters activity-log
+    anchors to single-Space pulses for the same reason.
 - `HAS_PERSON` → Person — people attached to this context. Usually a
   `:Person:PersonPulse` (relational-world contact), but may also be a real
   `:User` (the uploader's self-link, or a consent-gated attach via the

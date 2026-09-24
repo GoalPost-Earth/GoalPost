@@ -162,6 +162,13 @@ const adaptiveThresholdCache = new Map<
  * different cuts for the same field at the same moment. Harmless — every path
  * fails open and the cut only decides which candidates reach the LLM — but
  * don't read this as shared state.
+ *
+ * Since GOAL-376 there are also N concurrent READERS inside one process, one
+ * per Space in flight. Still safe, and for a specific reason: the key is a
+ * scopeContextId, and a FieldContext belongs to exactly one Space (verified on
+ * dev and demo: zero contexts carry HAS_CONTEXT from two Spaces), so each entry
+ * is owned by exactly one worker. The evict-read-write below is synchronous
+ * throughout, so workers cannot interleave inside it.
  */
 async function resolveSimilarityThreshold(
   scopeContextId: string
@@ -255,6 +262,41 @@ async function resolveSimilarityThreshold(
         : ADAPTIVE_THRESHOLD_FALLBACK_TTL_MS),
   })
   return threshold
+}
+
+/**
+ * Pairs with a suggestion write IN FLIGHT in this process (GOAL-376).
+ *
+ * The Cypher dedup below is symmetric but GLOBAL on the pair, not Space-scoped:
+ * `(source)<-[:SOURCE|TARGET]-(existing)-[:SOURCE|TARGET]->(target)` matches a
+ * suggestion written from ANY Space. That was harmless while Spaces were swept
+ * one after another — the second Space simply saw the first Space's row and
+ * skipped. Sweeping Spaces concurrently breaks it, because a FieldPulse may
+ * carry HAS_PULSE edges from contexts in two different Spaces: demo and dev
+ * both hold two such pulses, shared by the SAME two Spaces ("Whole Hearts CoC"
+ * and "GoalPost Stewardship Circle"), which sit adjacent in the sweep queue.
+ * Two workers then anchor the same pair at the same moment, both read "no
+ * existing", and both CREATE.
+ *
+ * Held only for the duration of the write, never as a cache. That is what
+ * closes the window without introducing a new one: a second worker either sees
+ * the lock (the first write is still in flight) or sees the committed row via
+ * the Cypher dedup (the first write finished) — the release and the commit are
+ * the same instant, so there is no gap between them to slip through. Keeping
+ * pairs in a TTL map instead would ALSO suppress legitimate later proposals
+ * for as long as a container stayed warm, which is a behaviour change nobody
+ * asked for.
+ *
+ * Scope is deliberately this process only. The cross-process race — two lambda
+ * instances, or an on-upload run racing the cron — is the one
+ * `createResonanceSuggestionsInDatabase` already documents and accepts; closing
+ * that needs a uniqueness constraint on the pair, not a lock.
+ */
+const pairWritesInFlight = new Set<string>()
+
+/** Order-independent key, so (a,b) and (b,a) are the same pair. */
+function resonancePairKey(a: string, b: string): string {
+  return a < b ? `${a}|${b}` : `${b}|${a}`
 }
 
 /**
@@ -739,178 +781,204 @@ async function createResonanceSuggestionsInDatabase(
   }
 
   for (const connection of eligibleConnections) {
-    let enrichedEvidence = connection.evidence
-    try {
-      const graphFacts = await collectPulsePairEvidence(
-        connection.sourcePulseId,
-        connection.targetPulseId,
-        spaceId
-      )
-      enrichedEvidence = composeEvidenceString(graphFacts, connection.evidence)
-    } catch (evidenceError) {
-      // Evidence enrichment is best-effort — never block the suggestion
-      // because the rationale Cypher hiccupped. Fall back to the LLM's
-      // narrative and log so ops can catch a sustained failure.
-      console.warn(
-        '[ResonanceSuggestion] Evidence enrichment failed; falling back to LLM-only evidence:',
-        evidenceError instanceof Error ? evidenceError.message : evidenceError
-      )
-    }
-
-    // Create ResonanceSuggestion and connect it to the space, context, source, and target.
-    // Deduped symmetrically: if these two pulses are already joined by any
-    // ResonanceSuggestion or ResonanceLink (in either direction), we skip the
-    // CREATE and return no row. This makes repeated SEQUENTIAL discovery runs
-    // safe — on-upload (GOAL-294) and the daily cron both flow through here, and
-    // without the guard every re-run would pile up duplicate suggestions for the
-    // same pair. It is read-then-create within one statement with no uniqueness
-    // constraint on the pair, so two CONCURRENT runs over the same context (e.g.
-    // an on-upload after() racing the cron) could each observe "none" and both
-    // create; that residual duplicate is acceptable here and, unlike the accept
-    // path, stays invisible until a human promotes one of the pair.
-    const suggestionResult = await graph.query<{ suggestionId: string }>(
-      `
-      MATCH (space:Space {id: $spaceId})
-      MATCH (space)-[:HAS_CONTEXT]->(context:FieldContext {id: $contextId})
-      MATCH (scope:FieldContext {id: $scopeContextId})
-      MATCH (source:FieldPulse {id: $sourcePulseId})
-      MATCH (target:FieldPulse {id: $targetPulseId})
-
-      // Ensure source and target are both inside the resonance scope — the
-      // root field's live subtree (GOAL-295) — AND that the holding context
-      // belongs to this Space. EXISTS keeps the row count at exactly 1 so the
-      // CREATEs below never multiply.
-      //
-      // The Space predicate is deliberate redundancy (GOAL-347). Without it,
-      // "no suggestion crosses a Space boundary" — the guarantee ADR-003 rests
-      // on — is not enforced here at all; it is inherited from the separate
-      // invariant that a HAS_SUBCONTEXT hierarchy never spans Spaces. That
-      // invariant does hold, by construction in sub-context.ts (a child is
-      // created under its parent's Space, and the move path refuses a
-      // different one) and in data (verified: zero cross-Space HAS_SUBCONTEXT
-      // edges on dev, demo and production). But it is enforced one hop away
-      // from the thing it protects: a single stray edge from a script, a
-      // migration, or the assistant would quietly turn every discovery run
-      // into a cross-Space suggestion writer, with nothing here to stop it.
-      // Naming the Space costs one index lookup and makes the boundary
-      // self-enforcing. Safe to require: every subtree context carries its own
-      // HAS_CONTEXT edge (verified zero exceptions on all three databases).
-      WHERE EXISTS {
-          MATCH (scope)-[:HAS_SUBCONTEXT*0..10]->(x:FieldContext)-[:HAS_PULSE]->(source)
-          WHERE x.deletedAt IS NULL AND (space)-[:HAS_CONTEXT]->(x)
-        }
-        AND EXISTS {
-          MATCH (scope)-[:HAS_SUBCONTEXT*0..10]->(x:FieldContext)-[:HAS_PULSE]->(target)
-          WHERE x.deletedAt IS NULL AND (space)-[:HAS_CONTEXT]->(x)
-        }
-
-      // Symmetric duplicate check — a ResonanceSuggestion or ResonanceLink that
-      // already touches BOTH pulses (SOURCE/TARGET either way round) means this
-      // pair is already proposed/confirmed; don't create another.
-      OPTIONAL MATCH (source)<-[:SOURCE|TARGET]-(existing)-[:SOURCE|TARGET]->(target)
-      WHERE existing:ResonanceSuggestion OR existing:ResonanceLink
-      WITH space, context, source, target, existing
-      WHERE existing IS NULL
-
-      // Per-pulse degree cap: a pulse may anchor at most $maxDegree PENDING
-      // suggestions. Counted LIVE from the graph, not in this process, so the
-      // cap holds across runs — on-upload (GOAL-294), the nightly cron and the
-      // manual sweep (GOAL-368) all feed the same queue. Without it a single
-      // pulse reached 21 pending pairs, which a reviewer reads as the same node
-      // proposed over and over.
-      //
-      // Scoped to THIS Space's queue. On the cross-context path the target
-      // usually lives in another Space, and its backlog there is that Space's
-      // business — counting it would let one Space's unreviewed queue suppress
-      // discovery in another, which cuts against the Space-isolation ADR. What
-      // we are bounding is how often one pulse recurs in the queue being
-      // written to.
-      //
-      // Like the dedup above it this is read-then-create in one statement with
-      // no uniqueness constraint, so two CONCURRENT sweeps can both observe
-      // degree 2 and both create, landing a pulse at 4. Same accepted residual
-      // — the cap paces the queue, it is not a hard invariant.
-      OPTIONAL MATCH (source)<-[:SOURCE|TARGET]-(sourceDeg:ResonanceSuggestion)
-      WHERE sourceDeg.status = 'pending' AND (space)-[:HAS_SUGGESTION]->(sourceDeg)
-      WITH space, context, source, target, count(DISTINCT sourceDeg) AS sourceDegree
-      WHERE sourceDegree < $maxDegree
-      OPTIONAL MATCH (target)<-[:SOURCE|TARGET]-(targetDeg:ResonanceSuggestion)
-      WHERE targetDeg.status = 'pending' AND (space)-[:HAS_SUGGESTION]->(targetDeg)
-      WITH space, context, source, target, count(DISTINCT targetDeg) AS targetDegree
-      WHERE targetDegree < $maxDegree
-
-      // Create ResonanceSuggestion
-      CREATE (suggestion:ResonanceSuggestion {
-        id: 'rs_' + randomUUID(),
-        label: $label,
-        description: $description,
-        confidence: $confidence,
-        evidence: $evidence,
-        status: 'pending',
-        createdAt: datetime()
-      })
-
-      // Connect to space, context and pulses
-      CREATE (space)-[:HAS_SUGGESTION]->(suggestion)
-      CREATE (context)-[:HAS_SUGGESTION]->(suggestion)
-      CREATE (suggestion)-[:SOURCE]->(source)
-      CREATE (suggestion)-[:TARGET]->(target)
-
-      // Point the pair at its theme (kb/05: ResonanceLink -RESONATES_AS-> 
-      // FieldResonance; a suggestion is a pending link and carries the same
-      // edge). This is what lets a reviewer be shown "31 pairs under
-      // Regenerative Commons" instead of 31 copies of one paragraph.
-      // Skipped when the theme write failed — an ungrouped suggestion is
-      // still a usable suggestion.
-      // OPTIONAL MATCH on a unique id yields at most one row, so this cannot
-      // multiply the CREATEs above; FOREACH is just the conditional-create
-      // idiom for "only if the theme node exists".
-      WITH suggestion
-      OPTIONAL MATCH (fr:FieldResonance {id: $fieldResonanceId})
-      FOREACH (_ IN CASE WHEN fr IS NULL THEN [] ELSE [1] END |
-        CREATE (suggestion)-[:RESONATES_AS]->(fr)
-      )
-
-      RETURN suggestion.id as suggestionId
-    `,
-      {
-        spaceId,
-        contextId,
-        scopeContextId,
-        sourcePulseId: connection.sourcePulseId,
-        targetPulseId: connection.targetPulseId,
-        label: pattern.label,
-        description: pattern.description,
-        confidence: connection.confidence,
-        evidence: enrichedEvidence,
-        maxDegree: neo4j.int(MAX_PENDING_SUGGESTIONS_PER_PULSE),
-        fieldResonanceId: (await resolveTheme())?.id ?? null,
-      }
+    // Take the pair lock before doing any work for it. Acquire-and-test is
+    // synchronous, so two workers can never both pass it (GOAL-376).
+    const pairKey = resonancePairKey(
+      connection.sourcePulseId,
+      connection.targetPulseId
     )
-
-    const suggestionId =
-      Array.isArray(suggestionResult) && suggestionResult.length > 0
-        ? suggestionResult[0].suggestionId
-        : null
-
-    if (suggestionId) {
-      suggestions.push({
-        linkId: suggestionId, // Using linkId field for backwards compatibility
-        contextId,
-        label: pattern.label,
-        description: pattern.description,
-        sourcePulseId: connection.sourcePulseId,
-        targetPulseId: connection.targetPulseId,
-        confidence: connection.confidence,
-        evidence: enrichedEvidence,
-      })
-    } else {
-      // The write returns no row for EITHER reason — the pair was already
-      // proposed/confirmed, or an endpoint is at its degree cap. Splitting the
-      // two would mean giving up the single-statement read-then-create, so
-      // they share a counter; the degree cap is the likely cause when a field
-      // keeps reporting skips long after its first sweep.
+    if (pairWritesInFlight.has(pairKey)) {
+      // Another worker is mid-write on this exact pair. Its row will be there
+      // for the next pass to see; proposing it twice is the thing to avoid.
       skippedExistingOrCapped += 1
+      continue
+    }
+    pairWritesInFlight.add(pairKey)
+
+    // try/finally, not try/catch: the lock must be released on the way out
+    // however this iteration ends — a thrown evidence error, a rejected
+    // write, or the normal path. Leaking a key would silently suppress the
+    // pair for the life of the process.
+    try {
+      let enrichedEvidence = connection.evidence
+      try {
+        const graphFacts = await collectPulsePairEvidence(
+          connection.sourcePulseId,
+          connection.targetPulseId,
+          spaceId
+        )
+        enrichedEvidence = composeEvidenceString(graphFacts, connection.evidence)
+      } catch (evidenceError) {
+        // Evidence enrichment is best-effort — never block the suggestion
+        // because the rationale Cypher hiccupped. Fall back to the LLM's
+        // narrative and log so ops can catch a sustained failure.
+        console.warn(
+          '[ResonanceSuggestion] Evidence enrichment failed; falling back to LLM-only evidence:',
+          evidenceError instanceof Error ? evidenceError.message : evidenceError
+        )
+      }
+
+      // Create ResonanceSuggestion and connect it to the space, context, source, and target.
+      // Deduped symmetrically: if these two pulses are already joined by any
+      // ResonanceSuggestion or ResonanceLink (in either direction), we skip the
+      // CREATE and return no row. This makes repeated SEQUENTIAL discovery runs
+      // safe — on-upload (GOAL-294) and the daily cron both flow through here, and
+      // without the guard every re-run would pile up duplicate suggestions for the
+      // same pair. It is read-then-create within one statement with no uniqueness
+      // constraint on the pair, so two CONCURRENT runs over the same context (e.g.
+      // an on-upload after() racing the cron) could each observe "none" and both
+      // create; that residual duplicate is acceptable here and, unlike the accept
+      // path, stays invisible until a human promotes one of the pair.
+      //
+      // Note the match is global on the pair, NOT Space-scoped, which is what
+      // makes a shared FieldPulse racy once Spaces are swept concurrently — see
+      // `reserveResonancePair`, which closes that window inside this process.
+      const suggestionResult = await graph.query<{ suggestionId: string }>(
+        `
+        MATCH (space:Space {id: $spaceId})
+        MATCH (space)-[:HAS_CONTEXT]->(context:FieldContext {id: $contextId})
+        MATCH (scope:FieldContext {id: $scopeContextId})
+        MATCH (source:FieldPulse {id: $sourcePulseId})
+        MATCH (target:FieldPulse {id: $targetPulseId})
+
+        // Ensure source and target are both inside the resonance scope — the
+        // root field's live subtree (GOAL-295) — AND that the holding context
+        // belongs to this Space. EXISTS keeps the row count at exactly 1 so the
+        // CREATEs below never multiply.
+        //
+        // The Space predicate is deliberate redundancy (GOAL-347). Without it,
+        // "no suggestion crosses a Space boundary" — the guarantee ADR-003 rests
+        // on — is not enforced here at all; it is inherited from the separate
+        // invariant that a HAS_SUBCONTEXT hierarchy never spans Spaces. That
+        // invariant does hold, by construction in sub-context.ts (a child is
+        // created under its parent's Space, and the move path refuses a
+        // different one) and in data (verified: zero cross-Space HAS_SUBCONTEXT
+        // edges on dev, demo and production). But it is enforced one hop away
+        // from the thing it protects: a single stray edge from a script, a
+        // migration, or the assistant would quietly turn every discovery run
+        // into a cross-Space suggestion writer, with nothing here to stop it.
+        // Naming the Space costs one index lookup and makes the boundary
+        // self-enforcing. Safe to require: every subtree context carries its own
+        // HAS_CONTEXT edge (verified zero exceptions on all three databases).
+        WHERE EXISTS {
+            MATCH (scope)-[:HAS_SUBCONTEXT*0..10]->(x:FieldContext)-[:HAS_PULSE]->(source)
+            WHERE x.deletedAt IS NULL AND (space)-[:HAS_CONTEXT]->(x)
+          }
+          AND EXISTS {
+            MATCH (scope)-[:HAS_SUBCONTEXT*0..10]->(x:FieldContext)-[:HAS_PULSE]->(target)
+            WHERE x.deletedAt IS NULL AND (space)-[:HAS_CONTEXT]->(x)
+          }
+
+        // Symmetric duplicate check — a ResonanceSuggestion or ResonanceLink that
+        // already touches BOTH pulses (SOURCE/TARGET either way round) means this
+        // pair is already proposed/confirmed; don't create another.
+        OPTIONAL MATCH (source)<-[:SOURCE|TARGET]-(existing)-[:SOURCE|TARGET]->(target)
+        WHERE existing:ResonanceSuggestion OR existing:ResonanceLink
+        WITH space, context, source, target, existing
+        WHERE existing IS NULL
+
+        // Per-pulse degree cap: a pulse may anchor at most $maxDegree PENDING
+        // suggestions. Counted LIVE from the graph, not in this process, so the
+        // cap holds across runs — on-upload (GOAL-294), the nightly cron and the
+        // manual sweep (GOAL-368) all feed the same queue. Without it a single
+        // pulse reached 21 pending pairs, which a reviewer reads as the same node
+        // proposed over and over.
+        //
+        // Scoped to THIS Space's queue. On the cross-context path the target
+        // usually lives in another Space, and its backlog there is that Space's
+        // business — counting it would let one Space's unreviewed queue suppress
+        // discovery in another, which cuts against the Space-isolation ADR. What
+        // we are bounding is how often one pulse recurs in the queue being
+        // written to.
+        //
+        // Like the dedup above it this is read-then-create in one statement with
+        // no uniqueness constraint, so two CONCURRENT sweeps can both observe
+        // degree 2 and both create, landing a pulse at 4. Same accepted residual
+        // — the cap paces the queue, it is not a hard invariant.
+        OPTIONAL MATCH (source)<-[:SOURCE|TARGET]-(sourceDeg:ResonanceSuggestion)
+        WHERE sourceDeg.status = 'pending' AND (space)-[:HAS_SUGGESTION]->(sourceDeg)
+        WITH space, context, source, target, count(DISTINCT sourceDeg) AS sourceDegree
+        WHERE sourceDegree < $maxDegree
+        OPTIONAL MATCH (target)<-[:SOURCE|TARGET]-(targetDeg:ResonanceSuggestion)
+        WHERE targetDeg.status = 'pending' AND (space)-[:HAS_SUGGESTION]->(targetDeg)
+        WITH space, context, source, target, count(DISTINCT targetDeg) AS targetDegree
+        WHERE targetDegree < $maxDegree
+
+        // Create ResonanceSuggestion
+        CREATE (suggestion:ResonanceSuggestion {
+          id: 'rs_' + randomUUID(),
+          label: $label,
+          description: $description,
+          confidence: $confidence,
+          evidence: $evidence,
+          status: 'pending',
+          createdAt: datetime()
+        })
+
+        // Connect to space, context and pulses
+        CREATE (space)-[:HAS_SUGGESTION]->(suggestion)
+        CREATE (context)-[:HAS_SUGGESTION]->(suggestion)
+        CREATE (suggestion)-[:SOURCE]->(source)
+        CREATE (suggestion)-[:TARGET]->(target)
+
+        // Point the pair at its theme (kb/05: ResonanceLink -RESONATES_AS-> 
+        // FieldResonance; a suggestion is a pending link and carries the same
+        // edge). This is what lets a reviewer be shown "31 pairs under
+        // Regenerative Commons" instead of 31 copies of one paragraph.
+        // Skipped when the theme write failed — an ungrouped suggestion is
+        // still a usable suggestion.
+        // OPTIONAL MATCH on a unique id yields at most one row, so this cannot
+        // multiply the CREATEs above; FOREACH is just the conditional-create
+        // idiom for "only if the theme node exists".
+        WITH suggestion
+        OPTIONAL MATCH (fr:FieldResonance {id: $fieldResonanceId})
+        FOREACH (_ IN CASE WHEN fr IS NULL THEN [] ELSE [1] END |
+          CREATE (suggestion)-[:RESONATES_AS]->(fr)
+        )
+
+        RETURN suggestion.id as suggestionId
+      `,
+        {
+          spaceId,
+          contextId,
+          scopeContextId,
+          sourcePulseId: connection.sourcePulseId,
+          targetPulseId: connection.targetPulseId,
+          label: pattern.label,
+          description: pattern.description,
+          confidence: connection.confidence,
+          evidence: enrichedEvidence,
+          maxDegree: neo4j.int(MAX_PENDING_SUGGESTIONS_PER_PULSE),
+          fieldResonanceId: (await resolveTheme())?.id ?? null,
+        }
+      )
+
+      const suggestionId =
+        Array.isArray(suggestionResult) && suggestionResult.length > 0
+          ? suggestionResult[0].suggestionId
+          : null
+
+      if (suggestionId) {
+        suggestions.push({
+          linkId: suggestionId, // Using linkId field for backwards compatibility
+          contextId,
+          label: pattern.label,
+          description: pattern.description,
+          sourcePulseId: connection.sourcePulseId,
+          targetPulseId: connection.targetPulseId,
+          confidence: connection.confidence,
+          evidence: enrichedEvidence,
+        })
+      } else {
+        // The write returns no row for EITHER reason — the pair was already
+        // proposed/confirmed, or an endpoint is at its degree cap. Splitting the
+        // two would mean giving up the single-statement read-then-create, so
+        // they share a counter; the degree cap is the likely cause when a field
+        // keeps reporting skips long after its first sweep.
+        skippedExistingOrCapped += 1
+      }
+    } finally {
+      pairWritesInFlight.delete(pairKey)
     }
   }
 

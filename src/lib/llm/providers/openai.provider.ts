@@ -50,6 +50,19 @@ export class OpenAIProvider implements LLMProvider {
   private apiKey: string
   private modelName: string
 
+  /**
+   * The model id this provider actually resolved to.
+   *
+   * Exposed because the resolution happens in the constructor — the caller
+   * passes a `ProviderConfig`, not a model — so without this there is no way to
+   * assert which model a factory wired up. GOAL-376 turned on exactly that
+   * class of bug: `getAnalysisProvider()` had always fallen through to the
+   * assistant model here, and no test could see it.
+   */
+  get model(): string {
+    return this.modelName
+  }
+
   constructor(private config: ProviderConfig = {}) {
     const apiKey = config.apiKey || process.env.OPENAI_API_KEY
     const modelName = getAssistantModelId(config.modelName)

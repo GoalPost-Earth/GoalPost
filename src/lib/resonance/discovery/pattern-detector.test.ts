@@ -123,6 +123,11 @@ interface GraphStub {
   labels?: LabelRows
   /** Rows (or a thrown error) from the FieldResonance upsert. */
   theme?: ThemeRows
+  /**
+   * Held by the suggestion write, so a test can keep one write in flight while
+   * a second concurrent call reaches the same pair.
+   */
+  writeGate?: Promise<void>
 }
 
 let stub: GraphStub
@@ -182,6 +187,7 @@ graphQuery.mockImplementation(
       }))
     }
     if (cypher.includes('CREATE (suggestion:ResonanceSuggestion')) {
+      if (stub.writeGate) await stub.writeGate
       return stub.writesSucceed === false
         ? []
         : [
@@ -979,5 +985,91 @@ describe('FieldResonance theme node', () => {
 
     expect(created).toHaveLength(1)
     expect(writes()[0].fieldResonanceId).toBeNull()
+  })
+})
+
+// ─── concurrent sweep: the shared-pulse pair race (GOAL-376) ────────────────
+
+describe('concurrent writes to the same pair', () => {
+  /**
+   * The precondition is real data, not a hypothetical: a FieldPulse may be held
+   * by contexts in two different Spaces, and demo and dev each hold two such
+   * pulses — shared by the same two Spaces, which sit adjacent in the sweep
+   * queue. Once GOAL-376 sweeps Spaces concurrently, two workers anchor that
+   * pair at the same moment. The Cypher dedup cannot save them: it is global on
+   * the pair but read-then-create, so both observe "no existing" and both
+   * CREATE.
+   */
+  it('writes the pair ONCE when two Spaces reach it at the same moment', async () => {
+    let releaseWrite!: () => void
+    const gate = new Promise<void>((resolve) => {
+      releaseWrite = resolve
+    })
+
+    const field = nextFieldId()
+    stubPattern([connection(ANCHOR, 'pulse_shared', 0.95)])
+
+    // First worker: reaches the write and parks there, holding the pair lock.
+    stub = {
+      scopeContextId: field,
+      similar: [{ id: 'pulse_shared', content: 'shared', similarity: 0.95 }],
+      writeGate: gate,
+    }
+    const first = discoverResonancesForPulse(ANCHOR, 'ws_alpha')
+    await Promise.resolve()
+    await Promise.resolve()
+
+    // Second worker, a different Space, same pair, while the first is still in
+    // flight. It must find the lock and skip rather than CREATE a duplicate.
+    const second = discoverResonancesForPulse(ANCHOR, 'ws_beta')
+
+    releaseWrite()
+    const [a, b] = await Promise.all([first, second])
+
+    const pairWrites = writes().filter(
+      (w) =>
+        (w.sourcePulseId === ANCHOR && w.targetPulseId === 'pulse_shared') ||
+        (w.sourcePulseId === 'pulse_shared' && w.targetPulseId === ANCHOR)
+    )
+    expect(pairWrites).toHaveLength(1)
+    expect(a.length + b.length).toBe(1)
+  })
+
+  it('releases the lock so the pair is writable again afterwards', async () => {
+    // A lock that outlived its write would silently suppress the pair for the
+    // life of the process — the failure mode of holding these in a TTL map.
+    const field = nextFieldId()
+    stubPattern([connection(ANCHOR, 'pulse_later', 0.95)])
+    const base = {
+      scopeContextId: field,
+      similar: [{ id: 'pulse_later', content: 'later', similarity: 0.95 }],
+    }
+
+    stub = { ...base }
+    const firstRun = await discoverResonancesForPulse(ANCHOR, 'ws_alpha')
+    stub = { ...base }
+    const secondRun = await discoverResonancesForPulse(ANCHOR, 'ws_alpha')
+
+    expect(firstRun).toHaveLength(1)
+    expect(secondRun).toHaveLength(1)
+  })
+
+  it('releases the lock even when the write throws', async () => {
+    const field = nextFieldId()
+    stubPattern([connection(ANCHOR, 'pulse_boom', 0.95)])
+    const base = {
+      scopeContextId: field,
+      similar: [{ id: 'pulse_boom', content: 'boom', similarity: 0.95 }],
+    }
+
+    stub = { ...base, writeGate: Promise.reject(new Error('write failed')) }
+    await expect(
+      discoverResonancesForPulse(ANCHOR, 'ws_alpha')
+    ).rejects.toThrow('write failed')
+
+    stub = { ...base }
+    await expect(
+      discoverResonancesForPulse(ANCHOR, 'ws_alpha')
+    ).resolves.toHaveLength(1)
   })
 })

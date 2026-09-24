@@ -145,6 +145,8 @@ Consequences to design around:
 - Work units check the deadline at the finest granularity that is expensive — for resonance discovery, per pulse, since one pulse is a vector search plus an LLM analysis.
 - Fan-out is ordered **least-recently-processed first**, persisted in the graph (`:ResonanceSweepState {spaceId, lastSweptAt}`). A unit that throws is still stamped, or a permanently-failing one starves everything behind it.
 - The response reports what remains (`complete`, `spacesSwept/spacesTotal`, per-phase `remaining`) so an operator can watch a backlog converge instead of guessing.
+- **Fan-out runs concurrently at the unit the guards can tolerate, and no finer** (GOAL-376). The resonance sweep overlaps **Spaces** (`RESONANCE_SWEEP_CONCURRENCY`, default 4) but never pulses within a field: the suggestion write is read-then-create, so a field must stay single-writer. A budget alone cannot fix a fan-out whose per-unit cost is remote latency — it only rations a fixed capacity. Measured on demo, a serial pass landed 11–14 LLM analyses a night and covered 1 Space of 19, leaving 10 Spaces never swept.
+- **Background analysis does not run on the assistant's model.** `getAnalysisProvider()` resolves `OPENAI_ANALYSIS_MODEL` (default `gpt-4o-mini`), not `getAssistantModelId()`. A reasoning model spends ~2,100 completion tokens and ~20s on a judgement the prompt has already narrowed to a handful of candidates, and in a budgeted sweep per-call latency *is* the coverage ceiling.
 
 **Why:** The prior sweep had no budget and no cursor: it fanned out over every Space with an LLM call per pulse and simply ran until the platform killed it at 300s. Because it re-enumerated Spaces in the same order every time, it would die at the same point every time — the Spaces behind that point never swept even once — and the caller got a bare 504 that discarded the counts for the phases that HAD succeeded. (On demo the question never even arose: the route was never invoked at all, which is the bug GOAL-347 opened on. The cost profile is what made the fix more than a scheduling change: the very first successful run is the most expensive one the sweep will ever do.) A deadline turns the kill into a clean stop; the ordering turns the clean stop into forward progress.
 
@@ -746,6 +748,14 @@ to provide.
 - The degree cap is read-then-create with no uniqueness constraint, so
   concurrent sweeps can overshoot it by one — the same accepted residual as the
   symmetric pair dedup.
+- The symmetric pair dedup matches **globally on the pair, not per Space**. That
+  is load-bearing once Spaces are swept concurrently (GOAL-376), because a
+  FieldPulse may be held by contexts in two different Spaces — so two workers
+  can anchor one pair at the same moment and both read "no existing".
+  `pairWritesInFlight` in `pattern-detector.ts` holds a lock for the duration of
+  each write, which closes that window **within one process**; the cross-process
+  race (two lambda instances, or on-upload racing the cron) remains the accepted
+  residual above. Closing that one needs a uniqueness constraint on the pair.
 - The theme find-or-create has the same shape: `MERGE` over an unbound pattern
   with no uniqueness constraint covering `(space, labelKey)`, so two concurrent
   sweeps can mint two nodes for one Space and label. The vocabulary read
