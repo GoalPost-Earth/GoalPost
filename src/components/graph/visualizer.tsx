@@ -54,6 +54,8 @@ export interface NvlRefHandle {
   ) => void
   fit: (nodeIds: string[], opts?: Record<string, unknown>) => void
   getNodes: () => Node[]
+  /** Every node with its current world position. */
+  getNodePositions: () => Array<Node & { x: number; y: number }>
   /** Re-kicks the layout simulation. Required after mount because NVL's force layout doesn't always converge from a cold start without an explicit nudge. */
   restart: (opts?: Record<string, unknown>, retainPositions?: boolean) => void
   /** Updates layout-specific options (gravity, linkDistance, simulationIterations, etc.) on the live NVL instance. */
