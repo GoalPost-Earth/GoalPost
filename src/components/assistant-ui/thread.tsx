@@ -9,6 +9,7 @@ import { useCallback, useEffect, type FC } from 'react'
 import { useRouter } from 'next/navigation'
 import { Headphones, Mic, Paperclip, SendHorizontalIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AssistantMessageError } from './assistant-message-error'
 import { EnhancedTextPart } from './enhanced-message-text'
 import { MessageFeedback } from './message-feedback'
 import { VoiceProvider, useVoiceContext } from './voice-context'
@@ -176,7 +177,13 @@ const AssistantMessageFeedbackFooter: FC = () => {
   )
   const isRunning = useAssistantState(({ thread }) => thread.isRunning)
   const isLast = useAssistantState(({ message }) => message.isLast)
-  if (isLast && isRunning) return null
+  // An errored turn isn't persisted (see the chat route's onFinish), so
+  // there is no ConversationTurn for the rating to attach to.
+  const hasError = useAssistantState(
+    ({ message }) =>
+      message.status?.type === 'incomplete' && message.status.reason === 'error'
+  )
+  if ((isLast && isRunning) || hasError) return null
   return <MessageFeedback turnId={turnId} />
 }
 
@@ -205,7 +212,14 @@ const AssistantMessageLoader: FC = () => {
     )
   )
 
-  if (hasTextContent) return null
+  // An errored turn already shows AssistantMessageError; "try rephrasing"
+  // would misdirect the member when the cause is an outage.
+  const hasError = useAssistantState(
+    ({ message }) =>
+      message.status?.type === 'incomplete' && message.status.reason === 'error'
+  )
+
+  if (hasTextContent || hasError) return null
   if (isRunning) {
     return (
       <div
@@ -230,25 +244,6 @@ const AssistantMessageLoader: FC = () => {
     )
   }
   return null
-}
-
-/**
- * Renders an error chip inside an assistant bubble when the runtime has
- * attached an error to that message (e.g. the streaming connection failed
- * mid-flight, or the model returned a malformed result).
- */
-const AssistantMessageError: FC = () => {
-  return (
-    <MessagePrimitive.Error>
-      <div
-        className="flex items-center gap-2 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-700 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-300"
-        role="alert"
-      >
-        <span className="material-symbols-outlined text-base">error</span>
-        <span>Something went wrong while generating the response.</span>
-      </div>
-    </MessagePrimitive.Error>
-  )
 }
 
 /**

@@ -63,6 +63,7 @@ import { randomUUID } from 'node:crypto'
 import { detectAutoSignals } from '@/lib/feedback/auto-detect'
 import { createAssistantFeedback } from '@/lib/feedback/assistant-feedback.service'
 import { recordAiSdkUsage } from '@/lib/llm/usage/record-ai-sdk-usage'
+import { classifyChatError } from '@/lib/simulation/chat-errors'
 
 // Allow streaming responses up to 60 seconds (different modes may be verbose)
 export const maxDuration = 60
@@ -635,7 +636,20 @@ export async function POST(req: Request) {
       // onFinish receives the full UIMessage list; we grab the last assistant
       // message and persist it as the matching turn for the user message saved
       // above. Failure is logged but never propagated — chat UX wins.
+      // A provider failure (429 credits exhausted, rate limit, 5xx) surfaces
+      // INSIDE the stream, so it never reaches the catch block below. Without
+      // this hook the AI SDK forwards the raw provider error to the client
+      // (kb/07 Rule 1) and the member just sees an empty bubble. Log the raw
+      // error here and send member-safe copy the chat UI renders as-is.
+      let streamErrored = false
       return result.toUIMessageStreamResponse({
+        onError: (error) => {
+          // The SDK calls this twice per failure — again with an Error built
+          // from our own copy when it re-reads the error chunk. Log once.
+          if (!streamErrored) console.error('[Chat API] Stream error:', error)
+          streamErrored = true
+          return classifyChatError(error).message
+        },
         headers: {
           'X-Simulation-Mode': assistantModeManager.getMode(),
         },
@@ -669,6 +683,10 @@ export async function POST(req: Request) {
             )
             .map((part) => part.text)
             .join('')
+          // A failed turn has nothing worth keeping, and an empty row would
+          // reload as "No response — try rephrasing", misdirecting the member
+          // during an outage. The error itself is in the server log.
+          if (streamErrored && !textContent) return
           void appendConversationTurn(
             currentUserId,
             {
@@ -683,8 +701,9 @@ export async function POST(req: Request) {
               // Run auto-detect AFTER the turn is persisted so the
               // feedback rows can FK to a real ConversationTurn node.
               // Fire-and-forget: a Neo4j hiccup here must NOT propagate
-              // to the user; the chat UX has already returned.
-              void emitAutoSignals(assistantTurnId, parts)
+              // to the user; the chat UX has already returned. Skip it when
+              // the stream errored — an outage is not a model quality signal.
+              if (!streamErrored) void emitAutoSignals(assistantTurnId, parts)
             })
             .catch((error) => {
               console.warn(
@@ -776,51 +795,18 @@ Title:`,
   } catch (error) {
     console.error('[Simulation API] Error:', error)
 
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error'
-
-    // GOAL-296: an OpenAI 429 (rate / token-quota) previously fell through to
-    // the generic 500 below with `details: errorMessage`, leaking the raw
-    // provider error to the client — an abrupt stop with an internal string,
-    // exactly the kb/07 Rule 1 failure this ticket is about. Detect it and
-    // surface a plain, retryable message instead. The AI SDK / OpenAI SDK
-    // attaches `statusCode`/`status` 429 on rate-limit errors.
-    const statusCode = (
-      error as { statusCode?: number; status?: number } | null
-    )?.statusCode
-    const status = (error as { status?: number } | null)?.status
-    // Primary signal is the numeric status; the message regex is a best-effort
-    // fallback kept tight so unrelated errors that merely mention "quota" or a
-    // "429" count aren't misclassified as retryable.
-    const isRateLimited =
-      statusCode === 429 ||
-      status === 429 ||
-      /rate.?limit|too many requests|insufficient_quota/i.test(errorMessage)
-
-    if (isRateLimited) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "I'm getting a lot of requests right now and need a moment. Please try again in a few seconds.",
-          retryable: true,
-        }),
-        {
-          status: 429,
-          headers: { 'Content-Type': 'application/json', 'Retry-After': '10' },
-        }
-      )
-    }
-
-    // kb/07 Rule 1: do NOT echo the raw error string to the client. Keep it in
-    // the server log (above); hand back a plain, member-safe message.
+    // GOAL-296 / kb/07 Rule 1: never echo the raw provider error to the
+    // client. Keep it in the server log (above); hand back member-safe copy.
+    // Same classifier as the stream's onError, so both paths read alike.
+    const info = classifyChatError(error)
     return new Response(
-      JSON.stringify({
-        error:
-          "Something went wrong on our end while answering. Please try again in a moment.",
-      }),
+      JSON.stringify({ error: info.message, retryable: info.retryable }),
       {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
+        status: info.httpStatus,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(info.kind === 'rate_limited' && { 'Retry-After': '10' }),
+        },
       }
     )
   }
