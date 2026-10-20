@@ -3073,6 +3073,14 @@ type Organization
   id: ID! @id
   name: String!
   description: String
+  # Public contact details, set by contact import (GOAL-382). An organization's
+  # own published address/phone, not a person's PII — readable under the same
+  # context-reach rule as the rest of the node. Not filterable, so they cannot
+  # be probed through a `where` on any path that skips the READ filter.
+  email: String @filterable(byValue: false)
+  phone: String @filterable(byValue: false)
+  website: String @filterable(byValue: false)
+  location: String @filterable(byValue: false)
   createdAt: DateTime
   updatedAt: DateTime
   # Contexts this org is attached to (HAS_ORGANIZATION). Open nested CONNECT is

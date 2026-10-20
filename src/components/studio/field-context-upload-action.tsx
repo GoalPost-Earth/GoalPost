@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState, type FC } from 'react'
+import dynamic from 'next/dynamic'
 import { useApolloClient } from '@apollo/client/react'
 import { FileUp } from 'lucide-react'
 import { toast } from 'sonner'
@@ -21,6 +22,18 @@ import {
   onImportArticlesModalClosed,
 } from '@/lib/simulation/pulse-creation-events'
 import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
+import { GET_FIELD_CONTEXT_DETAILS } from '@/app/graphql/queries/FIELD_CONTEXT_DETAILS_QUERIES'
+import { GET_FIELD_CONTEXT_PEOPLE } from '@/app/graphql/queries'
+
+// Loaded on demand so the contact parsers stay out of the dashboard bundle for
+// members who never import.
+const ImportContactsModal = dynamic(
+  () =>
+    import('@/components/fields/import-contacts-modal').then(
+      (mod) => mod.ImportContactsModal
+    ),
+  { ssr: false }
+)
 
 /**
  * Studio-shell entry point for getting source material into a FieldContext.
@@ -28,6 +41,10 @@ import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
  * One compact "Upload" affordance offers both ingestion paths (GOAL-327):
  *  - Upload a document — single file, presign → S3 PUT → process (GOAL-235)
  *  - Import articles — bulk CSV/XLSX spreadsheet (GOAL-317)
+ *  - Import contacts — people + organizations from a vCard / CSV / JSON
+ *    address-book export (GOAL-382). Unlike the article import, this
+ *    component owns that modal: it writes inline, so there is no job for the
+ *    page to track, only a refetch once it lands.
  *
  * The two are conceptually the same action ("get source material into this
  * field"), so they share one trigger rather than competing for room in a
@@ -63,6 +80,11 @@ export const FieldContextUploadAction: FC = () => {
   // which the queued-upload path deliberately bypasses (it releases the modal
   // directly), so without this the next open would show the previous file.
   const [uploadSessionKey, setUploadSessionKey] = useState(0)
+  // Same pinning as the document upload: captured on open so a focal change
+  // mid-import cannot retarget it.
+  const [contactsFieldContextId, setContactsFieldContextId] = useState<
+    string | null
+  >(null)
   // Both menu items open a modal that installs its own focus trap. Radix
   // restores focus to this menu's trigger ~300ms after the item is chosen —
   // i.e. *after* the dialog has already focused its first control — which
@@ -120,10 +142,11 @@ export const FieldContextUploadAction: FC = () => {
   // the Apollo cache on the field-context page, which already runs this query.
   const canEditContent = useFieldContextCanEditContent(focalFieldContextId)
 
-  if (!focalFieldContextId && !pinnedFieldContextId) return null
+  const pinnedAny = pinnedFieldContextId ?? contactsFieldContextId
+  if (!focalFieldContextId && !pinnedAny) return null
   // Hide the control for GUESTs / non-members — but never yank it out from
   // under an upload that is already in flight (pinned id survives that).
-  if (!canEditContent && !pinnedFieldContextId) return null
+  if (!canEditContent && !pinnedAny) return null
 
   const handleSubmit = async (input: UploadDocumentSubmitInput) => {
     if (!pinnedFieldContextId) {
@@ -178,7 +201,7 @@ export const FieldContextUploadAction: FC = () => {
             disabled={!focalFieldContextId}
             className="gp-glass-hover cursor-pointer flex items-center gap-1.5 md:gap-2 pl-3 pr-2 md:pl-5 md:pr-3 h-10 md:h-11 rounded-full gp-glass border border-gp-glass-border hover:border-gp-primary/40 hover:shadow-[0_0_50px_color-mix(in_srgb,var(--gp-primary)_35%,transparent)] transition-all group disabled:opacity-40 disabled:cursor-not-allowed"
             aria-label="Upload to this field context"
-            title="Upload a document or import articles"
+            title="Upload a document, or import articles or contacts"
           >
             <FileUp className="w-5 h-5 text-amber-600 dark:text-amber-300 transition-colors" />
             <span className="hidden sm:inline text-sm font-semibold text-gp-ink-strong">
@@ -238,6 +261,19 @@ export const FieldContextUploadAction: FC = () => {
             </span>
             <span className="text-sm font-medium">Import articles</span>
           </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              if (!focalFieldContextId) return
+              restoreFocusOnCloseRef.current = false
+              setContactsFieldContextId(focalFieldContextId)
+            }}
+            className="gp-menu-item cursor-pointer gap-2.5 rounded-lg px-2.5 py-2 focus:bg-transparent focus:text-gp-primary"
+          >
+            <span className="material-symbols-outlined text-[18px]">
+              contacts
+            </span>
+            <span className="text-sm font-medium">Import contacts</span>
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -251,6 +287,25 @@ export const FieldContextUploadAction: FC = () => {
         }}
         onSubmit={handleSubmit}
       />
+
+      {contactsFieldContextId && (
+        <ImportContactsModal
+          isOpen
+          fieldContextId={contactsFieldContextId}
+          onClose={() => {
+            setContactsFieldContextId(null)
+            refocusTrigger()
+          }}
+          // The field page's own queries — its people, organizations and
+          // roster change. Named, not 'active', so Bloom's graph queries are
+          // left alone.
+          onImported={() => {
+            void apolloClient.refetchQueries({
+              include: [GET_FIELD_CONTEXT_DETAILS, GET_FIELD_CONTEXT_PEOPLE],
+            })
+          }}
+        />
+      )}
     </>
   )
 }

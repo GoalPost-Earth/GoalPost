@@ -38,6 +38,7 @@ export type PolicyName =
   | 'invite-blast'
   | 'reset-request'
   | 'bulk-import'
+  | 'contact-import'
 
 interface RateLimitArgs {
   policy: PolicyName
@@ -126,6 +127,19 @@ function getLimiter(policy: PolicyName): Ratelimit | null {
         prefix: `rl:${ENV_PREFIX}:bulk-import`,
       })
       break
+    case 'contact-import':
+      // 120 contact-import BATCHES per hour per account (GOAL-382). The browser
+      // sends a file in batches of CONTACT_IMPORT_BATCH_SIZE (25), so this is
+      // 3000 contacts an hour — six full 500-contact files. Kept separate from
+      // `bulk-import`, which a single multi-batch file would exhaust. It also
+      // bounds how many addresses a looping caller can test for existence
+      // (an out-of-reach email is skipped rather than created).
+      limiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(120, '1 h'),
+        prefix: `rl:${ENV_PREFIX}:contact-import`,
+      })
+      break
   }
   limiterCache.set(policy, limiter)
   return limiter
@@ -146,6 +160,9 @@ const POLICY_FAILURE_MODE: Record<PolicyName, 'allow' | 'deny'> = {
   // is recoverable; a member losing the ability to import is a visible
   // product failure. Revisit if import spend ever becomes the dominant cost.
   'bulk-import': 'allow',
+  // Graph writes only (no LLM spend) and capped per request — same reasoning
+  // as bulk-import.
+  'contact-import': 'allow',
 }
 
 export async function rateLimit({

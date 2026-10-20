@@ -90,6 +90,10 @@ export const ALLOWED_RELATIONSHIPS = [
   // INITIATED_BY; MENTIONED_IN is the "related to / appears in" edge. Written by
   // the doc-ingestion link path. (person|org)-[:MENTIONED_IN]->(:FieldPulse).
   'MENTIONED_IN',
+  // A person's organization (company, cooperative…) — written by contact
+  // import (GOAL-382) from vCard ORG / CSV Company, with the person's `role`
+  // there on the edge. (person)-[:AFFILIATED_WITH]->(:Organization).
+  'AFFILIATED_WITH',
   'HAS_RESONANCE',
   // PromiseWeave edges — directly analogous to ResonanceLink's
   // SOURCE/TARGET/HAS_RESONANCE. A weave WEAVES the pulse(s) it connects, is
@@ -188,8 +192,8 @@ SpaceMembership { id, role, addedAt } — role ∈ {ADMIN, MEMBER, GUEST}.
 
 Community { id, name, description } — a public collective (e.g. "GoalPost Core Team"). Communities are NOT private — every authenticated user can see them and discover other members.
 
-Organization { id, name, description, createdAt }
-  - An organization / group / company / cooperative / institution named in an uploaded document (e.g. "Artisan Cooperative"). Its own type — NOT a Person and NOT a pulse. Nodes carry ["Organization","LifeSensor","RelationalEntity"]; match the \`:Organization\` label. Attached to a FieldContext via HAS_ORGANIZATION and linked to the pulses it relates to via MENTIONED_IN. When the user names an organization (or asks to show one), MATCH \`:Organization\` — these nodes are invisible to any query that omits the label.
+Organization { id, name, description, email, phone, website, location, createdAt }
+  - An organization / group / company / cooperative / institution named in an uploaded document or imported from a contacts file (e.g. "Artisan Cooperative"). Its own type — NOT a Person and NOT a pulse. Nodes carry ["Organization","LifeSensor","RelationalEntity"]; match the \`:Organization\` label. Attached to a FieldContext via HAS_ORGANIZATION and linked to the pulses it relates to via MENTIONED_IN. When the user names an organization (or asks to show one), MATCH \`:Organization\` — these nodes are invisible to any query that omits the label.
 
 FieldContext { id, title, emergentName, createdAt }
   - Belongs to exactly one Space (every context — nested or not — has its own
@@ -292,6 +296,7 @@ ResourcePulse (source-backed) { id, sourceFilename, sourceMimeType, sourceSummar
 (FieldContext)-[:HAS_ORGANIZATION]->(Organization)   // organizations attached to a field's relational world (GOAL-298). Parallels HAS_PERSON.
 (Person)-[:MENTIONED_IN]->(FieldPulse)         // a person named in / related to a pulse but NOT its author. Authorship is INITIATED_BY|CREATED_BY; MENTIONED_IN is the "appears in / related to" edge.
 (Organization)-[:MENTIONED_IN]->(FieldPulse)   // an organization named in / related to a pulse (e.g. the cooperative that offers a resource).
+(Person)-[:AFFILIATED_WITH {role}]->(Organization)   // the organization a person belongs to / works at, with their role there (GOAL-382).
 (FieldContext)-[:HAS_RESONANCE]->(ResonanceLink)
 (ResonanceLink)-[:SOURCE]->(FieldPulse)
 (ResonanceLink)-[:TARGET]->(FieldPulse)

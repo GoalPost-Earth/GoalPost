@@ -128,6 +128,11 @@ and blew the 60 s `/api/graphql` ceiling (guarded by
 - `IS_MEMBER` → SpaceMembership
 - `CONNECTED_TO` ↔ Person (bidirectional, with edge metadata: `why`, `interests`). Written by the person-detail UI, the GraphQL `createPersonConnection` mutation, **and** the AI assistant: `create_connection` (direct/proactive) and `create_person` (which MERGEs a `CONNECTED_TO` from the current user to the new person whenever a `relationshipWhy` is supplied). See `kb/07-ai-assistant-ux.md` Rule 5.
 - `CREATED_BY` ← FieldPulse, Log
+- `CREATED_BY` → Person — on a `:PersonPulse` created by contact import
+  (WF-14), the member who imported it; this is the `createdBy` branch of the
+  `privateProfile` read gate.
+- `AFFILIATED_WITH` → Organization — the organization this person belongs to,
+  with `role` on the edge (contact import, GOAL-382).
 
 ---
 
@@ -668,6 +673,10 @@ type maps the load-bearing `Organization` label; the `LifeSensor` /
 | id          | string   | Unique — `organization_<uuid>`            |
 | name        | string   | Required                                  |
 | description | string   | Optional — what the org is / does         |
+| email       | string   | Optional — the org's own public address (GOAL-382) |
+| phone       | string   | Optional (GOAL-382)                       |
+| website     | string   | Optional (GOAL-382)                       |
+| location    | string   | Optional — city, region, country (GOAL-382) |
 | createdAt   | datetime |                                           |
 | updatedAt   | datetime | Set on enrich                             |
 
@@ -678,6 +687,11 @@ type maps the load-bearing `Organization` label; the `LifeSensor` /
   it is the load-bearing branch of the read gate.
 - `MENTIONED_IN` → FieldPulse — the pulse(s) the org was identified as related to.
 - `EXTRACTED_FROM` → Document — doc-ingestion provenance.
+- `AFFILIATED_WITH` ← Person — people who belong to / work at the org, with
+  their `role` on the edge. Written by contact import (GOAL-382); not exposed in
+  the GraphQL schema yet (raw Cypher + the assistant's query generator only).
+- `CREATED_BY` → Person — the member who imported it (contact import only;
+  document-extracted orgs have none).
 
 **Authorization:** type-level `@authorization` READ filter over `contexts_SOME`
 (owner or member of a context's parent Space) — an org unreachable through any
@@ -687,8 +701,9 @@ created server-side only, via the audited doc-ingestion write in
 `src/lib/chat/hitl.ts` (`createOrganizationAuthorized`), which gates on
 `canEditContent`.
 
-**Writes:** created / enriched **only** by the doc-ingestion path
-(`create_organization` tool). Idempotent by name-within-context (a same-named org
+**Writes:** created / enriched by the doc-ingestion path
+(`create_organization` tool) and by contact import (WF-14,
+`src/lib/imports/contact-import-service.ts`, gated on edit rights to the field). Idempotent by name-within-context (a same-named org
 in the context is enriched, never duplicated). No embedding / vector index yet —
 semantic org discovery is a follow-up (resonance is pulse↔pulse today).
 

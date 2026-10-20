@@ -614,3 +614,69 @@ weaves existed only where the prod→dev migration had built them.
   through `normalizeWeaveStatus` (`src/lib/promise-weave.ts`).
 - Write logic lives in `src/hooks/usePromiseWeaves.ts` so the field-context
   page and any later surface cannot drift on the connect/disconnect shapes.
+
+## WF-14 — Contact Import (FieldContext, GOAL-382)
+
+**Actor:** Space owner, ADMIN or MEMBER of the field's Space (never GUEST)
+
+The spec is the industry-standard address-book exports, so test data can be
+mocked from any contacts app. Agreed with the client on GOAL-382.
+
+1. From the field's **Upload** menu, the member picks **Import contacts** and
+   chooses a file: **vCard** (`.vcf`, 2.1 / 3.0 / 4.0, any number of cards),
+   **CSV** (Outlook, Google Contacts, LinkedIn connections, or the GoalPost
+   template), or **JSON** (an array of contacts in the template's fields).
+2. The browser parses and previews it — nothing is written yet. A CSV's
+   source is detected from its header row and can be changed in the preview.
+   The member may also pick ONE pulse or person in this field to link every
+   contact to.
+3. `POST /api/import/contacts` re-validates, gates on edit rights to the field
+   (`loadEditableContext`), and writes inline (graph writes only — no LLM
+   spend, so no queue). The response is a per-row outcome:
+   `created` / `updated` / `linked` / `skipped`.
+4. Per contact:
+   - a person becomes a `:Person:PersonPulse` on the field's roster
+     (`HAS_PERSON {curated: true}`); an organization becomes an
+     `:Organization` (`HAS_ORGANIZATION`). New ones are `CREATED_BY` the member.
+   - a person's company (vCard `ORG`, CSV `Company`) is matched or created as an
+     Organization in the same field and linked with
+     `(Person)-[:AFFILIATED_WITH {role}]->(Organization)`.
+   - duplicates are matched, never added twice. People: **email first** —
+     within this field, or among contacts the member created (an exact email
+     brings their own contact into this field) — **then name + organization**,
+     within this field only (a same-named contact with no organization yet
+     also matches, unless the two carry different emails). Organizations:
+     name, within this field. On a match a value in the file **replaces** the
+     stored value; a blank keeps it.
+   - **email is never changed** on an existing contact, and an empty one is
+     filled only on a contact the member created — signup adopts whichever
+     Person holds an address, so planting one would hand the contact over.
+   - an email that belongs to a **registered member or pending invitee**
+     attaches them to the field (no profile change, no extra link) when the
+     article import's consent gate passes; an email held by anyone else out of
+     reach is **skipped** with one message for every case. Being
+     `CONNECTED_TO` the member is NOT reach — it is no read or write grant.
+   - the optional link: pulse → `MENTIONED_IN` (people and organizations);
+     person (never another registered member or invitee) → `CONNECTED_TO`,
+     people only — organizations are not linked to a person, since the only
+     person→organization edge (`AFFILIATED_WITH`) would claim they work there.
+   - a website without a scheme gets `https://`; any non-http(s) URL fails the
+     row.
+   - one activity `Log` per write (edges only when new), `metadata.source =
+     'contact-import'`. Each contact is ONE transaction — its organization and
+     link included — so a row reported skipped left nothing behind.
+
+### WF-14 implementation constraints
+
+- **A new source is a profile, not a screen.** Add an entry to
+  `CONTACT_SOURCE_PROFILES` (`src/lib/imports/contact-sources.ts`) mapping its
+  columns onto the canonical `ContactRecord` (`contact-import.ts`).
+- The preview and the route share `finalizeContactRecord`, so a row the
+  preview calls ready cannot 400 the batch.
+- Capped at `MAX_CONTACT_IMPORT_ROWS` (500) per file, sent by the browser in
+  batches of `CONTACT_IMPORT_BATCH_SIZE` (25) so each request stays inside the
+  duration budget (every contact is several round trips — ~2 s each from a
+  far-away dev box; progress moves per batch). Rate-limited per batch under
+  the `contact-import` policy (120/hour).
+- Writes live in `src/lib/imports/contact-import-service.ts`; rows run
+  sequentially so a contact listed twice in one file matches itself.
