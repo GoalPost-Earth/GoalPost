@@ -250,7 +250,10 @@ async function upsertOrganization(
         userId: scope.userId,
         organizationId: existingId,
         props,
-        ...logParams(scope, `Updated organization ${name} from a contact import into ${where(scope)}`),
+        ...logParams(
+          scope,
+          `Updated organization ${name} from a contact import into ${where(scope)}`
+        ),
       }
     )
     scope.organizationCache.set(key, existingId)
@@ -384,7 +387,10 @@ async function attachMember(
       contextId: scope.contextId,
       userId: scope.userId,
       personId,
-      ...logParams(scope, `Added ${displayName} to ${where(scope)} from a contact import`),
+      ...logParams(
+        scope,
+        `Added ${displayName} to ${where(scope)} from a contact import`
+      ),
     }
   )
   return Boolean(rows?.[0]?.id)
@@ -464,7 +470,10 @@ async function updatePerson(
       personId,
       props: rest,
       email,
-      ...logParams(scope, `Updated ${contactDisplayName(record)} from a contact import into ${where(scope)}`),
+      ...logParams(
+        scope,
+        `Updated ${contactDisplayName(record)} from a contact import into ${where(scope)}`
+      ),
     }
   )
   return { emailDropped: Boolean(row.emailDropped) }
@@ -533,7 +542,7 @@ export async function resolveLinkTarget(
     `,
     { contextId, userId, targetId: link.id }
   )
-  return rows && rows.length > 0 ? rows[0].label ?? '' : null
+  return rows && rows.length > 0 ? (rows[0].label ?? '') : null
 }
 
 /**
@@ -640,8 +649,18 @@ async function importPerson(
   }
 
   if (record.organization) {
-    const organization = await upsertOrganization(scope, record.organization, {})
-    await affiliate(scope, personId, organization.id, record.organization, record)
+    const organization = await upsertOrganization(
+      scope,
+      record.organization,
+      {}
+    )
+    await affiliate(
+      scope,
+      personId,
+      organization.id,
+      record.organization,
+      record
+    )
   }
   await linkToTarget(scope, personId, record)
   return outcome

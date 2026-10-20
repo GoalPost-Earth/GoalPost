@@ -2,8 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { gql } from '@apollo/client'
-import { useQuery } from '@apollo/client/react'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
 import {
   MAX_CONTACT_FILE_BYTES,
@@ -15,6 +13,7 @@ import {
   parseContactFile,
   type ParsedContactFile,
 } from '@/lib/imports/contact-sources'
+import { parseContactWorkbook } from '@/lib/imports/contact-sheet-parser'
 import {
   ContactIssueCard,
   ContactRowCard,
@@ -23,6 +22,10 @@ import {
   CountChip,
 } from './import-contacts-panels'
 import { useContactImport } from './use-contact-import'
+import {
+  CONTACT_SELECT_CLASS,
+  ContactLinkSelect,
+} from './import-contacts-link-select'
 
 /**
  * GOAL-382 — import people and organizations into a FieldContext from a
@@ -40,30 +43,6 @@ import { useContactImport } from './use-contact-import'
  * cascade, so mounting in place would hide the dialog in Bloom view.
  */
 
-const LINK_TARGETS_QUERY = gql`
-  query ContactImportLinkTargets($id: ID!) {
-    fieldContexts(where: { id_EQ: $id }) {
-      id
-      pulses {
-        id
-        title
-      }
-      people {
-        id
-        name
-      }
-    }
-  }
-`
-
-interface LinkTargetsData {
-  fieldContexts: {
-    id: string
-    pulses: { id: string; title: string }[]
-    people: { id: string; name: string | null }[]
-  }[]
-}
-
 interface ImportContactsModalProps {
   isOpen: boolean
   fieldContextId: string
@@ -72,8 +51,7 @@ interface ImportContactsModalProps {
   onImported: () => void
 }
 
-const selectClass =
-  'w-full min-w-0 rounded-lg border border-gp-glass-border bg-gp-surface-strong dark:bg-gp-surface-dark px-3 py-2 text-sm text-gp-ink-strong dark:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-gp-primary'
+const EXCEL_FILE = /\.xlsx?$/i
 
 export function ImportContactsModal({
   isOpen,
@@ -84,18 +62,17 @@ export function ImportContactsModal({
   const dialogRef = useRef<HTMLDivElement>(null)
   useFocusTrap(dialogRef, isOpen)
 
-  const [file, setFile] = useState<{ name: string; text: string } | null>(null)
+  // Text for vCard / CSV / JSON; the raw bytes for an Excel workbook. Kept so
+  // "Read this file as" can re-read it with another profile.
+  const [file, setFile] = useState<{
+    name: string
+    content: string | ArrayBuffer
+  } | null>(null)
   const [parsed, setParsed] = useState<ParsedContactFile | null>(null)
   const [linkValue, setLinkValue] = useState('')
   const [pickError, setPickError] = useState<string | null>(null)
   const { isSubmitting, progress, result, error, submit, reset } =
     useContactImport({ fieldContextId, onImported })
-
-  const { data: linkData } = useQuery<LinkTargetsData>(LINK_TARGETS_QUERY, {
-    variables: { id: fieldContextId },
-    skip: !isOpen || !parsed,
-  })
-  const field = linkData?.fieldContexts[0]
 
   const step = result ? 'results' : parsed ? 'preview' : 'pick'
   const records = parsed?.records ?? []
@@ -113,8 +90,11 @@ export function ImportContactsModal({
   }, [isSubmitting, onClose, reset])
 
   const readFile = useCallback(
-    (name: string, text: string, profileId?: string) => {
-      const next = parseContactFile(name, text, profileId)
+    (name: string, content: string | ArrayBuffer, profileId?: string) => {
+      const next =
+        typeof content === 'string'
+          ? parseContactFile(name, content, profileId)
+          : parseContactWorkbook(content, profileId)
       if (next.fileError) {
         setPickError(next.fileError)
         return
@@ -130,7 +110,7 @@ export function ImportContactsModal({
         return
       }
       setPickError(null)
-      setFile({ name, text })
+      setFile({ name, content })
       setParsed(next)
     },
     []
@@ -145,7 +125,12 @@ export function ImportContactsModal({
         return
       }
       try {
-        readFile(picked.name, await picked.text())
+        readFile(
+          picked.name,
+          EXCEL_FILE.test(picked.name)
+            ? await picked.arrayBuffer()
+            : await picked.text()
+        )
       } catch {
         setPickError('The file could not be read — pick it again and retry.')
       }
@@ -242,10 +227,10 @@ export function ImportContactsModal({
                 <label className="flex flex-col gap-1 min-w-0 text-xs font-medium text-gp-ink-muted dark:text-gp-ink-soft">
                   Read this file as
                   <select
-                    className={selectClass}
+                    className={CONTACT_SELECT_CLASS}
                     value={parsed.profile.id}
                     onChange={(event) =>
-                      readFile(file.name, file.text, event.target.value)
+                      readFile(file.name, file.content, event.target.value)
                     }
                   >
                     {CONTACT_SOURCE_PROFILES.filter(
@@ -258,34 +243,11 @@ export function ImportContactsModal({
                   </select>
                 </label>
               )}
-              <label className="flex flex-col gap-1 min-w-0 text-xs font-medium text-gp-ink-muted dark:text-gp-ink-soft">
-                Also link every contact to (optional)
-                <select
-                  className={selectClass}
-                  value={linkValue}
-                  onChange={(event) => setLinkValue(event.target.value)}
-                >
-                  <option value="">Nothing else</option>
-                  {field && field.pulses.length > 0 && (
-                    <optgroup label="Pulses in this field">
-                      {field.pulses.map((pulse) => (
-                        <option key={pulse.id} value={`pulse:${pulse.id}`}>
-                          {pulse.title}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {field && field.people.length > 0 && (
-                    <optgroup label="People in this field">
-                      {field.people.map((person) => (
-                        <option key={person.id} value={`person:${person.id}`}>
-                          {person.name || 'Unnamed person'}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-              </label>
+              <ContactLinkSelect
+                fieldContextId={fieldContextId}
+                value={linkValue}
+                onChange={setLinkValue}
+              />
             </div>
 
             <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
@@ -297,7 +259,10 @@ export function ImportContactsModal({
 
             <div className="overflow-y-auto min-h-0 space-y-2 pr-1">
               {parsed.errors.map((rowError) => (
-                <ContactIssueCard key={`err-${rowError.row}`} error={rowError} />
+                <ContactIssueCard
+                  key={`err-${rowError.row}`}
+                  error={rowError}
+                />
               ))}
               {parsed.records.map((record) => (
                 <ContactRowCard key={`row-${record.row}`} record={record} />
@@ -319,7 +284,11 @@ export function ImportContactsModal({
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1 shrink-0">
           {step === 'pick' && (
-            <button type="button" onClick={handleClose} className={secondaryButton}>
+            <button
+              type="button"
+              onClick={handleClose}
+              className={secondaryButton}
+            >
               Cancel
             </button>
           )}
@@ -363,7 +332,11 @@ export function ImportContactsModal({
             </>
           )}
           {step === 'results' && (
-            <button type="button" onClick={handleClose} className={primaryButton}>
+            <button
+              type="button"
+              onClick={handleClose}
+              className={primaryButton}
+            >
               Done
             </button>
           )}

@@ -65,8 +65,7 @@ export function useContactImport({
             body: JSON.stringify({ fieldContextId, contacts: batch, link }),
           })
           const body = (await res.json().catch(() => null)) as
-            | (ContactImportResult & { error?: string })
-            | null
+            (ContactImportResult & { error?: string }) | null
           if (res.status === 429) {
             throw new Error(
               'You have imported a lot of contacts recently — wait a while before importing more.'

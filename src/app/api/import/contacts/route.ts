@@ -132,7 +132,8 @@ export async function POST(req: Request) {
     if (!context.found || !context.allowed) {
       return Response.json(
         {
-          error: 'This field is not available, or you cannot add contacts to it.',
+          error:
+            'This field is not available, or you cannot add contacts to it.',
           reason: 'forbidden',
         },
         { status: 403 }
@@ -141,7 +142,12 @@ export async function POST(req: Request) {
 
     const link = parsed.data.link ?? null
     const linkLabel = link
-      ? await resolveLinkTarget(graph, parsed.data.fieldContextId, currentUserId, link)
+      ? await resolveLinkTarget(
+          graph,
+          parsed.data.fieldContextId,
+          currentUserId,
+          link
+        )
       : ''
     if (linkLabel === null) {
       return Response.json(
@@ -163,7 +169,8 @@ export async function POST(req: Request) {
       return Response.json(
         {
           ...result,
-          error: 'The import lost its connection to the database — please try again.',
+          error:
+            'The import lost its connection to the database — please try again.',
         },
         { status: 503 }
       )

@@ -85,7 +85,9 @@ function parseProperty(line: string): VCardProperty | null {
   }
   let value = line.slice(separator + 1)
   // 2.1 also allows the bare form (`NOTE;QUOTED-PRINTABLE:`), read as TYPE.
-  if (/QUOTED-PRINTABLE/i.test(`${params.ENCODING ?? ''},${params.TYPE ?? ''}`)) {
+  if (
+    /QUOTED-PRINTABLE/i.test(`${params.ENCODING ?? ''},${params.TYPE ?? ''}`)
+  ) {
     value = decodeQuotedPrintable(value)
   }
   return { name, params, value }
@@ -125,7 +127,10 @@ function preferred(properties: VCardProperty[]): string | undefined {
   return chosen ? unescapeText(chosen.value).trim() || undefined : undefined
 }
 
-function cardToContact(properties: VCardProperty[], row: number): ContactRecord {
+function cardToContact(
+  properties: VCardProperty[],
+  row: number
+): ContactRecord {
   const all = (name: string) => properties.filter((p) => p.name === name)
   const first = (name: string) => all(name)[0]
 

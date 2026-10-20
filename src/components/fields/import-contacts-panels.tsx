@@ -55,9 +55,9 @@ export function ContactsPicker({
     <>
       <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
         Import people and organizations from your address book. Export your
-        contacts as a vCard (.vcf) file, or as CSV from Outlook, Google
-        Contacts or LinkedIn. Contacts already in this field are updated rather
-        than added twice.
+        contacts as a vCard (.vcf) file, or as CSV from Outlook, Google Contacts
+        or LinkedIn — or fill in the template below as a CSV or Excel sheet.
+        Contacts already in this field are updated rather than added twice.
       </p>
 
       <label
@@ -98,14 +98,14 @@ export function ContactsPicker({
             : 'Drag a contacts file here, or click to choose'}
         </span>
         <span className="text-xs text-gp-ink-muted">
-          Accepts .vcf, .csv and .json — up to {MAX_CONTACT_IMPORT_ROWS}{' '}
-          contacts per import
+          Accepts .vcf, .csv, Excel (.xlsx/.xls) and .json — up to{' '}
+          {MAX_CONTACT_IMPORT_ROWS} contacts per import
         </span>
         <input
           id="import-contacts-file"
           type="file"
           aria-label="Choose a contacts file"
-          accept=".vcf,.vcard,.csv,.json,text/vcard,text/csv,application/json"
+          accept=".vcf,.vcard,.csv,.xlsx,.xls,.json,text/vcard,text/csv,application/json,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
           className="sr-only"
           onChange={(event) => {
             onFileSelected(event.target.files?.[0] ?? null)
@@ -209,7 +209,10 @@ export function CountChip({
   )
 }
 
-const STATUS_COPY: Record<ContactImportStatus, { label: string; icon: string }> = {
+const STATUS_COPY: Record<
+  ContactImportStatus,
+  { label: string; icon: string }
+> = {
   created: { label: 'Added', icon: 'person_add' },
   updated: { label: 'Updated', icon: 'sync' },
   linked: { label: 'Linked', icon: 'link' },

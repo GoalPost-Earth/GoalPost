@@ -69,7 +69,10 @@ describe('finalizeContactRecord', () => {
 
     it('keeps line breaks in the description (notes are prose)', () => {
       const record = finalized(
-        person({ description: '  Met at the spring gathering.\nFollow up re: dye workshop.  ' })
+        person({
+          description:
+            '  Met at the spring gathering.\nFollow up re: dye workshop.  ',
+        })
       )
       expect(record.description).toBe(
         'Met at the spring gathering.\nFollow up re: dye workshop.'
@@ -77,7 +80,9 @@ describe('finalizeContactRecord', () => {
     })
 
     it('drops blank and whitespace-only fields entirely', () => {
-      const record = finalized(person({ phone: '   ', location: '', jobTitle: '\n' }))
+      const record = finalized(
+        person({ phone: '   ', location: '', jobTitle: '\n' })
+      )
       expect(record).not.toHaveProperty('phone')
       expect(record).not.toHaveProperty('location')
       expect(record).not.toHaveProperty('jobTitle')
@@ -93,7 +98,11 @@ describe('finalizeContactRecord', () => {
   describe('when the contact is a person', () => {
     it('splits a single full name into first and last name', () => {
       const record = finalized(
-        person({ firstName: undefined, lastName: undefined, name: 'Kwame  Nkrumah Jr.' })
+        person({
+          firstName: undefined,
+          lastName: undefined,
+          name: 'Kwame  Nkrumah Jr.',
+        })
       )
       expect(record.firstName).toBe('Kwame')
       expect(record.lastName).toBe('Nkrumah Jr.')
@@ -116,7 +125,9 @@ describe('finalizeContactRecord', () => {
     })
 
     it('promotes a lone last name to the first name', () => {
-      const record = finalized(person({ firstName: undefined, lastName: 'Osei' }))
+      const record = finalized(
+        person({ firstName: undefined, lastName: 'Osei' })
+      )
       expect(record.firstName).toBe('Osei')
       expect(record).not.toHaveProperty('lastName')
     })
@@ -137,7 +148,12 @@ describe('finalizeContactRecord', () => {
     it('returns a row error when there is no name at all', () => {
       expect(
         finalizeError(
-          person({ row: 9, firstName: '  ', lastName: undefined, name: undefined })
+          person({
+            row: 9,
+            firstName: '  ',
+            lastName: undefined,
+            name: undefined,
+          })
         )
       ).toEqual({ row: 9, message: 'This contact has no name.' })
     })
@@ -182,29 +198,31 @@ describe('finalizeContactRecord', () => {
     const WEBSITE_ERROR = 'The website must be an http or https address.'
 
     it('adds https:// to a scheme-less address', () => {
-      expect(finalized(organization({ website: 'www.example.org' })).website).toBe(
-        'https://www.example.org'
-      )
+      expect(
+        finalized(organization({ website: 'www.example.org' })).website
+      ).toBe('https://www.example.org')
     })
 
     it('adds https:// to a bare domain with a path', () => {
-      expect(finalized(organization({ website: 'example.org/about' })).website).toBe(
-        'https://example.org/about'
-      )
+      expect(
+        finalized(organization({ website: 'example.org/about' })).website
+      ).toBe('https://example.org/about')
     })
 
     it('adds https:// to a scheme-less host with a port', () => {
       expect(
-        finalized(organization({ website: 'www.example.org:8080/about' })).website
+        finalized(organization({ website: 'www.example.org:8080/about' }))
+          .website
       ).toBe('https://www.example.org:8080/about')
     })
 
-    it.each(['https://example.org', 'http://example.org/path?q=1', 'HTTPS://Ex.org'])(
-      'keeps %p unchanged',
-      (website) => {
-        expect(finalized(organization({ website })).website).toBe(website)
-      }
-    )
+    it.each([
+      'https://example.org',
+      'http://example.org/path?q=1',
+      'HTTPS://Ex.org',
+    ])('keeps %p unchanged', (website) => {
+      expect(finalized(organization({ website })).website).toBe(website)
+    })
 
     it.each([
       'javascript:alert(1)',
@@ -220,21 +238,23 @@ describe('finalizeContactRecord', () => {
     })
 
     it('trims before deciding on the scheme', () => {
-      expect(finalized(organization({ website: '  www.example.org  ' })).website).toBe(
-        'https://www.example.org'
-      )
+      expect(
+        finalized(organization({ website: '  www.example.org  ' })).website
+      ).toBe('https://www.example.org')
     })
 
     it('never validates a person website (it is dropped first)', () => {
-      expect(finalized(person({ website: 'javascript:alert(1)' }))).not.toHaveProperty(
-        'website'
-      )
+      expect(
+        finalized(person({ website: 'javascript:alert(1)' }))
+      ).not.toHaveProperty('website')
     })
   })
 
   describe('validation', () => {
     it('rejects a malformed email with a row error naming the value', () => {
-      expect(finalizeError(person({ row: 5, email: 'ama at example.org' }))).toEqual({
+      expect(
+        finalizeError(person({ row: 5, email: 'ama at example.org' }))
+      ).toEqual({
         row: 5,
         message: '"ama at example.org" is not a valid email address.',
       })
@@ -243,12 +263,16 @@ describe('finalizeContactRecord', () => {
     it.each(['ama@example', '@example.org', 'ama@@example.org'])(
       'rejects %p',
       (email) => {
-        expect(finalizeError(person({ email })).message).toMatch(/not a valid email/)
+        expect(finalizeError(person({ email })).message).toMatch(
+          /not a valid email/
+        )
       }
     )
 
     it('accepts a contact with no email', () => {
-      expect(finalized(person({ email: undefined }))).not.toHaveProperty('email')
+      expect(finalized(person({ email: undefined }))).not.toHaveProperty(
+        'email'
+      )
     })
 
     it('trims an email before validating it', () => {
@@ -264,7 +288,10 @@ describe('finalizeContactRecord', () => {
 
     it('rejects an over-long value with the field and limit in the message', () => {
       const error = finalizeError(
-        person({ row: 6, jobTitle: 'x'.repeat(CONTACT_FIELD_LIMITS.jobTitle + 1) })
+        person({
+          row: 6,
+          jobTitle: 'x'.repeat(CONTACT_FIELD_LIMITS.jobTitle + 1),
+        })
       )
       expect(error).toEqual({
         row: 6,
@@ -274,7 +301,9 @@ describe('finalizeContactRecord', () => {
 
     it('does not count trimmed whitespace toward the limit', () => {
       const name = 'B'.repeat(CONTACT_FIELD_LIMITS.lastName)
-      expect(finalized(person({ lastName: `   ${name}   ` })).lastName).toBe(name)
+      expect(finalized(person({ lastName: `   ${name}   ` })).lastName).toBe(
+        name
+      )
     })
   })
 })
@@ -292,7 +321,11 @@ describe('contactDisplayName', () => {
   it('falls back to the full name for an un-split person', () => {
     expect(
       contactDisplayName(
-        person({ firstName: undefined, lastName: undefined, name: 'Kofi Annan' })
+        person({
+          firstName: undefined,
+          lastName: undefined,
+          name: 'Kofi Annan',
+        })
       )
     ).toBe('Kofi Annan')
   })
@@ -314,7 +347,12 @@ describe('summarizeContactOutcomes', () => {
     const outcomes: ContactImportOutcome[] = [
       { row: 2, kind: 'person', name: 'Ama Mensah', status: 'created' },
       { row: 3, kind: 'person', name: 'Kofi Annan', status: 'created' },
-      { row: 4, kind: 'organization', name: 'Artisan Cooperative', status: 'updated' },
+      {
+        row: 4,
+        kind: 'organization',
+        name: 'Artisan Cooperative',
+        status: 'updated',
+      },
       { row: 5, kind: 'person', name: 'Esi Owusu', status: 'linked' },
       {
         row: 6,

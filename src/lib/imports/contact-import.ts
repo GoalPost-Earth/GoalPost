@@ -129,8 +129,7 @@ export function finalizeContactRecord(
   for (const field of Object.keys(CONTACT_FIELD_LIMITS) as ContactTextField[]) {
     const value = record[field]?.replace(/\s+/g, ' ').trim()
     // Notes keep their line breaks — they are prose, not a single-line value.
-    const kept =
-      field === 'description' ? record.description?.trim() : value
+    const kept = field === 'description' ? record.description?.trim() : value
     if (kept) cleaned[field] = kept
   }
 
@@ -148,7 +147,9 @@ export function finalizeContactRecord(
     // Organization-only fields never reach a person.
     delete cleaned.website
     if (!cleaned.firstName) {
-      return { error: { row: record.row, message: 'This contact has no name.' } }
+      return {
+        error: { row: record.row, message: 'This contact has no name.' },
+      }
     }
   } else {
     cleaned.name = cleaned.name || cleaned.organization

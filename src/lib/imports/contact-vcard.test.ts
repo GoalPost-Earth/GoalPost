@@ -289,7 +289,13 @@ describe('parseVCardContacts', () => {
     })
 
     it('uses FN for an organization with no ORG', () => {
-      const text = crlf(['BEGIN:VCARD', 'VERSION:4.0', 'KIND:organization', 'FN:Seed Library', 'END:VCARD'])
+      const text = crlf([
+        'BEGIN:VCARD',
+        'VERSION:4.0',
+        'KIND:organization',
+        'FN:Seed Library',
+        'END:VCARD',
+      ])
       const [contact] = parseVCardContacts(text)
       expect(contact.kind).toBe('organization')
       expect(contact.name).toBe('Seed Library')

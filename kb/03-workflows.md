@@ -625,7 +625,9 @@ mocked from any contacts app. Agreed with the client on GOAL-382.
 1. From the field's **Upload** menu, the member picks **Import contacts** and
    chooses a file: **vCard** (`.vcf`, 2.1 / 3.0 / 4.0, any number of cards),
    **CSV** (Outlook, Google Contacts, LinkedIn connections, or the GoalPost
-   template), or **JSON** (an array of contacts in the template's fields).
+   template), **Excel** (`.xlsx`/`.xls` — first sheet, same column matching
+   as CSV), or **JSON** (an array of contacts in the template's fields). The
+   picker offers the template as a CSV download, which opens in Excel.
 2. The browser parses and previews it — nothing is written yet. A CSV's
    source is detected from its header row and can be changed in the preview.
    The member may also pick ONE pulse or person in this field to link every
@@ -668,6 +670,9 @@ mocked from any contacts app. Agreed with the client on GOAL-382.
 
 ### WF-14 implementation constraints
 
+- Excel is parsed in `contact-sheet-parser.ts`, apart from the profiles, so
+  the ~1MB `xlsx` library stays out of server bundles; it feeds the same
+  `parseTabularContacts` as CSV. Cells are read as Excel displays them.
 - **A new source is a profile, not a screen.** Add an entry to
   `CONTACT_SOURCE_PROFILES` (`src/lib/imports/contact-sources.ts`) mapping its
   columns onto the canonical `ContactRecord` (`contact-import.ts`).

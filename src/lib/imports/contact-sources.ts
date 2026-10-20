@@ -161,8 +161,32 @@ export const CONTACT_TEMPLATE_COLUMNS = [
   'notes',
 ]
 export const CONTACT_TEMPLATE_SAMPLE_ROWS = [
-  ['person', 'Ama', 'Mensah', '', 'ama@example.org', '+233 20 000 0000', 'Artisan Cooperative', 'Coordinator', 'Accra, Ghana', '', 'Met at the spring gathering'],
-  ['organization', '', '', 'Artisan Cooperative', 'hello@artisan.example', '', '', '', 'Accra, Ghana', 'https://artisan.example', 'Weaving and dye collective'],
+  [
+    'person',
+    'Ama',
+    'Mensah',
+    '',
+    'ama@example.org',
+    '+233 20 000 0000',
+    'Artisan Cooperative',
+    'Coordinator',
+    'Accra, Ghana',
+    '',
+    'Met at the spring gathering',
+  ],
+  [
+    'organization',
+    '',
+    '',
+    'Artisan Cooperative',
+    'hello@artisan.example',
+    '',
+    '',
+    '',
+    'Accra, Ghana',
+    'https://artisan.example',
+    'Weaving and dye collective',
+  ],
 ]
 
 export function normalizeColumn(column: string): string {
@@ -188,7 +212,10 @@ function profileColumns(profile: ContactSourceProfile): string[] {
 }
 
 /** How many of a profile's columns a header row carries. */
-function headerScore(profile: ContactSourceProfile, headers: Set<string>): number {
+function headerScore(
+  profile: ContactSourceProfile,
+  headers: Set<string>
+): number {
   return profileColumns(profile).filter((column) => headers.has(column)).length
 }
 
@@ -205,8 +232,11 @@ function detectCsvLayout(
 ): { headerIndex: number; profile: ContactSourceProfile } | null {
   const csvProfiles = CONTACT_SOURCE_PROFILES.filter((p) => p.format === 'csv')
   const requested = csvProfiles.find((p) => p.id === requestedProfileId)
-  let best: { headerIndex: number; profile: ContactSourceProfile; score: number } | null =
-    null
+  let best: {
+    headerIndex: number
+    profile: ContactSourceProfile
+    score: number
+  } | null = null
   for (let index = 0; index < Math.min(rows.length, 10); index += 1) {
     const headers = new Set(rows[index].map(normalizeColumn))
     const ranked = (requested ? [requested] : csvProfiles)
@@ -298,14 +328,18 @@ function finalizeAll(
   return { profile, records, errors }
 }
 
-function parseCsv(text: string, requestedProfileId?: string): ParsedContactFile {
-  // Blank records are kept through parsing and dropped below, so a record's
-  // index is still the row number a spreadsheet app shows (a quoted multi-line
-  // note stays one row there too, which is why this counts records, not lines).
-  const parsed = Papa.parse<string[]>(text, { skipEmptyLines: false })
+/**
+ * Map spreadsheet rows (CSV, or the first sheet of an .xlsx) through the
+ * best-fitting tabular profile. `rows` must keep blank rows in place, so a
+ * row's index is still the row number a spreadsheet app shows.
+ */
+export function parseTabularContacts(
+  rows: string[][],
+  requestedProfileId?: string
+): ParsedContactFile {
   const isBlank = (cells: string[]) => cells.every((cell) => !cell.trim())
   const layout = detectCsvLayout(
-    parsed.data.map((cells) => (isBlank(cells) ? [] : cells)),
+    rows.map((cells) => (isBlank(cells) ? [] : cells)),
     requestedProfileId
   )
   if (!layout) {
@@ -317,9 +351,9 @@ function parseCsv(text: string, requestedProfileId?: string): ParsedContactFile 
         'We could not find contact columns in this file. Use an Outlook, Google or LinkedIn export, or the GoalPost CSV template.',
     }
   }
-  const headers = parsed.data[layout.headerIndex].map(normalizeColumn)
+  const headers = rows[layout.headerIndex].map(normalizeColumn)
   const raw: ContactRecord[] = []
-  parsed.data.forEach((cells, index) => {
+  rows.forEach((cells, index) => {
     if (index <= layout.headerIndex || isBlank(cells)) return
     const row = new Map<string, string>()
     headers.forEach((header, column) => {
@@ -332,13 +366,29 @@ function parseCsv(text: string, requestedProfileId?: string): ParsedContactFile 
   return finalizeAll(layout.profile, raw)
 }
 
+function parseCsv(
+  text: string,
+  requestedProfileId?: string
+): ParsedContactFile {
+  // Blank records are kept (and dropped in parseTabularContacts) so indexes
+  // stay spreadsheet row numbers — a quoted multi-line note is one row there
+  // too, which is why this counts records, not lines.
+  const parsed = Papa.parse<string[]>(text, { skipEmptyLines: false })
+  return parseTabularContacts(parsed.data, requestedProfileId)
+}
+
 function parseJson(text: string): ParsedContactFile {
   const profile = getContactSourceProfile('json')!
   let data: unknown
   try {
     data = JSON.parse(text)
   } catch {
-    return { profile, records: [], errors: [], fileError: 'This file is not valid JSON.' }
+    return {
+      profile,
+      records: [],
+      errors: [],
+      fileError: 'This file is not valid JSON.',
+    }
   }
   const list = Array.isArray(data)
     ? data
@@ -348,7 +398,8 @@ function parseJson(text: string): ParsedContactFile {
       profile,
       records: [],
       errors: [],
-      fileError: 'Expected a JSON array of contacts, or an object with a "contacts" array.',
+      fileError:
+        'Expected a JSON array of contacts, or an object with a "contacts" array.',
     }
   }
   const raw = list.map((entry, index) => {
@@ -366,9 +417,10 @@ function parseJson(text: string): ParsedContactFile {
 }
 
 /**
- * Parse an uploaded contact file. The format comes from the extension; for a
- * CSV the source profile is detected from its header row unless the member
- * picked one explicitly.
+ * Parse an uploaded text contact file. The format comes from the extension;
+ * for a CSV the source profile is detected from its header row unless the
+ * member picked one explicitly. Excel files are binary and go through
+ * `parseContactWorkbook` (contact-sheet-parser.ts) instead.
  */
 export function parseContactFile(
   fileName: string,
@@ -380,7 +432,12 @@ export function parseContactFile(
     const profile = getContactSourceProfile('vcard')!
     const raw = parseVCardContacts(text)
     if (raw.length === 0) {
-      return { profile, records: [], errors: [], fileError: 'This file has no vCard entries.' }
+      return {
+        profile,
+        records: [],
+        errors: [],
+        fileError: 'This file has no vCard entries.',
+      }
     }
     return finalizeAll(profile, raw)
   }
@@ -390,6 +447,6 @@ export function parseContactFile(
     profile: null,
     records: [],
     errors: [],
-    fileError: 'Upload a .vcf, .csv or .json file.',
+    fileError: 'Upload a .vcf, .csv, Excel (.xlsx/.xls) or .json file.',
   }
 }

@@ -16,20 +16,67 @@ import {
 
 /** The header row Outlook (classic / outlook.com) writes on "Export contacts". */
 const OUTLOOK_HEADER = [
-  'First Name', 'Middle Name', 'Last Name', 'Title', 'Suffix', 'Nickname',
-  'Given Yomi', 'Surname Yomi', 'E-mail Address', 'E-mail 2 Address',
-  'E-mail 3 Address', 'Home Phone', 'Home Phone 2', 'Business Phone',
-  'Business Phone 2', 'Mobile Phone', 'Car Phone', 'Other Phone',
-  'Primary Phone', 'Pager', 'Business Fax', 'Home Fax', 'Other Fax',
-  'Company Main Telephone', 'Callback', 'Radio Phone', 'Telex', 'TTY/TDD Phone',
-  'IMAddress', 'Job Title', 'Department', 'Company', 'Office Location',
-  "Manager's Name", "Assistant's Name", "Assistant's Phone", 'Company Yomi',
-  'Business Street', 'Business City', 'Business State', 'Business Postal Code',
-  'Business Country/Region', 'Home Street', 'Home City', 'Home State',
-  'Home Postal Code', 'Home Country/Region', 'Other Street', 'Other City',
-  'Other State', 'Other Postal Code', 'Other Country/Region', 'Personal Web Page',
-  'Spouse', 'Schools', 'Hobby', 'Location', 'Web Page', 'Birthday',
-  'Anniversary', 'Notes',
+  'First Name',
+  'Middle Name',
+  'Last Name',
+  'Title',
+  'Suffix',
+  'Nickname',
+  'Given Yomi',
+  'Surname Yomi',
+  'E-mail Address',
+  'E-mail 2 Address',
+  'E-mail 3 Address',
+  'Home Phone',
+  'Home Phone 2',
+  'Business Phone',
+  'Business Phone 2',
+  'Mobile Phone',
+  'Car Phone',
+  'Other Phone',
+  'Primary Phone',
+  'Pager',
+  'Business Fax',
+  'Home Fax',
+  'Other Fax',
+  'Company Main Telephone',
+  'Callback',
+  'Radio Phone',
+  'Telex',
+  'TTY/TDD Phone',
+  'IMAddress',
+  'Job Title',
+  'Department',
+  'Company',
+  'Office Location',
+  "Manager's Name",
+  "Assistant's Name",
+  "Assistant's Phone",
+  'Company Yomi',
+  'Business Street',
+  'Business City',
+  'Business State',
+  'Business Postal Code',
+  'Business Country/Region',
+  'Home Street',
+  'Home City',
+  'Home State',
+  'Home Postal Code',
+  'Home Country/Region',
+  'Other Street',
+  'Other City',
+  'Other State',
+  'Other Postal Code',
+  'Other Country/Region',
+  'Personal Web Page',
+  'Spouse',
+  'Schools',
+  'Hobby',
+  'Location',
+  'Web Page',
+  'Birthday',
+  'Anniversary',
+  'Notes',
 ]
 
 function outlookRow(values: Record<string, string>): string[] {
@@ -72,18 +119,21 @@ describe('parseContactFile', () => {
         profile: null,
         records: [],
         errors: [],
-        fileError: 'Upload a .vcf, .csv or .json file.',
+        fileError: 'Upload a .vcf, .csv, Excel (.xlsx/.xls) or .json file.',
       })
     })
 
     it('rejects a file with no extension', () => {
       expect(parseContactFile('contacts', 'name\nAma').fileError).toBe(
-        'Upload a .vcf, .csv or .json file.'
+        'Upload a .vcf, .csv, Excel (.xlsx/.xls) or .json file.'
       )
     })
 
     it('matches the extension case-insensitively', () => {
-      const result = parseContactFile('EXPORT.CSV', 'name,email\nAma Mensah,ama@example.org')
+      const result = parseContactFile(
+        'EXPORT.CSV',
+        'name,email\nAma Mensah,ama@example.org'
+      )
       expect(result.fileError).toBeUndefined()
       expect(result.records).toHaveLength(1)
     })
@@ -107,7 +157,13 @@ describe('parseContactFile', () => {
       const result = parseContactFile(fileName, text)
       expect(result.profile?.id).toBe('vcard')
       expect(result.records).toEqual([
-        { row: 1, kind: 'person', firstName: 'Ama', lastName: 'Mensah', email: 'ama@example.org' },
+        {
+          row: 1,
+          kind: 'person',
+          firstName: 'Ama',
+          lastName: 'Mensah',
+          email: 'ama@example.org',
+        },
       ])
       expect(result.errors).toEqual([
         { row: 2, message: '"not-an-email" is not a valid email address.' },
@@ -138,7 +194,8 @@ describe('parseContactFile', () => {
         'Business Country/Region': 'Ghana',
         'Home City': 'Kumasi',
         'Web Page': 'https://ama.example',
-        Notes: 'Met at the spring gathering, Accra.\nFollow up re: dye workshop.',
+        Notes:
+          'Met at the spring gathering, Accra.\nFollow up re: dye workshop.',
       }),
       outlookRow({
         'First Name': 'Esi',
@@ -147,7 +204,10 @@ describe('parseContactFile', () => {
         'Home Country/Region': 'Ghana',
       }),
       outlookRow({ Company: 'Riverbank Food Bank', 'Business City': 'Leeds' }),
-      outlookRow({ 'First Name': 'Yaw', 'E-mail Address': 'yaw[at]example.org' }),
+      outlookRow({
+        'First Name': 'Yaw',
+        'E-mail Address': 'yaw[at]example.org',
+      }),
       outlookRow({ 'Job Title': 'Volunteer', 'Business City': 'Accra' }),
     ])
     const result = parseContactFile('contacts.csv', text)
@@ -166,7 +226,8 @@ describe('parseContactFile', () => {
         email: 'ama@artisan.example',
         phone: '+233 20 000 0000',
         location: 'Accra, Ghana',
-        description: 'Met at the spring gathering, Accra.\nFollow up re: dye workshop.',
+        description:
+          'Met at the spring gathering, Accra.\nFollow up re: dye workshop.',
         organization: 'Artisan Cooperative',
         jobTitle: 'Coordinator',
       })
@@ -199,7 +260,10 @@ describe('parseContactFile', () => {
     })
 
     it('reports a row with no name and no company as a row error', () => {
-      expect(result.errors).toContainEqual({ row: 6, message: 'This contact has no name.' })
+      expect(result.errors).toContainEqual({
+        row: 6,
+        message: 'This contact has no name.',
+      })
       expect(result.records).toHaveLength(3)
       expect(result.errors).toHaveLength(2)
     })
@@ -207,18 +271,43 @@ describe('parseContactFile', () => {
 
   describe('Google Contacts CSV', () => {
     const header = [
-      'First Name', 'Middle Name', 'Last Name', 'Phonetic First Name',
-      'Phonetic Middle Name', 'Phonetic Last Name', 'Name Prefix', 'Name Suffix',
-      'Nickname', 'File As', 'Organization Name', 'Organization Title',
-      'Organization Department', 'Birthday', 'Notes', 'Photo', 'Labels',
-      'E-mail 1 - Label', 'E-mail 1 - Value', 'E-mail 2 - Label', 'E-mail 2 - Value',
-      'Phone 1 - Label', 'Phone 1 - Value', 'Address 1 - Label',
-      'Address 1 - Formatted', 'Address 1 - Street', 'Address 1 - City',
-      'Address 1 - PO Box', 'Address 1 - Region', 'Address 1 - Postal Code',
-      'Address 1 - Country', 'Address 1 - Extended Address', 'Website 1 - Label',
+      'First Name',
+      'Middle Name',
+      'Last Name',
+      'Phonetic First Name',
+      'Phonetic Middle Name',
+      'Phonetic Last Name',
+      'Name Prefix',
+      'Name Suffix',
+      'Nickname',
+      'File As',
+      'Organization Name',
+      'Organization Title',
+      'Organization Department',
+      'Birthday',
+      'Notes',
+      'Photo',
+      'Labels',
+      'E-mail 1 - Label',
+      'E-mail 1 - Value',
+      'E-mail 2 - Label',
+      'E-mail 2 - Value',
+      'Phone 1 - Label',
+      'Phone 1 - Value',
+      'Address 1 - Label',
+      'Address 1 - Formatted',
+      'Address 1 - Street',
+      'Address 1 - City',
+      'Address 1 - PO Box',
+      'Address 1 - Region',
+      'Address 1 - Postal Code',
+      'Address 1 - Country',
+      'Address 1 - Extended Address',
+      'Website 1 - Label',
       'Website 1 - Value',
     ]
-    const row = (values: Record<string, string>) => header.map((c) => values[c] ?? '')
+    const row = (values: Record<string, string>) =>
+      header.map((c) => values[c] ?? '')
     const text = toCsv([
       header,
       row({
@@ -235,7 +324,10 @@ describe('parseContactFile', () => {
         'Address 1 - Country': 'Ghana',
         Labels: '* myContacts',
       }),
-      row({ 'Organization Name': 'Seed Library', 'Website 1 - Value': 'https://seedlibrary.example' }),
+      row({
+        'Organization Name': 'Seed Library',
+        'Website 1 - Value': 'https://seedlibrary.example',
+      }),
     ])
     const result = parseContactFile('google.csv', text)
 
@@ -334,7 +426,9 @@ describe('parseContactFile', () => {
         'First Name,Last Name,Email Address,Company,Position,Connected On',
         'Abena,Asante,abena@example.org,Riverbank Food Bank,Volunteer Lead,14 Mar 2025',
       ].join('\n')
-      expect(parseContactFile('Connections.csv', csv).profile?.id).toBe('linkedin-csv')
+      expect(parseContactFile('Connections.csv', csv).profile?.id).toBe(
+        'linkedin-csv'
+      )
     })
 
     it('numbers rows consecutively after the header', () => {
@@ -345,7 +439,10 @@ describe('parseContactFile', () => {
 
   describe('GoalPost CSV template', () => {
     it('round-trips the downloadable template sample rows', () => {
-      const text = toCsv([CONTACT_TEMPLATE_COLUMNS, ...CONTACT_TEMPLATE_SAMPLE_ROWS])
+      const text = toCsv([
+        CONTACT_TEMPLATE_COLUMNS,
+        ...CONTACT_TEMPLATE_SAMPLE_ROWS,
+      ])
       const result = parseContactFile('goalpost-contacts-template.csv', text)
       expect(result.fileError).toBeUndefined()
       expect(result.profile?.id).toBe('generic-csv')
@@ -395,7 +492,9 @@ describe('parseContactFile', () => {
         { row: 3, kind: 'organization', name: 'Mill Lane Makers' },
         { row: 5, kind: 'person', firstName: 'Esi', lastName: 'Owusu' },
       ])
-      expect(result.errors).toEqual([{ row: 4, message: 'This contact has no name.' }])
+      expect(result.errors).toEqual([
+        { row: 4, message: 'This contact has no name.' },
+      ])
     })
 
     it('infers the kind when the type column is blank or unrecognised', () => {
@@ -406,21 +505,40 @@ describe('parseContactFile', () => {
       ])
       expect(parseContactFile('contacts.csv', text).records).toEqual([
         { row: 2, kind: 'organization', name: 'Seed Library' },
-        { row: 3, kind: 'person', firstName: 'Yaw', organization: 'Seed Library' },
+        {
+          row: 3,
+          kind: 'person',
+          firstName: 'Yaw',
+          organization: 'Seed Library',
+        },
       ])
     })
 
     it('honours an explicitly requested profile', () => {
-      const text = toCsv([['First Name', 'Last Name', 'Company'], ['Ama', 'Mensah', 'Artisan Cooperative']])
-      expect(parseContactFile('c.csv', text, 'generic-csv').profile?.id).toBe('generic-csv')
-      expect(parseContactFile('c.csv', text, 'outlook-csv').profile?.id).toBe('outlook-csv')
+      const text = toCsv([
+        ['First Name', 'Last Name', 'Company'],
+        ['Ama', 'Mensah', 'Artisan Cooperative'],
+      ])
+      expect(parseContactFile('c.csv', text, 'generic-csv').profile?.id).toBe(
+        'generic-csv'
+      )
+      expect(parseContactFile('c.csv', text, 'outlook-csv').profile?.id).toBe(
+        'outlook-csv'
+      )
     })
 
     it('skips blank lines without shifting row numbers, and keeps the first of duplicated headers', () => {
-      const text = 'name,email,email\r\n\r\nAma Mensah,ama@example.org,other@example.org\r\n'
+      const text =
+        'name,email,email\r\n\r\nAma Mensah,ama@example.org,other@example.org\r\n'
       expect(parseContactFile('c.csv', text).records).toEqual([
         // Row 3: the blank line is row 2 in a spreadsheet app.
-        { row: 3, kind: 'person', firstName: 'Ama', lastName: 'Mensah', email: 'ama@example.org' },
+        {
+          row: 3,
+          kind: 'person',
+          firstName: 'Ama',
+          lastName: 'Mensah',
+          email: 'ama@example.org',
+        },
       ])
     })
   })
@@ -456,7 +574,11 @@ describe('parseContactFile', () => {
           organization: 'Artisan Cooperative',
           'Job Title': 'Coordinator',
         },
-        { type: 'organization', name: 'Seed Library', website: 'https://seedlibrary.example' },
+        {
+          type: 'organization',
+          name: 'Seed Library',
+          website: 'https://seedlibrary.example',
+        },
       ])
       const result = parseContactFile('contacts.json', text)
       expect(result.profile?.id).toBe('json')
@@ -472,7 +594,12 @@ describe('parseContactFile', () => {
           organization: 'Artisan Cooperative',
           jobTitle: 'Coordinator',
         },
-        { row: 2, kind: 'organization', name: 'Seed Library', website: 'https://seedlibrary.example' },
+        {
+          row: 2,
+          kind: 'organization',
+          name: 'Seed Library',
+          website: 'https://seedlibrary.example',
+        },
       ])
     })
 
@@ -511,7 +638,13 @@ describe('parseContactFile', () => {
       })
       const result = parseContactFile('export.json', text)
       expect(result.records).toEqual([
-        { row: 1, kind: 'person', firstName: 'Esi', lastName: 'Owusu', email: 'esi@example.org' },
+        {
+          row: 1,
+          kind: 'person',
+          firstName: 'Esi',
+          lastName: 'Owusu',
+          email: 'esi@example.org',
+        },
         { row: 6, kind: 'organization', name: 'Riverbank Food Bank' },
       ])
       expect(result.errors).toEqual([
