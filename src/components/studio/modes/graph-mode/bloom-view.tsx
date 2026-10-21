@@ -68,6 +68,8 @@ import {
   type BloomFocusNodeDetail,
 } from '../../bloom-search-context'
 import { toSearchEntries } from './bloom-search-match'
+import { buildCentredCanvas } from './bloom-centre-view'
+import { BloomCentreControls, BloomNodeMenu } from './bloom-centre-controls'
 
 /**
  * Bloom Exploration — the native NVL rendering of the user's spaces.
@@ -328,6 +330,44 @@ export const BloomView: FC = () => {
   // (`clickTimerRef`): if a second click (or `onNodeDoubleClick`) arrives
   // first, we cancel the pending drill and open the drawer instead.
   const clickTimerRef = useRef<number | null>(null)
+
+  // Centre on a node (GOAL-383). `centredIds` is the centred view: empty for
+  // the full canvas, otherwise the centre first and then every node the member
+  // expanded from it, in order. `isPicking` is the "Centre" button's armed
+  // state — the next node click picks the centre instead of drilling.
+  // `nodeMenu` is the right-click menu, anchored at the pointer.
+  const [centredIds, setCentredIds] = useState<string[]>([])
+  const [isPicking, setIsPicking] = useState(false)
+  const [nodeMenu, setNodeMenu] = useState<{
+    id: string
+    label: string
+    x: number
+    y: number
+  } | null>(null)
+  // Set by the centre/expand/exit handlers so the viewport is refit to what the
+  // view now shows once the layout has had a moment to place the new nodes.
+  const pendingCentreFitRef = useRef(false)
+  // Nodes a centred-view change is about to reveal (every node not in
+  // `shownIds`), and the node they should fan out from. NVL drops a newly
+  // added node wherever it likes — usually stacked on its siblings — and its
+  // force layout is slow to pull a stack apart, so the effect below seeds them
+  // in a ring around their anchor.
+  const pendingRevealRef = useRef<{
+    anchorId: string
+    shownIds: ReadonlySet<string>
+    // Where each node sat before the centred view was opened. On the way back
+    // out every node is put back here, so the full canvas returns as the
+    // member left it rather than as one big ring.
+    restore?: ReadonlyMap<string, { x: number; y: number }>
+  } | null>(null)
+  // The full-canvas layout, captured when a centred view is opened from it.
+  const savedLayoutRef = useRef<ReadonlyMap<
+    string,
+    { x: number; y: number }
+  > | null>(null)
+  // When pick mode last chose a centre. The second click of a double-click
+  // that lands inside this window is part of the pick, not a drawer request.
+  const pickedAtRef = useRef(0)
 
   // "In-space" / "in-field" are URL concepts, not focal-entity concepts.
   // Reading `sessionContext.activeSpaceId` would conflate the user's
@@ -909,10 +949,36 @@ export const BloomView: FC = () => {
   // against the surviving nodes, so hiding a node type cascades to its edges
   // and NVL is never handed a dangling arrow. Nothing is refetched (ADR-011),
   // and nothing here is an authorization decision (kb/02-user-roles.md).
-  const { nodes, relationships } = useMemo(
+  const filteredCanvas = useMemo(
     () => applyBloomTypeFilters(builtCanvas, typeFilters.hidden),
     [builtCanvas, typeFilters.hidden]
   )
+
+  // A centred view whose centre has left the canvas (its type switched off,
+  // or the data it came from is gone) has nothing to be centred on — fall back
+  // to the full canvas rather than paint an empty one. Adjusted during render,
+  // like the highlight below.
+  const centreId = centredIds[0] ?? null
+  if (
+    centreId &&
+    !filteredCanvas.nodes.some((n) => String(n.id) === centreId)
+  ) {
+    setCentredIds([])
+  }
+
+  // The centred view narrows the painted canvas to the expanded nodes and
+  // their one-hop neighbours (bloom-centre-view.ts). Downstream of the type
+  // filters, so a hidden type stays hidden here too, and upstream of search,
+  // the visible-entities channel and the layout kick, so all of them see
+  // exactly what is painted.
+  const { nodes, relationships } = useMemo(
+    () =>
+      centredIds.length > 0
+        ? buildCentredCanvas(filteredCanvas, centredIds)
+        : filteredCanvas,
+    [filteredCanvas, centredIds]
+  )
+  const centreKey = centredIds.join('|')
 
   // What NVL is handed: the painted canvas with NVL's native `selected` flag
   // resolved on EVERY node, not just the highlighted one.
@@ -930,8 +996,14 @@ export const BloomView: FC = () => {
   // re-run when the highlight moves. Attributes only — no positions, no
   // restart, so the simulation is untouched.
   const paintedNodes = useMemo(
-    () => nodes.map((n) => ({ ...n, selected: n.id === highlightedNodeId })),
-    [nodes, highlightedNodeId]
+    () =>
+      nodes.map((n) => ({
+        ...n,
+        // The centre of a centred view keeps NVL's halo so it stays findable
+        // as the view grows around it.
+        selected: n.id === highlightedNodeId || n.id === centreId,
+      })),
+    [nodes, highlightedNodeId, centreId]
   )
 
   // A highlight whose node has left the canvas (its type switched off in the
@@ -1303,10 +1375,82 @@ export const BloomView: FC = () => {
     ]
   )
 
+  // Drop a single click still waiting out the double-click window. Its timer
+  // closed over the view as it was when the click landed, so letting it fire
+  // after the view changed would expand into — or drill out of — the wrong one.
+  const cancelPendingClick = useCallback(() => {
+    if (clickTimerRef.current !== null) {
+      window.clearTimeout(clickTimerRef.current)
+      clickTimerRef.current = null
+    }
+  }, [])
+
+  // Centre the view on a node, starting a fresh centred view.
+  const centreOnNode = useCallback(
+    (id: string) => {
+      cancelPendingClick()
+      if (centredIds.length === 0) {
+        const ref = nvlRef.current
+        savedLayoutRef.current =
+          ref && typeof ref.getNodePositions === 'function'
+            ? new Map(
+                ref
+                  .getNodePositions()
+                  .map((n) => [String(n.id), { x: n.x, y: n.y }])
+              )
+            : null
+      }
+      pendingCentreFitRef.current = true
+      // Lay the neighbours out around the centre rather than leaving them where
+      // the full canvas had them — some of them a screen away.
+      pendingRevealRef.current = { anchorId: id, shownIds: new Set([id]) }
+      setIsPicking(false)
+      setNodeMenu(null)
+      setCentredIds([id])
+    },
+    [centredIds, cancelPendingClick]
+  )
+
+  // Expand a node in the centred view: append it so its neighbours join what
+  // is already on screen. Re-expanding a node is a no-op.
+  const expandNode = useCallback(
+    (id: string) => {
+      if (centredIds.includes(id)) return
+      pendingCentreFitRef.current = true
+      pendingRevealRef.current = {
+        anchorId: id,
+        shownIds: new Set(nodes.map((n) => n.id)),
+      }
+      setCentredIds((prev) => [...prev, id])
+    },
+    [nodes, centredIds]
+  )
+
+  const exitCentredView = useCallback(() => {
+    cancelPendingClick()
+    pendingCentreFitRef.current = true
+    if (centreId) {
+      pendingRevealRef.current = {
+        anchorId: centreId,
+        shownIds: new Set(nodes.map((n) => n.id)),
+        restore: savedLayoutRef.current ?? undefined,
+      }
+    }
+    savedLayoutRef.current = null
+    setCentredIds([])
+  }, [nodes, centreId, cancelPendingClick])
+
   // First click schedules a drill; if a second click lands before it fires,
   // that's a double-click → cancel the drill and open the drawer instead.
   const handleSingleClick = useCallback(
     (node: Node) => {
+      // Pick mode: this click chooses the centre — no drill, no drawer.
+      if (isPicking) {
+        pickedAtRef.current = Date.now()
+        centreOnNode(String(node.id))
+        return
+      }
+      if (Date.now() - pickedAtRef.current < SINGLE_CLICK_DELAY * 2) return
       if (clickTimerRef.current !== null) {
         // Second click of a double-click — drill is still pending, swap to
         // the drawer.
@@ -1317,10 +1461,24 @@ export const BloomView: FC = () => {
       }
       clickTimerRef.current = window.setTimeout(() => {
         clickTimerRef.current = null
+        // Inside a centred view a single click expands instead of drilling —
+        // drilling would change the route and drop the view being built.
+        // Double-click still opens the drawer.
+        if (centredIds.length > 0) {
+          expandNode(String(node.id))
+          return
+        }
         handleNodeNavigate(node)
       }, SINGLE_CLICK_DELAY)
     },
-    [handleNodeClick, handleNodeNavigate]
+    [
+      isPicking,
+      centredIds,
+      centreOnNode,
+      expandNode,
+      handleNodeClick,
+      handleNodeNavigate,
+    ]
   )
 
   // Fallback for NVL builds that surface `onNodeDoubleClick` without a second
@@ -1329,6 +1487,8 @@ export const BloomView: FC = () => {
   // open — re-dispatching the same entity is idempotent and harmless.
   const handleDoubleClick = useCallback(
     (node: Node) => {
+      // The tail of a double-click whose first click was a pick.
+      if (Date.now() - pickedAtRef.current < SINGLE_CLICK_DELAY * 2) return
       if (clickTimerRef.current !== null) {
         window.clearTimeout(clickTimerRef.current)
         clickTimerRef.current = null
@@ -1381,6 +1541,17 @@ export const BloomView: FC = () => {
       onNodeClick: (node) => handleSingleClick(node),
       onNodeDoubleClick: (node) => handleDoubleClick(node),
       onRelationshipClick: (rel) => handleRelationshipClick(rel),
+      onNodeRightClick: (node, _hits, event) => {
+        setNodeMenu({
+          id: String(node.id),
+          label:
+            typeof node.caption === 'string' && node.caption
+              ? node.caption
+              : 'Node',
+          x: event.clientX,
+          y: event.clientY,
+        })
+      },
       onCanvasClick: () => {
         setSelectedNode(null)
         setHighlightedNodeId(null)
@@ -1446,6 +1617,11 @@ export const BloomView: FC = () => {
   if (prevScopeKey !== scopeKey) {
     setPrevScopeKey(scopeKey)
     setSelectedNode(null)
+    // A centred view is built from the canvas it was opened on; the next
+    // scope starts on its full canvas.
+    setCentredIds([])
+    setIsPicking(false)
+    setNodeMenu(null)
     // A search highlight belongs to the canvas that was on screen when it was
     // picked; carrying it into the next scope would leave a node lit for a
     // reason the viewer can no longer see.
@@ -1469,6 +1645,10 @@ export const BloomView: FC = () => {
   const isInitialLayoutRef = useRef(true)
   useEffect(() => {
     isInitialLayoutRef.current = true
+    // Centred-view bookkeeping belongs to the canvas it was made on.
+    pendingCentreFitRef.current = false
+    pendingRevealRef.current = null
+    savedLayoutRef.current = null
   }, [scopeKey])
 
   // Kick the force simulation whenever the scope's node set is first
@@ -1487,7 +1667,11 @@ export const BloomView: FC = () => {
     // back on, and the count returns to a value already kicked — so the
     // re-added nodes would never get their simulation pass and would sit
     // stacked wherever NVL dropped them.
-    const kickKey = `${scopeKey}|${nodes.length}|${filterSignature}`
+    //
+    // And the centred view (GOAL-383): entering, expanding or leaving it
+    // changes which nodes are on canvas, and leaving can land back on a count
+    // that was already kicked.
+    const kickKey = `${scopeKey}|${nodes.length}|${filterSignature}|${centreKey}`
     if (lastKickedScopeRef.current === kickKey) return
     if (nodes.length === 0) return
     const ref = nvlRef.current
@@ -1520,7 +1704,7 @@ export const BloomView: FC = () => {
     return () => {
       for (const id of timers) window.clearTimeout(id)
     }
-  }, [nodes, scopeKey, filterSignature])
+  }, [nodes, scopeKey, filterSignature, centreKey])
 
   const fitToScope = useCallback(() => {
     if (lastFitScopeRef.current === scopeKey) return
@@ -1558,6 +1742,94 @@ export const BloomView: FC = () => {
     }),
     [fitToScope]
   )
+
+  // Refit to what the centred view shows after it is entered, grown or left.
+  // Timers rather than `onLayoutDone`, which can fire for the layout pass that
+  // was already running before the new nodes arrived. Two passes: an early one
+  // so the view moves promptly, and a final one once the simulation has
+  // spread the nodes out (it takes a couple of seconds to settle).
+  const fitCentredView = useCallback(
+    (final: boolean) => {
+      if (!pendingCentreFitRef.current) return
+      if (final) pendingCentreFitRef.current = false
+      const ref = nvlRef.current
+      if (!ref || typeof ref.fit !== 'function') return
+      if (nodes.length <= 1) {
+        ref.setZoom?.(1)
+        return
+      }
+      ref.fit(
+        nodes.map((n) => n.id),
+        { animated: true, maxZoom: 1.4 }
+      )
+    },
+    [nodes]
+  )
+
+  useEffect(() => {
+    const early = window.setTimeout(() => fitCentredView(false), 700)
+    const settled = window.setTimeout(() => fitCentredView(true), 2500)
+    return () => {
+      window.clearTimeout(early)
+      window.clearTimeout(settled)
+    }
+  }, [centreKey, fitCentredView])
+
+  // Seed the nodes a centred-view change just revealed in a ring around the
+  // node they came from, then let the force layout take over. Passing
+  // `updateLayout` is also what wakes the simulation — it is what NVL's own
+  // node drag does.
+  useEffect(() => {
+    const reveal = pendingRevealRef.current
+    if (!reveal) return
+    const timer = window.setTimeout(() => {
+      pendingRevealRef.current = null
+      const ref = nvlRef.current
+      if (!ref || typeof ref.getNodePositions !== 'function') return
+      const anchor = ref
+        .getNodePositions()
+        .find((n) => String(n.id) === reveal.anchorId)
+      const restore = reveal.restore
+      // Back to the full canvas: every node with a remembered spot goes back
+      // to it. Anything else that is new on screen fans out from the anchor.
+      const restored = restore
+        ? nodes.flatMap((n) => {
+            const at = restore.get(n.id)
+            return at ? [{ id: n.id, x: at.x, y: at.y }] : []
+          })
+        : []
+      const restoredIds = new Set(restored.map((p) => p.id))
+      const revealed = nodes.filter(
+        (n) => !reveal.shownIds.has(n.id) && !restoredIds.has(n.id)
+      )
+      const radius = 120 + revealed.length * 12
+      const ringed = anchor
+        ? revealed.map((n, i) => {
+            const angle = (2 * Math.PI * i) / revealed.length
+            return {
+              id: n.id,
+              x: anchor.x + radius * Math.cos(angle),
+              y: anchor.y + radius * Math.sin(angle),
+            }
+          })
+        : []
+      if (restored.length === 0 && ringed.length === 0) return
+      ref.setNodePositions([...restored, ...ringed], true)
+    }, 50)
+    return () => window.clearTimeout(timer)
+  }, [nodes])
+
+  // Escape backs out of pick mode.
+  useEffect(() => {
+    if (!isPicking) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsPicking(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isPicking])
+
+  const closeNodeMenu = useCallback(() => setNodeMenu(null), [])
 
   // Canvas search asked for a node: centre it and light it up. `fit` on a
   // single id pans to that node and clamps the zoom, so a jump from a
@@ -1671,6 +1943,14 @@ export const BloomView: FC = () => {
   const isFilteredToNothing =
     !isEmpty && builtCanvas.nodes.length > 0 && nodes.length === 0
 
+  const isColdLoading = !overlay && loading && builtCanvas.nodes.length === 0
+
+  const centreCaption = centreId
+    ? nodes.find((n) => n.id === centreId)?.caption
+    : undefined
+  const centreLabel =
+    typeof centreCaption === 'string' ? centreCaption : undefined
+
   return (
     <div className="relative w-full h-full bg-gp-surface dark:bg-gp-surface-dark flex">
       {/* Themed canvas backdrop. NVL renders on a transparent canvas, so this
@@ -1697,7 +1977,7 @@ export const BloomView: FC = () => {
       />
 
       <div ref={canvasWrapperRef} className="flex-1 relative">
-        {!overlay && loading && builtCanvas.nodes.length === 0 ? (
+        {isColdLoading ? (
           <GraphLoadingState
             label="Bloom is gathering"
             subtitle={
@@ -1764,6 +2044,27 @@ export const BloomView: FC = () => {
               Show all types
             </button>
           </div>
+        )}
+
+        {!isEmpty && !isColdLoading && (
+          <BloomCentreControls
+            mode={centreId ? 'centred' : isPicking ? 'picking' : 'idle'}
+            centreLabel={centreLabel}
+            shownCount={nodes.length}
+            onStartPicking={() => setIsPicking(true)}
+            onCancelPicking={() => setIsPicking(false)}
+            onExit={exitCentredView}
+          />
+        )}
+
+        {nodeMenu && (
+          <BloomNodeMenu
+            x={nodeMenu.x}
+            y={nodeMenu.y}
+            label={nodeMenu.label}
+            onCentre={() => centreOnNode(nodeMenu.id)}
+            onClose={closeNodeMenu}
+          />
         )}
 
         {/* Decodes the bare colored NVL circles — and, since GOAL-350, switches
