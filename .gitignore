@@ -83,6 +83,10 @@ Thumbs.db
 
 # Ad-hoc agent scratch files (do not let Tailwind scan)
 .profile-tmp/
+# Smith's per-run scratch: the weekly deps job's report (committed by mistake
+# in #204, untracked in #205) and the Playwright MCP's output dir.
+.agent/
+.playwright-mcp/
 
 # e2e-tester screenshots (local verification artifacts, never tracked)
 .e2e-shots/
