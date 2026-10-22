@@ -68,8 +68,8 @@ import {
   type BloomFocusNodeDetail,
 } from '../../bloom-search-context'
 import { toSearchEntries } from './bloom-search-match'
-import { buildCentredCanvas } from './bloom-centre-view'
-import { BloomCentreControls, BloomNodeMenu } from './bloom-centre-controls'
+import { buildCenteredCanvas } from './bloom-center-view'
+import { BloomCenterControls, BloomNodeMenu } from './bloom-center-controls'
 
 /**
  * Bloom Exploration — the native NVL rendering of the user's spaces.
@@ -308,7 +308,7 @@ export const BloomView: FC = () => {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   // The node canvas search last jumped to. Painted with NVL's own `selected`
   // state so the viewer can see WHICH circle the viewport landed on — a
-  // centred node is otherwise indistinguishable from its neighbours, since
+  // centered node is otherwise indistinguishable from its neighbours, since
   // Bloom nodes carry no label beyond a clipped caption.
   const [highlightedNodeId, setHighlightedNodeId] = useState<string | null>(
     null
@@ -331,12 +331,12 @@ export const BloomView: FC = () => {
   // first, we cancel the pending drill and open the drawer instead.
   const clickTimerRef = useRef<number | null>(null)
 
-  // Centre on a node (GOAL-383). `centredIds` is the centred view: empty for
-  // the full canvas, otherwise the centre first and then every node the member
-  // expanded from it, in order. `isPicking` is the "Centre" button's armed
-  // state — the next node click picks the centre instead of drilling.
+  // Center on a node (GOAL-383). `centeredIds` is the centered view: empty for
+  // the full canvas, otherwise the center first and then every node the member
+  // expanded from it, in order. `isPicking` is the "Center" button's armed
+  // state — the next node click picks the center instead of drilling.
   // `nodeMenu` is the right-click menu, anchored at the pointer.
-  const [centredIds, setCentredIds] = useState<string[]>([])
+  const [centeredIds, setCenteredIds] = useState<string[]>([])
   const [isPicking, setIsPicking] = useState(false)
   const [nodeMenu, setNodeMenu] = useState<{
     id: string
@@ -344,10 +344,10 @@ export const BloomView: FC = () => {
     x: number
     y: number
   } | null>(null)
-  // Set by the centre/expand/exit handlers so the viewport is refit to what the
+  // Set by the center/expand/exit handlers so the viewport is refit to what the
   // view now shows once the layout has had a moment to place the new nodes.
-  const pendingCentreFitRef = useRef(false)
-  // Nodes a centred-view change is about to reveal (every node not in
+  const pendingCenterFitRef = useRef(false)
+  // Nodes a centered-view change is about to reveal (every node not in
   // `shownIds`), and the node they should fan out from. NVL drops a newly
   // added node wherever it likes — usually stacked on its siblings — and its
   // force layout is slow to pull a stack apart, so the effect below seeds them
@@ -355,17 +355,17 @@ export const BloomView: FC = () => {
   const pendingRevealRef = useRef<{
     anchorId: string
     shownIds: ReadonlySet<string>
-    // Where each node sat before the centred view was opened. On the way back
+    // Where each node sat before the centered view was opened. On the way back
     // out every node is put back here, so the full canvas returns as the
     // member left it rather than as one big ring.
     restore?: ReadonlyMap<string, { x: number; y: number }>
   } | null>(null)
-  // The full-canvas layout, captured when a centred view is opened from it.
+  // The full-canvas layout, captured when a centered view is opened from it.
   const savedLayoutRef = useRef<ReadonlyMap<
     string,
     { x: number; y: number }
   > | null>(null)
-  // When pick mode last chose a centre. The second click of a double-click
+  // When pick mode last chose a center. The second click of a double-click
   // that lands inside this window is part of the pick, not a drawer request.
   const pickedAtRef = useRef(0)
 
@@ -954,31 +954,31 @@ export const BloomView: FC = () => {
     [builtCanvas, typeFilters.hidden]
   )
 
-  // A centred view whose centre has left the canvas (its type switched off,
-  // or the data it came from is gone) has nothing to be centred on — fall back
+  // A centered view whose center has left the canvas (its type switched off,
+  // or the data it came from is gone) has nothing to be centered on — fall back
   // to the full canvas rather than paint an empty one. Adjusted during render,
   // like the highlight below.
-  const centreId = centredIds[0] ?? null
+  const centerId = centeredIds[0] ?? null
   if (
-    centreId &&
-    !filteredCanvas.nodes.some((n) => String(n.id) === centreId)
+    centerId &&
+    !filteredCanvas.nodes.some((n) => String(n.id) === centerId)
   ) {
-    setCentredIds([])
+    setCenteredIds([])
   }
 
-  // The centred view narrows the painted canvas to the expanded nodes and
-  // their one-hop neighbours (bloom-centre-view.ts). Downstream of the type
+  // The centered view narrows the painted canvas to the expanded nodes and
+  // their one-hop neighbours (bloom-center-view.ts). Downstream of the type
   // filters, so a hidden type stays hidden here too, and upstream of search,
   // the visible-entities channel and the layout kick, so all of them see
   // exactly what is painted.
   const { nodes, relationships } = useMemo(
     () =>
-      centredIds.length > 0
-        ? buildCentredCanvas(filteredCanvas, centredIds)
+      centeredIds.length > 0
+        ? buildCenteredCanvas(filteredCanvas, centeredIds)
         : filteredCanvas,
-    [filteredCanvas, centredIds]
+    [filteredCanvas, centeredIds]
   )
-  const centreKey = centredIds.join('|')
+  const centerKey = centeredIds.join('|')
 
   // What NVL is handed: the painted canvas with NVL's native `selected` flag
   // resolved on EVERY node, not just the highlighted one.
@@ -999,11 +999,11 @@ export const BloomView: FC = () => {
     () =>
       nodes.map((n) => ({
         ...n,
-        // The centre of a centred view keeps NVL's halo so it stays findable
+        // The center of a centered view keeps NVL's halo so it stays findable
         // as the view grows around it.
-        selected: n.id === highlightedNodeId || n.id === centreId,
+        selected: n.id === highlightedNodeId || n.id === centerId,
       })),
-    [nodes, highlightedNodeId, centreId]
+    [nodes, highlightedNodeId, centerId]
   )
 
   // A highlight whose node has left the canvas (its type switched off in the
@@ -1385,11 +1385,11 @@ export const BloomView: FC = () => {
     }
   }, [])
 
-  // Centre the view on a node, starting a fresh centred view.
-  const centreOnNode = useCallback(
+  // Center the view on a node, starting a fresh centered view.
+  const centerOnNode = useCallback(
     (id: string) => {
       cancelPendingClick()
-      if (centredIds.length === 0) {
+      if (centeredIds.length === 0) {
         const ref = nvlRef.current
         savedLayoutRef.current =
           ref && typeof ref.getNodePositions === 'function'
@@ -1400,54 +1400,54 @@ export const BloomView: FC = () => {
               )
             : null
       }
-      pendingCentreFitRef.current = true
-      // Lay the neighbours out around the centre rather than leaving them where
+      pendingCenterFitRef.current = true
+      // Lay the neighbours out around the center rather than leaving them where
       // the full canvas had them — some of them a screen away.
       pendingRevealRef.current = { anchorId: id, shownIds: new Set([id]) }
       setIsPicking(false)
       setNodeMenu(null)
-      setCentredIds([id])
+      setCenteredIds([id])
     },
-    [centredIds, cancelPendingClick]
+    [centeredIds, cancelPendingClick]
   )
 
-  // Expand a node in the centred view: append it so its neighbours join what
+  // Expand a node in the centered view: append it so its neighbours join what
   // is already on screen. Re-expanding a node is a no-op.
   const expandNode = useCallback(
     (id: string) => {
-      if (centredIds.includes(id)) return
-      pendingCentreFitRef.current = true
+      if (centeredIds.includes(id)) return
+      pendingCenterFitRef.current = true
       pendingRevealRef.current = {
         anchorId: id,
         shownIds: new Set(nodes.map((n) => n.id)),
       }
-      setCentredIds((prev) => [...prev, id])
+      setCenteredIds((prev) => [...prev, id])
     },
-    [nodes, centredIds]
+    [nodes, centeredIds]
   )
 
-  const exitCentredView = useCallback(() => {
+  const exitCenteredView = useCallback(() => {
     cancelPendingClick()
-    pendingCentreFitRef.current = true
-    if (centreId) {
+    pendingCenterFitRef.current = true
+    if (centerId) {
       pendingRevealRef.current = {
-        anchorId: centreId,
+        anchorId: centerId,
         shownIds: new Set(nodes.map((n) => n.id)),
         restore: savedLayoutRef.current ?? undefined,
       }
     }
     savedLayoutRef.current = null
-    setCentredIds([])
-  }, [nodes, centreId, cancelPendingClick])
+    setCenteredIds([])
+  }, [nodes, centerId, cancelPendingClick])
 
   // First click schedules a drill; if a second click lands before it fires,
   // that's a double-click → cancel the drill and open the drawer instead.
   const handleSingleClick = useCallback(
     (node: Node) => {
-      // Pick mode: this click chooses the centre — no drill, no drawer.
+      // Pick mode: this click chooses the center — no drill, no drawer.
       if (isPicking) {
         pickedAtRef.current = Date.now()
-        centreOnNode(String(node.id))
+        centerOnNode(String(node.id))
         return
       }
       if (Date.now() - pickedAtRef.current < SINGLE_CLICK_DELAY * 2) return
@@ -1461,10 +1461,10 @@ export const BloomView: FC = () => {
       }
       clickTimerRef.current = window.setTimeout(() => {
         clickTimerRef.current = null
-        // Inside a centred view a single click expands instead of drilling —
+        // Inside a centered view a single click expands instead of drilling —
         // drilling would change the route and drop the view being built.
         // Double-click still opens the drawer.
-        if (centredIds.length > 0) {
+        if (centeredIds.length > 0) {
           expandNode(String(node.id))
           return
         }
@@ -1473,8 +1473,8 @@ export const BloomView: FC = () => {
     },
     [
       isPicking,
-      centredIds,
-      centreOnNode,
+      centeredIds,
+      centerOnNode,
       expandNode,
       handleNodeClick,
       handleNodeNavigate,
@@ -1617,9 +1617,9 @@ export const BloomView: FC = () => {
   if (prevScopeKey !== scopeKey) {
     setPrevScopeKey(scopeKey)
     setSelectedNode(null)
-    // A centred view is built from the canvas it was opened on; the next
+    // A centered view is built from the canvas it was opened on; the next
     // scope starts on its full canvas.
-    setCentredIds([])
+    setCenteredIds([])
     setIsPicking(false)
     setNodeMenu(null)
     // A search highlight belongs to the canvas that was on screen when it was
@@ -1645,8 +1645,8 @@ export const BloomView: FC = () => {
   const isInitialLayoutRef = useRef(true)
   useEffect(() => {
     isInitialLayoutRef.current = true
-    // Centred-view bookkeeping belongs to the canvas it was made on.
-    pendingCentreFitRef.current = false
+    // Centered-view bookkeeping belongs to the canvas it was made on.
+    pendingCenterFitRef.current = false
     pendingRevealRef.current = null
     savedLayoutRef.current = null
   }, [scopeKey])
@@ -1668,10 +1668,10 @@ export const BloomView: FC = () => {
     // re-added nodes would never get their simulation pass and would sit
     // stacked wherever NVL dropped them.
     //
-    // And the centred view (GOAL-383): entering, expanding or leaving it
+    // And the centered view (GOAL-383): entering, expanding or leaving it
     // changes which nodes are on canvas, and leaving can land back on a count
     // that was already kicked.
-    const kickKey = `${scopeKey}|${nodes.length}|${filterSignature}|${centreKey}`
+    const kickKey = `${scopeKey}|${nodes.length}|${filterSignature}|${centerKey}`
     if (lastKickedScopeRef.current === kickKey) return
     if (nodes.length === 0) return
     const ref = nvlRef.current
@@ -1704,7 +1704,7 @@ export const BloomView: FC = () => {
     return () => {
       for (const id of timers) window.clearTimeout(id)
     }
-  }, [nodes, scopeKey, filterSignature, centreKey])
+  }, [nodes, scopeKey, filterSignature, centerKey])
 
   const fitToScope = useCallback(() => {
     if (lastFitScopeRef.current === scopeKey) return
@@ -1743,15 +1743,15 @@ export const BloomView: FC = () => {
     [fitToScope]
   )
 
-  // Refit to what the centred view shows after it is entered, grown or left.
+  // Refit to what the centered view shows after it is entered, grown or left.
   // Timers rather than `onLayoutDone`, which can fire for the layout pass that
   // was already running before the new nodes arrived. Two passes: an early one
   // so the view moves promptly, and a final one once the simulation has
   // spread the nodes out (it takes a couple of seconds to settle).
-  const fitCentredView = useCallback(
+  const fitCenteredView = useCallback(
     (final: boolean) => {
-      if (!pendingCentreFitRef.current) return
-      if (final) pendingCentreFitRef.current = false
+      if (!pendingCenterFitRef.current) return
+      if (final) pendingCenterFitRef.current = false
       const ref = nvlRef.current
       if (!ref || typeof ref.fit !== 'function') return
       if (nodes.length <= 1) {
@@ -1767,15 +1767,15 @@ export const BloomView: FC = () => {
   )
 
   useEffect(() => {
-    const early = window.setTimeout(() => fitCentredView(false), 700)
-    const settled = window.setTimeout(() => fitCentredView(true), 2500)
+    const early = window.setTimeout(() => fitCenteredView(false), 700)
+    const settled = window.setTimeout(() => fitCenteredView(true), 2500)
     return () => {
       window.clearTimeout(early)
       window.clearTimeout(settled)
     }
-  }, [centreKey, fitCentredView])
+  }, [centerKey, fitCenteredView])
 
-  // Seed the nodes a centred-view change just revealed in a ring around the
+  // Seed the nodes a centered-view change just revealed in a ring around the
   // node they came from, then let the force layout take over. Passing
   // `updateLayout` is also what wakes the simulation — it is what NVL's own
   // node drag does.
@@ -1831,7 +1831,7 @@ export const BloomView: FC = () => {
 
   const closeNodeMenu = useCallback(() => setNodeMenu(null), [])
 
-  // Canvas search asked for a node: centre it and light it up. `fit` on a
+  // Canvas search asked for a node: center it and light it up. `fit` on a
   // single id pans to that node and clamps the zoom, so a jump from a
   // zoomed-right-out canvas lands readable rather than at whatever scale the
   // viewer left behind.
@@ -1945,11 +1945,11 @@ export const BloomView: FC = () => {
 
   const isColdLoading = !overlay && loading && builtCanvas.nodes.length === 0
 
-  const centreCaption = centreId
-    ? nodes.find((n) => n.id === centreId)?.caption
+  const centerCaption = centerId
+    ? nodes.find((n) => n.id === centerId)?.caption
     : undefined
-  const centreLabel =
-    typeof centreCaption === 'string' ? centreCaption : undefined
+  const centerLabel =
+    typeof centerCaption === 'string' ? centerCaption : undefined
 
   return (
     <div className="relative w-full h-full bg-gp-surface dark:bg-gp-surface-dark flex">
@@ -2047,13 +2047,13 @@ export const BloomView: FC = () => {
         )}
 
         {!isEmpty && !isColdLoading && (
-          <BloomCentreControls
-            mode={centreId ? 'centred' : isPicking ? 'picking' : 'idle'}
-            centreLabel={centreLabel}
+          <BloomCenterControls
+            mode={centerId ? 'centered' : isPicking ? 'picking' : 'idle'}
+            centerLabel={centerLabel}
             shownCount={nodes.length}
             onStartPicking={() => setIsPicking(true)}
             onCancelPicking={() => setIsPicking(false)}
-            onExit={exitCentredView}
+            onExit={exitCenteredView}
           />
         )}
 
@@ -2062,7 +2062,7 @@ export const BloomView: FC = () => {
             x={nodeMenu.x}
             y={nodeMenu.y}
             label={nodeMenu.label}
-            onCentre={() => centreOnNode(nodeMenu.id)}
+            onCenter={() => centerOnNode(nodeMenu.id)}
             onClose={closeNodeMenu}
           />
         )}

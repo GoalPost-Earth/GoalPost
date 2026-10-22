@@ -1,10 +1,10 @@
 import type { BloomCanvas } from './bloom-type-registry'
 
 /**
- * Centre on a node (GOAL-383) — the pure derivation behind Bloom's centred view.
+ * Center on a node (GOAL-383) — the pure derivation behind Bloom's centered view.
  *
- * A centred view is the canvas narrowed to a growing set of EXPANDED nodes and
- * everything one hop from any of them. The member starts by centring on one
+ * A centered view is the canvas narrowed to a growing set of EXPANDED nodes and
+ * everything one hop from any of them. The member starts by centering on one
  * node (`expandedIds[0]`) and every neighbour they click is appended, so the
  * view only ever grows: nodes already on screen stay, new ones join them.
  *
@@ -18,7 +18,7 @@ import type { BloomCanvas } from './bloom-type-registry'
  * Nothing here is an authorization decision: it only ever hides what the
  * canvas was already allowed to paint (kb/02-user-roles.md).
  */
-export function buildCentredCanvas(
+export function buildCenteredCanvas(
   canvas: BloomCanvas,
   expandedIds: readonly string[]
 ): BloomCanvas {

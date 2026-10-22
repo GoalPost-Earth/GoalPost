@@ -1,12 +1,12 @@
 /**
- * GOAL-383 — centre on a node.
+ * GOAL-383 — center on a node.
  *
- * Pins the centred view's derivation: the centred node plus its one-hop
+ * Pins the centered view's derivation: the centered node plus its one-hop
  * neighbours, growth (never replacement) as more nodes are expanded, and that
  * NVL is never handed an edge to a node the view isn't showing.
  */
 import type { Node, Relationship } from '@neo4j-nvl/base'
-import { buildCentredCanvas } from './bloom-centre-view'
+import { buildCenteredCanvas } from './bloom-center-view'
 
 const node = (id: string): Node => ({ id, caption: id })
 const rel = (from: string, to: string): Relationship => ({
@@ -22,10 +22,10 @@ const canvas = {
 }
 
 const ids = (expanded: string[]) =>
-  buildCentredCanvas(canvas, expanded).nodes.map((n) => n.id)
+  buildCenteredCanvas(canvas, expanded).nodes.map((n) => n.id)
 
-describe('buildCentredCanvas', () => {
-  it('shows the centred node and its one-hop neighbours, in either direction', () => {
+describe('buildCenteredCanvas', () => {
+  it('shows the centered node and its one-hop neighbours, in either direction', () => {
     // b is the `to` of a→b and e→b and the `from` of b→c.
     expect(ids(['b'])).toEqual(['a', 'b', 'c', 'e'])
   })
@@ -48,7 +48,7 @@ describe('buildCentredCanvas', () => {
   })
 
   it('only hands NVL edges whose endpoints are both shown', () => {
-    const { nodes, relationships } = buildCentredCanvas(canvas, ['a'])
+    const { nodes, relationships } = buildCenteredCanvas(canvas, ['a'])
     const shown = new Set(nodes.map((n) => n.id))
     expect(relationships.map((r) => r.id)).toEqual(['a-b'])
     for (const r of relationships) {
@@ -62,7 +62,7 @@ describe('buildCentredCanvas', () => {
       nodes: ['x', 'y', 'z'].map(node),
       relationships: [rel('x', 'y'), rel('x', 'z'), rel('y', 'z')],
     }
-    const { relationships } = buildCentredCanvas(triangle, ['x'])
+    const { relationships } = buildCenteredCanvas(triangle, ['x'])
     expect(relationships.map((r) => r.id)).toContain('y-z')
   })
 
@@ -71,13 +71,13 @@ describe('buildCentredCanvas', () => {
       nodes: [node('a')],
       relationships: [rel('a', 'ghost')],
     }
-    const { nodes, relationships } = buildCentredCanvas(dangling, ['a'])
+    const { nodes, relationships } = buildCenteredCanvas(dangling, ['a'])
     expect(nodes.map((n) => n.id)).toEqual(['a'])
     expect(relationships).toEqual([])
   })
 
-  it('is empty when the centred node has left the canvas', () => {
-    expect(buildCentredCanvas(canvas, ['gone'])).toEqual({
+  it('is empty when the centered node has left the canvas', () => {
+    expect(buildCenteredCanvas(canvas, ['gone'])).toEqual({
       nodes: [],
       relationships: [],
     })

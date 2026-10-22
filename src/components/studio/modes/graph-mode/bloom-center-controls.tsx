@@ -4,23 +4,23 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { cn } from '@/lib/utils'
 
 /**
- * Centre on a node (GOAL-383) — the on-canvas chrome for Bloom's centred view.
+ * Center on a node (GOAL-383) — the on-canvas chrome for Bloom's centered view.
  *
- *   - `BloomCentreControls` is the top-left pill. Idle it is the "Centre"
+ *   - `BloomCenterControls` is the top-left pill. Idle it is the "Center"
  *     button that arms pick mode; while picking it says so and offers Cancel;
- *     in a centred view it names the centre, counts what is shown, and carries
+ *     in a centered view it names the center, counts what is shown, and carries
  *     the "Full canvas" control back out.
  *   - `BloomNodeMenu` is the right-click menu on a node.
  *
  * Both are presentational: BloomView owns the state and the canvas derivation
- * (`bloom-centre-view.ts`).
+ * (`bloom-center-view.ts`).
  */
 
-type CentreControlsProps = {
-  mode: 'idle' | 'picking' | 'centred'
-  /** Caption of the centred node — only read in 'centred'. */
-  centreLabel?: string
-  /** Nodes on screen in the centred view. */
+type CenterControlsProps = {
+  mode: 'idle' | 'picking' | 'centered'
+  /** Caption of the centered node — only read in 'centered'. */
+  centerLabel?: string
+  /** Nodes on screen in the centered view. */
   shownCount?: number
   onStartPicking: () => void
   onCancelPicking: () => void
@@ -30,14 +30,14 @@ type CentreControlsProps = {
 const PILL =
   'pointer-events-auto flex min-w-0 max-w-full items-center gap-2 rounded-full gp-glass border shadow-xl'
 
-export function BloomCentreControls({
+export function BloomCenterControls({
   mode,
-  centreLabel,
+  centerLabel,
   shownCount = 0,
   onStartPicking,
   onCancelPicking,
   onExit,
-}: CentreControlsProps) {
+}: CenterControlsProps) {
   return (
     // Full-width row on phones (so a long caption truncates rather than
     // overflowing), a capped one from `sm:` up.
@@ -57,7 +57,7 @@ export function BloomCentreControls({
             center_focus_strong
           </span>
           <span className="text-xs font-semibold">
-            Centre<span className="hidden sm:inline"> on a node</span>
+            Center<span className="hidden sm:inline"> on a node</span>
           </span>
         </button>
       )}
@@ -71,7 +71,7 @@ export function BloomCentreControls({
             ads_click
           </span>
           <span className="min-w-0 truncate text-xs font-semibold text-gp-ink-strong">
-            Pick a node to centre on
+            Pick a node to center on
           </span>
           <button
             type="button"
@@ -83,14 +83,14 @@ export function BloomCentreControls({
         </div>
       )}
 
-      {mode === 'centred' && (
+      {mode === 'centered' && (
         <div className={cn(PILL, 'border-gp-primary/40 py-1 pl-3 pr-1')}>
           <span className="material-symbols-outlined shrink-0 text-lg leading-none text-gp-primary">
             center_focus_strong
           </span>
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-xs font-semibold text-gp-ink-strong">
-              {centreLabel || 'Centred view'}
+              {centerLabel || 'Centered view'}
             </p>
             <p className="truncate text-[10px] text-gp-ink-muted">
               {shownCount} {shownCount === 1 ? 'node' : 'nodes'} · click one to
@@ -118,7 +118,7 @@ type NodeMenuProps = {
   x: number
   y: number
   label: string
-  onCentre: () => void
+  onCenter: () => void
   onClose: () => void
 }
 
@@ -128,7 +128,7 @@ export function BloomNodeMenu({
   x,
   y,
   label,
-  onCentre,
+  onCenter,
   onClose,
 }: NodeMenuProps) {
   const menuRef = useRef<HTMLDivElement | null>(null)
@@ -192,13 +192,13 @@ export function BloomNodeMenu({
         ref={itemRef}
         type="button"
         role="menuitem"
-        onClick={onCentre}
+        onClick={onCenter}
         className="gp-menu-item flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm text-gp-ink-strong"
       >
         <span className="material-symbols-outlined text-lg leading-none">
           center_focus_strong
         </span>
-        Centre on this node
+        Center on this node
       </button>
     </div>
   )
