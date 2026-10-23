@@ -17,6 +17,7 @@ import { parseContactWorkbook } from '@/lib/imports/contact-sheet-parser'
 import {
   ContactIssueCard,
   ContactRowCard,
+  SelectAllContacts,
   ContactsPicker,
   ContactsResults,
   CountChip,
@@ -71,13 +72,27 @@ export function ImportContactsModal({
   const [parsed, setParsed] = useState<ParsedContactFile | null>(null)
   const [linkValue, setLinkValue] = useState('')
   const [pickError, setPickError] = useState<string | null>(null)
+  // Rows the member unticked in the preview. Everything starts ticked, so a
+  // file imports in full unless someone is deliberately left out.
+  const [excludedRows, setExcludedRows] = useState<ReadonlySet<number>>(
+    () => new Set()
+  )
   const { isSubmitting, progress, result, error, submit, reset } =
     useContactImport({ fieldContextId, onImported })
 
   const step = result ? 'results' : parsed ? 'preview' : 'pick'
   const records = parsed?.records ?? []
-  const people = records.filter((record) => record.kind === 'person').length
-  const organizations = records.length - people
+  const selectedRecords = records.filter(
+    (record) => !excludedRows.has(record.row)
+  )
+  const people = selectedRecords.filter((r) => r.kind === 'person').length
+  const organizations = selectedRecords.length - people
+  const toggleRow = (row: number) =>
+    setExcludedRows((current) => {
+      const next = new Set(current)
+      if (!next.delete(row)) next.add(row)
+      return next
+    })
 
   const handleClose = useCallback(() => {
     if (isSubmitting) return
@@ -112,6 +127,7 @@ export function ImportContactsModal({
       setPickError(null)
       setFile({ name, content })
       setParsed(next)
+      setExcludedRows(new Set())
     },
     []
   )
@@ -147,8 +163,11 @@ export function ImportContactsModal({
         ? { kind, id: linkValue.slice(separator + 1) }
         : undefined
     setPickError(null)
-    void submit(parsed.records, link)
-  }, [linkValue, parsed, submit])
+    void submit(
+      parsed.records.filter((record) => !excludedRows.has(record.row)),
+      link
+    )
+  }, [excludedRows, linkValue, parsed, submit])
 
   // Esc closes. Capture phase + stopPropagation so StudioShell's window-level
   // Escape shortcut does not also close the chat panel behind the dialog.
@@ -251,11 +270,26 @@ export function ImportContactsModal({
             </div>
 
             <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
-              Review before importing — nothing is saved yet. A contact that
-              matches one already here (by email, or by name and organization)
-              is updated with the values in this file.
+              Review before importing — nothing is saved yet, and only the
+              ticked contacts are imported. A contact that matches one already
+              here (by email, or by name and organization) is updated with the
+              values in this file.
               {parsed.errors.length > 0 && ' Rows with issues will be skipped.'}
             </p>
+
+            {records.length > 0 && (
+              <SelectAllContacts
+                selectedCount={selectedRecords.length}
+                total={records.length}
+                onChange={(selectAll) =>
+                  setExcludedRows(
+                    selectAll
+                      ? new Set()
+                      : new Set(records.map((record) => record.row))
+                  )
+                }
+              />
+            )}
 
             <div className="overflow-y-auto min-h-0 space-y-2 pr-1">
               {parsed.errors.map((rowError) => (
@@ -265,7 +299,12 @@ export function ImportContactsModal({
                 />
               ))}
               {parsed.records.map((record) => (
-                <ContactRowCard key={`row-${record.row}`} record={record} />
+                <ContactRowCard
+                  key={`row-${record.row}`}
+                  record={record}
+                  selected={!excludedRows.has(record.row)}
+                  onToggle={() => toggleRow(record.row)}
+                />
               ))}
             </div>
           </>
@@ -310,7 +349,7 @@ export function ImportContactsModal({
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={isSubmitting || records.length === 0}
+                disabled={isSubmitting || selectedRecords.length === 0}
                 aria-busy={isSubmitting}
                 // Busy is not "unavailable": keep full contrast while the
                 // progress label is the thing the member is reading.
@@ -327,7 +366,7 @@ export function ImportContactsModal({
                 )}
                 {isSubmitting
                   ? `Importing ${progress.done} of ${progress.total}…`
-                  : `Import ${records.length} contact${records.length === 1 ? '' : 's'}`}
+                  : `Import ${selectedRecords.length} contact${selectedRecords.length === 1 ? '' : 's'}`}
               </button>
             </>
           )}

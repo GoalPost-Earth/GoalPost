@@ -53,11 +53,16 @@ export const OBSERVED_APP_MAXIMA = {
   // GET_FIELD_CONTEXT_PEOPLE and `fieldContext { people { id } }` to
   // GET_DOCUMENT_BY_ID. This records a new OBSERVATION; the enforced ceiling
   // below is unchanged, and headroom stays ~7.6x.
-  cost: 660,
+  // 660 → 679 (measured 678.75): GOAL-386 (#206) grew the field-context
+  // documents for organizations on the canvas, and GOAL-382 added the contact
+  // details (phone, location, affiliations) to the person queries. Again an
+  // observation only — the enforced ceiling is unchanged (~7.4x headroom).
+  cost: 679,
   depth: 6,
   aliases: 6,
   // 392 → 394 for the same GOAL-346 selections as `cost` above.
-  tokens: 394,
+  // 394 → 406 for the same GOAL-386 / GOAL-382 selections as `cost` above.
+  tokens: 406,
 } as const
 
 export const QUERY_LIMITS = {

@@ -31,6 +31,14 @@ export const GET_FIELD_CONTEXT_PEOPLE = gql`
         privateProfile {
           id
           email
+          # Contact details the importer writes (GOAL-382).
+          phone
+          location
+          affiliations {
+            organizationId
+            name
+            role
+          }
           description
           # The current user's relationship to this person lives on the
           # CONNECTED_TO edge; match the edge whose other end is the user.

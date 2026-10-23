@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, type FC } from 'react'
+import { useMemo, type FC, type ReactNode } from 'react'
 import Image from 'next/image'
 import { ArrowRight, Hash, Layers, Sparkles, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -67,7 +67,9 @@ export const PersonHero: FC<{
   name: string
   photo?: string | null
   email?: string | null
-}> = ({ name, photo, email }) => (
+  /** Rendered under the email — the contact-details chips. */
+  children?: ReactNode
+}> = ({ name, photo, email, children }) => (
   <section className="relative px-6 pt-7 pb-6 border-b border-gp-glass-border bg-gradient-to-br from-gp-primary/20 via-gp-accent-glow/10 to-transparent">
     <div className="flex flex-col items-center text-center gap-3">
       <div className="size-20 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-accent-glow/20 flex items-center justify-center border-4 border-white/50 dark:border-white/10 shadow-lg">
@@ -85,7 +87,9 @@ export const PersonHero: FC<{
           </span>
         )}
       </div>
-      <div>
+      {/* Full width so long contact chips truncate instead of widening the
+          column past the drawer (it sits in an items-center flex column). */}
+      <div className="w-full min-w-0">
         <h2 className="text-xl font-black tracking-tight text-gp-ink-strong dark:text-white break-words">
           {name}
         </h2>
@@ -94,6 +98,7 @@ export const PersonHero: FC<{
             {email}
           </p>
         )}
+        {children}
       </div>
     </div>
   </section>

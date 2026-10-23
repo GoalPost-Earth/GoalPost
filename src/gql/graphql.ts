@@ -5089,6 +5089,12 @@ export type FieldContext = {
    * context. Edges to them still come from the hand-built families in
    * `bloom-graph-builder.ts`, which is why those are layered rather than retired.
    *
+   * `AFFILIATED_WITH` (GOAL-386) is a person in this context out to an
+   * organization in this context, so it stays inside the same scope. Its `role`
+   * property is deliberately NOT surfaced, and the statement forces its label to
+   * null rather than trusting no writer ever adds a `label`/`why` — so the canvas
+   * captions it with the type's plain word.
+   *
    * COUPLING: `label` surfaces `CONNECTED_TO.why`, which is gated PII on
    * `PersonPrivateProfile`. That gate's `contexts_SOME` branch grants exactly the
    * caller who passed this type's READ filter, so today the two agree. If that
@@ -6709,10 +6715,14 @@ export type FieldContextOrganizationOrganizationsNodeAggregateSelection = {
   __typename?: 'FieldContextOrganizationOrganizationsNodeAggregateSelection'
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  email: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  location: StringAggregateSelection
   name: StringAggregateSelection
+  phone: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+  website: StringAggregateSelection
 }
 
 export type FieldContextOrganizationsAggregateInput = {
@@ -7528,6 +7538,13 @@ export type FieldContextSort = {
   title?: InputMaybe<SortDirection>
 }
 
+export type FieldContextSpacesConnectionWhere = {
+  AND?: InputMaybe<Array<FieldContextSpacesConnectionWhere>>
+  NOT?: InputMaybe<FieldContextSpacesConnectionWhere>
+  OR?: InputMaybe<Array<FieldContextSpacesConnectionWhere>>
+  node?: InputMaybe<SpaceAuthAnchorWhere>
+}
+
 export type FieldContextSubContextsAggregateInput = {
   AND?: InputMaybe<Array<FieldContextSubContextsAggregateInput>>
   NOT?: InputMaybe<FieldContextSubContextsAggregateInput>
@@ -8156,6 +8173,22 @@ export type FieldContextWhere = {
   resonances_SINGLE?: InputMaybe<ResonanceLinkWhere>
   /** Return FieldContexts where some of the related ResonanceLinks match this filter */
   resonances_SOME?: InputMaybe<ResonanceLinkWhere>
+  /** Return FieldContexts where all of the related FieldContextSpacesConnections match this filter */
+  spacesConnection_ALL?: InputMaybe<FieldContextSpacesConnectionWhere>
+  /** Return FieldContexts where none of the related FieldContextSpacesConnections match this filter */
+  spacesConnection_NONE?: InputMaybe<FieldContextSpacesConnectionWhere>
+  /** Return FieldContexts where one of the related FieldContextSpacesConnections match this filter */
+  spacesConnection_SINGLE?: InputMaybe<FieldContextSpacesConnectionWhere>
+  /** Return FieldContexts where some of the related FieldContextSpacesConnections match this filter */
+  spacesConnection_SOME?: InputMaybe<FieldContextSpacesConnectionWhere>
+  /** Return FieldContexts where all of the related SpaceAuthAnchors match this filter */
+  spaces_ALL?: InputMaybe<SpaceAuthAnchorWhere>
+  /** Return FieldContexts where none of the related SpaceAuthAnchors match this filter */
+  spaces_NONE?: InputMaybe<SpaceAuthAnchorWhere>
+  /** Return FieldContexts where one of the related SpaceAuthAnchors match this filter */
+  spaces_SINGLE?: InputMaybe<SpaceAuthAnchorWhere>
+  /** Return FieldContexts where some of the related SpaceAuthAnchors match this filter */
+  spaces_SOME?: InputMaybe<SpaceAuthAnchorWhere>
   subContextsAggregate?: InputMaybe<FieldContextSubContextsAggregateInput>
   /** Return FieldContexts where all of the related FieldContextSubContextsConnections match this filter */
   subContextsConnection_ALL?: InputMaybe<FieldContextSubContextsConnectionWhere>
@@ -14937,17 +14970,21 @@ export type Organization = {
   contextsConnection: OrganizationContextsConnection
   createdAt?: Maybe<Scalars['DateTime']['output']>
   description?: Maybe<Scalars['String']['output']>
+  email?: Maybe<Scalars['String']['output']>
   extractedFrom: Array<ResourcePulse>
   /** @deprecated Please use field "aggregate" inside "extractedFromConnection" instead */
   extractedFromAggregate?: Maybe<OrganizationResourcePulseExtractedFromAggregationSelection>
   extractedFromConnection: OrganizationExtractedFromConnection
   id: Scalars['ID']['output']
+  location?: Maybe<Scalars['String']['output']>
   mentionedIn: Array<FieldPulse>
   /** @deprecated Please use field "aggregate" inside "mentionedInConnection" instead */
   mentionedInAggregate?: Maybe<OrganizationFieldPulseMentionedInAggregationSelection>
   mentionedInConnection: OrganizationMentionedInConnection
   name: Scalars['String']['output']
+  phone?: Maybe<Scalars['String']['output']>
   updatedAt?: Maybe<Scalars['DateTime']['output']>
+  website?: Maybe<Scalars['String']['output']>
 }
 
 /**
@@ -15131,10 +15168,14 @@ export type OrganizationAggregateNode = {
   __typename?: 'OrganizationAggregateNode'
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  email: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  location: StringAggregateSelection
   name: StringAggregateSelection
+  phone: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+  website: StringAggregateSelection
 }
 
 export type OrganizationAggregateSelection = {
@@ -15142,10 +15183,14 @@ export type OrganizationAggregateSelection = {
   count: Scalars['Int']['output']
   createdAt: DateTimeAggregateSelection
   description: StringAggregateSelection
+  email: StringAggregateSelection
   /** @deprecated aggregation of ID fields are deprecated and will be removed */
   id: IdAggregateSelection
+  location: StringAggregateSelection
   name: StringAggregateSelection
+  phone: StringAggregateSelection
   updatedAt: DateTimeAggregateSelection
+  website: StringAggregateSelection
 }
 
 export type OrganizationContextsAggregateInput = {
@@ -15836,9 +15881,13 @@ export type OrganizationResourcePulseExtractedFromNodeAggregateSelection = {
 export type OrganizationSort = {
   createdAt?: InputMaybe<SortDirection>
   description?: InputMaybe<SortDirection>
+  email?: InputMaybe<SortDirection>
   id?: InputMaybe<SortDirection>
+  location?: InputMaybe<SortDirection>
   name?: InputMaybe<SortDirection>
+  phone?: InputMaybe<SortDirection>
   updatedAt?: InputMaybe<SortDirection>
+  website?: InputMaybe<SortDirection>
 }
 
 export type OrganizationWhere = {
@@ -16315,6 +16364,19 @@ export type PersonOwnsSpacesConnectionArgs = {
   first?: InputMaybe<Scalars['Int']['input']>
   sort?: InputMaybe<Array<PersonOwnsSpacesConnectionSort>>
   where?: InputMaybe<PersonOwnsSpacesConnectionWhere>
+}
+
+/**
+ * One organization a person belongs to (their AFFILIATED_WITH edge, written by
+ * contact import — GOAL-382), flattened with their role there. Returned only by
+ * `PersonPrivateProfile.affiliations`, so it is gated with the rest of the PII.
+ */
+export type PersonAffiliation = {
+  __typename?: 'PersonAffiliation'
+  name: Scalars['String']['output']
+  organizationId: Scalars['String']['output']
+  /** The person's role at the organization (vCard TITLE / CSV Job Title). */
+  role?: Maybe<Scalars['String']['output']>
 }
 
 export type PersonAggregate = {
@@ -17913,26 +17975,80 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
  * of that table and blew the 60 s `maxDuration` on `/api/graphql`
  * (src/app/api/graphql/route.ts), which is what surfaced as the profile page
  * hanging forever. A TYPE-level filter is emitted exactly ONCE regardless of how
- * many fields are selected, so the cost is now flat in field count: this schema
- * now emits 29 EXISTS whether the caller selects one gated field or all twelve
- * (`person-pii-gate-plan-size.test.ts` asserts that equality). End to end on the
- * same fixture, GET_PERSON_PROFILE went from 20,442 ms cold / 168 dbHits /
- * 38,761 characters of Cypher to 1,553 ms / 33 dbHits / 7,510 characters.
+ * many fields are selected, so the cost is now flat in field count — the same
+ * number of EXISTS whether the caller selects one gated field or all twelve
+ * (`person-pii-gate-plan-size.test.ts` asserts that equality; it was 29 under
+ * GOAL-275 and is 4 since GOAL-372, below). End to end on the same fixture,
+ * GET_PERSON_PROFILE went from 20,442 ms cold / 168 dbHits / 38,761 characters of
+ * Cypher to 1,553 ms / 33 dbHits / 7,510 characters.
  *
- * Rejected alternative, for the record: keeping the fields on `Person` and
- * pointing their filters at a single `@cypher` Boolean gate. That does cut
- * planning, but `@neo4j/graphql` emits a cypher-field filter as
- * `MATCH (this:Person) CALL { … } WITH * WHERE this.id = $param`, and Neo4j will
- * NOT push a predicate below a `CALL` subquery (measured: 3 dbHits with the
- * predicate before the CALL, 3,021 after). The gate therefore ran for every
- * Person in the database on a single-row lookup — 168 dbHits became 146,453,
- * scaling with database size. A type-level filter stays declarative and inlines
- * into the `WHERE`, so the index seek survives.
+ * HOW THE GATE COMPILES (GOAL-372) — the filter below is a single `@cypher`
+ * Boolean, `callerCanRead`, not a nested `where`. The five branches used to be
+ * written declaratively (`ownsSpaces_SOME: { OR: [...] }` and friends); the
+ * library expanded that into ~29 nested `EXISTS {` blocks at every selection
+ * site, and Neo4j's planning cost is super-linear in predicate count (ADR-010).
+ * One compact predicate the library inlines verbatim costs 4.
+ *
+ * The deterministic part of the measurement — same numbers on every run, on any
+ * machine:
+ *
+ *   | document           | EXISTS  | emitted Cypher   |
+ *   | GET_PERSON_PROFILE | 65 → 40 | 12,782 → 10,684  |
+ *   | GET_LOGGED_IN_USER | 45 → 20 |  9,428 →  7,332  |
+ *   | GET_ALL_ME_SPACES  | 77 → 27 | 13,135 →  8,366  |
+ *
+ * and dbHits on dev, which also reproduce exactly: an unbounded
+ * `people { privateProfile { email } }` over all 639 Person nodes goes
+ * 14,439 → 10,744 (−26%); the noisiest single DENY case (a CONNECTED_TO-only
+ * caller) 157 → 73 (−53%). A single-row lookup goes 2 → 4, the +2 being the
+ * caller's own index seek.
+ *
+ * BE CAREFUL WITH WALL CLOCK HERE. Cold planning (`CYPHER replan=force`) improves
+ * — ~18–35% across the three documents, order-alternated, n=21 — but dev is a
+ * shared Aura instance and an independent reviewer measured the same statements
+ * as flat. Treat the millisecond figure as noisy and the EXISTS / dbHits figures
+ * as the evidence. With a WARM plan cache, which is what production is in
+ * essentially all the time, both versions are 24–25 ms and indistinguishable.
+ *
+ * So the case for this change is HEADROOM, not latency: predicate count is what
+ * went super-linear and blew the 60 s `maxDuration` under GOAL-275 at 302 EXISTS,
+ * and this removes ~25 predicates from every Person selection site.
+ *
+ * (The EXISTS that remain belong to the Space / FieldContext / SpaceMembership
+ * visibility rules reached through `ownsSpaces` / `memberOf` / `contexts`, not to
+ * this gate.)
+ *
+ * WHY A `@cypher` FIELD IS SAFE IN A FILTER *HERE*, AND ONLY HERE. ADR-010's
+ * second rule says not to do this, and that rule still stands for every other
+ * type. The library emits a cypher-field filter as
+ * `MATCH (n:Label) CALL { <gate> } WITH * WHERE <gate result> = true`, and Neo4j
+ * will NOT push a predicate below a `CALL` subquery. On a type with a root query
+ * — `Person`, say — nothing has narrowed the rows before the CALL opens, so the
+ * gate runs once per node of that label: a single-row lookup measured 168 dbHits
+ * declaratively and 146,453 through the CALL, scaling with database size. That is
+ * why these fields are not on `Person`.
+ *
+ * The exception this type qualifies for is narrow and testable:
+ * `@query(read: false, aggregate: false)` means `PersonPrivateProfile` has no
+ * root query, and it is reachable ONLY through `Person.privateProfile` on an
+ * already-resolved `Person`. The caller's own `where` has therefore already been
+ * applied, on the initial MATCH, before any CALL opens. Re-proven with PROFILE on
+ * dev rather than assumed: exactly 1 row enters the gate CALL, every node access
+ * is a `NodeUniqueIndexSeek` and there is no `NodeByLabelScan` anywhere in the
+ * plan; a single-row lookup goes from 2 to 4 total dbHits, the +2 being the
+ * caller's own index seek. `person-pii-gate-plan-size.test.ts` pins the ordering
+ * that makes this true ("applies the caller filter BEFORE the gate").
+ *
+ * If you add a root query to this type, or reach it any other way, this argument
+ * evaporates and the gate becomes a full label scan. Re-measure before you do.
  *
  * AUTHORIZATION — the policy is byte-for-byte the rule that used to be
  * duplicated on 14 fields, and is documented in full on `Person` above. A read is
  * authorized when the caller is the person, created them, shares a Space with
- * them, or can view a FieldContext holding them.
+ * them, or can view a FieldContext holding them. GOAL-372 changed how that rule
+ * compiles, never who it admits: checked on dev across all 12 user accounts ×
+ * all 639 `:Person` nodes (7,668 pairs), old rule and new predicate granted the
+ * same 399 and disagreed on none.
  *
  * Two consequences of the `contexts_SOME` branch worth stating, both unchanged
  * from the original rule and both covered by
@@ -17957,6 +18073,23 @@ export type PersonPersonCreatedByNodeAggregateSelection = {
  */
 export type PersonPrivateProfile = {
   __typename?: 'PersonPrivateProfile'
+  /**
+   * The organizations this person belongs to, with their role there
+   * (AFFILIATED_WITH, written by contact import — GOAL-382), so a member can see
+   * what an import recorded. The role is gated here with the rest of the PII; the
+   * canvas edge deliberately never shows it (GOAL-386).
+   *
+   * A @cypher field skips the Organization type's own READ filter, so the
+   * statement restates it: only organizations held by a FieldContext in a Space
+   * the caller owns or belongs to are returned. Without that, reading a contact's
+   * profile would disclose the name of an organization in a Space the caller
+   * cannot see.
+   *
+   * Declared as a NULLABLE list, for the reason `FieldContext.curatedPersonIds`
+   * gives: a parent produced by a custom resolver yields undefined here, and
+   * `[…]!` would null the whole parent path.
+   */
+  affiliations?: Maybe<Array<PersonAffiliation>>
   careManual?: Maybe<Scalars['String']['output']>
   /**
    * The CONNECTED_TO edge properties (`why` / `interests`) flattened alongside the
@@ -18434,6 +18567,7 @@ export type PersonPrivateProfileWhere = {
   AND?: InputMaybe<Array<PersonPrivateProfileWhere>>
   NOT?: InputMaybe<PersonPrivateProfileWhere>
   OR?: InputMaybe<Array<PersonPrivateProfileWhere>>
+  callerCanRead_EQ?: InputMaybe<Scalars['Boolean']['input']>
   contextsAggregate?: InputMaybe<PersonPrivateProfileContextsAggregateInput>
   /** Return PersonPrivateProfiles where all of the related PersonPrivateProfileContextsConnections match this filter */
   contextsConnection_ALL?: InputMaybe<PersonPrivateProfileContextsConnectionWhere>
@@ -24238,6 +24372,263 @@ export type SpaceAggregateSelection = {
   why: StringAggregateSelection
 }
 
+export type SpaceAuthAnchorMembersAggregateInput = {
+  AND?: InputMaybe<Array<SpaceAuthAnchorMembersAggregateInput>>
+  NOT?: InputMaybe<SpaceAuthAnchorMembersAggregateInput>
+  OR?: InputMaybe<Array<SpaceAuthAnchorMembersAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<SpaceAuthAnchorMembersNodeAggregationWhereInput>
+}
+
+export type SpaceAuthAnchorMembersConnectionWhere = {
+  AND?: InputMaybe<Array<SpaceAuthAnchorMembersConnectionWhere>>
+  NOT?: InputMaybe<SpaceAuthAnchorMembersConnectionWhere>
+  OR?: InputMaybe<Array<SpaceAuthAnchorMembersConnectionWhere>>
+  node?: InputMaybe<SpaceMembershipWhere>
+}
+
+export type SpaceAuthAnchorMembersNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<SpaceAuthAnchorMembersNodeAggregationWhereInput>>
+  NOT?: InputMaybe<SpaceAuthAnchorMembersNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<SpaceAuthAnchorMembersNodeAggregationWhereInput>>
+  addedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  addedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type SpaceAuthAnchorOwnerAggregateInput = {
+  AND?: InputMaybe<Array<SpaceAuthAnchorOwnerAggregateInput>>
+  NOT?: InputMaybe<SpaceAuthAnchorOwnerAggregateInput>
+  OR?: InputMaybe<Array<SpaceAuthAnchorOwnerAggregateInput>>
+  count_EQ?: InputMaybe<Scalars['Int']['input']>
+  count_GT?: InputMaybe<Scalars['Int']['input']>
+  count_GTE?: InputMaybe<Scalars['Int']['input']>
+  count_LT?: InputMaybe<Scalars['Int']['input']>
+  count_LTE?: InputMaybe<Scalars['Int']['input']>
+  node?: InputMaybe<SpaceAuthAnchorOwnerNodeAggregationWhereInput>
+}
+
+export type SpaceAuthAnchorOwnerConnectionWhere = {
+  AND?: InputMaybe<Array<SpaceAuthAnchorOwnerConnectionWhere>>
+  NOT?: InputMaybe<SpaceAuthAnchorOwnerConnectionWhere>
+  OR?: InputMaybe<Array<SpaceAuthAnchorOwnerConnectionWhere>>
+  node?: InputMaybe<PersonWhere>
+}
+
+export type SpaceAuthAnchorOwnerNodeAggregationWhereInput = {
+  AND?: InputMaybe<Array<SpaceAuthAnchorOwnerNodeAggregationWhereInput>>
+  NOT?: InputMaybe<SpaceAuthAnchorOwnerNodeAggregationWhereInput>
+  OR?: InputMaybe<Array<SpaceAuthAnchorOwnerNodeAggregationWhereInput>>
+  authId_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  authId_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  authId_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  authId_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  avatar_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  avatar_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  avatar_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  createdAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  createdAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  firstName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  firstName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  firstName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  firstName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  lastName_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  lastName_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  lastName_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_AVERAGE_EQUAL?: InputMaybe<
+    Scalars['Float']['input']
+  >
+  onboardingCurrentStepIndex_AVERAGE_GT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_GTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LT?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_AVERAGE_LTE?: InputMaybe<Scalars['Float']['input']>
+  onboardingCurrentStepIndex_MAX_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MAX_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_MIN_LTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_GTE?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LT?: InputMaybe<Scalars['Int']['input']>
+  onboardingCurrentStepIndex_SUM_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  photo_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  photo_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  photo_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  refreshTokenExp_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  refreshTokenExp_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  signupDate_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  status_AVERAGE_LENGTH_EQUAL?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_GTE?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LT?: InputMaybe<Scalars['Float']['input']>
+  status_AVERAGE_LENGTH_LTE?: InputMaybe<Scalars['Float']['input']>
+  status_LONGEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_LONGEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_EQUAL?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_GTE?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LT?: InputMaybe<Scalars['Int']['input']>
+  status_SHORTEST_LENGTH_LTE?: InputMaybe<Scalars['Int']['input']>
+  updatedAt_MAX_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MAX_LTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_EQUAL?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_GTE?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LT?: InputMaybe<Scalars['DateTime']['input']>
+  updatedAt_MIN_LTE?: InputMaybe<Scalars['DateTime']['input']>
+}
+
+export type SpaceAuthAnchorWhere = {
+  AND?: InputMaybe<Array<SpaceAuthAnchorWhere>>
+  NOT?: InputMaybe<SpaceAuthAnchorWhere>
+  OR?: InputMaybe<Array<SpaceAuthAnchorWhere>>
+  id_CONTAINS?: InputMaybe<Scalars['ID']['input']>
+  id_ENDS_WITH?: InputMaybe<Scalars['ID']['input']>
+  id_EQ?: InputMaybe<Scalars['ID']['input']>
+  id_IN?: InputMaybe<Array<Scalars['ID']['input']>>
+  id_STARTS_WITH?: InputMaybe<Scalars['ID']['input']>
+  membersAggregate?: InputMaybe<SpaceAuthAnchorMembersAggregateInput>
+  /** Return SpaceAuthAnchors where all of the related SpaceAuthAnchorMembersConnections match this filter */
+  membersConnection_ALL?: InputMaybe<SpaceAuthAnchorMembersConnectionWhere>
+  /** Return SpaceAuthAnchors where none of the related SpaceAuthAnchorMembersConnections match this filter */
+  membersConnection_NONE?: InputMaybe<SpaceAuthAnchorMembersConnectionWhere>
+  /** Return SpaceAuthAnchors where one of the related SpaceAuthAnchorMembersConnections match this filter */
+  membersConnection_SINGLE?: InputMaybe<SpaceAuthAnchorMembersConnectionWhere>
+  /** Return SpaceAuthAnchors where some of the related SpaceAuthAnchorMembersConnections match this filter */
+  membersConnection_SOME?: InputMaybe<SpaceAuthAnchorMembersConnectionWhere>
+  /** Return SpaceAuthAnchors where all of the related SpaceMemberships match this filter */
+  members_ALL?: InputMaybe<SpaceMembershipWhere>
+  /** Return SpaceAuthAnchors where none of the related SpaceMemberships match this filter */
+  members_NONE?: InputMaybe<SpaceMembershipWhere>
+  /** Return SpaceAuthAnchors where one of the related SpaceMemberships match this filter */
+  members_SINGLE?: InputMaybe<SpaceMembershipWhere>
+  /** Return SpaceAuthAnchors where some of the related SpaceMemberships match this filter */
+  members_SOME?: InputMaybe<SpaceMembershipWhere>
+  ownerAggregate?: InputMaybe<SpaceAuthAnchorOwnerAggregateInput>
+  /** Return SpaceAuthAnchors where all of the related SpaceAuthAnchorOwnerConnections match this filter */
+  ownerConnection_ALL?: InputMaybe<SpaceAuthAnchorOwnerConnectionWhere>
+  /** Return SpaceAuthAnchors where none of the related SpaceAuthAnchorOwnerConnections match this filter */
+  ownerConnection_NONE?: InputMaybe<SpaceAuthAnchorOwnerConnectionWhere>
+  /** Return SpaceAuthAnchors where one of the related SpaceAuthAnchorOwnerConnections match this filter */
+  ownerConnection_SINGLE?: InputMaybe<SpaceAuthAnchorOwnerConnectionWhere>
+  /** Return SpaceAuthAnchors where some of the related SpaceAuthAnchorOwnerConnections match this filter */
+  ownerConnection_SOME?: InputMaybe<SpaceAuthAnchorOwnerConnectionWhere>
+  /** Return SpaceAuthAnchors where all of the related People match this filter */
+  owner_ALL?: InputMaybe<PersonWhere>
+  /** Return SpaceAuthAnchors where none of the related People match this filter */
+  owner_NONE?: InputMaybe<PersonWhere>
+  /** Return SpaceAuthAnchors where one of the related People match this filter */
+  owner_SINGLE?: InputMaybe<PersonWhere>
+  /** Return SpaceAuthAnchors where some of the related People match this filter */
+  owner_SOME?: InputMaybe<PersonWhere>
+}
+
 export type SpaceConnectInput = {
   contexts?: InputMaybe<Array<SpaceContextsConnectFieldInput>>
   members?: InputMaybe<Array<SpaceMembersConnectFieldInput>>
@@ -25118,6 +25509,13 @@ export type SpaceMembershipSpaceUpdateFieldInput = {
   update?: InputMaybe<SpaceMembershipSpaceUpdateConnectionInput>
 }
 
+export type SpaceMembershipSpacesConnectionWhere = {
+  AND?: InputMaybe<Array<SpaceMembershipSpacesConnectionWhere>>
+  NOT?: InputMaybe<SpaceMembershipSpacesConnectionWhere>
+  OR?: InputMaybe<Array<SpaceMembershipSpacesConnectionWhere>>
+  node?: InputMaybe<SpaceAuthAnchorWhere>
+}
+
 export type SpaceMembershipUpdateInput = {
   addedAt_SET?: InputMaybe<Scalars['DateTime']['input']>
   member?: InputMaybe<Array<SpaceMembershipMemberUpdateFieldInput>>
@@ -25176,6 +25574,22 @@ export type SpaceMembershipWhere = {
   space_SINGLE?: InputMaybe<SpaceWhere>
   /** Return SpaceMemberships where some of the related Spaces match this filter */
   space_SOME?: InputMaybe<SpaceWhere>
+  /** Return SpaceMemberships where all of the related SpaceMembershipSpacesConnections match this filter */
+  spacesConnection_ALL?: InputMaybe<SpaceMembershipSpacesConnectionWhere>
+  /** Return SpaceMemberships where none of the related SpaceMembershipSpacesConnections match this filter */
+  spacesConnection_NONE?: InputMaybe<SpaceMembershipSpacesConnectionWhere>
+  /** Return SpaceMemberships where one of the related SpaceMembershipSpacesConnections match this filter */
+  spacesConnection_SINGLE?: InputMaybe<SpaceMembershipSpacesConnectionWhere>
+  /** Return SpaceMemberships where some of the related SpaceMembershipSpacesConnections match this filter */
+  spacesConnection_SOME?: InputMaybe<SpaceMembershipSpacesConnectionWhere>
+  /** Return SpaceMemberships where all of the related SpaceAuthAnchors match this filter */
+  spaces_ALL?: InputMaybe<SpaceAuthAnchorWhere>
+  /** Return SpaceMemberships where none of the related SpaceAuthAnchors match this filter */
+  spaces_NONE?: InputMaybe<SpaceAuthAnchorWhere>
+  /** Return SpaceMemberships where one of the related SpaceAuthAnchors match this filter */
+  spaces_SINGLE?: InputMaybe<SpaceAuthAnchorWhere>
+  /** Return SpaceMemberships where some of the related SpaceAuthAnchors match this filter */
+  spaces_SOME?: InputMaybe<SpaceAuthAnchorWhere>
 }
 
 export type SpaceMembershipsConnection = {
@@ -30957,7 +31371,15 @@ export type GetFieldContextPeopleQuery = {
         __typename?: 'PersonPrivateProfile'
         id: string
         email?: string | null
+        phone?: string | null
+        location?: string | null
         description?: string | null
+        affiliations?: Array<{
+          __typename?: 'PersonAffiliation'
+          organizationId: string
+          name: string
+          role?: string | null
+        }> | null
         connectionEdges: Array<{
           __typename?: 'PersonConnectionEdge'
           connectedPersonId: string
@@ -31663,6 +32085,10 @@ export type GetOrganizationDetailsQuery = {
     id: string
     name: string
     description?: string | null
+    email?: string | null
+    phone?: string | null
+    website?: string | null
+    location?: string | null
     createdAt?: any | null
     updatedAt?: any | null
     mentionedIn: Array<
@@ -31703,6 +32129,8 @@ export type GetPersonProfileQuery = {
       __typename?: 'PersonPrivateProfile'
       id: string
       email?: string | null
+      phone?: string | null
+      location?: string | null
       description?: string | null
       traits?: string | null
       passions?: string | null
@@ -31710,6 +32138,12 @@ export type GetPersonProfileQuery = {
       interests?: string | null
       careManual?: string | null
       favorites?: string | null
+      affiliations?: Array<{
+        __typename?: 'PersonAffiliation'
+        organizationId: string
+        name: string
+        role?: string | null
+      }> | null
       connections: Array<{
         __typename?: 'Person'
         id: string
@@ -42539,6 +42973,38 @@ export const GetFieldContextPeopleDocument = {
                             },
                             {
                               kind: 'Field',
+                              name: { kind: 'Name', value: 'phone' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'location' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'affiliations' },
+                              selectionSet: {
+                                kind: 'SelectionSet',
+                                selections: [
+                                  {
+                                    kind: 'Field',
+                                    name: {
+                                      kind: 'Name',
+                                      value: 'organizationId',
+                                    },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'name' },
+                                  },
+                                  {
+                                    kind: 'Field',
+                                    name: { kind: 'Name', value: 'role' },
+                                  },
+                                ],
+                              },
+                            },
+                            {
+                              kind: 'Field',
                               name: { kind: 'Name', value: 'description' },
                             },
                             {
@@ -45473,6 +45939,10 @@ export const GetOrganizationDetailsDocument = {
                 { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'description' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'website' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'location' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'createdAt' } },
                 { kind: 'Field', name: { kind: 'Name', value: 'updatedAt' } },
                 {
@@ -45577,6 +46047,32 @@ export const GetPersonProfileDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'affiliations' },
+                        selectionSet: {
+                          kind: 'SelectionSet',
+                          selections: [
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'organizationId' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'name' },
+                            },
+                            {
+                              kind: 'Field',
+                              name: { kind: 'Name', value: 'role' },
+                            },
+                          ],
+                        },
+                      },
                       {
                         kind: 'Field',
                         name: { kind: 'Name', value: 'description' },

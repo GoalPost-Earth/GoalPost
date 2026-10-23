@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import { formatDistanceToNow } from 'date-fns'
 import { GET_ORGANIZATION_DETAILS } from '@/app/graphql/queries/ORGANIZATION_QUERIES'
 import { LinkifiedText } from '@/components/ui/linkified-text'
+import { ContactDetails } from '@/components/ui/contact-details'
 import {
   getIconForType,
   getConfigForType,
@@ -91,6 +92,13 @@ export const OrganizationDetailsBody: FC<{
                 </span>
               )}
             </div>
+            <ContactDetails
+              align="start"
+              phone={org.phone}
+              email={org.email}
+              website={org.website}
+              location={org.location}
+            />
           </div>
         </div>
       </section>
@@ -107,7 +115,8 @@ export const OrganizationDetailsBody: FC<{
 
       <section className="px-6 py-5 space-y-3">
         <SectionHeader>
-          Related pulses{relatedPulses.length > 0 ? ` · ${relatedPulses.length}` : ''}
+          Related pulses
+          {relatedPulses.length > 0 ? ` · ${relatedPulses.length}` : ''}
         </SectionHeader>
         {relatedPulses.length === 0 ? (
           <p className="text-sm text-gp-ink-muted dark:text-white/60 italic">

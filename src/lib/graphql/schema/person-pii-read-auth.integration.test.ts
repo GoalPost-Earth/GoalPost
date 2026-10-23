@@ -763,6 +763,8 @@ describe('GOAL-275 — the gate has no parallel read path', () => {
         'interests',
         'connections',
         'connectionEdges',
+        // GOAL-382 — the organizations the person belongs to, with their role.
+        'affiliations',
       ].sort()
     )
   })
@@ -790,6 +792,7 @@ describe('GOAL-275 — the gate has no parallel read path', () => {
       'interests',
       'connections',
       'connectionEdges',
+      'affiliations',
     ]
     const whereFields = Object.keys(
       (

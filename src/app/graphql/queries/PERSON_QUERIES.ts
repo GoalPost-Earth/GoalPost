@@ -14,6 +14,15 @@ export const GET_PERSON_PROFILE = graphql(`
       privateProfile {
         id
         email
+        # Contact details the importer writes (GOAL-382), shown so a member
+        # can check what an import recorded.
+        phone
+        location
+        affiliations {
+          organizationId
+          name
+          role
+        }
         description
         traits
         passions
@@ -170,4 +179,3 @@ export const GET_RELATED_PEOPLE = graphql(`
     }
   }
 `)
-

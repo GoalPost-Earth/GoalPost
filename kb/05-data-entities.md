@@ -88,7 +88,7 @@ may read so people stay findable by name across Spaces (it also still exposes
 onboarding state, timestamps, and the relationship fields, each auth-filtered
 by its own target type). Every PII / narrative scalar (`email`, `phone`, `pronouns`, `location`, `gender`, `description`,
 `careManual`, `favorites`, `passions`, `traits`, `fieldsOfCare`, `interests`)
-plus `connections` / `connectionEdges` is readable **only** through
+plus `connections` / `connectionEdges` / `affiliations` is readable **only** through
 `Person.privateProfile`, which resolves to a `PersonPrivateProfile` over the
 same node behind a single type-level `@authorization` filter:
 
@@ -132,7 +132,13 @@ and blew the 60 s `/api/graphql` ceiling (guarded by
   (WF-14), the member who imported it; this is the `createdBy` branch of the
   `privateProfile` read gate.
 - `AFFILIATED_WITH` → Organization — the organization this person belongs to,
-  with `role` on the edge (contact import, GOAL-382).
+  with `role` on the edge (contact import, GOAL-382). Read through
+  `privateProfile.affiliations` (`{organizationId, name, role}`), which only
+  returns organizations held by a FieldContext in a Space the caller owns or
+  belongs to — a `@cypher` field skips Organization's own READ filter, so the
+  statement restates it. Shown as contact-detail chips (with phone and
+  location) in the person drawer, the full profile and the field's person
+  panel (`src/components/ui/contact-details.tsx`).
 
 ---
 
@@ -689,9 +695,11 @@ type maps the load-bearing `Organization` label; the `LifeSensor` /
 - `EXTRACTED_FROM` → Document — doc-ingestion provenance.
 - `AFFILIATED_WITH` ← Person — people who belong to / work at the org, with
   their `role` on the edge. Written by contact import (GOAL-382). Not a GraphQL
-  relationship field; the only read path besides raw Cypher and the assistant's
-  query generator is `FieldContext.edges` (GOAL-386), which returns the edge for
-  the Bloom canvas with its label forced to null — `role` is never surfaced.
+  relationship field. Two read paths besides raw Cypher and the assistant's
+  query generator: `FieldContext.edges` (GOAL-386), which returns the edge for
+  the Bloom canvas with its label forced to null — `role` is never surfaced
+  there — and the person-side `PersonPrivateProfile.affiliations`, where the
+  role IS shown, behind the PII gate (see Person above).
 - `CREATED_BY` → Person — the member who imported it (contact import only;
   document-extracted orgs have none).
 

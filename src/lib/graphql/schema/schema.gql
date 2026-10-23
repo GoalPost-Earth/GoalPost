@@ -87,6 +87,23 @@ type PersonConnectionEdge {
 }
 
 """
+One organization a person belongs to (their AFFILIATED_WITH edge, written by
+contact import — GOAL-382), flattened with their role there. Returned only by
+`PersonPrivateProfile.affiliations`, so it is gated with the rest of the PII.
+"""
+type PersonAffiliation
+  # Pure payload, NOT a node type — the same guard, for the same reason, as
+  # `FieldContextEdge` below: undecorated, @neo4j/graphql would generate open
+  # CRUD roots for it with no @authorization rule.
+  @query(read: false, aggregate: false)
+  @mutation(operations: []) {
+  organizationId: String!
+  name: String!
+  """The person's role at the organization (vCard TITLE / CSV Job Title)."""
+  role: String
+}
+
+"""
 GOAL-362 — one relationship inside a FieldContext, flattened so the canvas can
 paint it without a hand-written family per edge type.
 
@@ -768,6 +785,40 @@ type PersonPrivateProfile
       columnName: "connectionEdge"
     )
 
+  """
+  The organizations this person belongs to, with their role there
+  (AFFILIATED_WITH, written by contact import — GOAL-382), so a member can see
+  what an import recorded. The role is gated here with the rest of the PII; the
+  canvas edge deliberately never shows it (GOAL-386).
+
+  A @cypher field skips the Organization type's own READ filter, so the
+  statement restates it: only organizations held by a FieldContext in a Space
+  the caller owns or belongs to are returned. Without that, reading a contact's
+  profile would disclose the name of an organization in a Space the caller
+  cannot see.
+
+  Declared as a NULLABLE list, for the reason `FieldContext.curatedPersonIds`
+  gives: a parent produced by a custom resolver yields undefined here, and
+  `[…]!` would null the whole parent path.
+  """
+  affiliations: [PersonAffiliation!]
+    @filterable(byValue: false)
+    @cypher(
+      statement: """
+      MATCH (this)-[a:AFFILIATED_WITH]->(o:Organization)
+      WHERE EXISTS {
+        MATCH (o)<-[:HAS_ORGANIZATION]-(:FieldContext)<-[:HAS_CONTEXT]-(s:Space)
+        WHERE (s:MeSpace OR s:WeSpace)
+          AND (EXISTS { (:Person {id: $jwt.user.id})-[:OWNS]->(s) }
+            OR EXISTS { (s)-[:HAS_MEMBER]->(:SpaceMembership)-[:IS_MEMBER]->(:Person {id: $jwt.user.id}) })
+      }
+      WITH o, a
+      ORDER BY toLower(o.name), o.id
+      RETURN {organizationId: o.id, name: o.name, role: a.role} AS affiliation
+      """
+      columnName: "affiliation"
+    )
+
   # Relationship fields required by the @authorization filter above — the
   # `*_SOME` predicates only exist in PersonPrivateProfileWhere if the
   # relationships are declared on this type. They exist ONLY to be filtered on:
@@ -783,7 +834,7 @@ type PersonPrivateProfile
   # no create/update inputs for a nested write to hang off.
   #
   # After all three, the built type exposes exactly: id, the 12 PII scalars,
-  # connections, connectionEdges. If you add a relationship here, re-check the
+  # connections, connectionEdges, affiliations. If you add a relationship here, re-check the
   # built type — do not assume `@selectable` covered it.
   ownsSpaces: [Space!]!
     @relationship(type: "OWNS", direction: OUT, nestedOperations: [], aggregate: false)

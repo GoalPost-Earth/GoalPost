@@ -26,6 +26,7 @@ import {
   PersonStatGrid,
   RecentPulsesSection,
 } from './person-details-sections'
+import { ContactDetails } from '@/components/ui/contact-details'
 
 /**
  * Person/User/PersonPulse inspection. Heavy edit affordances (add /
@@ -103,11 +104,13 @@ export const PersonDetailsBody: FC<{
 
   return (
     <div className="flex flex-col">
-      <PersonHero
-        name={person.name}
-        photo={person.photo}
-        email={pii.email}
-      />
+      <PersonHero name={person.name} photo={person.photo} email={pii.email}>
+        <ContactDetails
+          phone={pii.phone}
+          location={pii.location}
+          affiliations={pii.affiliations}
+        />
+      </PersonHero>
 
       <PersonStatGrid
         pulseCount={ownedPulses.length + relatedRows.length}

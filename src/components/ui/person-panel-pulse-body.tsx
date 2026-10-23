@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useMutation } from '@apollo/client/react'
 import { cn } from '@/lib/utils'
 import { UPDATE_PERSON_PULSE_MUTATION } from '@/app/graphql/mutations/PERSON_MUTATIONS'
+import { ContactDetails } from '@/components/ui/contact-details'
 import {
   type PersonInPanel,
   inputClass,
@@ -98,7 +99,8 @@ export function PersonPulseBody({
     <div className="mt-5 space-y-5">
       <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft leading-relaxed">
         A person in your world — they don&apos;t use GoalPost and don&apos;t own
-        any pulses. What matters here is who they are and how you relate to them.
+        any pulses. What matters here is who they are and how you relate to
+        them.
       </p>
 
       {editing ? (
@@ -183,6 +185,11 @@ export function PersonPulseBody({
         </div>
       ) : (
         <div className="space-y-5">
+          <ContactDetails
+            phone={person.phone}
+            location={person.location}
+            affiliations={person.affiliations}
+          />
           {/* Read from the local drafts (seeded from props, updated on Save) so
               the panel reflects an edit immediately — the parent's refetch lags
               behind and would otherwise show stale text until reopened. */}

@@ -11,6 +11,7 @@ import {
   ProfileConnections,
   ProfileHeader,
 } from '@/components/persons/profile-sections'
+import { ContactDetails } from '@/components/ui/contact-details'
 import { ProfileSummaryGrid } from '@/components/persons/profile-summary-grid'
 import {
   AddConnectionModal,
@@ -196,7 +197,13 @@ export default function PersonProfilePage() {
             photo={person.photo}
             email={pii?.email}
             onOpenInDashboard={handleOpenPersonNode}
-          />
+          >
+            <ContactDetails
+              phone={pii?.phone}
+              location={pii?.location}
+              affiliations={pii?.affiliations}
+            />
+          </ProfileHeader>
 
           <EntityProvenance documents={provenanceDocuments} />
 

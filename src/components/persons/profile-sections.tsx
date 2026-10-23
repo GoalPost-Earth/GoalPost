@@ -1,6 +1,6 @@
 'use client'
 
-import type { FC } from 'react'
+import type { FC, ReactNode } from 'react'
 import Image from 'next/image'
 import { SectionHeader } from './section-header'
 import { ProfileCard } from './profile-card'
@@ -25,7 +25,9 @@ export const ProfileHeader: FC<{
   photo?: string | null
   email?: string | null
   onOpenInDashboard: () => void
-}> = ({ name, photo, email, onOpenInDashboard }) => (
+  /** Rendered under the email — the contact-details chips. */
+  children?: ReactNode
+}> = ({ name, photo, email, onOpenInDashboard, children }) => (
   <div className="flex flex-col items-center text-center mb-12">
     <div className="size-24 rounded-full bg-linear-to-br from-gp-primary/20 to-gp-accent-glow/20 flex items-center justify-center mb-6 border-4 border-white/50 dark:border-white/10 shadow-lg">
       {photo ? (
@@ -49,6 +51,7 @@ export const ProfileHeader: FC<{
     {email && (
       <p className="text-gp-ink-muted dark:text-gp-ink-soft text-xs">{email}</p>
     )}
+    {children}
 
     <button
       onClick={onOpenInDashboard}
@@ -81,7 +84,11 @@ const AttributeCard: FC<{ icon: string; title: string; text: string }> = ({
  */
 export const ProfileAttributes: FC<{ pii: any }> = ({ pii }) => {
   const attributes: Array<{ icon: string; title: string; text?: string }> = [
-    { icon: 'volunteer_activism', title: 'Fields of Care', text: pii?.fieldsOfCare },
+    {
+      icon: 'volunteer_activism',
+      title: 'Fields of Care',
+      text: pii?.fieldsOfCare,
+    },
     { icon: 'favorite', title: 'Passions', text: pii?.passions },
     { icon: 'psychology', title: 'Traits', text: pii?.traits },
     { icon: 'interests', title: 'Interests', text: pii?.interests },

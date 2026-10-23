@@ -138,34 +138,100 @@ function DetailLine({ icon, children }: { icon: string; children: ReactNode }) {
   )
 }
 
-export function ContactRowCard({ record }: { record: ContactRecord }) {
+/**
+ * One previewed contact, with the tick box that decides whether it is
+ * imported. The whole card is the label, so a tap anywhere toggles it — on a
+ * phone the box alone is a small target. Unticked cards dim but stay in place,
+ * so the member can see what they left out.
+ */
+export function ContactRowCard({
+  record,
+  selected,
+  onToggle,
+}: {
+  record: ContactRecord
+  selected: boolean
+  onToggle: () => void
+}) {
   const affiliation = [record.jobTitle, record.organization]
     .filter(Boolean)
     .join(' · ')
+  const name = contactDisplayName(record)
   return (
-    <div className="rounded-xl border border-gp-glass-border bg-gp-glass-bg/40 px-3 py-2 min-w-0">
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-[10px] font-semibold text-gp-ink-muted shrink-0">
-          #{record.row}
-        </span>
-        <span
-          className="material-symbols-outlined text-[14px] text-gp-ink-muted shrink-0"
-          role="img"
-          aria-label={record.kind === 'person' ? 'Person' : 'Organization'}
-        >
-          {KIND_ICON[record.kind]}
-        </span>
-        <h4 className="text-xs font-bold text-gp-ink-strong dark:text-white truncate min-w-0">
-          {contactDisplayName(record)}
-        </h4>
+    <label
+      className={`flex items-start gap-2.5 rounded-xl border px-3 py-2 min-w-0 cursor-pointer transition-colors ${
+        selected
+          ? 'border-gp-glass-border bg-gp-glass-bg/40'
+          : 'border-dashed border-gp-glass-border bg-transparent opacity-70'
+      }`}
+    >
+      <input
+        type="checkbox"
+        checked={selected}
+        onChange={onToggle}
+        aria-label={`Import ${name}`}
+        className="mt-0.5 size-4 shrink-0 cursor-pointer accent-gp-primary"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-[10px] font-semibold text-gp-ink-muted shrink-0">
+            #{record.row}
+          </span>
+          <span
+            className="material-symbols-outlined text-[14px] text-gp-ink-muted shrink-0"
+            role="img"
+            aria-label={record.kind === 'person' ? 'Person' : 'Organization'}
+          >
+            {KIND_ICON[record.kind]}
+          </span>
+          <h4
+            className={`text-xs font-bold text-gp-ink-strong dark:text-white truncate min-w-0 ${
+              selected ? '' : 'line-through decoration-gp-ink-muted'
+            }`}
+          >
+            {name}
+          </h4>
+        </div>
+        {affiliation && <DetailLine icon="work">{affiliation}</DetailLine>}
+        {record.email && <DetailLine icon="mail">{record.email}</DetailLine>}
+        {record.phone && <DetailLine icon="call">{record.phone}</DetailLine>}
+        {record.location && (
+          <DetailLine icon="location_on">{record.location}</DetailLine>
+        )}
       </div>
-      {affiliation && <DetailLine icon="work">{affiliation}</DetailLine>}
-      {record.email && <DetailLine icon="mail">{record.email}</DetailLine>}
-      {record.phone && <DetailLine icon="call">{record.phone}</DetailLine>}
-      {record.location && (
-        <DetailLine icon="location_on">{record.location}</DetailLine>
-      )}
-    </div>
+    </label>
+  )
+}
+
+/** "Select all" for the preview — indeterminate when only some are ticked. */
+export function SelectAllContacts({
+  selectedCount,
+  total,
+  onChange,
+}: {
+  selectedCount: number
+  total: number
+  onChange: (selectAll: boolean) => void
+}) {
+  const allSelected = selectedCount === total
+  return (
+    <label className="flex items-center gap-2 min-w-0 shrink-0 cursor-pointer text-xs font-medium text-gp-ink-strong dark:text-white">
+      <input
+        type="checkbox"
+        checked={allSelected}
+        ref={(input) => {
+          if (input) input.indeterminate = selectedCount > 0 && !allSelected
+        }}
+        onChange={() => onChange(!allSelected)}
+        className="size-4 shrink-0 cursor-pointer accent-gp-primary"
+      />
+      <span className="truncate">
+        {allSelected ? 'All selected' : `${selectedCount} of ${total} selected`}
+      </span>
+      <span className="text-gp-ink-muted font-normal hidden sm:inline">
+        — untick anyone you don’t want to import
+      </span>
+    </label>
   )
 }
 

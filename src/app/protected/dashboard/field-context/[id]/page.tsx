@@ -77,6 +77,7 @@ import { useApp, useFocalEntity, usePageContext } from '@/contexts'
 import { usePulseSharing } from '@/hooks/usePulseSharing'
 import { FieldContextSections } from '@/components/fields/field-context-sections'
 import { ArticleImportStatusSection } from '@/components/fields/article-import-status-section'
+import type { AffiliationView } from '@/components/ui/contact-details'
 import {
   DocumentList,
   type DocumentRecord,
@@ -441,6 +442,9 @@ export default function FieldContextDetailsPage() {
               // open directory identity only.
               privateProfile?: {
                 email?: string | null
+                phone?: string | null
+                location?: string | null
+                affiliations?: AffiliationView[] | null
                 description?: string | null
                 connectionEdges?: Array<{
                   connectedPersonId?: string | null
@@ -527,6 +531,9 @@ export default function FieldContextDetailsPage() {
       lastName: person.lastName || '',
       name: person.name || null,
       email: person.privateProfile?.email || null,
+      phone: person.privateProfile?.phone || null,
+      location: person.privateProfile?.location || null,
+      affiliations: person.privateProfile?.affiliations || null,
       photo: person.photo || null,
       role: roleById.get(person.id) || ('PERSON' as const),
       description: person.privateProfile?.description || null,

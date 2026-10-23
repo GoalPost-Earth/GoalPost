@@ -1,3 +1,4 @@
+import type { AffiliationView } from '@/components/ui/contact-details'
 // Shared types + style tokens for the PersonPanel and its two body variants
 // (PersonPulse vs member). Kept in one place so the shell and bodies agree on
 // role colors and form styling without a circular import.
@@ -8,6 +9,10 @@ export interface PersonInPanel {
   lastName: string
   name: string | null
   email?: string | null
+  /** Contact details the importer writes (GOAL-382). */
+  phone?: string | null
+  location?: string | null
+  affiliations?: AffiliationView[] | null
   photo?: string | null
   role?: 'ADMIN' | 'MEMBER' | 'GUEST' | 'OWNER' | 'PERSON'
 }
