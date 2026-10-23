@@ -80,6 +80,21 @@ export function memberRing(color: string): { url: string; size: number } {
   return { url: `data:image/svg+xml,${encodeURIComponent(svg)}`, size: 1.34 }
 }
 
+/**
+ * The building glyph painted inside an organization node (GOAL-386) — the
+ * Material `apartment` icon the drawer already uses for organizations
+ * (`ORGANIZATION_CONFIG`). Colour alone is the legend's type key, but it is a
+ * weak cue on its own; a shape inside the node is what lets an organization
+ * read apart from a person at a glance in every theme, and for viewers who
+ * can't separate the two hues. NVL expects a black, square icon and inverts it
+ * to white on a dark fill, so no per-mode variant is needed.
+ */
+export const ORGANIZATION_ICON = `data:image/svg+xml,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">` +
+    `<path fill="#000" d="M17 11V3H7v4H3v14h8v-4h2v4h8V11h-4zM7 19H5v-2h2v2zm0-4H5v-2h2v2zm0-4H5V9h2v2zm4 4H9v-2h2v2zm0-4H9V9h2v2zm0-4H9V5h2v2zm4 8h-2v-2h2v2zm0-4h-2V9h2v2zm0-4h-2V5h2v2zm4 12h-2v-2h2v2zm0-4h-2v-2h2v2z"/>` +
+    `</svg>`
+)}`
+
 export interface PersonRecord {
   id: string
   name: string
@@ -173,6 +188,12 @@ export interface BloomGraphInput {
   // In-field scope.
   pulses: PulseRecord[]
   persons: PersonRecord[]
+  /**
+   * GOAL-386 — organizations attached to this field (HAS_ORGANIZATION), read
+   * through `FieldContext.organizations`, so the Organization READ filter has
+   * already dropped any the viewer can't see.
+   */
+  organizations: NamedEntity[]
   weaves: WeaveRecord[]
   resonances: ResonanceRecord[]
   connections: ConnectionRecord[]
@@ -217,6 +238,10 @@ const PULSE_SIZE = 32
 
 const PERSON_SIZE = 30
 
+// A touch larger than a person: an organization is usually what several of
+// the field's people hang off.
+const ORGANIZATION_SIZE = 34
+
 // The root "You" hub reads slightly larger than its spokes — it's the
 // identity node every space radiates from.
 const YOU_SIZE = 44
@@ -244,6 +269,7 @@ export function buildBloomNodes(input: BloomGraphInput): Node[] {
     inSpace,
     pulses,
     persons,
+    organizations,
     weaves,
     subContexts,
     fieldAnchor,
@@ -298,6 +324,16 @@ export function buildBloomNodes(input: BloomGraphInput): Node[] {
             : {}),
         }) as Node
     )
+    const organizationNodes = organizations.map(
+      (org) =>
+        ({
+          id: org.id,
+          caption: org.name,
+          color: palette.organization,
+          size: ORGANIZATION_SIZE,
+          icon: ORGANIZATION_ICON,
+        }) as Node
+    )
     // NVL renders `caption` and nothing else per node, so the proposed state
     // rides in the caption. A separate colour would need its own palette entry
     // AND a legend row to be decodable, where the suffix is legible in every
@@ -338,6 +374,7 @@ export function buildBloomNodes(input: BloomGraphInput): Node[] {
     return [
       ...pulseNodes,
       ...personNodes,
+      ...organizationNodes,
       ...weaveNodes,
       ...anchorNodes,
       ...subContextNodes,
@@ -441,6 +478,7 @@ export function buildBloomRelationships(
     inSpace,
     pulses,
     persons,
+    organizations,
     weaves,
     resonances,
     connections,
@@ -478,6 +516,9 @@ export function buildBloomRelationships(
     const visibleIds = new Set<string>([
       ...pulses.map((p) => p.id),
       ...persons.map((p) => p.id),
+      // GOAL-386: organizations are endpoints too — their AFFILIATED_WITH and
+      // MENTIONED_IN edges arrive through the sweep below.
+      ...organizations.map((o) => o.id),
     ])
     // GOAL-362: the sweep runs FIRST and its keys suppress the hand-built
     // family for any edge it already carries. Inverted on purpose — for an

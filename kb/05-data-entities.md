@@ -688,8 +688,10 @@ type maps the load-bearing `Organization` label; the `LifeSensor` /
 - `MENTIONED_IN` → FieldPulse — the pulse(s) the org was identified as related to.
 - `EXTRACTED_FROM` → Document — doc-ingestion provenance.
 - `AFFILIATED_WITH` ← Person — people who belong to / work at the org, with
-  their `role` on the edge. Written by contact import (GOAL-382); not exposed in
-  the GraphQL schema yet (raw Cypher + the assistant's query generator only).
+  their `role` on the edge. Written by contact import (GOAL-382). Not a GraphQL
+  relationship field; the only read path besides raw Cypher and the assistant's
+  query generator is `FieldContext.edges` (GOAL-386), which returns the edge for
+  the Bloom canvas with its label forced to null — `role` is never surfaced.
 - `CREATED_BY` → Person — the member who imported it (contact import only;
   document-extracted orgs have none).
 

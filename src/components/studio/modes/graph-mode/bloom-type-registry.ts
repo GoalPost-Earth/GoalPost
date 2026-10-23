@@ -186,11 +186,15 @@ export const BLOOM_NODE_TYPES: BloomTypeRow[] = [
     key: 'organization',
     label: 'Organization',
     kind: 'node',
-    swatch: {
-      dark: NODE_STYLE.Organization.color,
-      light: lightColorFor(NODE_STYLE.Organization.color),
-    },
-    colors: ov(NODE_STYLE.Organization.color),
+    // GOAL-386: the in-field canvas paints organizations its own orange, so
+    // the swatch is that — the overlay teal below still decodes here, but it
+    // loses to `Field context` on the colour index (see the header note).
+    swatch: { dark: DARK.organization, light: LIGHT.organization },
+    colors: [
+      DARK.organization,
+      LIGHT.organization,
+      ...ov(NODE_STYLE.Organization.color),
+    ],
   },
   {
     key: 'community',
@@ -251,6 +255,16 @@ export const BLOOM_RELATIONSHIP_TYPES: BloomTypeRow[] = [
     kind: 'relationship',
     swatch: { dark: '#f472b6', light: '#ce1073' },
     colors: [DARK.connectedEdge, LIGHT.connectedEdge],
+  },
+  {
+    // GOAL-386. A person out to the organization they belong to — written by
+    // contact import, and the one tie that places an imported person and
+    // their company next to each other on the canvas.
+    key: 'affiliated-with',
+    label: 'Affiliated with',
+    kind: 'relationship',
+    swatch: { dark: DARK.organization, light: LIGHT.organization },
+    colors: [DARK.affiliatedEdge, LIGHT.affiliatedEdge],
   },
   {
     // GOAL-362: named for what the edge SAYS, not for the schema's relationship
@@ -343,6 +357,10 @@ export const normalizeColor = (c: string | undefined): string =>
  * only type signal a painted NVL node carries, so this is a limit of the
  * encoding rather than of the filter — giving Organization its own colour in
  * `node-style.ts` is what would restore it as an independent toggle.
+ *
+ * The collision is overlay-only. The native in-field canvas paints
+ * organizations `palette.organization` (GOAL-386), which no other row claims,
+ * so there the `Organization` row is offered and switches them on its own.
  */
 function buildColorIndex(rows: BloomTypeRow[]): ReadonlyMap<string, string> {
   const index = new Map<string, string>()
