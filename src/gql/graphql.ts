@@ -30783,6 +30783,11 @@ export type GetFieldContextDetailsQuery = {
       toId: string
       label?: string | null
     }> | null
+    organizations: Array<{
+      __typename?: 'Organization'
+      id: string
+      name: string
+    }>
     parentContext: Array<{
       __typename?: 'FieldContext'
       id: string
@@ -41847,6 +41852,17 @@ export const GetFieldContextDetailsDocument = {
                       },
                       { kind: 'Field', name: { kind: 'Name', value: 'toId' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'label' } },
+                    ],
+                  },
+                },
+                {
+                  kind: 'Field',
+                  name: { kind: 'Name', value: 'organizations' },
+                  selectionSet: {
+                    kind: 'SelectionSet',
+                    selections: [
+                      { kind: 'Field', name: { kind: 'Name', value: 'id' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'name' } },
                     ],
                   },
                 },

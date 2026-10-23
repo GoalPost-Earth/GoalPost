@@ -529,6 +529,19 @@ export const BloomView: FC = () => {
     }))
   }, [inField, fieldDetailsData])
 
+  // GOAL-386: organizations attached to the field (contact import, document
+  // ingest). Off the same GET_FIELD_CONTEXT_DETAILS payload; the Organization
+  // READ filter has already dropped any the viewer can't reach, so nothing
+  // here is an access decision.
+  const organizations = useMemo<NamedEntity[]>(() => {
+    if (!inField || !fieldDetailsData) return []
+    const context = fieldDetailsData.fieldContexts?.[0]
+    return (context?.organizations ?? []).map((org) => ({
+      id: org.id,
+      name: org.name || 'Untitled organization',
+    }))
+  }, [inField, fieldDetailsData])
+
   // The active field itself, rendered as the anchor its nested fields hang
   // off. Only materialized when there is nesting to show — a field with no
   // sub-contexts keeps the classic free-floating pulse cloud.
@@ -898,6 +911,7 @@ export const BloomView: FC = () => {
       inSpace,
       pulses,
       persons,
+      organizations,
       weaves,
       resonances,
       connections,
@@ -922,6 +936,7 @@ export const BloomView: FC = () => {
       inSpace,
       pulses,
       persons,
+      organizations,
       weaves,
       resonances,
       connections,
@@ -1086,6 +1101,15 @@ export const BloomView: FC = () => {
               type: p.focalType as VisibleEntity['type'],
               source: 'bloom' as const,
             })),
+          // Organizations too (GOAL-386) — switchable, so only the rendered.
+          ...organizations
+            .filter((o) => rendered.has(o.id))
+            .map((o) => ({
+              id: o.id,
+              name: o.name,
+              type: 'Organization' as VisibleEntity['type'],
+              source: 'bloom' as const,
+            })),
           // Nested fields on canvas resolve by name too (GOAL-339). Not
           // filtered against `rendered`: a sub-context is never document-
           // derived and always keeps its `nested` edge to the field anchor, so
@@ -1120,6 +1144,7 @@ export const BloomView: FC = () => {
     nodes,
     pulses,
     persons,
+    organizations,
     subContexts,
     inSpace,
     fieldContexts,
@@ -1175,6 +1200,12 @@ export const BloomView: FC = () => {
             source: 'manual',
           })
           dispatchOpenInfoDrawer({ type: 'Person', id: person.id, label })
+          return
+        }
+        // Organization — its read-only drawer. Not a focal entity type, so no
+        // setFocalEntity, as with a weave hub.
+        if (organizations.some((o) => o.id === id)) {
+          dispatchOpenInfoDrawer({ type: 'Organization', id, label })
           return
         }
         // PromiseWeave hub — open the read-only weave drawer. Not a focal
@@ -1275,6 +1306,7 @@ export const BloomView: FC = () => {
       nodes,
       pulses,
       persons,
+      organizations,
       weaves,
       documentProvenance,
       subContexts,

@@ -111,6 +111,11 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
         toId
         label
       }
+      # GOAL-386: drawn as nodes on the in-field canvas.
+      organizations {
+        id
+        name
+      }
       parentContext {
         id
         title

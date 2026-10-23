@@ -66,6 +66,7 @@ function nodeCasesFor(
       ([k, v]): [string, string] => [`${mode}.pulse.${k}`, v]
     ),
     [`${mode}.person`, palette.person],
+    [`${mode}.organization`, palette.organization],
     [`${mode}.weaveNode`, palette.weaveNode],
   ]
 }

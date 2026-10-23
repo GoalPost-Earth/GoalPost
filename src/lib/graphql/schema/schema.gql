@@ -1538,6 +1538,12 @@ type FieldContext
   context. Edges to them still come from the hand-built families in
   `bloom-graph-builder.ts`, which is why those are layered rather than retired.
 
+  `AFFILIATED_WITH` (GOAL-386) is a person in this context out to an
+  organization in this context, so it stays inside the same scope. Its `role`
+  property is deliberately NOT surfaced, and the statement forces its label to
+  null rather than trusting no writer ever adds a `label`/`why` — so the canvas
+  captions it with the type's plain word.
+
   COUPLING: `label` surfaces `CONNECTED_TO.why`, which is gated PII on
   `PersonPrivateProfile`. That gate's `contexts_SOME` branch grants exactly the
   caller who passed this type's READ filter, so today the two agree. If that
@@ -1552,13 +1558,16 @@ type FieldContext
     @cypher(
       statement: """
       MATCH (this)-[:HAS_PULSE|HAS_PERSON|HAS_ORGANIZATION]->(a)
-      MATCH (a)-[r:INITIATED_BY|CREATED_BY|MENTIONED_IN|CONNECTED_TO|EXTRACTED_FROM]->(b)
+      MATCH (a)-[r:INITIATED_BY|CREATED_BY|MENTIONED_IN|CONNECTED_TO|EXTRACTED_FROM|AFFILIATED_WITH]->(b)
       WHERE (this)-[:HAS_PULSE|HAS_PERSON|HAS_ORGANIZATION]->(b)
       RETURN DISTINCT {
         type: type(r),
         fromId: a.id,
         toId: b.id,
-        label: coalesce(r.label, r.why)
+        // AFFILIATED_WITH never carries a label: its only property is the
+        // person's role, and the canvas must not show it (GOAL-386).
+        label: CASE type(r) WHEN 'AFFILIATED_WITH' THEN null
+          ELSE coalesce(r.label, r.why) END
       } AS edge
       ORDER BY edge.type, edge.fromId, edge.toId
       LIMIT 2000

@@ -84,6 +84,8 @@ function colorFor(type: string, palette: BloomPalette): string {
       return palette.connectedEdge
     case 'EXTRACTED_FROM':
       return palette.extractedEdge
+    case 'AFFILIATED_WITH':
+      return palette.affiliatedEdge
     default:
       return palette.otherEdge
   }

@@ -58,6 +58,15 @@ export interface BloomPalette {
   /** Ring drawn around a person who has access to the containing Space. */
   memberRing: string
   /**
+   * Organization nodes in the in-field view (GOAL-386). NOT the `--gp-org`
+   * teal the overlay and drawer use: that teal is also the WeSpace field tint
+   * on this canvas, and colour is the legend's type key, so a teal org would be
+   * governed by the `Field context` toggle and never get its own. Orange sits
+   * clear of every other in-field hue — above all the person pink, which is
+   * the one it most needs to read apart from.
+   */
+  organization: string
+  /**
    * PromiseWeave connector nodes — deliberately outside the violet
    * resonance/story/coreValue cluster so a weave reads as its own kind of
    * connector. Migrated care points surface here (see kb/05-data-entities.md).
@@ -76,6 +85,8 @@ export interface BloomPalette {
   weaveEdge: string
   /** CONNECTED_TO — interpersonal relationships between people. */
   connectedEdge: string
+  /** AFFILIATED_WITH — a person out to the organization they belong to. */
+  affiliatedEdge: string
   /**
    * Document nodes in the in-field view (GOAL-346). Deliberately the SAME
    * slate the cypher generator's `styleFor` gives a Document
@@ -129,12 +140,14 @@ export const BLOOM_PALETTE_DARK: BloomPalette = {
   },
   person: '#f9a8d4',
   memberRing: '#fde68a',
+  organization: '#fb923c', // orange-400
   weaveNode: '#2dd4bf',
   structuralEdge: 'rgba(148, 163, 184, 0.40)',
   resonanceEdge: 'rgba(167, 139, 250, 0.55)',
   initiatedEdge: 'rgba(255, 255, 255, 0.22)',
   weaveEdge: 'rgba(45, 212, 191, 0.55)',
   connectedEdge: 'rgba(244, 114, 182, 0.55)',
+  affiliatedEdge: 'rgba(251, 146, 60, 0.55)',
   extractedEdge: 'rgba(251, 191, 36, 0.65)',
   mentionedEdge: 'rgba(56, 189, 248, 0.50)',
   otherEdge: 'rgba(203, 213, 225, 0.38)',
@@ -159,6 +172,7 @@ export const BLOOM_PALETTE_LIGHT: BloomPalette = {
   },
   person: '#e21082',
   memberRing: '#a16207',
+  organization: '#c2410c',
   weaveNode: '#198376',
   // Edges carry a little more alpha than their dark counterparts: a
   // translucent stroke loses more of itself against a light backdrop.
@@ -169,6 +183,7 @@ export const BLOOM_PALETTE_LIGHT: BloomPalette = {
   initiatedEdge: 'rgba(90, 109, 136, 0.32)',
   weaveEdge: 'rgba(25, 131, 118, 0.60)',
   connectedEdge: 'rgba(206, 16, 115, 0.60)',
+  affiliatedEdge: 'rgba(194, 65, 12, 0.60)',
   // The light-mode Document slate, per node-style.ts's own light override.
   extractedEdge: 'rgba(158, 115, 3, 0.70)',
   mentionedEdge: 'rgba(2, 132, 199, 0.60)',

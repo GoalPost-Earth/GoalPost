@@ -38,6 +38,7 @@ export const DEFAULT_EDGE_CAPTIONS: Readonly<Record<string, string>> = {
   CREATED_BY: 'Authored',
   MENTIONED_IN: 'Mentioned',
   CONNECTED_TO: 'Connected',
+  AFFILIATED_WITH: 'Affiliated with',
   EXTRACTED_FROM: 'Extracted from',
   WEAVES: 'Weaves',
   WOVEN_FOR: 'Woven for',
