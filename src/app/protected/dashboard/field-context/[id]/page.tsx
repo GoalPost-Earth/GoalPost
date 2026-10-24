@@ -83,6 +83,7 @@ import {
   type DocumentRecord,
 } from '@/components/fields/document-list'
 import { SubContextsSection } from '@/components/fields/sub-contexts-section'
+import { OrganizationsSection } from '@/components/fields/organizations-section'
 import { MoveFieldModal } from '@/components/fields/move-field-modal'
 import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
 import {
@@ -1406,7 +1407,7 @@ export default function FieldContextDetailsPage() {
       {/* Scrollable content — pb-40 leaves a clear lane for the
           floating StudioCanvasActionBar at the bottom of the canvas so
           page content never sits directly under it at scroll end. */}
-      <main className="flex-1 min-w-0 relative z-10 overflow-y-auto overflow-x-hidden scroller p-4 sm:p-8 pb-40">
+      <main className="flex-1 min-w-0 relative z-10 overflow-y-auto overflow-x-hidden scroller p-4 sm:p-8 pb-40 sm:pb-40">
         <div className="max-w-5xl mx-auto space-y-5 sm:space-y-6 animate-fade-in">
           {/* Top bar — back to the owning Space on the left; page-local
               actions on the right as pill buttons. On md+ the pills
@@ -1652,6 +1653,19 @@ export default function FieldContextDetailsPage() {
                 id: resonanceId,
               })
             }
+          />
+
+          {/* GOAL-387 — organizations were canvas-only (GOAL-386), so they
+              could not be taken out of a field from here. */}
+          <OrganizationsSection
+            contextId={contextId}
+            organizations={[...(context.organizations ?? [])].sort((a, b) =>
+              a.name.localeCompare(b.name)
+            )}
+            canEdit={canEditContent}
+            // The canvas reads the same query's cache (ADR-011), so this
+            // refetch updates Bloom and the edges too.
+            onChanged={() => refetch()}
           />
         </div>
       </main>
@@ -2072,7 +2086,7 @@ const FieldContextSkeleton: FC = () => (
         }}
       />
     </div>
-    <main className="flex-1 min-w-0 relative z-10 overflow-y-auto overflow-x-hidden scroller p-4 sm:p-8 pb-40">
+    <main className="flex-1 min-w-0 relative z-10 overflow-y-auto overflow-x-hidden scroller p-4 sm:p-8 pb-40 sm:pb-40">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="flex items-center justify-between gap-3">
           <div className="h-4 w-32 rounded-full bg-white/30 dark:bg-white/5 animate-pulse" />

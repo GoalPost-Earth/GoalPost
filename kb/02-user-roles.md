@@ -44,6 +44,12 @@ Defined in `src/lib/permissions/space-permissions.ts`:
 | `isSpaceOwner(userId, spaceId)`          | Boolean — checks `OWNS` relationship   |
 | `memberExistsInSpace(memberId, spaceId)` | Boolean — checks `HAS_MEMBER` chain    |
 
+Organizations (GOAL-387): removing one from a field or deleting it needs
+`canEditContent` on the field (checked inside `organization-resolver.ts`, never
+GUEST). A delete only destroys the organization when the caller can edit every
+live field holding it; otherwise it is removed from their fields and left for
+the other Spaces.
+
 ---
 
 ## Authentication

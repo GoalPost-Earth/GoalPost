@@ -3450,6 +3450,20 @@ type AddPersonToFieldContextResponse {
 }
 
 """
+GOAL-387 — result of removing or deleting an organization from the field
+Dashboard. `deleted` is true when the Organization node itself is gone (not
+just this field's edge to it).
+"""
+type OrganizationMutationResponse
+  # Pure payload, NOT a node type — same guard as `FieldContextEdge`.
+  @query(read: false, aggregate: false)
+  @mutation(operations: []) {
+  success: Boolean!
+  message: String!
+  deleted: Boolean!
+}
+
+"""
 Input for logging pulse-related activities.
 """
 input LogPulseInput {
@@ -3605,6 +3619,28 @@ type Mutation {
     contextId: ID!
     personId: ID!
   ): AddPersonToFieldContextResponse!
+
+  """
+  GOAL-387 — detach an organization from one field (its HAS_ORGANIZATION edge).
+  Caller must be able to edit the field (owner, ADMIN or MEMBER — never GUEST).
+  If no other field holds the organization afterwards it is deleted, because a
+  context-less organization is unreachable by every READ path. Writes a Log.
+  """
+  removeOrganizationFromFieldContext(
+    contextId: ID!
+    organizationId: ID!
+  ): OrganizationMutationResponse!
+
+  """
+  GOAL-387 — delete an organization, starting from a field the caller can edit.
+  Deleted outright (DETACH DELETE) only when the caller can edit EVERY live
+  field holding it; otherwise it is detached from the fields the caller can edit
+  and left in place for the rest. Writes a Log.
+  """
+  deleteOrganizationFromFieldContext(
+    contextId: ID!
+    organizationId: ID!
+  ): OrganizationMutationResponse!
 
   """
   Add a member to a space with a specific role.

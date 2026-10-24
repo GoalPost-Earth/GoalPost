@@ -115,6 +115,12 @@ export const GET_FIELD_CONTEXT_DETAILS = graphql(`
       organizations {
         id
         name
+        # GOAL-387 — the Dashboard's Organizations section shows these.
+        description
+        email
+        phone
+        website
+        location
       }
       parentContext {
         id

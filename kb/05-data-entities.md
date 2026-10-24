@@ -713,7 +713,19 @@ created server-side only, via the audited doc-ingestion write in
 
 **Writes:** created / enriched by the doc-ingestion path
 (`create_organization` tool) and by contact import (WF-14,
-`src/lib/imports/contact-import-service.ts`, gated on edit rights to the field). Idempotent by name-within-context (a same-named org
+`src/lib/imports/contact-import-service.ts`, gated on edit rights to the field).
+Taken out of a field from the field's Dashboard view (GOAL-387) by two custom
+mutations in `src/lib/graphql/resolvers/organization-resolver.ts`, both gated
+on editing the field (owner / ADMIN / MEMBER, never GUEST) and each writing one
+Log:
+- `removeOrganizationFromFieldContext` deletes this field's `HAS_ORGANIZATION`
+  edge; if no field holds the org afterwards it is DETACH DELETEd, since a
+  context-less org is unreachable by every READ path (the same
+  exclusive-holder rule as the deleted-field purge).
+- `deleteOrganizationFromFieldContext` DETACH DELETEs the org only when the
+  caller can edit EVERY live field holding it; otherwise it removes it from
+  the fields they can edit and leaves it for the other Spaces.
+Never deletes the people or pulses it was linked to. Idempotent by name-within-context (a same-named org
 in the context is enriched, never duplicated). No embedding / vector index yet —
 semantic org discovery is a follow-up (resonance is pulse↔pulse today).
 

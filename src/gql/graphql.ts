@@ -13467,6 +13467,13 @@ export type Mutation = {
   deleteIngestDocumentResponses: DeleteInfo
   deleteMarkNotificationResponses: DeleteInfo
   deleteMeSpaces: DeleteInfo
+  /**
+   * GOAL-387 — delete an organization, starting from a field the caller can edit.
+   * Deleted outright (DETACH DELETE) only when the caller can edit EVERY live
+   * field holding it; otherwise it is detached from the fields the caller can edit
+   * and left in place for the rest. Writes a Log.
+   */
+  deleteOrganizationFromFieldContext: OrganizationMutationResponse
   deletePeople: DeleteInfo
   /**
    * Delete a person-to-person connection.
@@ -13586,6 +13593,13 @@ export type Mutation = {
    * new tool calls.
    */
   reExtractDocument: IngestDocumentResponse
+  /**
+   * GOAL-387 — detach an organization from one field (its HAS_ORGANIZATION edge).
+   * Caller must be able to edit the field (owner, ADMIN or MEMBER — never GUEST).
+   * If no other field holds the organization afterwards it is deleted, because a
+   * context-less organization is unreachable by every READ path. Writes a Log.
+   */
+  removeOrganizationFromFieldContext: OrganizationMutationResponse
   /**
    * Remove a member from a space.
    * Only the space owner or members with ADMIN role can remove members.
@@ -13887,6 +13901,11 @@ export type MutationDeleteMeSpacesArgs = {
   where?: InputMaybe<MeSpaceWhere>
 }
 
+export type MutationDeleteOrganizationFromFieldContextArgs = {
+  contextId: Scalars['ID']['input']
+  organizationId: Scalars['ID']['input']
+}
+
 export type MutationDeletePeopleArgs = {
   delete?: InputMaybe<PersonDeleteInput>
   where?: InputMaybe<PersonWhere>
@@ -14004,6 +14023,11 @@ export type MutationMoveFieldContextArgs = {
 
 export type MutationReExtractDocumentArgs = {
   documentId: Scalars['ID']['input']
+}
+
+export type MutationRemoveOrganizationFromFieldContextArgs = {
+  contextId: Scalars['ID']['input']
+  organizationId: Scalars['ID']['input']
 }
 
 export type MutationRemoveSpaceMemberArgs = {
@@ -15836,6 +15860,18 @@ export type OrganizationMentionedInRelationship = {
   __typename?: 'OrganizationMentionedInRelationship'
   cursor: Scalars['String']['output']
   node: FieldPulse
+}
+
+/**
+ * GOAL-387 — result of removing or deleting an organization from the field
+ * Dashboard. `deleted` is true when the Organization node itself is gone (not
+ * just this field's edge to it).
+ */
+export type OrganizationMutationResponse = {
+  __typename?: 'OrganizationMutationResponse'
+  deleted: Scalars['Boolean']['output']
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
 }
 
 export type OrganizationResourcePulseExtractedFromAggregateSelection = {
@@ -29675,6 +29711,36 @@ export type MarkAllNotificationsReadMutation = {
   }
 }
 
+export type RemoveOrganizationFromFieldContextMutationVariables = Exact<{
+  contextId: Scalars['ID']['input']
+  organizationId: Scalars['ID']['input']
+}>
+
+export type RemoveOrganizationFromFieldContextMutation = {
+  __typename?: 'Mutation'
+  removeOrganizationFromFieldContext: {
+    __typename?: 'OrganizationMutationResponse'
+    success: boolean
+    message: string
+    deleted: boolean
+  }
+}
+
+export type DeleteOrganizationFromFieldContextMutationVariables = Exact<{
+  contextId: Scalars['ID']['input']
+  organizationId: Scalars['ID']['input']
+}>
+
+export type DeleteOrganizationFromFieldContextMutation = {
+  __typename?: 'Mutation'
+  deleteOrganizationFromFieldContext: {
+    __typename?: 'OrganizationMutationResponse'
+    success: boolean
+    message: string
+    deleted: boolean
+  }
+}
+
 export type CreatePeopleMutationVariables = Exact<{
   input: Array<PersonCreateInput> | PersonCreateInput
 }>
@@ -31201,6 +31267,11 @@ export type GetFieldContextDetailsQuery = {
       __typename?: 'Organization'
       id: string
       name: string
+      description?: string | null
+      email?: string | null
+      phone?: string | null
+      website?: string | null
+      location?: string | null
     }>
     parentContext: Array<{
       __typename?: 'FieldContext'
@@ -35611,6 +35682,150 @@ export const MarkAllNotificationsReadDocument = {
 } as unknown as DocumentNode<
   MarkAllNotificationsReadMutation,
   MarkAllNotificationsReadMutationVariables
+>
+export const RemoveOrganizationFromFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'RemoveOrganizationFromFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'organizationId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'removeOrganizationFromFieldContext' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'contextId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'contextId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'organizationId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'organizationId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'deleted' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  RemoveOrganizationFromFieldContextMutation,
+  RemoveOrganizationFromFieldContextMutationVariables
+>
+export const DeleteOrganizationFromFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeleteOrganizationFromFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'organizationId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deleteOrganizationFromFieldContext' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'contextId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'contextId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'organizationId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'organizationId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'deleted' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeleteOrganizationFromFieldContextMutation,
+  DeleteOrganizationFromFieldContextMutationVariables
 >
 export const CreatePeopleDocument = {
   kind: 'Document',
@@ -42297,6 +42512,20 @@ export const GetFieldContextDetailsDocument = {
                     selections: [
                       { kind: 'Field', name: { kind: 'Name', value: 'id' } },
                       { kind: 'Field', name: { kind: 'Name', value: 'name' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'description' },
+                      },
+                      { kind: 'Field', name: { kind: 'Name', value: 'email' } },
+                      { kind: 'Field', name: { kind: 'Name', value: 'phone' } },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'website' },
+                      },
+                      {
+                        kind: 'Field',
+                        name: { kind: 'Name', value: 'location' },
+                      },
                     ],
                   },
                 },

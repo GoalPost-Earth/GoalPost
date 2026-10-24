@@ -57,12 +57,15 @@ export const OBSERVED_APP_MAXIMA = {
   // documents for organizations on the canvas, and GOAL-382 added the contact
   // details (phone, location, affiliations) to the person queries. Again an
   // observation only — the enforced ceiling is unchanged (~7.4x headroom).
-  cost: 679,
+  // 679 → 690: GOAL-387 added the organizations' description and contact
+  // fields to GET_FIELD_CONTEXT_DETAILS for the Dashboard section.
+  cost: 690,
   depth: 6,
   aliases: 6,
   // 392 → 394 for the same GOAL-346 selections as `cost` above.
   // 394 → 406 for the same GOAL-386 / GOAL-382 selections as `cost` above.
-  tokens: 406,
+  // 406 → 411 for the same GOAL-387 selections as `cost` above.
+  tokens: 411,
 } as const
 
 export const QUERY_LIMITS = {
