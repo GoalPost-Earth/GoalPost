@@ -39,6 +39,17 @@ interface ResonanceSuggestion {
   contextId: string
   contextTitle: string
   /**
+   * The field the MATCHED (target) pulse lives in — what the review card names
+   * as "Matched in …" and what the member can hide by (GOAL-384). The anchor
+   * above is the field the queue was opened from, so it reads the same on every
+   * card; a cross-field suggestion (ADR-020) or a pair spanning nested fields
+   * (ADR-017) finds its match elsewhere. Null when the target is held by no
+   * live field of THIS Space (the on-upload cross-Space path), so another
+   * Space's field title is never named to this Space's audience.
+   */
+  matchedContextId: string | null
+  matchedContextTitle: string | null
+  /**
    * The theme this pair expresses (GOAL / Phase 2). Null for a suggestion
    * written before themes existed, or one whose theme write failed — the
    * review UI groups those under "Ungrouped" rather than hiding them.
@@ -155,6 +166,22 @@ export async function GET(request: NextRequest) {
       // a 477-row queue.
       OPTIONAL MATCH (suggestion)-[:RESONATES_AS]->(theme:FieldResonance)
 
+      // Where the match came from (GOAL-384): a live field of THIS Space that
+      // holds the target. Restricted to the anchoring Space for the same reason
+      // ADR-020 limits the evidence string's field titles to it — a pulse also
+      // held elsewhere (a member's private MeSpace field) must not leak that
+      // field's title to this Space's audience. A pulse can sit in several
+      // fields, so prefer the anchor itself (a within-field pair reads "this
+      // field", not an arbitrary sibling), then title + id for a stable pick.
+      // OPTIONAL and below the guards WHERE, like the theme match above, so a
+      // cross-Space target still returns its row, just with a null field.
+      OPTIONAL MATCH (space)-[:HAS_CONTEXT]->(matched:FieldContext)-[:HAS_PULSE]->(target)
+      WHERE matched.deletedAt IS NULL
+      WITH suggestion, source, target, context, theme, matched
+      ORDER BY CASE WHEN matched = context THEN 0 ELSE 1 END, matched.title, matched.id
+      WITH suggestion, source, target, context, theme,
+           head(collect(matched)) AS matched
+
       RETURN {
         id: suggestion.id,
         label: suggestion.label,
@@ -169,6 +196,8 @@ export async function GET(request: NextRequest) {
         targetPulseContent: target.content,
         contextId: context.id,
         contextTitle: context.title,
+        matchedContextId: matched.id,
+        matchedContextTitle: matched.title,
         themeId: theme.id,
         themeLabel: theme.label
       } as suggestion

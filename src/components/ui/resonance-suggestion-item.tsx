@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { OTHER_SPACE_FIELD_LABEL } from '@/components/ui/resonance-field-filter'
 import { cn } from '@/lib/utils'
 
 interface ResonanceSuggestionItemProps {
@@ -14,7 +15,9 @@ interface ResonanceSuggestionItemProps {
   sourcePulseContent: string
   targetPulseId: string
   targetPulseContent: string
-  contextTitle: string
+  /** The field the matched pulse lives in (GOAL-384) — see
+   *  `matchedFieldLabel` in resonance-field-filter.tsx. */
+  matchedFieldLabel: string
   /** Omit BOTH to render the suggestion read-only — a viewer without
    *  `canEditContent` (a WeSpace GUEST) may read the review queue but cannot
    *  act on it, and must not be shown controls that can only 403. */
@@ -46,7 +49,7 @@ export function ResonanceSuggestionItem({
   evidence,
   sourcePulseContent,
   targetPulseContent,
-  contextTitle,
+  matchedFieldLabel,
   onAccept,
   onDecline,
   isLoading = false,
@@ -75,12 +78,32 @@ export function ResonanceSuggestionItem({
     <div className="rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
       {/* Header: Pattern Label + Confidence */}
       <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             {label}
           </h3>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            {contextTitle}
+          {/* The MATCHED pulse's field, not the anchor's: the queue is opened
+              from one field, so the anchor title read the same on every card
+              and never said where a match came from (GOAL-384). */}
+          <p className="mt-1 flex min-w-0 items-center gap-1 text-sm text-slate-600 dark:text-slate-400">
+            <span
+              aria-hidden="true"
+              className="material-symbols-outlined shrink-0 text-[16px] leading-none"
+            >
+              hub
+            </span>
+            <span className="min-w-0 truncate">
+              {matchedFieldLabel === OTHER_SPACE_FIELD_LABEL ? (
+                'Matched outside this Space'
+              ) : (
+                <>
+                  Matched in{' '}
+                  <span className="font-medium text-slate-800 dark:text-slate-200">
+                    {matchedFieldLabel}
+                  </span>
+                </>
+              )}
+            </span>
           </p>
         </div>
         <div

@@ -9,13 +9,20 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { ResonanceSuggestionItem } from '@/components/ui/resonance-suggestion-item'
+import { ResonanceBulkAcceptBar } from '@/components/ui/resonance-bulk-accept-bar'
+import {
+  HiddenFieldsEmptyState,
+  ResonanceFieldFilter,
+  useResonanceFieldFilter,
+} from '@/components/ui/resonance-field-filter'
+import {
+  ResonanceSuggestionTabs,
+  type ResonanceTabStatus as TabStatus,
+} from '@/components/ui/resonance-suggestion-tabs'
 import { ResonanceSuggestionList } from '@/components/ui/resonance-suggestion-list'
 import { ResonanceReviewCarousel } from '@/components/ui/resonance-review-carousel'
 import { groupSuggestionsByTheme } from '@/lib/resonance/group-suggestions'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
 
 interface Suggestion {
   id: string
@@ -31,6 +38,8 @@ interface Suggestion {
   targetPulseContent: string
   contextId: string
   contextTitle: string
+  matchedContextId?: string | null
+  matchedContextTitle?: string | null
   themeId?: string | null
   themeLabel?: string | null
 }
@@ -59,8 +68,6 @@ interface ResonanceSuggestionsModalProps {
     action: 'accept' | 'decline'
   ) => Promise<number | void>
 }
-
-type TabStatus = 'pending' | 'accepted' | 'declined'
 
 export function ResonanceSuggestionsModal({
   isOpen,
@@ -102,15 +109,25 @@ export function ResonanceSuggestionsModal({
     }
   }
 
-  // Filter suggestions by status
   // Grouped is the default on the pending tab — it is the view that makes a
   // large queue reviewable. The flat list stays one tap away for anyone who
   // wants to work pair by pair.
   const [grouped, setGrouped] = useState(true)
 
-  const filteredSuggestions = useMemo(() => {
-    return suggestions.filter((s) => s.status === activeTab)
-  }, [suggestions, activeTab])
+  const tabSuggestions = useMemo(
+    () => suggestions.filter((s) => s.status === activeTab),
+    [suggestions, activeTab]
+  )
+
+  // Hide / show by the field a match came from (GOAL-384).
+  const fieldFilter = useResonanceFieldFilter(tabSuggestions)
+  const { isVisible, visible: filteredSuggestions } = fieldFilter
+
+  // The bulk routes act on the whole field's queue server-side, hidden
+  // suggestions included, so "Accept 12" or a theme's "Accept all" would take
+  // pairs the member just chose not to see. Pause them while a field is hidden
+  // rather than let the number on the button and the action disagree.
+  const bulkPaused = activeTab === 'pending' && fieldFilter.hiddenCount > 0
 
   const themeGroups = useMemo(
     () =>
@@ -141,11 +158,13 @@ export function ResonanceSuggestionsModal({
   // Get current suggestion in review mode
   const currentSuggestion = reviewMode ? filteredSuggestions[reviewIndex] : null
 
-  // Tab counts
+  // What each tab will actually list once hidden fields are taken out.
+  const countTab = (status: TabStatus) =>
+    suggestions.filter((s) => s.status === status && isVisible(s)).length
   const tabCounts = {
-    pending: suggestions.filter((s) => s.status === 'pending').length,
-    accepted: suggestions.filter((s) => s.status === 'accepted').length,
-    declined: suggestions.filter((s) => s.status === 'declined').length,
+    pending: countTab('pending'),
+    accepted: countTab('accepted'),
+    declined: countTab('declined'),
   }
 
   const handleStartReview = () => {
@@ -201,6 +220,8 @@ export function ResonanceSuggestionsModal({
   const handleClose = () => {
     setReviewMode(false)
     setReviewIndex(0)
+    // Stays mounted on the field page — never reopen filtered from last time.
+    fieldFilter.showAll()
     onClose()
   }
 
@@ -246,33 +267,11 @@ export function ResonanceSuggestionsModal({
           {/* Tab View */}
           {!reviewMode && (
             <div className="space-y-4">
-              {/* Tabs */}
-              <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
-                {(['pending', 'accepted', 'declined'] as const).map(
-                  (status) => (
-                    <button
-                      key={status}
-                      onClick={() => setActiveTab(status)}
-                      className={cn(
-                        'px-4 py-2 text-sm font-medium border-b-2 transition-colors capitalize',
-                        activeTab === status
-                          ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                          : 'border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
-                      )}
-                    >
-                      {status}
-                      {/* min-w + horizontal padding, not a fixed w-5: a Space
-                          can queue three-digit counts (159 in the GOAL-353
-                          report) and a fixed 20px circle clipped them. */}
-                      {tabCounts[status] > 0 && (
-                        <span className="ml-2 inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-semibold text-white bg-slate-600 rounded-full dark:bg-slate-500">
-                          {tabCounts[status]}
-                        </span>
-                      )}
-                    </button>
-                  )
-                )}
-              </div>
+              <ResonanceSuggestionTabs
+                activeTab={activeTab}
+                counts={tabCounts}
+                onChange={setActiveTab}
+              />
 
               {/* Group / list switch. Only offered when there is more than one
                   theme to separate — otherwise it toggles between two
@@ -303,59 +302,36 @@ export function ResonanceSuggestionsModal({
                   </div>
                 )}
 
+              {/* Hide / show by the field a match came from (GOAL-384) */}
+              {!loading && (
+                <ResonanceFieldFilter
+                  rows={fieldFilter.rows}
+                  hidden={fieldFilter.hidden}
+                  hiddenCount={fieldFilter.hiddenCount}
+                  onToggle={fieldFilter.toggle}
+                  onShowAll={fieldFilter.showAll}
+                />
+              )}
+
               {/* Bulk accept-by-confidence control (pending tab only) */}
               {activeTab === 'pending' &&
                 onAcceptAll &&
-                tabCounts.pending > 0 && (
-                  <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="material-symbols-outlined shrink-0 text-[20px] text-gp-primary">
-                        auto_awesome
-                      </span>
-                      <label
-                        htmlFor="resonance-threshold"
-                        className="text-sm text-foreground"
-                      >
-                        Accept all at or above
-                      </label>
-                      <div className="flex shrink-0 items-center gap-1">
-                        <Input
-                          id="resonance-threshold"
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={Number.isFinite(threshold) ? threshold : ''}
-                          onChange={(e) => {
-                            const n = Math.round(Number(e.target.value))
-                            setThreshold(
-                              Number.isFinite(n)
-                                ? Math.max(0, Math.min(100, n))
-                                : 0
-                            )
-                          }}
-                          className="h-9 w-16 text-center"
-                          aria-label="Confidence threshold percentage"
-                        />
-                        <span className="text-sm text-muted-foreground">%</span>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={handleAcceptAll}
-                      disabled={eligibleCount === 0 || bulkLoading}
-                      className="w-full shrink-0 sm:w-auto"
-                    >
-                      <span
-                        className={cn(
-                          'material-symbols-outlined mr-1 text-[18px]',
-                          bulkLoading && 'animate-spin'
-                        )}
-                      >
-                        {bulkLoading ? 'progress_activity' : 'done_all'}
-                      </span>
-                      {bulkLoading ? 'Accepting…' : `Accept ${eligibleCount}`}
-                    </Button>
-                  </div>
+                tabCounts.pending > 0 &&
+                !bulkPaused && (
+                  <ResonanceBulkAcceptBar
+                    threshold={threshold}
+                    onThresholdChange={setThreshold}
+                    eligibleCount={eligibleCount}
+                    loading={bulkLoading}
+                    onAcceptAll={handleAcceptAll}
+                  />
                 )}
+              {bulkPaused && (onAcceptAll || onReviewTheme) && (
+                <p className="text-xs text-gp-ink-muted">
+                  Bulk accept and dismiss are paused while a field is hidden —
+                  they would include the suggestions you have hidden.
+                </p>
+              )}
 
               {/* Content */}
               {loading ? (
@@ -364,6 +340,12 @@ export function ResonanceSuggestionsModal({
                     <Skeleton key={i} className="h-48 rounded-lg" />
                   ))}
                 </div>
+              ) : filteredSuggestions.length === 0 &&
+                tabSuggestions.length > 0 ? (
+                <HiddenFieldsEmptyState
+                  status={activeTab}
+                  onShowAll={fieldFilter.showAll}
+                />
               ) : filteredSuggestions.length === 0 ? (
                 <div className="rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 p-8 text-center dark:border-slate-600 dark:bg-slate-800/50">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -381,7 +363,7 @@ export function ResonanceSuggestionsModal({
                   onAccept={onAccept ? handleAccept : undefined}
                   onDecline={onDecline ? handleDecline : undefined}
                   onReviewTheme={
-                    onReviewTheme
+                    onReviewTheme && !bulkPaused
                       ? async (themeId, action) => {
                           const result = await onReviewTheme(themeId, action)
                           // onRefresh is the ONLY caller that re-counts the

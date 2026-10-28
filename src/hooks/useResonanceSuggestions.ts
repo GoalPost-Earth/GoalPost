@@ -15,6 +15,9 @@ interface Suggestion {
   targetPulseContent: string
   contextId: string
   contextTitle: string
+  /** The field the matched pulse lives in; null when it is outside this Space. */
+  matchedContextId: string | null
+  matchedContextTitle: string | null
   /** The theme this pair expresses; null for suggestions written before themes. */
   themeId: string | null
   themeLabel: string | null
