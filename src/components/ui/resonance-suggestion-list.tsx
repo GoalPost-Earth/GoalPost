@@ -1,6 +1,7 @@
 'use client'
 
 import { ResonanceSuggestionItem } from '@/components/ui/resonance-suggestion-item'
+import { matchedFieldLabel } from '@/components/ui/resonance-field-filter'
 import { ResonanceThemeGroup } from '@/components/ui/resonance-theme-group'
 import type { SuggestionGroup } from '@/lib/resonance/group-suggestions'
 
@@ -22,7 +23,8 @@ interface ListSuggestion {
   sourcePulseContent: string
   targetPulseId: string
   targetPulseContent: string
-  contextTitle: string
+  matchedContextId?: string | null
+  matchedContextTitle?: string | null
   themeId?: string | null
   themeLabel?: string | null
 }
@@ -66,7 +68,7 @@ export function ResonanceSuggestionList({
       sourcePulseContent={suggestion.sourcePulseContent}
       targetPulseId={suggestion.targetPulseId}
       targetPulseContent={suggestion.targetPulseContent}
-      contextTitle={suggestion.contextTitle}
+      matchedFieldLabel={matchedFieldLabel(suggestion)}
       onAccept={onAccept}
       onDecline={onDecline}
       isLoading={actionLoadingId === suggestion.id}

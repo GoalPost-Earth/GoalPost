@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { ResonanceSuggestionItem } from '@/components/ui/resonance-suggestion-item'
+import { matchedFieldLabel } from '@/components/ui/resonance-field-filter'
 
 /**
  * One-pair-at-a-time review, with progress and prev/next.
@@ -24,7 +25,8 @@ interface CarouselSuggestion {
   sourcePulseContent: string
   targetPulseId: string
   targetPulseContent: string
-  contextTitle: string
+  matchedContextId?: string | null
+  matchedContextTitle?: string | null
 }
 
 interface ResonanceReviewCarouselProps {
@@ -78,7 +80,7 @@ export function ResonanceReviewCarousel({
         sourcePulseContent={suggestion.sourcePulseContent}
         targetPulseId={suggestion.targetPulseId}
         targetPulseContent={suggestion.targetPulseContent}
-        contextTitle={suggestion.contextTitle}
+        matchedFieldLabel={matchedFieldLabel(suggestion)}
         // Undefined when the viewer lacks `canEditContent` — the item then
         // renders read-only rather than showing controls the accept/decline
         // routes would reject (kb/02-user-roles.md).
