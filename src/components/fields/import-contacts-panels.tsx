@@ -1,14 +1,10 @@
 'use client'
 
-import { useState, type ReactNode } from 'react'
-import { ORGANIZATION_CONFIG } from '@/lib/pulse-type-config'
+import { useState, type ReactNode, type Ref } from 'react'
 import {
   MAX_CONTACT_IMPORT_ROWS,
-  contactDisplayName,
   type ContactImportResult,
   type ContactImportStatus,
-  type ContactKind,
-  type ContactRecord,
   type ContactRowError,
 } from '@/lib/imports/contact-import'
 import {
@@ -18,15 +14,10 @@ import {
 
 /**
  * Presentational pieces of the contact import modal (GOAL-382): the file
- * picker, the preview rows, and the results. Kept apart from the modal shell
+ * picker, the progress, and the results. Kept apart from the modal shell
  * so both stay under the 400-line component budget. Same visual language as
  * the article import (`import-articles-*`).
  */
-
-const KIND_ICON: Record<ContactKind, string> = {
-  person: 'person',
-  organization: ORGANIZATION_CONFIG.icon,
-}
 
 function csvCell(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value
@@ -46,8 +37,11 @@ function downloadContactTemplate() {
 
 export function ContactsPicker({
   onFileSelected,
+  children,
 }: {
   onFileSelected: (file: File | null) => void
+  /** Import settings, shown above the drop zone so they are set first. */
+  children: ReactNode
 }) {
   const [isDragging, setIsDragging] = useState(false)
 
@@ -56,9 +50,12 @@ export function ContactsPicker({
       <p className="text-sm text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
         Import people and organizations from your address book. Export your
         contacts as a vCard (.vcf) file, or as CSV from Outlook, Google Contacts
-        or LinkedIn — or fill in the template below as a CSV or Excel sheet.
-        Contacts already in this field are updated rather than added twice.
+        or LinkedIn — or fill in the template below as a CSV or Excel sheet. The
+        import starts as soon as you choose a file. Contacts already in this
+        field are updated rather than added twice.
       </p>
+
+      {children}
 
       <label
         htmlFor="import-contacts-file"
@@ -79,7 +76,7 @@ export function ContactsPicker({
           setIsDragging(false)
           onFileSelected(event.dataTransfer.files?.[0] ?? null)
         }}
-        className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors cursor-pointer hover:border-gp-primary ${
+        className={`shrink-0 flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-8 text-center transition-colors cursor-pointer hover:border-gp-primary ${
           isDragging
             ? 'border-gp-primary bg-gp-primary/10 dark:bg-gp-primary/15'
             : 'border-gp-glass-border bg-gp-glass-bg/40'
@@ -94,7 +91,7 @@ export function ContactsPicker({
         </span>
         <span className="text-sm text-gp-ink-strong dark:text-white font-medium">
           {isDragging
-            ? 'Drop to preview'
+            ? 'Drop to import'
             : 'Drag a contacts file here, or click to choose'}
         </span>
         <span className="text-xs text-gp-ink-muted">
@@ -117,7 +114,7 @@ export function ContactsPicker({
       <button
         type="button"
         onClick={downloadContactTemplate}
-        className="inline-flex items-center gap-1.5 self-start text-xs font-medium text-gp-primary hover:underline cursor-pointer"
+        className="shrink-0 inline-flex items-center gap-1.5 self-start text-xs font-medium text-gp-primary hover:underline cursor-pointer"
       >
         <span className="material-symbols-outlined text-[14px]">download</span>
         Download the CSV template
@@ -126,112 +123,46 @@ export function ContactsPicker({
   )
 }
 
-/** One metadata line under a contact's name — label stays, value truncates. */
-function DetailLine({ icon, children }: { icon: string; children: ReactNode }) {
-  return (
-    <div className="mt-0.5 flex items-center gap-1 text-[10px] text-gp-ink-muted dark:text-gp-ink-soft min-w-0">
-      <span className="material-symbols-outlined text-[12px] shrink-0">
-        {icon}
-      </span>
-      <span className="truncate">{children}</span>
-    </div>
-  )
-}
-
 /**
- * One previewed contact, with the tick box that decides whether it is
- * imported. The whole card is the label, so a tap anywhere toggles it — on a
- * phone the box alone is a small target. Unticked cards dim but stay in place,
- * so the member can see what they left out.
+ * Reading the file, then sending its batches. Stop sits here rather than in the
+ * dialog's footer because Done appears there when the import ends, and a late
+ * click on Stop must not land on it and close the results.
  */
-export function ContactRowCard({
-  record,
-  selected,
-  onToggle,
+export function ContactsImporting({
+  label,
+  onStop,
+  isStopping = false,
+  stopButtonRef,
 }: {
-  record: ContactRecord
-  selected: boolean
-  onToggle: () => void
+  label: string
+  /** Absent while the file is still being read. */
+  onStop?: () => void
+  isStopping?: boolean
+  stopButtonRef?: Ref<HTMLButtonElement>
 }) {
-  const affiliation = [record.jobTitle, record.organization]
-    .filter(Boolean)
-    .join(' · ')
-  const name = contactDisplayName(record)
   return (
-    <label
-      className={`flex items-start gap-2.5 rounded-xl border px-3 py-2 min-w-0 cursor-pointer transition-colors ${
-        selected
-          ? 'border-gp-glass-border bg-gp-glass-bg/40'
-          : 'border-dashed border-gp-glass-border bg-transparent opacity-70'
-      }`}
+    <div
+      role="status"
+      className="flex flex-col items-center gap-3 rounded-xl border border-gp-glass-border bg-gp-glass-bg/40 px-4 py-8 text-center"
     >
-      <input
-        type="checkbox"
-        checked={selected}
-        onChange={onToggle}
-        aria-label={`Import ${name}`}
-        className="mt-0.5 size-4 shrink-0 cursor-pointer accent-gp-primary"
-      />
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-[10px] font-semibold text-gp-ink-muted shrink-0">
-            #{record.row}
-          </span>
-          <span
-            className="material-symbols-outlined text-[14px] text-gp-ink-muted shrink-0"
-            role="img"
-            aria-label={record.kind === 'person' ? 'Person' : 'Organization'}
-          >
-            {KIND_ICON[record.kind]}
-          </span>
-          <h4
-            className={`text-xs font-bold text-gp-ink-strong dark:text-white truncate min-w-0 ${
-              selected ? '' : 'line-through decoration-gp-ink-muted'
-            }`}
-          >
-            {name}
-          </h4>
-        </div>
-        {affiliation && <DetailLine icon="work">{affiliation}</DetailLine>}
-        {record.email && <DetailLine icon="mail">{record.email}</DetailLine>}
-        {record.phone && <DetailLine icon="call">{record.phone}</DetailLine>}
-        {record.location && (
-          <DetailLine icon="location_on">{record.location}</DetailLine>
-        )}
-      </div>
-    </label>
-  )
-}
-
-/** "Select all" for the preview — indeterminate when only some are ticked. */
-export function SelectAllContacts({
-  selectedCount,
-  total,
-  onChange,
-}: {
-  selectedCount: number
-  total: number
-  onChange: (selectAll: boolean) => void
-}) {
-  const allSelected = selectedCount === total
-  return (
-    <label className="flex items-center gap-2 min-w-0 shrink-0 cursor-pointer text-xs font-medium text-gp-ink-strong dark:text-white">
-      <input
-        type="checkbox"
-        checked={allSelected}
-        ref={(input) => {
-          if (input) input.indeterminate = selectedCount > 0 && !allSelected
-        }}
-        onChange={() => onChange(!allSelected)}
-        className="size-4 shrink-0 cursor-pointer accent-gp-primary"
-      />
-      <span className="truncate">
-        {allSelected ? 'All selected' : `${selectedCount} of ${total} selected`}
+      <span className="material-symbols-outlined text-3xl text-gp-primary animate-spin">
+        hourglass_bottom
       </span>
-      <span className="text-gp-ink-muted font-normal hidden sm:inline">
-        — untick anyone you don’t want to import
+      <span className="text-sm font-medium text-gp-ink-strong dark:text-white">
+        {label}
       </span>
-    </label>
+      {onStop && (
+        <button
+          ref={stopButtonRef}
+          type="button"
+          onClick={onStop}
+          aria-busy={isStopping}
+          className="px-4 py-1.5 rounded-lg border border-gp-glass-border text-sm text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors cursor-pointer"
+        >
+          {isStopping ? 'Stopping…' : 'Stop importing'}
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -241,7 +172,7 @@ export function ContactIssueCard({ error }: { error: ContactRowError }) {
       <span className="material-symbols-outlined text-[14px] shrink-0">
         error
       </span>
-      <p className="min-w-0">
+      <p className="min-w-0 break-words">
         <span className="font-semibold">#{error.row}</span> {error.message}
       </p>
     </div>
@@ -285,7 +216,20 @@ const STATUS_COPY: Record<
   skipped: { label: 'Skipped', icon: 'block' },
 }
 
-export function ContactsResults({ result }: { result: ContactImportResult }) {
+export function ContactsResults({
+  result,
+  issues,
+  notImported,
+  importFailed,
+}: {
+  result: ContactImportResult
+  /** Rows the file parser rejected, which never reached the import. */
+  issues: ContactRowError[]
+  /** Rows not sent because the import stopped or a batch failed. */
+  notImported: number
+  /** After a failure some of those rows may still have been saved. */
+  importFailed: boolean
+}) {
   const { summary, outcomes } = result
   // Skipped rows first — they are the ones that need the member's attention.
   const ordered = [...outcomes].sort(
@@ -295,7 +239,7 @@ export function ContactsResults({ result }: { result: ContactImportResult }) {
   )
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2 shrink-0">
+      <div role="status" className="flex flex-wrap items-center gap-2 shrink-0">
         <CountChip icon="person_add" tone="ready">
           {summary.created} added
         </CountChip>
@@ -312,8 +256,23 @@ export function ContactsResults({ result }: { result: ContactImportResult }) {
             {summary.skipped} skipped
           </CountChip>
         )}
+        {issues.length > 0 && (
+          <CountChip icon="error" tone="issue">
+            {issues.length} with issues
+          </CountChip>
+        )}
+        {notImported > 0 && (
+          <CountChip icon="do_not_disturb_on" tone="neutral">
+            {notImported} {importFailed ? 'not confirmed' : 'not imported'}
+          </CountChip>
+        )}
       </div>
       <ul className="overflow-y-auto min-h-0 space-y-1.5 pr-1">
+        {issues.map((issue) => (
+          <li key={`issue-${issue.row}`}>
+            <ContactIssueCard error={issue} />
+          </li>
+        ))}
         {ordered.map((outcome) => (
           <li
             key={outcome.row}

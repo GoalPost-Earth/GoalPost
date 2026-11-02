@@ -18,8 +18,13 @@ import {
  * file in one request could outlast the function on a slow database link. The
  * file goes in batches of CONTACT_IMPORT_BATCH_SIZE instead, with progress,
  * and the outcomes are merged into one result. A failed batch stops the
- * import: what already landed is reported alongside the error, and the batch
- * itself wrote nothing it reports (each contact is its own transaction).
+ * import: what already landed is reported alongside the error. Each contact is
+ * its own transaction, so a batch lost in transit (a 504, a dropped connection)
+ * may have saved some rows the browser never heard about; the field is refetched
+ * after any attempt, and those rows count as `notImported` until re-imported. The
+ * member can also stop between batches: choosing a file starts the import, so
+ * this is the only way to limit a wrong file. `notImported` counts the rows
+ * that never got an outcome either way.
  */
 export function useContactImport({
   fieldContextId,
@@ -32,19 +37,30 @@ export function useContactImport({
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [result, setResult] = useState<ContactImportResult | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [notImported, setNotImported] = useState(0)
+  const [isStopping, setIsStopping] = useState(false)
+  const stopRef = useRef(false)
   // State lags a render; this stops a double click starting two imports.
   const inFlightRef = useRef(false)
 
   const reset = useCallback(() => {
     setResult(null)
     setError(null)
+    setNotImported(0)
     setProgress({ done: 0, total: 0 })
+  }, [])
+
+  const stop = useCallback(() => {
+    stopRef.current = true
+    setIsStopping(true)
   }, [])
 
   const submit = useCallback(
     async (records: ContactRecord[], link: ContactLinkTarget | undefined) => {
       if (records.length === 0 || inFlightRef.current) return
       inFlightRef.current = true
+      stopRef.current = false
+      setIsStopping(false)
       setIsSubmitting(true)
       setError(null)
       setProgress({ done: 0, total: records.length })
@@ -55,6 +71,7 @@ export function useContactImport({
           start < records.length;
           start += CONTACT_IMPORT_BATCH_SIZE
         ) {
+          if (stopRef.current) break
           const batch = records.slice(start, start + CONTACT_IMPORT_BATCH_SIZE)
           // Per batch — a long import can outlive the access token.
           const authHeaders = await chatApiAuthHeaders()
@@ -92,16 +109,28 @@ export function useContactImport({
             : message
         )
       } finally {
+        setNotImported(records.length - outcomes.length)
         if (outcomes.length > 0) {
           setResult({ summary: summarizeContactOutcomes(outcomes), outcomes })
-          onImported()
         }
+        onImported()
         setIsSubmitting(false)
+        setIsStopping(false)
         inFlightRef.current = false
       }
     },
     [fieldContextId, onImported]
   )
 
-  return { isSubmitting, progress, result, error, setError, submit, reset }
+  return {
+    isSubmitting,
+    isStopping,
+    progress,
+    result,
+    error,
+    notImported,
+    submit,
+    stop,
+    reset,
+  }
 }

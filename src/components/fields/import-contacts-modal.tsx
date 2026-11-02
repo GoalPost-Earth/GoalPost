@@ -6,21 +6,19 @@ import { useFocusTrap } from '@/hooks/useFocusTrap'
 import {
   MAX_CONTACT_FILE_BYTES,
   MAX_CONTACT_IMPORT_ROWS,
+  summarizeContactOutcomes,
   type ContactLinkTarget,
+  type ContactRowError,
 } from '@/lib/imports/contact-import'
 import {
   CONTACT_SOURCE_PROFILES,
   parseContactFile,
-  type ParsedContactFile,
 } from '@/lib/imports/contact-sources'
 import { parseContactWorkbook } from '@/lib/imports/contact-sheet-parser'
 import {
-  ContactIssueCard,
-  ContactRowCard,
-  SelectAllContacts,
+  ContactsImporting,
   ContactsPicker,
   ContactsResults,
-  CountChip,
 } from './import-contacts-panels'
 import { useContactImport } from './use-contact-import'
 import {
@@ -30,14 +28,14 @@ import {
 
 /**
  * GOAL-382 — import people and organizations into a FieldContext from a
- * contacts file (vCard, Outlook / Google / LinkedIn CSV, or JSON).
+ * contacts file (vCard, Outlook / Google / LinkedIn CSV, Excel, or JSON).
  *
- * Three steps: pick a file → preview what was read (nothing is written until
- * the member confirms; a CSV's detected source can be changed here, and every
- * contact can optionally be linked to one pulse or person in the field) →
- * results. Parsing is client-side; the confirm step POSTs the mapped contacts
- * to /api/import/contacts in batches (`useContactImport`), and the route
- * answers each with its per-row outcome.
+ * Choosing a file starts the import; there is no confirmation step (the client
+ * asked for none). So the two settings that shape an import, the CSV format and
+ * the optional link to one pulse or person, sit beside the file picker and are
+ * set first. Parsing is client-side, the mapped contacts POST to
+ * /api/import/contacts in batches (`useContactImport`), and the results account
+ * for every row: its outcome, why it could not be read, or that it was not sent.
  *
  * Portalled to `document.body` for the same reason as the article import: the
  * floating action bar that opens it sits outside the canvas visibility
@@ -54,6 +52,14 @@ interface ImportContactsModalProps {
 
 const EXCEL_FILE = /\.xlsx?$/i
 
+function linkTarget(value: string): ContactLinkTarget | undefined {
+  const separator = value.indexOf(':')
+  const kind = value.slice(0, separator)
+  return kind === 'pulse' || kind === 'person'
+    ? { kind, id: value.slice(separator + 1) }
+    : undefined
+}
+
 export function ImportContactsModal({
   isOpen,
   fieldContextId,
@@ -61,113 +67,122 @@ export function ImportContactsModal({
   onImported,
 }: ImportContactsModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null)
+  const primaryActionRef = useRef<HTMLButtonElement>(null)
+  // Reading a file takes real time for a cloud placeholder, and importing starts
+  // when it finishes. Closing or picking again retires the read in progress.
+  const readSessionRef = useRef(0)
   useFocusTrap(dialogRef, isOpen)
 
-  // Text for vCard / CSV / JSON; the raw bytes for an Excel workbook. Kept so
-  // "Read this file as" can re-read it with another profile.
-  const [file, setFile] = useState<{
-    name: string
-    content: string | ArrayBuffer
-  } | null>(null)
-  const [parsed, setParsed] = useState<ParsedContactFile | null>(null)
+  const [profileId, setProfileId] = useState('')
   const [linkValue, setLinkValue] = useState('')
   const [pickError, setPickError] = useState<string | null>(null)
-  // Rows the member unticked in the preview. Everything starts ticked, so a
-  // file imports in full unless someone is deliberately left out.
-  const [excludedRows, setExcludedRows] = useState<ReadonlySet<number>>(
-    () => new Set()
-  )
-  const { isSubmitting, progress, result, error, submit, reset } =
-    useContactImport({ fieldContextId, onImported })
+  // Rows the parser could not read. They never reach the route, so the results
+  // have to list them alongside the route's outcomes.
+  const [issues, setIssues] = useState<ContactRowError[]>([])
+  const [isReading, setIsReading] = useState(false)
+  const {
+    isSubmitting,
+    isStopping,
+    progress,
+    result,
+    error,
+    notImported,
+    submit,
+    stop,
+    reset,
+  } = useContactImport({ fieldContextId, onImported })
 
-  const step = result ? 'results' : parsed ? 'preview' : 'pick'
-  const records = parsed?.records ?? []
-  const selectedRecords = records.filter(
-    (record) => !excludedRows.has(record.row)
+  const step = isSubmitting
+    ? 'importing'
+    : isReading
+      ? 'reading'
+      : result || issues.length > 0
+        ? 'results'
+        : 'pick'
+
+  // The control holding focus unmounts when the step changes, which would drop
+  // keyboard focus out of the dialog.
+  useEffect(() => {
+    if (!isOpen) return
+    const target =
+      primaryActionRef.current ??
+      dialogRef.current?.querySelector<HTMLElement>('button:not([disabled])')
+    target?.focus()
+  }, [isOpen, step])
+
+  useEffect(
+    () => () => {
+      readSessionRef.current += 1
+    },
+    []
   )
-  const people = selectedRecords.filter((r) => r.kind === 'person').length
-  const organizations = selectedRecords.length - people
-  const toggleRow = (row: number) =>
-    setExcludedRows((current) => {
-      const next = new Set(current)
-      if (!next.delete(row)) next.add(row)
-      return next
-    })
 
   const handleClose = useCallback(() => {
     if (isSubmitting) return
-    setFile(null)
-    setParsed(null)
+    readSessionRef.current += 1
+    setIsReading(false)
+    setProfileId('')
     setLinkValue('')
     setPickError(null)
+    setIssues([])
     reset()
     onClose()
   }, [isSubmitting, onClose, reset])
 
-  const readFile = useCallback(
-    (name: string, content: string | ArrayBuffer, profileId?: string) => {
-      const next =
+  const importFile = useCallback(
+    (name: string, content: string | ArrayBuffer) => {
+      const requestedProfile = profileId || undefined
+      const parsed =
         typeof content === 'string'
-          ? parseContactFile(name, content, profileId)
-          : parseContactWorkbook(content, profileId)
-      if (next.fileError) {
-        setPickError(next.fileError)
+          ? parseContactFile(name, content, requestedProfile)
+          : parseContactWorkbook(content, requestedProfile)
+      if (parsed.fileError) {
+        setPickError(parsed.fileError)
         return
       }
-      if (next.records.length + next.errors.length === 0) {
+      if (parsed.records.length + parsed.errors.length === 0) {
         setPickError('This file has no contacts in it.')
         return
       }
-      if (next.records.length > MAX_CONTACT_IMPORT_ROWS) {
+      if (parsed.records.length > MAX_CONTACT_IMPORT_ROWS) {
         setPickError(
-          `This file has ${next.records.length} contacts — a single import is capped at ${MAX_CONTACT_IMPORT_ROWS}. Split it and import in batches.`
+          `This file has ${parsed.records.length} contacts — a single import is capped at ${MAX_CONTACT_IMPORT_ROWS}. Split it and import in batches.`
         )
         return
       }
-      setPickError(null)
-      setFile({ name, content })
-      setParsed(next)
-      setExcludedRows(new Set())
+      setIssues(parsed.errors)
+      void submit(parsed.records, linkTarget(linkValue))
     },
-    []
+    [linkValue, profileId, submit]
   )
 
   const handleFileSelected = useCallback(
     async (picked: File | null) => {
       if (!picked) return
+      readSessionRef.current += 1
+      const session = readSessionRef.current
       setPickError(null)
+      reset()
       if (picked.size > MAX_CONTACT_FILE_BYTES) {
         setPickError('This file is too large — the limit is 5 MB.')
         return
       }
+      setIsReading(true)
       try {
-        readFile(
-          picked.name,
-          EXCEL_FILE.test(picked.name)
-            ? await picked.arrayBuffer()
-            : await picked.text()
-        )
+        const content = EXCEL_FILE.test(picked.name)
+          ? await picked.arrayBuffer()
+          : await picked.text()
+        if (session !== readSessionRef.current) return
+        setIsReading(false)
+        importFile(picked.name, content)
       } catch {
+        if (session !== readSessionRef.current) return
+        setIsReading(false)
         setPickError('The file could not be read — pick it again and retry.')
       }
     },
-    [readFile]
+    [importFile, reset]
   )
-
-  const handleSubmit = useCallback(() => {
-    if (!parsed) return
-    const separator = linkValue.indexOf(':')
-    const kind = linkValue.slice(0, separator)
-    const link: ContactLinkTarget | undefined =
-      kind === 'pulse' || kind === 'person'
-        ? { kind, id: linkValue.slice(separator + 1) }
-        : undefined
-    setPickError(null)
-    void submit(
-      parsed.records.filter((record) => !excludedRows.has(record.row)),
-      link
-    )
-  }, [excludedRows, linkValue, parsed, submit])
 
   // Esc closes. Capture phase + stopPropagation so StudioShell's window-level
   // Escape shortcut does not also close the chat panel behind the dialog.
@@ -185,9 +200,9 @@ export function ImportContactsModal({
   if (!isOpen || typeof document === 'undefined') return null
 
   const secondaryButton =
-    'px-5 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer'
+    'px-5 py-2 rounded-lg border border-gp-glass-border text-gp-ink-strong dark:text-white hover:bg-gp-glass-bg transition-colors cursor-pointer'
   const primaryButton =
-    'px-5 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer'
+    'px-5 py-2 rounded-lg bg-gp-primary text-white font-medium hover:shadow-lg hover:scale-[1.02] transition-all flex items-center justify-center gap-2 cursor-pointer'
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -218,40 +233,17 @@ export function ImportContactsModal({
         </div>
 
         {step === 'pick' && (
-          <ContactsPicker onFileSelected={handleFileSelected} />
-        )}
-
-        {step === 'preview' && parsed && file && (
-          <>
-            <div className="flex flex-wrap items-center gap-2 shrink-0 min-w-0">
-              <CountChip icon="person" tone="ready">
-                {people} {people === 1 ? 'person' : 'people'}
-              </CountChip>
-              <CountChip icon="apartment" tone="ready">
-                {organizations}{' '}
-                {organizations === 1 ? 'organization' : 'organizations'}
-              </CountChip>
-              {parsed.errors.length > 0 && (
-                <CountChip icon="error" tone="issue">
-                  {parsed.errors.length} with issues
-                </CountChip>
-              )}
-              <span className="text-xs text-gp-ink-muted truncate min-w-0">
-                {file.name}
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
-              {parsed.profile?.format === 'csv' && (
+          <div className="min-h-0 -m-0.5 p-0.5 overflow-y-auto flex flex-col gap-4">
+            <ContactsPicker onFileSelected={handleFileSelected}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
                 <label className="flex flex-col gap-1 min-w-0 text-xs font-medium text-gp-ink-muted dark:text-gp-ink-soft">
-                  Read this file as
+                  CSV or Excel format
                   <select
                     className={CONTACT_SELECT_CLASS}
-                    value={parsed.profile.id}
-                    onChange={(event) =>
-                      readFile(file.name, file.content, event.target.value)
-                    }
+                    value={profileId}
+                    onChange={(event) => setProfileId(event.target.value)}
                   >
+                    <option value="">Detect automatically</option>
                     {CONTACT_SOURCE_PROFILES.filter(
                       (profile) => profile.format === 'csv'
                     ).map((profile) => (
@@ -261,56 +253,40 @@ export function ImportContactsModal({
                     ))}
                   </select>
                 </label>
-              )}
-              <ContactLinkSelect
-                fieldContextId={fieldContextId}
-                value={linkValue}
-                onChange={setLinkValue}
-              />
-            </div>
-
-            <p className="text-xs text-gp-ink-muted dark:text-gp-ink-soft shrink-0">
-              Review before importing — nothing is saved yet, and only the
-              ticked contacts are imported. A contact that matches one already
-              here (by email, or by name and organization) is updated with the
-              values in this file.
-              {parsed.errors.length > 0 && ' Rows with issues will be skipped.'}
-            </p>
-
-            {records.length > 0 && (
-              <SelectAllContacts
-                selectedCount={selectedRecords.length}
-                total={records.length}
-                onChange={(selectAll) =>
-                  setExcludedRows(
-                    selectAll
-                      ? new Set()
-                      : new Set(records.map((record) => record.row))
-                  )
-                }
-              />
-            )}
-
-            <div className="overflow-y-auto min-h-0 space-y-2 pr-1">
-              {parsed.errors.map((rowError) => (
-                <ContactIssueCard
-                  key={`err-${rowError.row}`}
-                  error={rowError}
+                <ContactLinkSelect
+                  fieldContextId={fieldContextId}
+                  value={linkValue}
+                  onChange={setLinkValue}
                 />
-              ))}
-              {parsed.records.map((record) => (
-                <ContactRowCard
-                  key={`row-${record.row}`}
-                  record={record}
-                  selected={!excludedRows.has(record.row)}
-                  onToggle={() => toggleRow(record.row)}
-                />
-              ))}
-            </div>
-          </>
+              </div>
+            </ContactsPicker>
+          </div>
         )}
 
-        {step === 'results' && result && <ContactsResults result={result} />}
+        {step === 'reading' && <ContactsImporting label="Reading the file…" />}
+
+        {step === 'importing' && (
+          <ContactsImporting
+            label={`Importing ${progress.done} of ${progress.total}…`}
+            onStop={stop}
+            isStopping={isStopping}
+            stopButtonRef={primaryActionRef}
+          />
+        )}
+
+        {step === 'results' && (
+          <ContactsResults
+            result={
+              result ?? {
+                summary: summarizeContactOutcomes([]),
+                outcomes: [],
+              }
+            }
+            issues={issues}
+            notImported={notImported}
+            importFailed={Boolean(error)}
+          />
+        )}
 
         {(pickError ?? error) && (
           <div
@@ -322,7 +298,7 @@ export function ImportContactsModal({
         )}
 
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-1 shrink-0">
-          {step === 'pick' && (
+          {(step === 'pick' || step === 'reading') && (
             <button
               type="button"
               onClick={handleClose}
@@ -331,53 +307,28 @@ export function ImportContactsModal({
               Cancel
             </button>
           )}
-          {step === 'preview' && (
+          {step === 'results' && (
             <>
+              {/* Keeps the format and link settings, which closing would clear. */}
               <button
                 type="button"
                 onClick={() => {
-                  setParsed(null)
-                  setFile(null)
-                  setPickError(null)
+                  setIssues([])
                   reset()
                 }}
-                disabled={isSubmitting}
                 className={secondaryButton}
               >
-                Back
+                {error ? 'Try again' : 'Import another file'}
               </button>
               <button
+                ref={primaryActionRef}
                 type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitting || selectedRecords.length === 0}
-                aria-busy={isSubmitting}
-                // Busy is not "unavailable": keep full contrast while the
-                // progress label is the thing the member is reading.
-                className={
-                  isSubmitting
-                    ? primaryButton.replace('disabled:opacity-50', '')
-                    : primaryButton
-                }
+                onClick={handleClose}
+                className={primaryButton}
               >
-                {isSubmitting && (
-                  <span className="material-symbols-outlined text-base animate-spin">
-                    hourglass_bottom
-                  </span>
-                )}
-                {isSubmitting
-                  ? `Importing ${progress.done} of ${progress.total}…`
-                  : `Import ${selectedRecords.length} contact${selectedRecords.length === 1 ? '' : 's'}`}
+                Done
               </button>
             </>
-          )}
-          {step === 'results' && (
-            <button
-              type="button"
-              onClick={handleClose}
-              className={primaryButton}
-            >
-              Done
-            </button>
           )}
         </div>
       </div>

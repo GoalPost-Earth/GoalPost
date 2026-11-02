@@ -628,10 +628,16 @@ mocked from any contacts app. Agreed with the client on GOAL-382.
    template), **Excel** (`.xlsx`/`.xls` — first sheet, same column matching
    as CSV), or **JSON** (an array of contacts in the template's fields). The
    picker offers the template as a CSV download, which opens in Excel.
-2. The browser parses and previews it — nothing is written yet. A CSV's
-   source is detected from its header row and can be changed in the preview.
-   The member may also pick ONE pulse or person in this field to link every
-   contact to.
+2. Choosing the file starts the import: **there is no preview or confirmation
+   step**, at the client's request (Robert, 2026-11-02). Two optional settings
+   sit beside the picker and are set first: the CSV / Excel format (detected
+   from the header row unless one is chosen) and ONE pulse or person in this
+   field to link every contact to. The browser parses the file; rows it cannot
+   read are listed in the results. A file is refused before anything is written
+   if it names no contact, has several columns but no email, phone, first / last
+   name or `type` column (so `Company,Website` needs the template), or fits
+   another format better than the one chosen. The member can
+   stop between batches; rows not sent are counted in the results.
 3. `POST /api/import/contacts` re-validates, gates on edit rights to the field
    (`loadEditableContext`), and writes inline (graph writes only — no LLM
    spend, so no queue). The response is a per-row outcome:
@@ -676,8 +682,8 @@ mocked from any contacts app. Agreed with the client on GOAL-382.
 - **A new source is a profile, not a screen.** Add an entry to
   `CONTACT_SOURCE_PROFILES` (`src/lib/imports/contact-sources.ts`) mapping its
   columns onto the canonical `ContactRecord` (`contact-import.ts`).
-- The preview and the route share `finalizeContactRecord`, so a row the
-  preview calls ready cannot 400 the batch.
+- The browser parser and the route share `finalizeContactRecord`, so a row the
+  browser accepts cannot 400 the batch.
 - Capped at `MAX_CONTACT_IMPORT_ROWS` (500) per file, sent by the browser in
   batches of `CONTACT_IMPORT_BATCH_SIZE` (25) so each request stays inside the
   duration budget (every contact is several round trips — ~2 s each from a

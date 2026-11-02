@@ -3,10 +3,10 @@ import { ARTICLE_EMAIL_SHAPE } from './article-import'
 /**
  * GOAL-382 — bulk contact import (people + organizations) into a FieldContext.
  *
- * Shared, dependency-free pieces used by both the browser (parse + preview)
+ * Shared, dependency-free pieces used by both the browser (parse + submit)
  * and the server (validate + write): the canonical contact shape every source
  * format is mapped onto, its limits, and the row validation that decides what
- * the preview calls "ready" — so a row that passes the preview cannot 400 the
+ * the browser submits — so a row that passes in the browser cannot 400 the
  * whole batch on the server.
  *
  * The file formats themselves are the industry-standard contact exports

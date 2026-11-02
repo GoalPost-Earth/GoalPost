@@ -543,6 +543,85 @@ describe('parseContactFile', () => {
     })
   })
 
+  describe('a person-name column the named exports do not read', () => {
+    it.each([
+      [['Name', 'E-mail Address', 'Company']],
+      [['Name', 'E-mail Address', 'Mobile Phone', 'Company']],
+      [['Display Name', 'E-mail Address', 'Company']],
+      [['Name', 'Email Address', 'Company', 'Position', 'URL', 'Connected On']],
+    ])('keeps the person, not their company: %j', (headers) => {
+      const cells = headers.map((header) => {
+        if (/name/i.test(header)) return 'Ama Mensah'
+        if (/mail/i.test(header)) return 'ama@example.org'
+        if (header === 'Company') return 'Acme'
+        return 'x'
+      })
+      const { records, fileError } = parseContactFile(
+        'c.csv',
+        toCsv([headers, cells])
+      )
+      expect(fileError).toBeUndefined()
+      expect(records[0]).toMatchObject({
+        kind: 'person',
+        firstName: 'Ama',
+        lastName: 'Mensah',
+        organization: 'Acme',
+      })
+    })
+
+    it('reads a simple name and email list', () => {
+      const { records, fileError } = parseContactFile(
+        'c.csv',
+        toCsv([
+          ['Name', 'E-mail Address'],
+          ['Ama Mensah', 'ama@example.org'],
+        ])
+      )
+      expect(fileError).toBeUndefined()
+      expect(records[0]).toMatchObject({
+        kind: 'person',
+        email: 'ama@example.org',
+      })
+    })
+
+    it('refuses a chosen format that cannot read the name', () => {
+      const result = parseContactFile(
+        'c.csv',
+        toCsv([
+          ['Name', 'E-mail Address', 'Company'],
+          ['Ama Mensah', 'ama@example.org', 'Acme'],
+        ]),
+        'outlook-csv'
+      )
+      expect(result.records).toEqual([])
+      expect(result.fileError).toMatch(/doesn't look like Outlook/)
+    })
+  })
+
+  describe('choosing the header row', () => {
+    it('prefers the real header over a metadata row that ties it', () => {
+      const { records } = parseContactFile(
+        'c.csv',
+        toCsv([
+          ['Name:', 'Riverbank', 'Phone:', '555'],
+          ['Name', 'Email'],
+          ['Ama Mensah', 'ama@example.org'],
+        ])
+      )
+      expect(records).toHaveLength(1)
+      expect(records[0]).toMatchObject({ email: 'ama@example.org' })
+    })
+
+    it('prefers a lone name column over a Notes: line that ties it', () => {
+      const { records, fileError } = parseContactFile(
+        'c.csv',
+        toCsv([['Notes:'], [''], ['Name'], ['Ama Mensah']])
+      )
+      expect(fileError).toBeUndefined()
+      expect(records).toHaveLength(1)
+    })
+  })
+
   describe('CSV with no recognisable columns', () => {
     it('returns a file error and no profile', () => {
       const text = toCsv([
@@ -551,6 +630,67 @@ describe('parseContactFile', () => {
       ])
       const result = parseContactFile('mystery.csv', text)
       expect(result.profile).toBeNull()
+      expect(result.records).toEqual([])
+      expect(result.fileError).toMatch(/could not find contact columns/)
+    })
+
+    it('refuses one matching column among unknown ones', () => {
+      const result = parseContactFile(
+        'products.csv',
+        toCsv([
+          ['Name', 'Price'],
+          ['Widget', '5'],
+        ])
+      )
+      expect(result.records).toEqual([])
+      expect(result.fileError).toMatch(/could not find contact columns/)
+    })
+
+    it('refuses contact columns that never name anyone', () => {
+      const result = parseContactFile(
+        'numbers.csv',
+        toCsv([
+          ['Email', 'Phone'],
+          ['ama@example.org', '123'],
+        ])
+      )
+      expect(result.records).toEqual([])
+      expect(result.fileError).toMatch(/could not find contact columns/)
+    })
+
+    it('accepts a file that is only a list of names', () => {
+      const result = parseContactFile(
+        'names.csv',
+        toCsv([['Name'], ['Ama Mensah']])
+      )
+      expect(result.fileError).toBeUndefined()
+      expect(result.records).toHaveLength(1)
+    })
+
+    it('refuses a chosen format that would lose columns another reads', () => {
+      const result = parseContactFile(
+        'outlook.csv',
+        toCsv([
+          ['First Name', 'Last Name', 'E-mail Address', 'Company'],
+          ['Ama', 'Mensah', 'ama@example.org', 'Artisan Cooperative'],
+        ]),
+        'linkedin-csv'
+      )
+      expect(result.records).toEqual([])
+      expect(result.fileError).toMatch(/doesn't look like LinkedIn/)
+    })
+
+    it.each([
+      [['Name', 'Description', 'Price', 'URL']],
+      [['Name', 'Location', 'Date']],
+      [['Name', 'Notes', 'Qty']],
+      [['Name', 'Title', 'Salary']],
+      [['Company', 'Title', 'Amount', 'Stage']],
+    ])('refuses a sheet that is not contacts: %j', (headers) => {
+      const result = parseContactFile(
+        'sheet.csv',
+        toCsv([headers, headers.map(() => 'x')])
+      )
       expect(result.records).toEqual([])
       expect(result.fileError).toMatch(/could not find contact columns/)
     })

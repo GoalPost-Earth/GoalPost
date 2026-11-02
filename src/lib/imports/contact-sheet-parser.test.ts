@@ -380,22 +380,14 @@ describe('parseContactWorkbook', () => {
       )
     })
 
-    it('uses the requested profile instead', () => {
+    it('refuses a requested profile that fits worse than another', () => {
       const result = parseContactWorkbook(
         workbookBuffer({ rows }),
         'outlook-csv'
       )
-      expect(result.profile?.id).toBe('outlook-csv')
-      // Outlook has no "email address" / "position" columns.
-      expect(result.records).toEqual([
-        {
-          row: 2,
-          kind: 'person',
-          firstName: 'Abena',
-          lastName: 'Asante',
-          organization: 'Riverbank Food Bank',
-        },
-      ])
+      expect(result.profile).toBeNull()
+      expect(result.records).toEqual([])
+      expect(result.fileError).toMatch(/doesn't look like Outlook CSV/)
     })
 
     it('gives a fileError when the requested profile fits none of the columns', () => {

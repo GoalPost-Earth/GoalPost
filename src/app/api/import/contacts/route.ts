@@ -24,10 +24,10 @@ import {
  *   { fieldContextId, contacts: ContactRecord[], link?: { kind, id } }
  *   → 200 { summary, outcomes }
  *
- * The browser parses the vCard / CSV / JSON file and previews it (nothing is
- * written until the member confirms), then submits the mapped contacts. This
- * route authenticates, rate-limits, re-validates every contact with the same
- * rules the preview used, gates on edit rights to the field, and writes.
+ * The browser parses the vCard / CSV / JSON file and submits the mapped
+ * contacts. This route authenticates, rate-limits, re-validates every contact
+ * with the same rules the browser used, gates on edit rights to the field, and
+ * writes.
  *
  * Inline rather than queued like the article import: a contact import is graph
  * writes only — no fetching, no LLM or embedding spend. The browser sends a
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
     )
   }
 
-  // Re-run the preview's own rules (name required, person/org field split) so
+  // Re-run the browser's own rules (name required, person/org field split) so
   // the writer only ever sees a record the shared finalizer produced.
   const records: ContactRecord[] = []
   for (const contact of parsed.data.contacts) {

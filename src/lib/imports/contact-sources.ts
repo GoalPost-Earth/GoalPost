@@ -14,7 +14,7 @@ import { parseVCardContacts } from './contact-vcard'
  *
  * Every supported source is a PROFILE in `CONTACT_SOURCE_PROFILES`: a file
  * format plus, for tabular formats, which source columns feed which contact
- * field. The import modal, the preview and the server write path are shared by
+ * field. The import modal and the server write path are shared by
  * all of them, so supporting another address book's export is a new entry in
  * this list — not a new screen.
  *
@@ -57,9 +57,9 @@ export interface ContactSourceProfile {
 const GENERIC_COLUMNS: ContactSourceProfile['columns'] = {
   firstName: ['first name', 'firstname', 'given name'],
   lastName: ['last name', 'lastname', 'family name', 'surname'],
-  name: ['name', 'full name', 'display name'],
-  email: ['email', 'email address', 'e mail'],
-  phone: ['phone', 'phone number', 'mobile', 'telephone'],
+  name: ['name', 'full name', 'display name', 'contact name'],
+  email: ['email', 'email address', 'e mail', 'e mail address'],
+  phone: ['phone', 'phone number', 'mobile', 'mobile phone', 'telephone'],
   location: ['location', 'address', 'city'],
   description: ['description', 'notes', 'note'],
   website: ['website', 'url', 'web page'],
@@ -219,37 +219,135 @@ function headerScore(
   return profileColumns(profile).filter((column) => headers.has(column)).length
 }
 
+const PERSON_NAME_FIELDS = ['firstName', 'lastName', 'name'] as const
+
+function fieldColumns(
+  profile: ContactSourceProfile,
+  fields: readonly ContactTextField[]
+): string[] {
+  return fields.flatMap((field) => profile.columns?.[field] ?? [])
+}
+
+const CSV_PROFILES = CONTACT_SOURCE_PROFILES.filter((p) => p.format === 'csv')
+
+/** Every column any CSV profile takes for these fields. */
+function knownColumns(fields: readonly ContactTextField[]): Set<string> {
+  return new Set(CSV_PROFILES.flatMap((p) => fieldColumns(p, fields)))
+}
+
+const PERSON_NAME_COLUMNS = knownColumns(PERSON_NAME_FIELDS)
+
+function hasPersonName(headers: Set<string>): boolean {
+  return [...PERSON_NAME_COLUMNS].some((column) => headers.has(column))
+}
+
+/**
+ * Columns only a contacts file has. `name`, `title`, `url` and `notes` also head
+ * product lists and event sheets, so they do not count.
+ */
+const CONTACT_SIGNAL_COLUMNS = new Set([
+  ...knownColumns(['firstName', 'lastName', 'email', 'phone']),
+  ...CSV_PROFILES.flatMap((p) => (p.kindColumn ? [p.kindColumn] : [])),
+])
+
+/** False when the header names a person in a column this profile doesn't read. */
+function readsPersonName(
+  profile: ContactSourceProfile,
+  headers: Set<string>
+): boolean {
+  const named = fieldColumns(profile, PERSON_NAME_FIELDS)
+  return named.some((column) => headers.has(column)) || !hasPersonName(headers)
+}
+
 /**
  * Find the header row — LinkedIn's export opens with a few lines of notes
  * before it — and the CSV profile it fits best. The header row is the opening
- * row that names the most columns a CSV profile knows (the earliest on a tie):
- * "first row naming any known column" is not enough, because LinkedIn's
- * preamble starts with a lone `Notes:` line, and "notes" is a known column.
+ * row that names the most columns a CSV profile knows; on a tie, the one with a
+ * person's name, then the one with fewer unknown cells (a metadata row like
+ * `Name:,Riverbank,Phone:,555` has as many matches as the real header below
+ * it), then the earliest. "First row naming any known column" is not enough,
+ * because LinkedIn's preamble starts with a lone `Notes:` line.
+ *
+ * A profile that can't read the person-name column loses to one that can, even
+ * on score: mapping `Name,E-mail Address,Company` through Outlook, which has no
+ * `Name`, would save each person as their company.
  */
 function detectCsvLayout(
   rows: string[][],
   requestedProfileId?: string
 ): { headerIndex: number; profile: ContactSourceProfile } | null {
-  const csvProfiles = CONTACT_SOURCE_PROFILES.filter((p) => p.format === 'csv')
-  const requested = csvProfiles.find((p) => p.id === requestedProfileId)
-  let best: {
+  const requested = CSV_PROFILES.find((p) => p.id === requestedProfileId)
+  type Candidate = {
     headerIndex: number
     profile: ContactSourceProfile
-    score: number
-  } | null = null
+    rank: [score: number, readsName: number, unknownCells: number]
+  }
+  let best: Candidate | null = null
   for (let index = 0; index < Math.min(rows.length, 10); index += 1) {
-    const headers = new Set(rows[index].map(normalizeColumn))
-    const ranked = (requested ? [requested] : csvProfiles)
-      .map((profile) => ({ profile, score: headerScore(profile, headers) }))
+    const headers = new Set(rows[index].map(normalizeColumn).filter(Boolean))
+    const ranked = (requested ? [requested] : CSV_PROFILES)
+      .map((profile) => ({
+        profile,
+        score: headerScore(profile, headers),
+        readsName: Number(readsPersonName(profile, headers)),
+      }))
       .filter((candidate) => candidate.score > 0)
       // Stable on ties, so the more specific named exports (listed first) win
       // over the generic template that shares their column names.
-      .sort((a, b) => b.score - a.score)
-    if (ranked.length > 0 && (!best || ranked[0].score > best.score)) {
-      best = { headerIndex: index, ...ranked[0] }
+      .sort((a, b) => b.readsName - a.readsName || b.score - a.score)
+    const top = ranked[0]
+    if (!top) continue
+    const rank: Candidate['rank'] = [
+      top.score,
+      Number(hasPersonName(headers)),
+      -(headers.size - top.score),
+    ]
+    if (!best || isHigher(rank, best.rank)) {
+      best = { headerIndex: index, profile: top.profile, rank }
     }
   }
   return best && { headerIndex: best.headerIndex, profile: best.profile }
+}
+
+function isHigher(a: readonly number[], b: readonly number[]): boolean {
+  const differing = a.findIndex((value, index) => value !== b[index])
+  return differing !== -1 && a[differing] > b[differing]
+}
+
+const NO_CONTACT_COLUMNS =
+  'We could not find contact columns in this file. Use an Outlook, Google or LinkedIn export, or the GoalPost CSV template.'
+
+/**
+ * Choosing a file imports it straight away, so a header row that fits badly has
+ * to stop here: nothing later would catch contacts mapped from the wrong
+ * columns. A file must say who each row is, and with more than one column it
+ * must also carry something only a contacts file has (`Name,Price` is not one).
+ * A format the member chose is refused when it can't read the name column, or
+ * when another one reads more of the columns: reading an Outlook file as
+ * LinkedIn would import every contact without its email.
+ */
+function layoutProblem(
+  columns: string[],
+  profile: ContactSourceProfile,
+  requestedProfileId?: string
+): string | null {
+  const headers = new Set(columns.filter(Boolean))
+  const names = fieldColumns(profile, [...PERSON_NAME_FIELDS, 'organization'])
+  if (!names.some((column) => headers.has(column))) return NO_CONTACT_COLUMNS
+  if (
+    headers.size > 1 &&
+    ![...CONTACT_SIGNAL_COLUMNS].some((column) => headers.has(column))
+  ) {
+    return NO_CONTACT_COLUMNS
+  }
+  if (!requestedProfileId) return null
+  const score = headerScore(profile, headers)
+  const fits =
+    readsPersonName(profile, headers) &&
+    !CSV_PROFILES.some((p) => headerScore(p, headers) > score)
+  return fits
+    ? null
+    : `This file doesn't look like ${profile.label}. Choose another format, or leave it on Detect automatically.`
 }
 
 function readField(
@@ -310,7 +408,7 @@ export interface ParsedContactFile {
   profile: ContactSourceProfile | null
   records: ContactRecord[]
   errors: ContactRowError[]
-  /** A whole-file problem (unreadable, unknown layout) — nothing to preview. */
+  /** A whole-file problem (unreadable, unknown layout) — nothing to import. */
   fileError?: string
 }
 
@@ -347,11 +445,12 @@ export function parseTabularContacts(
       profile: null,
       records: [],
       errors: [],
-      fileError:
-        'We could not find contact columns in this file. Use an Outlook, Google or LinkedIn export, or the GoalPost CSV template.',
+      fileError: NO_CONTACT_COLUMNS,
     }
   }
   const headers = rows[layout.headerIndex].map(normalizeColumn)
+  const fileError = layoutProblem(headers, layout.profile, requestedProfileId)
+  if (fileError) return { profile: null, records: [], errors: [], fileError }
   const raw: ContactRecord[] = []
   rows.forEach((cells, index) => {
     if (index <= layout.headerIndex || isBlank(cells)) return
