@@ -3450,6 +3450,19 @@ type AddPersonToFieldContextResponse {
 }
 
 """
+Result of `deletePersonFromFieldContext`. `deleted` is true when the Person node
+itself is gone (not just the caller's fields' edges to it).
+"""
+type PersonDeletionResponse
+  # Pure payload, NOT a node type — same guard as `FieldContextEdge`.
+  @query(read: false, aggregate: false)
+  @mutation(operations: []) {
+  success: Boolean!
+  message: String!
+  deleted: Boolean!
+}
+
+"""
 GOAL-387 — result of removing or deleting an organization from the field
 Dashboard. `deleted` is true when the Organization node itself is gone (not
 just this field's edge to it).
@@ -3619,6 +3632,20 @@ type Mutation {
     contextId: ID!
     personId: ID!
   ): AddPersonToFieldContextResponse!
+
+  """
+  Delete a person, starting from a field the caller can edit (owner, ADMIN or
+  MEMBER — never GUEST). Deleted outright only when they have no account or Space
+  membership and nothing outside the caller's reach relies on them: every field
+  holding them is editable by the caller, no other user created or is connected
+  to them, and nothing in a field the caller cannot edit is linked to them.
+  Otherwise they are detached from the fields the caller can edit and left in
+  place. Writes a Log.
+  """
+  deletePersonFromFieldContext(
+    contextId: ID!
+    personId: ID!
+  ): PersonDeletionResponse!
 
   """
   GOAL-387 — detach an organization from one field (its HAS_ORGANIZATION edge).

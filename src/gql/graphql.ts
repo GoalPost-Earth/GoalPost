@@ -13481,6 +13481,16 @@ export type Mutation = {
    */
   deletePersonConnection: DeletePersonConnectionResponse
   deletePersonConnectionEdges: DeleteInfo
+  /**
+   * Delete a person, starting from a field the caller can edit (owner, ADMIN or
+   * MEMBER — never GUEST). Deleted outright only when they have no account or Space
+   * membership and nothing outside the caller's reach relies on them: every field
+   * holding them is editable by the caller, no user in another Space created or is
+   * connected to them, and no pulse or weave in a field the caller cannot edit
+   * refers to them. Otherwise they are detached from the fields the caller can edit
+   * and left in place. Writes a Log.
+   */
+  deletePersonFromFieldContext: PersonDeletionResponse
   deletePromiseWeaves: DeleteInfo
   deleteRemoveSpaceMemberResponses: DeleteInfo
   deleteResonanceLinks: DeleteInfo
@@ -13918,6 +13928,11 @@ export type MutationDeletePersonConnectionArgs = {
 
 export type MutationDeletePersonConnectionEdgesArgs = {
   where?: InputMaybe<PersonConnectionEdgeWhere>
+}
+
+export type MutationDeletePersonFromFieldContextArgs = {
+  contextId: Scalars['ID']['input']
+  personId: Scalars['ID']['input']
 }
 
 export type MutationDeletePromiseWeavesArgs = {
@@ -16918,6 +16933,17 @@ export type PersonDeleteInput = {
   extractedFrom?: InputMaybe<Array<PersonExtractedFromDeleteFieldInput>>
   memberOf?: InputMaybe<Array<PersonMemberOfDeleteFieldInput>>
   ownsSpaces?: InputMaybe<Array<PersonOwnsSpacesDeleteFieldInput>>
+}
+
+/**
+ * Result of `deletePersonFromFieldContext`. `deleted` is true when the Person node
+ * itself is gone (not just the caller's fields' edges to it).
+ */
+export type PersonDeletionResponse = {
+  __typename?: 'PersonDeletionResponse'
+  deleted: Scalars['Boolean']['output']
+  message: Scalars['String']['output']
+  success: Scalars['Boolean']['output']
 }
 
 export type PersonDisconnectInput = {
@@ -29620,6 +29646,21 @@ export type AddPersonToFieldContextMutation = {
   }
 }
 
+export type DeletePersonFromFieldContextMutationVariables = Exact<{
+  contextId: Scalars['ID']['input']
+  personId: Scalars['ID']['input']
+}>
+
+export type DeletePersonFromFieldContextMutation = {
+  __typename?: 'Mutation'
+  deletePersonFromFieldContext: {
+    __typename?: 'PersonDeletionResponse'
+    success: boolean
+    message: string
+    deleted: boolean
+  }
+}
+
 export type RemovePersonFromFieldContextMutationVariables = Exact<{
   contextId: Scalars['ID']['input']
   personId: Scalars['ID']['input']
@@ -35204,6 +35245,78 @@ export const AddPersonToFieldContextDocument = {
 } as unknown as DocumentNode<
   AddPersonToFieldContextMutation,
   AddPersonToFieldContextMutationVariables
+>
+export const DeletePersonFromFieldContextDocument = {
+  kind: 'Document',
+  definitions: [
+    {
+      kind: 'OperationDefinition',
+      operation: 'mutation',
+      name: { kind: 'Name', value: 'DeletePersonFromFieldContext' },
+      variableDefinitions: [
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'contextId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+        {
+          kind: 'VariableDefinition',
+          variable: {
+            kind: 'Variable',
+            name: { kind: 'Name', value: 'personId' },
+          },
+          type: {
+            kind: 'NonNullType',
+            type: { kind: 'NamedType', name: { kind: 'Name', value: 'ID' } },
+          },
+        },
+      ],
+      selectionSet: {
+        kind: 'SelectionSet',
+        selections: [
+          {
+            kind: 'Field',
+            name: { kind: 'Name', value: 'deletePersonFromFieldContext' },
+            arguments: [
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'contextId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'contextId' },
+                },
+              },
+              {
+                kind: 'Argument',
+                name: { kind: 'Name', value: 'personId' },
+                value: {
+                  kind: 'Variable',
+                  name: { kind: 'Name', value: 'personId' },
+                },
+              },
+            ],
+            selectionSet: {
+              kind: 'SelectionSet',
+              selections: [
+                { kind: 'Field', name: { kind: 'Name', value: 'success' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'message' } },
+                { kind: 'Field', name: { kind: 'Name', value: 'deleted' } },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  ],
+} as unknown as DocumentNode<
+  DeletePersonFromFieldContextMutation,
+  DeletePersonFromFieldContextMutationVariables
 >
 export const RemovePersonFromFieldContextDocument = {
   kind: 'Document',

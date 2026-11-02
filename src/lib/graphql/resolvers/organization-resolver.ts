@@ -23,7 +23,7 @@ import { Context } from '@/config/types'
 const NOT_ALLOWED = 'You can only change organizations in fields you can edit.'
 
 /** True when `$userId` can edit field `ctx` (bound in the surrounding query). */
-const CALLER_CAN_EDIT = (ctx: string) => `EXISTS {
+export const CALLER_CAN_EDIT = (ctx: string) => `EXISTS {
   MATCH (space:Space)-[:HAS_CONTEXT]->(${ctx})
   WHERE (:Person {id: $userId})-[:OWNS]->(space)
      OR EXISTS {

@@ -44,6 +44,8 @@ type FieldContextSectionsProps = {
   weaves?: WeaveRecord[]
   space?: SpaceRecord | null
   people?: PersonRecord[]
+  /** Rendered directly after People, so a field's contacts read as one block. */
+  organizationsSection?: React.ReactNode
   /**
    * GOAL-346: how many attached people are being shown under their source
    * Document instead of in this list. Without it the section says "No people
@@ -114,6 +116,7 @@ export function FieldContextSections({
   weaves = [],
   space,
   people,
+  organizationsSection,
   peopleFromDocumentsCount = 0,
   onAddPulse,
   onAddPerson,
@@ -266,6 +269,10 @@ export function FieldContextSections({
             />
           )}
         </div>
+      )}
+
+      {organizationsSection && (
+        <div className="min-w-0 md:col-span-2">{organizationsSection}</div>
       )}
 
       <PulsesSection

@@ -43,6 +43,7 @@ import {
 import {
   ADD_PERSON_TO_FIELD_CONTEXT_MUTATION,
   REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION,
+  DELETE_PERSON_FROM_FIELD_CONTEXT_MUTATION,
   CREATE_PEOPLE_MUTATION,
   CREATE_GOAL_PULSE_MUTATION,
   CREATE_RESOURCE_PULSE_MUTATION,
@@ -84,6 +85,7 @@ import {
 } from '@/components/fields/document-list'
 import { SubContextsSection } from '@/components/fields/sub-contexts-section'
 import { OrganizationsSection } from '@/components/fields/organizations-section'
+import { DeletePersonDialog } from '@/components/fields/delete-person-dialog'
 import { MoveFieldModal } from '@/components/fields/move-field-modal'
 import { runDocumentUploadFlow } from '@/lib/ingest/upload-document-flow'
 import {
@@ -151,6 +153,12 @@ export default function FieldContextDetailsPage() {
   const [isAddingPersonToField, setIsAddingPersonToField] = useState(false)
   const [isRemovingPersonFromField, setIsRemovingPersonFromField] =
     useState(false)
+  const [personIdToDelete, setPersonIdToDelete] = useState<string | null>(null)
+  // Held through the refetches, not just the mutation: the dialog stays open
+  // until the row is gone, and a second click would hit the refused path.
+  const [isDeletingPerson, setIsDeletingPerson] = useState(false)
+  // Set on open and never cleared, so the title survives the close animation.
+  const [deleteDialogPersonName, setDeleteDialogPersonName] = useState('')
   const [isUploadDocumentModalOpen, setIsUploadDocumentModalOpen] =
     useState(false)
   // Bumped on every open so the modal remounts with clean state (GOAL-337).
@@ -281,6 +289,9 @@ export default function FieldContextDetailsPage() {
   )
   const [removePersonFromFieldContext] = useMutation(
     REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION
+  )
+  const [deletePersonFromFieldContext] = useMutation(
+    DELETE_PERSON_FROM_FIELD_CONTEXT_MUTATION
   )
   const [createPerson] = useMutation(CREATE_PEOPLE_MUTATION)
 
@@ -1203,6 +1214,36 @@ export default function FieldContextDetailsPage() {
     }
   }
 
+  const handleConfirmDeletePerson = async () => {
+    if (!personIdToDelete) return
+    setIsDeletingPerson(true)
+    try {
+      const { data: response } = await deletePersonFromFieldContext({
+        variables: { contextId, personId: personIdToDelete },
+      })
+      const result = response?.deletePersonFromFieldContext
+      if (!result?.success) {
+        toast.error(result?.message || 'Could not delete this person.')
+        return
+      }
+      // Refetch first so the row is gone by the time the toast says so. The
+      // details query feeds the canvas (ADR-011), so Bloom updates too.
+      // allSettled: the delete has landed, so a failed refetch must not be
+      // reported as a failed delete. Documents list the people they named.
+      await Promise.allSettled([
+        refetchFieldPeople(),
+        refetch(),
+        refetchDocuments(),
+      ])
+      setPersonIdToDelete(null)
+      toast.success(result.message)
+    } catch {
+      toast.error('Could not delete this person.')
+    } finally {
+      setIsDeletingPerson(false)
+    }
+  }
+
   // `documentsLoading && !documentsData` joins the gate for GOAL-346 — see the
   // query above. Both halves are needed: a refetch after an upload sets
   // `loading` true again while data is already present, and re-throwing the
@@ -1572,6 +1613,20 @@ export default function FieldContextDetailsPage() {
             resonances={resonances}
             weaves={weaves}
             people={people}
+            organizationsSection={
+              // GOAL-387 — organizations were canvas-only (GOAL-386), so they
+              // could not be taken out of a field from here.
+              <OrganizationsSection
+                contextId={contextId}
+                organizations={[...(context.organizations ?? [])].sort((a, b) =>
+                  a.name.localeCompare(b.name)
+                )}
+                canEdit={canEditContent}
+                // The canvas reads the same query's cache (ADR-011), so this
+                // refetch updates Bloom and the edges too.
+                onChanged={() => refetch()}
+              />
+            }
             peopleFromDocumentsCount={peopleFromDocumentsCount}
             space={space}
             onAddPulse={() => setIsCreatePulseModalOpen(true)}
@@ -1653,19 +1708,6 @@ export default function FieldContextDetailsPage() {
                 id: resonanceId,
               })
             }
-          />
-
-          {/* GOAL-387 — organizations were canvas-only (GOAL-386), so they
-              could not be taken out of a field from here. */}
-          <OrganizationsSection
-            contextId={contextId}
-            organizations={[...(context.organizations ?? [])].sort((a, b) =>
-              a.name.localeCompare(b.name)
-            )}
-            canEdit={canEditContent}
-            // The canvas reads the same query's cache (ADR-011), so this
-            // refetch updates Bloom and the edges too.
-            onChanged={() => refetch()}
           />
         </div>
       </main>
@@ -1860,9 +1902,35 @@ export default function FieldContextDetailsPage() {
         relationshipWhy={selectedPerson?.relationshipWhy ?? null}
         onRemoveFromField={handleRemovePersonFromField}
         isRemovingFromField={isRemovingPersonFromField}
+        onDeletePerson={
+          canEditContent
+            ? (personId) => {
+                const person = people.find((entry) => entry.id === personId)
+                if (!person) return
+                // Close the panel first: it holds a focus trap of its own,
+                // which would fight the confirmation dialog's.
+                setIsPersonPanelOpen(false)
+                setSelectedPerson(null)
+                setDeleteDialogPersonName(
+                  person.name ||
+                    `${person.firstName} ${person.lastName}`.trim() ||
+                    'this person'
+                )
+                setPersonIdToDelete(person.id)
+              }
+            : undefined
+        }
         onPersonUpdated={() => {
           refetchFieldPeople()
         }}
+      />
+
+      <DeletePersonDialog
+        open={personIdToDelete !== null}
+        personName={deleteDialogPersonName}
+        isDeleting={isDeletingPerson}
+        onCancel={() => setPersonIdToDelete(null)}
+        onConfirm={() => void handleConfirmDeletePerson()}
       />
 
       <AddPersonToFieldModal

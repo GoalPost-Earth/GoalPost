@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useMutation } from '@apollo/client/react'
 import { cn } from '@/lib/utils'
 import { UPDATE_PERSON_PULSE_MUTATION } from '@/app/graphql/mutations/PERSON_MUTATIONS'
+import { Button } from '@/components/ui/button'
 import { ContactDetails } from '@/components/ui/contact-details'
 import {
   type PersonInPanel,
@@ -25,6 +26,7 @@ export function PersonPulseBody({
   onViewProfile,
   onRemoveFromField,
   isRemovingFromField,
+  onDeletePerson,
 }: {
   person: PersonInPanel
   description: string | null
@@ -33,6 +35,7 @@ export function PersonPulseBody({
   onViewProfile: () => void
   onRemoveFromField?: (personId: string) => Promise<void>
   isRemovingFromField: boolean
+  onDeletePerson?: (personId: string) => void
 }) {
   const [editing, setEditing] = useState(false)
   const [firstName, setFirstName] = useState(person.firstName)
@@ -228,13 +231,25 @@ export function PersonPulseBody({
             <button
               onClick={() => onRemoveFromField(person.id)}
               disabled={isRemovingFromField}
-              className="w-full px-4 py-3 rounded-xl bg-red-500/90 hover:bg-red-500 text-white font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full px-4 py-2.5 rounded-xl border border-gp-glass-border text-gp-ink-strong dark:text-white font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-xl">
                 person_remove
               </span>
               {isRemovingFromField ? 'Removing…' : 'Remove from Field'}
             </button>
+          )}
+
+          {onDeletePerson && (
+            <Button
+              variant="destructive"
+              onClick={() => onDeletePerson(person.id)}
+              disabled={isRemovingFromField}
+              className="w-full h-auto px-4 py-3 rounded-xl text-base font-medium cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-xl">delete</span>
+              Delete person
+            </Button>
           )}
         </div>
       )}

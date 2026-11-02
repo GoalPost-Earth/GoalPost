@@ -23,6 +23,8 @@ export interface PersonPanelProps {
   onConnectionClick?: (connectedPersonId: string) => void
   onRemoveFromField?: (personId: string) => Promise<void>
   isRemovingFromField?: boolean
+  /** Asks to delete this contact from the graph. Omit to hide the action. */
+  onDeletePerson?: (personId: string) => void
   /**
    * A PersonPulse's relational note — who they are. Read + inline-editable.
    * Only meaningful for the PERSON (person pulse) variant.
@@ -45,6 +47,7 @@ export function PersonPanel({
   onConnectionClick,
   onRemoveFromField,
   isRemovingFromField = false,
+  onDeletePerson,
   description = null,
   relationshipWhy = null,
   onPersonUpdated,
@@ -176,6 +179,7 @@ export function PersonPanel({
               onViewProfile={handleViewProfile}
               onRemoveFromField={onRemoveFromField}
               isRemovingFromField={isRemovingFromField}
+              onDeletePerson={onDeletePerson}
             />
           ) : (
             <MemberBody

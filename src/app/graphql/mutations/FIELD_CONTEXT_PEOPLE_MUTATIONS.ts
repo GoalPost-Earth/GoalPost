@@ -22,6 +22,22 @@ export const ADD_PERSON_TO_FIELD_CONTEXT_MUTATION = graphql(`
 `)
 
 /**
+ * Delete a contact from the graph, starting from a field the caller can edit.
+ * A custom resolver: the generated `deletePeople` only lets a person delete
+ * themselves. `deleted` is false when they were only removed from the caller's
+ * fields because someone else still relies on them.
+ */
+export const DELETE_PERSON_FROM_FIELD_CONTEXT_MUTATION = graphql(`
+  mutation DeletePersonFromFieldContext($contextId: ID!, $personId: ID!) {
+    deletePersonFromFieldContext(contextId: $contextId, personId: $personId) {
+      success
+      message
+      deleted
+    }
+  }
+`)
+
+/**
  * Detach a person node from a field context so they no longer appear in that field graph.
  */
 export const REMOVE_PERSON_FROM_FIELD_CONTEXT_MUTATION = graphql(`

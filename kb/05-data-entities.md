@@ -278,7 +278,9 @@ The same three properties are written on the triggering member's `Person`
   `:Person:PersonPulse` (relational-world contact), but may also be a real
   `:User` (the uploader's self-link, or a consent-gated attach via the
   `addPersonToFieldContext` mutation — never the generated nested CONNECT,
-  which is disabled)
+  which is disabled). "Remove from Field" only drops this edge and leaves the
+  Person in the graph; `deletePersonFromFieldContext` deletes the node when
+  nothing outside the caller's reach relies on it (`kb/02-user-roles.md`)
 - `HAS_RESONANCE` → ResonanceLink
 - `CREATED_BY` → Person
 

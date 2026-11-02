@@ -50,6 +50,18 @@ GUEST). A delete only destroys the organization when the caller can edit every
 live field holding it; otherwise it is removed from their fields and left for
 the other Spaces.
 
+People: deleting one from a field also needs `canEditContent` on the field
+(`deletePersonFromFieldContext` in `field-context-people-resolver.ts`, never
+GUEST). The Person is only destroyed when they have no account, Space ownership
+or membership, the caller can edit every live field holding them, no other
+`:User` created or is connected to them (a teammate's contact is only removed,
+because `addSpaceMember` has no acceptance step and shared membership can be
+manufactured), and nothing in a field the caller cannot edit is linked to them
+by any edge. Otherwise they are removed from the caller's fields and left in
+place. The extra checks exist because any editor can attach a non-user contact
+to a field by id, so holding a contact in your field proves nothing about whose
+it is.
+
 ---
 
 ## Authentication

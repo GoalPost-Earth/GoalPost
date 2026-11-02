@@ -30,6 +30,7 @@ type Documents = {
   '\n  mutation MoveFieldContext($contextId: ID!, $newParentContextId: ID) {\n    moveFieldContext(\n      contextId: $contextId\n      newParentContextId: $newParentContextId\n    ) {\n      contextId\n      newParentContextId\n      moved\n    }\n  }\n': typeof types.MoveFieldContextDocument
   '\n  mutation ConnectFieldToSpace($fieldId: ID!, $spaceId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $fieldId }\n      update: {\n        meSpace: { connect: [{ where: { node: { id_EQ: $spaceId } } }] }\n      }\n    ) {\n      fieldContexts {\n        id\n        title\n        space {\n          id\n          name\n        }\n      }\n    }\n  }\n': typeof types.ConnectFieldToSpaceDocument
   '\n  mutation AddPersonToFieldContext($contextId: ID!, $personId: ID!) {\n    addPersonToFieldContext(contextId: $contextId, personId: $personId) {\n      success\n      message\n      person {\n        id\n        name\n      }\n    }\n  }\n': typeof types.AddPersonToFieldContextDocument
+  '\n  mutation DeletePersonFromFieldContext($contextId: ID!, $personId: ID!) {\n    deletePersonFromFieldContext(contextId: $contextId, personId: $personId) {\n      success\n      message\n      deleted\n    }\n  }\n': typeof types.DeletePersonFromFieldContextDocument
   "\n  mutation RemovePersonFromFieldContext($contextId: ID!, $personId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $contextId }\n      update: {\n        people: { disconnect: [{ where: { node: { id_EQ: $personId } } }] }\n      }\n    ) {\n      # Only id is read — the caller refetches the people list. Selecting the\n      # GOAL-275-gated email here would needlessly AND the Person auth filter\n      # onto this write's return for data nobody consumes.\n      fieldContexts {\n        id\n      }\n    }\n  }\n": typeof types.RemovePersonFromFieldContextDocument
   '\n  mutation createGoalPulses($input: [GoalPulseCreateInput!]!) {\n    createGoalPulses(input: $input) {\n      goalPulses {\n        id\n        content\n        createdAt\n        intensity\n        status\n        horizon\n      }\n    }\n  }\n': typeof types.CreateGoalPulsesDocument
   '\n  mutation updateGoalPulses(\n    $where: GoalPulseWhere!\n    $update: GoalPulseUpdateInput!\n  ) {\n    updateGoalPulses(where: $where, update: $update) {\n      goalPulses {\n        id\n        content\n        createdAt\n        intensity\n        status\n        horizon\n      }\n    }\n  }\n': typeof types.UpdateGoalPulsesDocument
@@ -163,6 +164,8 @@ const documents: Documents = {
     types.ConnectFieldToSpaceDocument,
   '\n  mutation AddPersonToFieldContext($contextId: ID!, $personId: ID!) {\n    addPersonToFieldContext(contextId: $contextId, personId: $personId) {\n      success\n      message\n      person {\n        id\n        name\n      }\n    }\n  }\n':
     types.AddPersonToFieldContextDocument,
+  '\n  mutation DeletePersonFromFieldContext($contextId: ID!, $personId: ID!) {\n    deletePersonFromFieldContext(contextId: $contextId, personId: $personId) {\n      success\n      message\n      deleted\n    }\n  }\n':
+    types.DeletePersonFromFieldContextDocument,
   "\n  mutation RemovePersonFromFieldContext($contextId: ID!, $personId: ID!) {\n    updateFieldContexts(\n      where: { id_EQ: $contextId }\n      update: {\n        people: { disconnect: [{ where: { node: { id_EQ: $personId } } }] }\n      }\n    ) {\n      # Only id is read — the caller refetches the people list. Selecting the\n      # GOAL-275-gated email here would needlessly AND the Person auth filter\n      # onto this write's return for data nobody consumes.\n      fieldContexts {\n        id\n      }\n    }\n  }\n":
     types.RemovePersonFromFieldContextDocument,
   '\n  mutation createGoalPulses($input: [GoalPulseCreateInput!]!) {\n    createGoalPulses(input: $input) {\n      goalPulses {\n        id\n        content\n        createdAt\n        intensity\n        status\n        horizon\n      }\n    }\n  }\n':
@@ -473,6 +476,12 @@ export function graphql(
 export function graphql(
   source: '\n  mutation AddPersonToFieldContext($contextId: ID!, $personId: ID!) {\n    addPersonToFieldContext(contextId: $contextId, personId: $personId) {\n      success\n      message\n      person {\n        id\n        name\n      }\n    }\n  }\n'
 ): (typeof documents)['\n  mutation AddPersonToFieldContext($contextId: ID!, $personId: ID!) {\n    addPersonToFieldContext(contextId: $contextId, personId: $personId) {\n      success\n      message\n      person {\n        id\n        name\n      }\n    }\n  }\n']
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(
+  source: '\n  mutation DeletePersonFromFieldContext($contextId: ID!, $personId: ID!) {\n    deletePersonFromFieldContext(contextId: $contextId, personId: $personId) {\n      success\n      message\n      deleted\n    }\n  }\n'
+): (typeof documents)['\n  mutation DeletePersonFromFieldContext($contextId: ID!, $personId: ID!) {\n    deletePersonFromFieldContext(contextId: $contextId, personId: $personId) {\n      success\n      message\n      deleted\n    }\n  }\n']
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
